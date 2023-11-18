@@ -23,29 +23,29 @@
 <meta property="og:site_name" content="HedonSpace">
 <meta property="og:description" content="本文对 Raft-Extended 进行了一比一的翻译，其中有些地方加入了额外的注解，这些都是笔者在学习 Raft 算法时遇到的比较困惑的难点，希望这些注解能对其他读者有帮助。">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gsmihlh9ptj322u0nsgpj.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gsar1v5rklj32300pc4bj.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gsap8d6ijjj322s0l47g5.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gsapcmhhi4j31ym0ig78s.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gsasp7ss8gj32220ssjy9.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gse5vxj5sfj31se0u017c.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gse88t4iicj31wc0u0ts1.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gsfipd3u1tj322c0j2wju.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gsgq3skl4gj322c0nwaes.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gsgpnv9f98j32060p6agz.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gshvublij8j321s0lsadj.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gshxf2bjwej31gg0u0k01.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gsixtffkroj32220my76y.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gsiz66oe4yj323m0jgdj0.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gsj0yuh34ej61km0u043r02.jpg">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsmihlh9ptj322u0nsgpj.jpg">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsar1v5rklj32300pc4bj.jpg">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsap8d6ijjj322s0l47g5.jpg">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsapcmhhi4j31ym0ig78s.jpg">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsasp7ss8gj32220ssjy9.jpg">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gse5vxj5sfj31se0u017c.jpg">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gse88t4iicj31wc0u0ts1.jpg">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsfipd3u1tj322c0j2wju.jpg">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsgq3skl4gj322c0nwaes.jpg">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsgpnv9f98j32060p6agz.jpg">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gshvublij8j321s0lsadj.jpg">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gshxf2bjwej31gg0u0k01.jpg">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsixtffkroj32220my76y.jpg">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsiz66oe4yj323m0jgdj0.jpg">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsj0yuh34ej61km0u043r02.jpg">
 <meta property="article:published_time" content="2023-11-18T14:29:59.000Z">
-<meta property="article:modified_time" content="2023-11-18T14:54:12.513Z">
+<meta property="article:modified_time" content="2023-11-18T15:21:36.838Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="分布式">
 <meta property="article:tag" content="Raft">
 <meta property="article:tag" content="原创">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/008i3skNly1gsmihlh9ptj322u0nsgpj.jpg">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsmihlh9ptj322u0nsgpj.jpg">
   
   
   
@@ -409,7 +409,7 @@
 <h2 id="2-复制状态机"><a href="#2-复制状态机" class="headerlink" title="2. 复制状态机"></a>2. 复制状态机</h2><p>共识算法一般都是在复制状态机 [37] 的背景下实现的。在这种方法下，一组服务器在的状态机计算相同状态的相同副本，即使某些服务器崩溃，它们也可以继续运行。</p>
 <p>复制状态机是用来解决分布式系统中的各种容错问题。比如说，具有单个 leader 的大规模的系统，如 GFS [8]，HDFS [38] 和 RAMCloud [33] ，他们通常都使用单独的复制状态机来管理 leader election 和保存 leader 崩溃后重新选举所需的配置信息。像 Chubby [2] 和 ZooKeeper [11] 都是复制状态机。</p>
 <p>复制状态机通常都是使用日志复制（log replication）来实现。如图1：每个服务器都保存着一份拥有一系列命令的日志，然后服务器上的状态机会按顺序执行日志中的命令。每一份日志中命令相同并且顺序也相同，因此每个状态机可以处理相同的命令序列。所以状态机是可确定的，每个状态机都执行相同的状态和相同的输出序列。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gsmihlh9ptj322u0nsgpj.jpg" srcset="/img/loading.gif" lazyload alt="image-20210719200404010"></p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsmihlh9ptj322u0nsgpj.jpg" srcset="/img/loading.gif" lazyload alt="image-20210719200404010"></p>
 <p>共识算法的主要工作就是保证复制日志（replicated log）的一致性。每台服务器上的共识模块接收来自客户端的命令，并将这些命令添加到其日志当中。它（指共识模块）与其他服务器上的共识模块进行通信，以确保每台服务器上最终以相同的顺序包含相同的命令，即使部分服务器崩溃了，这个条件也可以满足。一旦命令被正确复制，每台服务器上的状态机就会按日志顺序处理它们，并将输出返回给客户端。这样就形成了高可用的复制状态机。</p>
 <p>适用于实际系统的共识算法通常都包含以下几点特征：</p>
 <ul>
@@ -479,7 +479,7 @@
 <p>Raft 中安全性的关键是图 3 中状态机的安全性：只要有任何服务器节点将一个特定的日志条目应用到它的状态机中，那么其他服务器节点就不能在同一个日志索引位置上存储另外一条不同的指令。第 5.4 节将会描述 Raft 如何保证这种特性，而且该解决方案在 5.2 节描述的选举机制上还增加了额外的限制。</p>
 </li>
 </ul>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gsar1v5rklj32300pc4bj.jpg" srcset="/img/loading.gif" lazyload alt="image-20210709155333989"></p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsar1v5rklj32300pc4bj.jpg" srcset="/img/loading.gif" lazyload alt="image-20210709155333989"></p>
 <p>在展示了 Raft 共识算法后，本章节将讨论可用性的一些问题以及时序在系统中的所用。</p>
 <h3 id="5-1-Raft-基础"><a href="#5-1-Raft-基础" class="headerlink" title="5.1 Raft 基础"></a>5.1 Raft 基础</h3><p>一个 Raft 集群中包含若干个服务器节点，<font color="green"><strong>5 个一个比较典型的数字，5 个服务器的集群可以容忍 2 个节点的失效</strong></font>。在任何一个时刻，集群中的每一个节点都只可能是以下是三种身份之一：</p>
 <ul>
@@ -488,9 +488,9 @@
 <li>candidate：这是用来选举一个新的 leader 的时候出现的一种临时状态，这将在第 5.2 节中详细描述</li>
 </ul>
 <p>在正常情况下，集群中只有一个 leader，然后剩下的节点都是 follower。图 4 展示了这些状态和它们之间的转换关系，这些转换关系将会在接下来进行讨论。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gsap8d6ijjj322s0l47g5.jpg" srcset="/img/loading.gif" lazyload alt="image-20210709145034498"></p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsap8d6ijjj322s0l47g5.jpg" srcset="/img/loading.gif" lazyload alt="image-20210709145034498"></p>
 <p>如图 5 所示，Raft 将时间划分成任意长度的任期（term）。每一段任期从一次选举开始，在这个时候会有一个或者多个 candidate 尝试去成为 leader。如果某一个 candidate 赢得了选举，那么它就会在任期剩下的时间里承担一个 leader 的角色。在某些情况下，一次选举无法选出 leader，这个时候这个任期会以没有 leader 而结束。同时一个新的任期（包含一次新的选举）会很快重新开始。这是因为 Raft 会保证在任意一个任期内，至多有一个 leader。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gsapcmhhi4j31ym0ig78s.jpg" srcset="/img/loading.gif" lazyload alt="image-20210709145441879"></p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsapcmhhi4j31ym0ig78s.jpg" srcset="/img/loading.gif" lazyload alt="image-20210709145441879"></p>
 <p>集群中不同的服务器观察到的任期转换的次数也许是不同的，在某些情况下，一个节点可能没有观察到 leader 选举过程甚至是整个任期过程。</p>
 <p>任期在 Raft 中还扮演着一个逻辑时钟（logical clock）的角色，这使得服务器可以发现一些过期的信息，比如过时的 leader。</p>
 <p>每一个节点都存储着一个当前任期号（current term number），该任期号会随着时间<strong>单调递增</strong>。节点之间通信的时候会交换当前任期号，如果一个节点的当前任期号比其他节点小，那么它就将自己的任期号更新为较大的那个值。如果一个 candidate 或者 leader 发现自己的任期号过期了，它就会立刻回到 follower 状态。如果一个节点接收了一个带着过期的任期号的请求，那么它会拒绝这次请求。</p>
@@ -519,7 +519,7 @@
 <p>选举的例子可以很好地展现可理解性是如何指导我们在多种备选设计方案中做出抉择的。在一开始，我们本打算使用一种等级系统（rank system）：每一个 candidate 被赋予一个一次的等级（rank），如果一个 candidate 发现另外一个 candidate 有着更高的登记，那么它就会返回 follower 状态，这样可以使高等级的 candidate 更加容易地赢得下一轮选举。但是我们发现这种方法在可用性方面会有一些小问题： <strong>如果等级较高的服务器崩溃了，那么等级较低的服务器可能需要进入超时状态，然后重新成为一个 candidate。如果这种操作出现得太快，那么它可能会重启进程去开启一轮新的选举。</strong> 经过我们对该算法做出了多次的调整，我们最终还是认为随机重试的方法更加通俗易懂。</p>
 <h3 id="5-3-Log-replication"><a href="#5-3-Log-replication" class="headerlink" title="5.3 Log replication"></a>5.3 Log replication</h3><p>Leader 一旦被选举出来，它就要开始为客户端的请求提供服务了。每一个客户端请求都包含一条将被复制状态机执行的命令。leader 会以一个新条目的方式将该命令追加到自己的日志中，并且以同步的方式向集群中的其他节点发起 AppendEntires RPCs，让它们复制该条目。当条目被安全地复制（何为安全复制，后面会介绍）之后，leader 会将该条目应用到自己的状态机中，状态机执行该指令，然后把执行的结果返回给客户端。如果 follower 崩溃了或者运行缓慢，或者网络丢包，leader 会不断地重试 AppendEntiries RPCs（即使已经对客户端作出了响应）直到所有的 follower 都成功存储了所有的日志条目。</p>
 <p>日志以图 6 展示的方式组织着。每条日志条目都存储着一条状态机指令和 leader 收到该指定时的任期号。日志条目中的任期号可以用来检测多个日志副本之间是否不一致，以此来保证图 3 中的某些性质。每个日志条目还有一个整数索引值来表明它在日志中的位置。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gsasp7ss8gj32220ssjy9.jpg" srcset="/img/loading.gif" lazyload alt="image-20210709165036190"></p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsasp7ss8gj32220ssjy9.jpg" srcset="/img/loading.gif" lazyload alt="image-20210709165036190"></p>
 <p>那么问题就来了，<strong>leader 什么时候会觉得把日志条目应用到状态机是安全的呢？</strong> 这种日志条目被称为已提交的日志条目。Raft 保证这种已提交的日志条目都是持久化的并且最终都会被所有可用的状态机执行。 <strong>一旦创建该日志条目的 leader 将它复制到过半的节点上时（比如图 6 中的条目 7），该日志条目就会被提交。</strong> 同时，leader 日志中该日志条目之前的所有日志条目也都会被提交，包括由之前的其他 leader 创建的日志条目。5.4 节会讨论在 leader 变更之后应用该规则的一些细节，并证明这种提交的规则是安全的。leader 会追踪它所知道的要提交的最高索引，并将该索引包含在未来的 AppendEntries RPC 中（包括心跳），以便其他的节点可以发现这个索引。一旦一个 follower 知道了一个日志条目被提交了。它就会将该日志条目按日志顺序应用到自己的状态机中。</p>
 <p>我们设计 Raft 日志机制来使得不同节点上的日志之间可以保持高水平的一致性。这么做不仅简化了系统的行为也使得系统更加可预测，同时该机制也是保证安全性的重要组成部分。Raft 会一直维护着以下的特性，这些特性也同时构成了图 3 中的日志匹配特性（Log Matching Property）：</p>
 <ul>
@@ -529,7 +529,7 @@
 <p>第一条特性源于这样一个事实，在给定的一个任期值和给定的一个日志索引中，一个 leader 最多创建一个日志条目，而且日志条目永远不会改变它们在日志中的位置。</p>
 <p>第二条特性是由 AppendEntries RPC 执行的一个简单的一致性检查所保证的。当 leader 发送一个 AppendEntries RPC 的时候，leader 会将前一个日志条目的索引位置和任期号包含在里面（紧邻最新的日志条目）。如果一个 follower 在它的日志中找不到包含相同索引位置和任期号的条目，那么它就会拒绝该新的日志条目。一致性检查就像一个归纳步骤：一开始空的日志状态肯定是满足日志匹配特性（Log Matching Property）的，然后一致性检查保证了日志扩展时的日志匹配特性。因此，当 AppendEntries RPC 返回成功时，leader 就知道 follower 的日志一定和自己相同（从第一个日志条目到最新条目）。</p>
 <p>正常操作期间，leader 和 follower 的日志都是保持一致的，所以 AppendEntries 的一致性检查从来不会失败。但是，如果 leader 崩溃了，那么就有可能会造成日志处于不一致的状态，比如说老的 leader 可能还没有完全复制它日志中的所有条目它就崩溃了。这些不一致的情况会在一系列的 leader 和 follower 崩溃的情况下加剧。图 7 解释了什么情况下 follower 的日志可能和新的 leader 的日志不同。follower 可能会确实一些在新 leader 中有的日志条目，也有可能拥有一些新的 leader 没有的日志条目，或者同时存在。缺失或多出日志条目的情况有可能会涉及到多个任期。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gse5vxj5sfj31se0u017c.jpg" srcset="/img/loading.gif" lazyload alt="image-20210712144330139"></p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gse5vxj5sfj31se0u017c.jpg" srcset="/img/loading.gif" lazyload alt="image-20210712144330139"></p>
 <p>在 Raft 算法中，leader 通过强制 follower 复制 leader 日志来解决日志不一致的问题。也就是说，follower 中跟 leader 冲突的日志条目会被 leader 的日志条目所覆盖。5.4 节会证明通过增加一个限制，这种方式就可以保证安全性。</p>
 <p>为了使 follower 的日志跟自己（leader）一致，leader 必须找到两者达成一致的最大的日志条目索引，删除 follower 日志中从那个索引之后的所有日志条目，并且将自己那个索引之后的所有日志条目发送给 follower。所有的这些操作都发生在 AppendEntries RPCs 的一致性检查的回复中。leader 维护着一个针对每一个 follower 的 <strong>nextIndex</strong>，这个 nextIndex 代表的就是 leader 要发送给 follower 的下一个日志条目的索引。<strong>当选出一个新的 leader 时，该 leader 将所有的 nextIndex 的值都初始化为自己最后一个日志条目的 index 加 1（图7 中的 11）</strong>。如果一个 follower 的日志跟 leader 的是不一致的，那么下一次的 AppendEntries RPC 的一致性检查就会失败。<strong>AppendEntries RPC 在被 follower 拒绝之后，leader 对 nextIndex 进行减 1，然后重试 AppendEntries RPC。最终 nextIndex 会在某个位置满足 leader 和 follower 在该位置及之前的日志是一致的，此时，AppendEntries RPC 就会成功，将 follower 跟 leader 冲突的日志条目全部删除然后追加 leader 中的日志条目（需要的话）</strong>。一旦 AppendEntries RPC 成功，follower 的日志就和 leader 的一致了，并且在该任期接下来的时间里都保持一致。</p>
 <blockquote>
@@ -564,7 +564,7 @@
 <p>译者注：注意！这一节「提交之前任期内的日志条目」这种操作 Raft 的不允许的！本小节只是用来举一种错误情况！</p>
 </blockquote>
 <p>如 5.3 节中提到的那样，一旦当前任期内的某个日志条目以及存储到过半的服务器节点上，leader 就知道该日志可以被提交了。如果这个 leader 在提交某个日志条目之前崩溃了，以后的 leader 会尝试完成该日志条目的复制。然而，如果是之前任期内的某个日志条目已经存储到了过半的服务器节点上了，新任期内的 leader 也无法立即断定该日志条目已经被提交了。图 8 展示了一种情况：一个已经被存储到过半节点的老日志条目，仍然有可能会被未来的 leader 覆盖掉。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gse88t4iicj31wc0u0ts1.jpg" srcset="/img/loading.gif" lazyload alt="image-20210712160506841"></p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gse88t4iicj31wc0u0ts1.jpg" srcset="/img/loading.gif" lazyload alt="image-20210712160506841"></p>
 <blockquote>
 <p>译者注：<strong>对图 8 的理解的补充</strong>。</p>
 <p><font color="orange">参考：</font></p>
@@ -617,7 +617,7 @@
 <li><p>因为 leader 从来不删除或重写自己的日志条目，所以如果一个已提交的日志要做到不存在未来的 leader<sub>U</sub> 中的话，那么它只可能在 leader<sub>U</sub> 选举的过程中被丢失。</p>
 </li>
 <li><p>leader<sub>T</sub> 将该日志复制给了集群中过半的节点，leader<sub>U</sub> 从集群中过半的节点得到了投票。因此，至少有一个节点（这里称它为 voter）同时接收了来自 leader<sub>T</sub> 的日志条目并且给 leader<sub>U</sub> 投票了。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gsfipd3u1tj322c0j2wju.jpg" srcset="/img/loading.gif" lazyload alt="image-20210713185232381"></p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsfipd3u1tj322c0j2wju.jpg" srcset="/img/loading.gif" lazyload alt="image-20210713185232381"></p>
 </li>
 <li><p>voter 必然在给 leader<sub>U</sub>  投票之前就已经接收了这个已经提交的日志条目了。否则，它就会拒绝来自 leader<sub>T</sub> 的 AppendEntries RPC 请求，因为如果它在给 leader<sub>U</sub> 投票之后再接收条目的话，那么它的当前任期号会比 T 大。</p>
 <blockquote>
@@ -655,7 +655,7 @@
 <p>广播时间和平均故障间隔时间是由系统决定的，但是选举超时时间是我们可以自定义的。Raft 的 RPCs 需要接收方将信息持久化地保存到稳定存储中，所以广播时间大约是 0.5ms ~ 20ms 之间，取决于存储的技术。因此，选举超时时间可能需要在 10ms ~ 500ms 之间。而大多数的服务器的平均故障间隔时间都在几个月甚至更长，所以很容易满足时间的要求。</p>
 <h2 id="6-集群成员变更"><a href="#6-集群成员变更" class="headerlink" title="6. 集群成员变更"></a>6. 集群成员变更</h2><p>到目前为止，我们都假设集群的配置（参与共识算法的服务器节点集合）是固定不变的。但是在实际情况中，我们有时候是需要去改变集群配置的，比如说在服务器崩溃的时候去更换服务器或者是更改副本的数量。尽管可以通过下线整个集群，更新所有配置，然后重启整个集群的方式来实现这个需求，但是这会导致集群在更改过程中是不可用的。另外，如果这个过程中存在一些操作需要人工干预，那么就会有操作失误的风险。为了避免这些问题，我们决定将配置变更自动化并将其纳入到 Raft 的共识算法中来。</p>
 <p>为了使配置变更机制足够安全，在配置变更过程中不能存在任何一个时刻使得同一任期中选出两个 leader。遗憾的是，任何服务器直接从旧的配置转换为新的配置的方案都是不安全的。一次性自动地转换所有服务器的配置的不可能的，所以在转换期间整个集群可能划分为两个独立的大多数（如图 10 所示）。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gsgq3skl4gj322c0nwaes.jpg" srcset="/img/loading.gif" lazyload alt="image-20210714195412552"></p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsgq3skl4gj322c0nwaes.jpg" srcset="/img/loading.gif" lazyload alt="image-20210714195412552"></p>
 <blockquote>
 <p>译者注：图 10 补充</p>
 <p>上图中，在中间位置 Server1 可以通过自身和 Server2 的选票成为 leader（满足旧配置下收到大多数选票的原则）；Server3 可以通过自身和 Server4、Server5 的选票成为 leader（满足新配置线，即集群有 5 个节点的情况下的收到大多数选票的原则）；此时整个集群可能在同一任期中出现了两个 leader，这和 Raft 协议是违背的。</p>
@@ -668,7 +668,7 @@
 </ul>
 <p>联合共识允许每一个节点在不妥协安全性的前提下，在不同的时刻进行配置转换过程。此外，联合共识还允许在集群配置变更期间响应客户端的请求。</p>
 <p>集群配置在复制日志中以特殊的日志条目来存储和通信。图 11 展示了配置变更的过程。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gsgpnv9f98j32060p6agz.jpg" srcset="/img/loading.gif" lazyload alt="image-20210714193852320"></p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsgpnv9f98j32060p6agz.jpg" srcset="/img/loading.gif" lazyload alt="image-20210714193852320"></p>
 <p>当 leader 接收到一个更新配置的请求的时候，它就创建一个联合共识日志条目 C<sub>old,new</sub>，并以前面描述的方式复制该条目。 <strong>一旦某个节点将该配置日志条目增加到自己的日志中。那么这个节点就会用该配置来做出未来的所有决策（一个节点总是使用日志中最新的配置，无论该日志是否已经被提交）。</strong> 这就意味着 leader 会使用 C<sub>old,new</sub> 的规则来判断 C<sub>old,new</sub> 日志条目是什么时候被提交的。如果 leader 崩溃了，新的 leader 有可能处于 C<sub>old</sub> 配置，也可能处于 C<sub>old,new</sub> 配置，这取决于赢得选举的 candidate 是否已经接收到了 C<sub>old,new</sub> 配置。在任何情况下，处于 C<sub>new</sub> 状态的节点在此期间都是不能单独做出决定的。</p>
 <p>当 C<sub>old,new</sub> 被提交了，那么 C<sub>old</sub> 和 C<sub>new</sub> 都不能在没有得到对方认可的情况下做出决定，并且 Leade 完整特性（Leader Completeness Property）保证了只有拥有 C<sub>old,new</sub> 日志的 candidate 有可能被选为 leader。所以现在 leader 就可以安全地创建一个描述 C<sub>new</sub> 的日志条目并将其复制给集群中的其他节点了。一样的，新的配置被节点收到后就会立刻生效。当新的配置在 C<sub>new</sub> 的规则下被提交了之后，旧配置就变得无关紧要了，处于旧配置的节点也可以关闭了。如图 11 所示，没有任何一个时刻 C<sub>old</sub> 和 C<sub>new</sub> 是可以单独做决定的，这保证了安全性。</p>
 <p>关于配置变更有三个问题需要解决：</p>
@@ -740,7 +740,7 @@
 <h2 id="7-日志压缩"><a href="#7-日志压缩" class="headerlink" title="7. 日志压缩"></a>7. 日志压缩</h2><p>在正常情况下，Raft 的日志会随着客户端请求的增加而不断增长。但在实际系统中，日志不可能无限制地增长。随着日志越来越长，它会占用越来越多的空间，并且需要花更多的时间来重新执行日志中的日志条目。如果没有一定的机制来清除日志中积累的过期的信息，那么最终一定会影响系统的可用性。</p>
 <p><strong>快照技术（snapshotting）</strong> 是日志压缩最简单的方法。在快照技术中，某个时间点下的前整个系统的状态都会以快照的形式持久化起来，然后该时间点之前的日志会被全部丢弃。快照技术呗使用在 Chubby 和 ZooKeeper 当中，接下来的章节会介绍 Raft 中的快照技术。</p>
 <p><strong>增量压缩方法（Incremental approach to compaction）</strong>，例如<strong>日志清洗（log cleaning）</strong>[36] 和<strong>日志结构合并树（log-structured merge trees）</strong>[30, 5]，都是可行的。这些方法每次只对一小部分数据进行操作，这样就分散了压缩的负载压力。首先，选择一个积累了大量被删除或被覆盖的对象的数据区域，然后重写该区域内还活着的对象，之后释放该区域。和快照技术相比，这需要大量额外的机制，并且增加了更多的复杂性，快照技术通过操作整个数据集来简化问题。虽然日志清理需要对 Raft 进行修改，但是状态机可以使用与快照技术相同的接口来实现 LSM（日志结构合并） 树。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gshvublij8j321s0lsadj.jpg" srcset="/img/loading.gif" lazyload alt="image-20210715195808192"></p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gshvublij8j321s0lsadj.jpg" srcset="/img/loading.gif" lazyload alt="image-20210715195808192"></p>
 <p>图 12 展示了 Raft 快照技术的基本思想。每一个节点独立地生成快照，快照中只包含自己日志中已经被提交的条目，这个过程主要的工作是状态机将自己的状态写入快照中。Raft 在快照中还保留了少量的元数据：</p>
 <ul>
 <li>last included index：指的是最后一个被快照取代的日志条目的索引值（状态机最后应用的日志条目）</li>
@@ -748,7 +748,7 @@
 </ul>
 <p>保留这些元数据是为了支持快照后第一个条目的 AppendEntries 一致性检查，因为该条目需要一个之前的日志索引和任期号。为了支持集群成员变更（第 6 节中讨论的），快照中还包含日志中到 last included index 为止的最新的配置。一旦节点完成了快照的写入，它可能就会删除 last included index 及之前的所有日志条目，以及之前的快照。</p>
 <p>尽管通常情况下，节点都是独立生成快照的，但是 leader 不可避免偶尔需要发送快照给一些落后的 follower。这通常发生在 leader 已经丢弃了需要发给 follower 的下一条日志条目的时候。幸运的是，这种情况在正常操作中是不会出现的：一个与 leader 保持同步的 follower 通常都会拥有该日志条目。不过如果一个 follower 运行比较缓慢，或者是它刚加入集群，那么它就可能会没有该日志条目。这个时候 leader 会通过网络将该快照发送给该 follower，以使得该 follower 可以更新到最新的状态。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gshxf2bjwej31gg0u0k01.jpg" srcset="/img/loading.gif" lazyload alt="image-20210715205247442"></p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gshxf2bjwej31gg0u0k01.jpg" srcset="/img/loading.gif" lazyload alt="image-20210715205247442"></p>
 <p>这个时候 leader 使用了一种新的 RPC 来发送快照给那些太落后的 followers，如图 13 所示，这种 RPC 叫做 <strong>InstallSnapshot</strong>。当一个 follower 通过这种 RPC 收到快照的时候，它必须决定如何处理当前已经存在的日志条目。通常情况下，这份快照会包含接受者日志者没有的信息。所以这种情况下 follower 会丢弃它的整个日志，它的日志会全部被快照取代，并且可能有与快照冲突的未提交的条目。相反，如果一个 follower 收到一个描述其日志前缀的快照（可能是由于重传或错误），则被快照覆盖的日志条目将被删除，但是快照之后的条目仍然有效，且必须要保留。</p>
 <p>这种快照的方式违反了 Raft 的 strong leader 原则，因为 follower 可能在不知道 leader 的情况下创建快照。但是我们认为这种违背是合乎情理的。leader 的存在，是为了防止在达成共识的时候产生冲突，但是在创建快照的时候，共识已经达成了，因此没有决策会出现冲突。这种情况下，数据还是跟之前一样，只能从 leader 流向 follower，只不过现在允许 follower 可以重新组织它们的数组而已。</p>
 <p>我们曾经考虑过一种可替代的方案，那就是只有 leader 可以创建快照，然后由 leader 将这份快照发送给其他所有的 follower。但是，这种方案有两个缺点：</p>
@@ -825,7 +825,7 @@
 <center>表格1：考虑到潜在的实验偏向，我们对于每种情况的解决方法，以及相应的材料。</center>
 
 <p>平均上看，参与者在 Raft 测验上的得分要比在 Paxos 测验上的得分高处 4.9 分（在 60 分中，Raft 的平均得分是 25.7 分，Paxos 的平均得分是 20.8 分）。图 14 展示了每个参与者的得分。配对 t 检验（paired t-test）表明，在 95% 的置信度下，Raft 分数的真实分布的平均值至少要比 Paxos 的大 2.5 分。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gsixtffkroj32220my76y.jpg" srcset="/img/loading.gif" lazyload alt="image-20210716175208106"></p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsixtffkroj32220my76y.jpg" srcset="/img/loading.gif" lazyload alt="image-20210716175208106"></p>
 <p>我们也建立了一个线性回归模型来预测一个新的学生的测验成绩，这个模型基于以下三点：</p>
 <ol>
 <li>他们使用的是哪个测验</li>
@@ -833,7 +833,7 @@
 <li>学习算法的顺序</li>
 </ol>
 <p>该模型预测，对小测验的选择会产生 12.5 分的有利于 Raft 的差别，这很明显高于观察到的 4.9 分的分差。这是因为实际上许多的学生之前有学习过 Paxos，这对 Paxos 的有很大帮助的，但是对 Raft 的帮助就较小了。但是奇怪的是，模型预测对于先进行 Paxos 小测验的人而言，Raft 的得分低了 6.3 分。虽然我们不知道这是为什么，但是这似乎在统计上是有意义的。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gsiz66oe4yj323m0jgdj0.jpg" srcset="/img/loading.gif" lazyload alt="image-20210716183850084"></p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsiz66oe4yj323m0jgdj0.jpg" srcset="/img/loading.gif" lazyload alt="image-20210716183850084"></p>
 <p>我们同时也在测验之后对参与者进行了调查，调查的内容是他们认为哪个算法更容易去实现或解释。这些调查结果展示在图 15。调查结果是碾压性的，结果表明 Raft 算法更加容易实现和解释（41 人中的 33 个）。然而，这种自我报告的感觉可能没有参与者的测试分数来得可靠，而且参与者可能由于我们假设 Raft 更容易理解而存在偏向。</p>
 <p>在参考文献 [33] 中有一个关于 Raft 用户学习的更加详细的讨论。</p>
 <h3 id="9-2-正确性"><a href="#9-2-正确性" class="headerlink" title="9.2 正确性"></a>9.2 正确性</h3><p>在第 5 节中，我们已经对共识机制制定了正式的规范并且对其安全性做了证明。这份正式的规范使用 TLA+ 规范语言 [17] 使图 2 中对算法的总结的信息非常清晰。它差不多有 400 行并且作为了我们要证明的核心。同时这份规范对于任何想实现 Raft 的人都是十分有用的。我们用 TLA 证明系统 [7] 机械地证明了日志完整性（Log Completeness Property）。然而，这个证明依赖的约束前提还没有被机械证明（例如，我们还没有证明规范中的类型安全）。而且，我们已经编写了状态机安全特性的非正式证明 [31]，它是完整的（它仅依赖于规范）和相对精确的（大约 3500 字长）。</p>
@@ -843,7 +843,7 @@
 <li>leader 选举过程收敛是否足够快？</li>
 <li>在 leader 崩溃之后，最小的系统崩溃时间是多久？</li>
 </ol>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNly1gsj0yuh34ej61km0u043r02.jpg" srcset="/img/loading.gif" lazyload alt="image-20210716194110554"></p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsj0yuh34ej61km0u043r02.jpg" srcset="/img/loading.gif" lazyload alt="image-20210716194110554"></p>
 <p>为了衡量 leader election 的性能，我们反复使一个拥有 5 个节点的集群的 leader 宕机，并计算它检测崩溃和重新选一个新的 leader 所需的时间（见图 16）。为了构建一个最坏的情景，我们使各个节点中的日志长度都是不同的，这样某些 candidate 是无法成为  leader 的。而已，为了尽可能出现无结果的投票（split vote）情况，我们的测试脚本在终止 leader 的进程之前从 leader 那触发了一个同步的发送了一次心跳广播（类似于 leader 在崩溃前复制一个日志条目给其他节点）。leader 在其心跳间隔内均匀随机地崩溃，这个心跳间隔也是所有测试中最小选举超时时长的一半。因此，<strong>最小宕机时间大约就是最小选举超时时间的一半</strong>。</p>
 <p>图 16 中上面的图表明，只需要在选举超时时间上使用很小的随机化就可以大大避免出现没有结果的投票的情况。在没有随机化的情况下（译者注：见图 16 中上面的图右边的橙色虚线），由于出现了很多没有结果的投票的情况，leader election 往往都需要花费超过 10s 的时间。仅仅加入 5ms 的随机化时间，就大大改善了选举过程，现在平均的宕机时间只有 287ms。继续增大随机性可以大大改善最坏的情况：通过增加 50ms 的随机化时间，最坏的完成情况（即完成 1000 次实验）只需要 513 ms。</p>
 <p>图 16 中下面的图表明，通过减少选举超时时间可以禁烧系统的宕机时间。在选举超时时间为 12~24ms 的情况下，只需要平均 35ms 就可以选举出新的 leader（最长的一次花费了 152ms）。然而，进一步降低选举超时时间可能就会违反 Raft 不等式的要求。</p>
