@@ -24,7 +24,7 @@
 <meta property="og:description" content="本文总结了在 Ubuntu18.04 虚拟机上部署 Kafka 集群的具体过程。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2023-11-21T16:28:59.000Z">
-<meta property="article:modified_time" content="2023-11-21T16:43:03.572Z">
+<meta property="article:modified_time" content="2023-11-21T16:44:08.223Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Kafka">
 <meta property="article:tag" content="部署">
@@ -357,7 +357,7 @@
 </tbody></table>
 <h2 id="安装-vim-curl"><a href="#安装-vim-curl" class="headerlink" title="安装 vim, curl"></a>安装 vim, curl</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo apt update<br>sudo apt install vim<br>sudo apt install curl<br></code></pre></td></tr></table></figure>
 
-<h2 id="配置静态-ip-和-hosts"><a href="#配置静态-ip-和-hosts" class="headerlink" title="配置静态 ip 和 hosts"></a>配置静态 ip 和 hosts</h2><p>为了使用域名，更加方便的进行配置，这里将虚拟机的 DHCP 改成了静态分配 IP，所以需要手动设置一下每台机器 IP 地址，这里以 <code>192.158.50.131</code> 为例。</p>
+<h2 id="配置静态-ip-和-hosts"><a href="#配置静态-ip-和-hosts" class="headerlink" title="配置静态 ip 和 hosts"></a>配置静态 ip 和 hosts</h2><p>为了使用域名，更加方便的进行配置，这里将虚拟机的 DHCP 改成了静态分配 IP，所以需要手动设置一下每台机器 IP 地址，这里以 <code>192.168.50.131</code> 为例。</p>
 <ol>
 <li><p>找到网络接口名称，运行以下命令：</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ip addr<br></code></pre></td></tr></table></figure>
