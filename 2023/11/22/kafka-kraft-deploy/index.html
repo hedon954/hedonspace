@@ -16,15 +16,15 @@
   <meta name="author" content="Hedon Wang">
   <meta name="keywords" content="">
   
-    <meta name="description" content="本文总结了在 Ubuntu18.04 虚拟机上部署 Kafka 集群的具体过程。">
+    <meta name="description" content="版本说明 Ubuntu 18.04.6 Kafka 3.6.0 JDK8  集群配置   操作系统 ip 域名 Kafka Broker 端口 Kafka Controller 端口    Ubuntu 18.04.6 192.168.50.131 kafka1.com 9092 9093   Ubuntu 18.04.6 192.168.50.132 kafka2.com 9092 9093">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Kafka 集群部署">
-<meta property="og:url" content="https://hedon.top/2023/11/22/kakfa-cluster-deploy/index.html">
+<meta property="og:title" content="Kafka 集群部署（KRaft）">
+<meta property="og:url" content="https://hedon.top/2023/11/22/kafka-kraft-deploy/index.html">
 <meta property="og:site_name" content="HedonSpace">
-<meta property="og:description" content="本文总结了在 Ubuntu18.04 虚拟机上部署 Kafka 集群的具体过程。">
+<meta property="og:description" content="版本说明 Ubuntu 18.04.6 Kafka 3.6.0 JDK8  集群配置   操作系统 ip 域名 Kafka Broker 端口 Kafka Controller 端口    Ubuntu 18.04.6 192.168.50.131 kafka1.com 9092 9093   Ubuntu 18.04.6 192.168.50.132 kafka2.com 9092 9093">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2023-11-21T16:28:59.000Z">
-<meta property="article:modified_time" content="2023-11-22T06:25:06.864Z">
+<meta property="article:published_time" content="2023-11-22T13:52:31.000Z">
+<meta property="article:modified_time" content="2023-11-23T03:16:32.506Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Kafka">
 <meta property="article:tag" content="部署">
@@ -33,7 +33,7 @@
   
   
   
-  <title>Kafka 集群部署 - HedonSpace</title>
+  <title>Kafka 集群部署（KRaft） - HedonSpace</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -222,13 +222,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/banner/kafka-cluster-deploy.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/banner/kafka-kraft-deploy.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle">Kafka 集群部署</span>
+            <span id="subtitle">Kafka 集群部署（KRaft）</span>
           
         </div>
 
@@ -244,8 +244,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2023-11-22 00:28" pubdate>
-          2023-11-22 12:28
+        <time datetime="2023-11-22 21:52" pubdate>
+          2023-11-22 09:52
         </time>
       </span>
     
@@ -256,7 +256,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          8.3k words
+          8.8k words
         
       </span>
     
@@ -267,7 +267,7 @@
         
         
         
-          21 mins
+          22 mins
         
       </span>
     
@@ -312,15 +312,14 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">Kafka 集群部署</h1>
+            <h1 id="seo-header">Kafka 集群部署（KRaft）</h1>
             
             
               <div class="markdown-body">
                 
                 <h2 id="版本说明"><a href="#版本说明" class="headerlink" title="版本说明"></a>版本说明</h2><ul>
 <li>Ubuntu 18.04.6</li>
-<li>Zookeeper 3.5.9</li>
-<li>Kafka 2.7.0</li>
+<li>Kafka 3.6.0</li>
 <li>JDK8</li>
 </ul>
 <h2 id="集群配置"><a href="#集群配置" class="headerlink" title="集群配置"></a>集群配置</h2><table>
@@ -329,30 +328,30 @@
 <th align="center">操作系统</th>
 <th align="center">ip</th>
 <th align="center">域名</th>
-<th align="center">Zookeeper 端口</th>
-<th align="center">Kafka 端口</th>
+<th align="center">Kafka Broker 端口</th>
+<th align="center">Kafka Controller 端口</th>
 </tr>
 </thead>
 <tbody><tr>
 <td align="center">Ubuntu 18.04.6</td>
 <td align="center">192.168.50.131</td>
 <td align="center">kafka1.com</td>
-<td align="center">2181</td>
 <td align="center">9092</td>
+<td align="center">9093</td>
 </tr>
 <tr>
 <td align="center">Ubuntu 18.04.6</td>
 <td align="center">192.168.50.132</td>
 <td align="center">kafka2.com</td>
-<td align="center">2181</td>
 <td align="center">9092</td>
+<td align="center">9093</td>
 </tr>
 <tr>
 <td align="center">Ubuntu 18.04.6</td>
 <td align="center">192.168.50.133</td>
 <td align="center">kafka3.com</td>
-<td align="center">2181</td>
 <td align="center">9092</td>
+<td align="center">9093</td>
 </tr>
 </tbody></table>
 <h2 id="安装-vim-curl"><a href="#安装-vim-curl" class="headerlink" title="安装 vim, curl"></a>安装 vim, curl</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo apt update<br>sudo apt install vim<br>sudo apt install curl<br></code></pre></td></tr></table></figure>
@@ -377,7 +376,7 @@
 <p>说明默认网关是 <code>192.168.50.2</code>，</p>
 </li>
 <li><p>编辑 <code>/etc/network/interfaces</code> 文件，配置静态 IP 地址，内容如下：</p>
-<figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs tex">auto ens33<br>iface ens33 inet static<br>	address 192.168.50.131<br>	netmask 255.255.255.0<br>	gateway 192.168.50.2<br>	dns-nameservers 8.8.8.8 8.8.4.4<br></code></pre></td></tr></table></figure>
+<figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs tex">auto ens33<br>iface ens33 inet static<br>   address 192.168.50.131<br>   netmask 255.255.255.0<br>   gateway 192.168.50.2<br>   dns-nameservers 8.8.8.8 8.8.4.4<br></code></pre></td></tr></table></figure>
 </li>
 <li><p>重启</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">su reboot<br></code></pre></td></tr></table></figure>
@@ -403,10 +402,14 @@
 <p>如果这里可以访问，则直接跳过进入下一步，不可以的话，需要配置一下域名解析系统。</p>
 </li>
 <li><p>配置域名解析系统</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo vim /etc/resolv.conf<br></code></pre></td></tr></table></figure>
+<p> Ubuntu 系统使用 <code>systemd-resolved</code> 服务来管理 DNS，你可以在 <code>/etc/systemd/resolved.conf</code> 文件中进行 DNS 配置。</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo vim /etc/systemd/resolved.conf<br></code></pre></td></tr></table></figure>
 
-<p>追加下面内容：</p>
-<figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs tex">nameserver 8.8.8.8<br>nameserver 8.8.4.4<br></code></pre></td></tr></table></figure>
+<p>取消或添加 <code>DNS</code> 的注释，并修改为：</p>
+<figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs tex">[Resolve]<br>DNS=8.8.8.8 8.8.4.4<br></code></pre></td></tr></table></figure>
+
+<p>重启启动 <code>systemd-resolved</code>：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo systemctl restart systemd-resolved<br></code></pre></td></tr></table></figure>
 
 <p>再尝试 ping 一下百度：</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs sh">hedon@ubuntu:~$ ping www.baidu.com<br>PING www.a.shifen.com (153.3.238.110) 56(84) bytes of data.<br>64 bytes from 153.3.238.110 (153.3.238.110): icmp_seq=1 ttl=128 time=15.9 ms<br>64 bytes from 153.3.238.110 (153.3.238.110): icmp_seq=2 ttl=128 time=15.9 ms<br>64 bytes from 153.3.238.110 (153.3.238.110): icmp_seq=3 ttl=128 time=16.1 ms<br>64 bytes from 153.3.238.110 (153.3.238.110): icmp_seq=4 ttl=128 time=15.3 ms<br>^C<br>--- www.a.shifen.com ping statistics ---<br>4 packets transmitted, 4 received, 0% packet loss, time 14104ms<br>rtt min/avg/max/mdev = 15.368/15.850/16.145/0.291 ms<br></code></pre></td></tr></table></figure></li>
@@ -427,102 +430,69 @@
 
 
 
-<h2 id="安装-zookeeper"><a href="#安装-zookeeper" class="headerlink" title="安装 zookeeper"></a>安装 zookeeper</h2><p>在 Ubuntu 上，您可以通过以下步骤安装 Apache Zookeeper 3.5.9：</p>
-<ol>
-<li>下载 Apache Zookeeper 3.5.9 的二进制文件。使用以下命令下载并解压缩 Zookeeper：</li>
-</ol>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">wget https://archive.apache.org/dist/zookeeper/zookeeper-3.5.9/apache-zookeeper-3.5.9-bin.tar.gz<br>tar -xzf apache-zookeeper-3.5.9-bin.tar.gz<br></code></pre></td></tr></table></figure>
-
-<ol start="4">
-<li>将解压缩后的文件夹移动到 <code>/opt</code> 目录中：</li>
-</ol>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo <span class="hljs-built_in">mv</span> apache-zookeeper-3.5.9-bin /opt/zookeeper-3.5.9<br></code></pre></td></tr></table></figure>
-
-<ol start="5">
-<li>在 <code>/opt/zookeeper-3.5.9</code> 目录中创建一个名为 <code>data</code> 的文件夹，用于存储 Zookeeper 的数据：</li>
-</ol>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo <span class="hljs-built_in">mkdir</span> /opt/zookeeper-3.5.9/data<br></code></pre></td></tr></table></figure>
-
-<ol start="6">
-<li>在 <code>/opt/zookeeper-3.5.9/data</code> 下创建 myid 文件并设置内容为 <code>1</code>，其他两台机器则为 <code>2</code> 和 <code>3</code>：</li>
-</ol>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">echo</span> 1 | sudo <span class="hljs-built_in">tee</span> /opt/zookeeper-3.5.9/data/myid<br></code></pre></td></tr></table></figure>
-
-<ol start="7">
-<li>复制 Zookeeper 配置文件样本，并将其命名为 <code>zoo.cfg</code>：</li>
-</ol>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo <span class="hljs-built_in">cp</span> /opt/zookeeper-3.5.9/conf/zoo_sample.cfg /opt/zookeeper-3.5.9/conf/zoo.cfg<br></code></pre></td></tr></table></figure>
-
-<ol start="8">
-<li>使用文本编辑器（例如 vim）编辑 <code>zoo.cfg</code> 文件：</li>
-</ol>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo vim /opt/zookeeper-3.5.9/conf/zoo.cfg<br></code></pre></td></tr></table></figure>
-
-<ol start="9">
-<li>修改 <code>zoo.cfg</code> 文件：</li>
-</ol>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># The number of milliseconds of each tick</span><br>tickTime=2000<br><span class="hljs-comment"># The number of ticks that the initial </span><br><span class="hljs-comment"># synchronization phase can take</span><br>initLimit=10<br><span class="hljs-comment"># The number of ticks that can pass between </span><br><span class="hljs-comment"># sending a request and getting an acknowledgement</span><br>syncLimit=5<br><span class="hljs-comment"># the directory where the snapshot is stored.</span><br><span class="hljs-comment"># 设置数据存储目录</span><br>dataDir=/opt/zookeeper-3.5.9/data<br><span class="hljs-comment"># the port at which the clients will connect</span><br>clientPort=2181<br><span class="hljs-comment"># 设置集群信息</span><br>server.1=kafka1.com:2888:3888<br>server.2=kafka2.com:2888:3888<br>server.3=kafka3.com:2888:3888<br></code></pre></td></tr></table></figure>
-
-<blockquote>
-<p>在 Zookeeper 的配置文件中，<code>server.x=hostname:port1:port2</code> 这种格式的配置项是用来设置 Zookeeper 集群（集群模式下）的。其中，<code>x</code> 是服务器的 ID，<code>hostname</code> 是服务器的主机名或 IP 地址，<code>port1</code> 和 <code>port2</code> 是用于集群间通信的端口。</p>
-<p>具体来说：</p>
-<ul>
-<li><p><code>port1（2888）</code>：这是服务器之间用于相互通信的端口。Zookeeper 服务器使用这个端口进行 leader 选举以及同步 follower 和 leader 之间的状态。</p>
-</li>
-<li><p><code>port2（3888）</code>：这个端口用于服务器之间的 leader 选举。在 Zookeeper 集群启动或者在 leader 服务器崩溃后，follower 服务器会通过这个端口进行新一轮的 leader 选举。</p>
-</li>
-</ul>
-<p>这两个端口可以根据你的网络配置进行修改，但必须在所有的 Zookeeper 服务器上保持一致。</p>
-</blockquote>
-<ol start="10">
-<li>三个节点都启动 Zookeeper 服务器：</li>
-</ol>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/zookeeper/bin/zkServer.sh start<br></code></pre></td></tr></table></figure>
-
-<p>可以连接到 Zookeeper 的端口上（默认是 <code>2181</code>），通过发送四字命令 <code>srvr</code> 来验证 Zookeeper 是否安装正确（部署集群的话需要把所有 Zookeeper 启动）：</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs sh">hedon@ubuntu:/opt/zookeeper-3.5.9$ telnet localhost 2181<br>Trying 127.0.0.1...<br>Connected to localhost.<br>Escape character is <span class="hljs-string">&#x27;^]&#x27;</span>.<br>srvr<br>Zookeeper version: 3.5.9-83df9301aa5c2a5d284a9940177808c01bc35cef, built on 01/06/2021 19:49 GMT<br>Latency min/avg/max: 0/0/0<br>Received: 1<br>Sent: 0<br>Connections: 1<br>Outstanding: 0<br>Zxid: 0x0<br>Mode: standalone<br>Node count: 5<br>Connection closed by foreign host.<br></code></pre></td></tr></table></figure>
-
-<ol start="11">
-<li>要停止 Zookeeper 服务器，可以使用以下命令：</li>
-</ol>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/zookeeper/bin/zkServer.sh stop<br></code></pre></td></tr></table></figure>
-
-
-
 <h2 id="安装-Kafka"><a href="#安装-Kafka" class="headerlink" title="安装 Kafka"></a>安装 Kafka</h2><ol>
 <li><p>下载并解压 Kafka</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">wget https://archive.apache.org/dist/kafka/2.7.0/kafka_2.13-2.7.0.tgz<br>tar -zxvf kafka_2.13-2.7.0.tgz<br></code></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">wget https://archive.apache.org/dist/kafka/3.6.0/kafka_2.13-3.6.0.tgz<br>tar -zxvf kafka_2.13-3.6.0.tgz<br></code></pre></td></tr></table></figure>
 </li>
 <li><p>将解压缩后的文件夹移动到 <code>/opt</code> 目录中：</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo <span class="hljs-built_in">mv</span> kafka_2.13-2.7.0 /opt/kafka-2.7.0<br></code></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo <span class="hljs-built_in">mv</span> kafka_2.13-3.6.0 /opt/kafka-3.6.0<br></code></pre></td></tr></table></figure>
 </li>
-<li><p>创建日志目录</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo <span class="hljs-built_in">mkdir</span> /opt/kafka-2.7.0/kafka-logs<br></code></pre></td></tr></table></figure>
-</li>
-<li><p>备份 Kafka 默认配置</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo <span class="hljs-built_in">cp</span> /opt/kafka-2.7.0/config/server.properties /opt/kafka-2.7.0/config/server.properties.bak<br></code></pre></td></tr></table></figure>
-</li>
-<li><p>修改 Kafka 配置</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo vim /opt/kafka-2.7.0/config/server.properties<br></code></pre></td></tr></table></figure>
+<li><p>使用 Kafka 提供的脚本生成一个 ClusterID</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">export</span> KAFKA_CLUSTER_ID=<span class="hljs-string">&quot;<span class="hljs-subst">$(/opt/kafka-3.6.0/bin/kafka-storage.sh random-uuid)</span>&quot;</span><br></code></pre></td></tr></table></figure>
 
-<p>主要是修改下面几个配置：</p>
-<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs properties"><span class="hljs-comment"># 集群中每个 broker 的 id 必须唯一，这里分别为 1，2，3</span><br><span class="hljs-attr">broker.id</span>=<span class="hljs-string">1</span><br><span class="hljs-comment"># 日志目录</span><br><span class="hljs-attr">log.dirs</span>=<span class="hljs-string">/opt/kafka-2.7.0/kafka-logs</span><br><span class="hljs-comment"># 配置 Zookeeper</span><br><span class="hljs-attr">zookeeper.connect</span>=<span class="hljs-string">kafka1.com:2181,kafka2.com:2181,kafka3.com:2181</span><br><span class="hljs-comment"># 定义 Kafka Broker 在哪些网络地址上监听连接，下面配置表示在所有的 IP 地址上监听 9092 端口</span><br><span class="hljs-attr">listeners</span>=<span class="hljs-string">PLAINTEXT://:9092</span><br><span class="hljs-comment"># 定义 Kafka Broker 如何向外部公布它的地址。这是 Kafka Broker 通知 Producer 和 Consumer 如何连接到自己的方式。例如，如果你设置 advertised.listeners=PLAINTEXT://my.public.ip:9092，那么 Kafka Broker 将告诉 Producer 和 Consumer 它的公共 IP 地址是 my.public.ip，并且它在 9092 端口上监听连接。</span><br><span class="hljs-attr">advertised.listeners</span>=<span class="hljs-string">PLAINTEXT://kafka1.com:9092</span><br></code></pre></td></tr></table></figure>
+<p>输出 ClusterID</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">hedon@ubuntu:/opt/kafka-3.6.0$ <span class="hljs-built_in">echo</span> <span class="hljs-variable">$KAFKA_CLUSTER_ID</span><br>XiMRcbJ-QEO694L7sfDdBQ<br></code></pre></td></tr></table></figure>
+
+<p>在其他节点上将 <code>KAFKA_CLUSTER_ID</code> 设置为上面的值：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">export</span> KAFKA_CLUSTER_ID=XiMRcbJ-QEO694L7sfDdBQ<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>备份配置文件，注意这里的配置文件是 <code>config/kraft/server.properties</code>，在 <code>config</code> 目录下的 <code>kraft</code> 目录中：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">cp</span> /opt/kafka-3.6.0/config/kraft/server.properties /opt/kafka-3.6.0/config/kraft/server.properties.bak<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>修改配置</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">vim /opt/kafka-3.6.0/config/kraft/server.properties<br></code></pre></td></tr></table></figure>
+
+<p>主要修改内容如下：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs properties"><span class="hljs-comment"># 节点 ID，分别为 1，2，3</span><br><span class="hljs-attr">node.id</span>=<span class="hljs-string">1</span><br><span class="hljs-comment"># 日志目录</span><br><span class="hljs-attr">log.dirs</span>=<span class="hljs-string">/opt/kafka-3.6.0/kafka-combined-logs</span><br><span class="hljs-comment"># 可以成为控制器的节点和它们的端口</span><br><span class="hljs-attr">controller.quorum.voters</span>=<span class="hljs-string">1@kafka1.com:9093,2@kafka2.com:9093,3@kafka3.com:9093</span><br><span class="hljs-comment"># 定义 Kafka Broker 如何向外部公布它的地址。</span><br><span class="hljs-comment"># 这是 Kafka Broker 通知 Producer 和 Consumer 如何连接到自己的方式。</span><br><span class="hljs-comment"># 例如，如果你设置 advertised.listeners=PLAINTEXT://my.public.ip:9092，</span><br><span class="hljs-comment"># 那么 Kafka Broker 将告诉 Producer 和 Consumer 它的公共 IP 地址是 my.public.ip，并且它在 9092 端口上监听连接。</span><br><span class="hljs-comment"># 这里我们需要在 3 个节点分别设置对应的地址</span><br><span class="hljs-attr">advertised.listeners</span>=<span class="hljs-string">PLAINTEXT://kafka1.com:9092</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>格式化日志目录</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/kafka-3.6.0/bin/kafka-storage.sh format -t <span class="hljs-variable">$KAFKA_CLUSTER_ID</span> -c /opt/kafka-3.6.0/config/kraft/server.properties<br></code></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">Formatting /opt/kafka-3.6.0/kraft-combined-logs with metadata.version 3.6-IV2.<br></code></pre></td></tr></table></figure>
 </li>
 <li><p>三个节点都启动 Kafka</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/kafka-2.7.0/bin/kafka-server-start.sh -daemon /opt/kafka-2.7.0/config/server.properties<br></code></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/kafka-3.6.0/bin/kafka-server-start.sh -daemon /opt/kafka-3.6.0/config/kraft/server.properties<br></code></pre></td></tr></table></figure>
 </li>
 <li><p>选择任意一个节点创建一个新 topic</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/kafka-2.7.0/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic <span class="hljs-built_in">test</span> --replication-factor 1 --partitions=2<br></code></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/kafka-3.6.0/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic <span class="hljs-built_in">test</span> --replication-factor 1 --partitions=2<br></code></pre></td></tr></table></figure>
 
 <p>输出：</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">Created topic <span class="hljs-built_in">test</span>.<br></code></pre></td></tr></table></figure>
 </li>
 <li><p>在其他节点获取 <code>test</code> 这个 <code>topic</code> 的信息</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/kafka-2.7.0/bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic <span class="hljs-built_in">test</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/kafka-3.6.0/bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic <span class="hljs-built_in">test</span><br></code></pre></td></tr></table></figure>
 
 <p>可以看到关于 <code>test</code> 这个 <code>topic</code> 的信息是可以获取到的，说明集群之前信息是互通的，集群搭建完毕。</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">Topic: <span class="hljs-built_in">test</span>	PartitionCount: 2	ReplicationFactor: 1	Configs: segment.bytes=1073741824<br>	Topic: <span class="hljs-built_in">test</span>	Partition: 0	Leader: 1	Replicas: 1	Isr: 1<br>	Topic: <span class="hljs-built_in">test</span>	Partition: 1	Leader: 2	Replicas: 2	Isr: 2<br></code></pre></td></tr></table></figure></li>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">Topic: <span class="hljs-built_in">test</span>	TopicId: svJClTUpSFa9Z6FWDvkARg	PartitionCount: 2	ReplicationFactor: 1	Configs: segment.bytes=1073741824<br>	Topic: <span class="hljs-built_in">test</span>	Partition: 0	Leader: 2	Replicas: 2	Isr: 2<br>	Topic: <span class="hljs-built_in">test</span>	Partition: 1	Leader: 3	Replicas: 3	Isr: 3<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>随便选择一个节点，往 <code>test</code> 里面写入数据：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/kafka-3.6.0/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic <span class="hljs-built_in">test</span><br></code></pre></td></tr></table></figure>
+
+<p> 输入数据后按回车即发送一条数据，可以随时按 <code>Ctrl + C</code> 退出：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">hedon@ubuntu:~/Downloads$ /opt/kafka-3.6.0/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic <span class="hljs-built_in">test</span><br>&gt;msg1<br>&gt;msg2<br>&gt;msg 3<br>&gt;^<br></code></pre></td></tr></table></figure>
+
+</li>
+<li><p>随便选择一个节点，启动消费者消费 <code>topic</code> 中的数据：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/kafka-3.6.0/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic <span class="hljs-built_in">test</span> --from-beginning<br></code></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">hedon@ubuntu:/opt/kafka-3.6.0$ /opt/kafka-3.6.0/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic <span class="hljs-built_in">test</span> --from-beginning<br>msg1<br>msg2<br>msg 3<br>^CProcessed a total of 3 messages<br></code></pre></td></tr></table></figure></li>
 </ol>
+<p>至此，Kafka 的 KRaft 版本集群就部署完毕了！</p>
+<div class="note note-info">
+            <h2 id="补充说明-KRaft-配置文件"><a href="#补充说明-KRaft-配置文件" class="headerlink" title="补充说明 - KRaft 配置文件"></a>补充说明 - KRaft 配置文件</h2><p>下面是 Kafka KRaft 版本配置文件每个配置项的解释：</p><table><thead><tr><th>配置项</th><th>说明</th></tr></thead><tbody><tr><td>process.roles</td><td>Kafka 服务器的角色，设置此项将 Kafka 置于 KRaft 模式。可能的值包括 “broker” 和 “controller”。</td></tr><tr><td>node.id</td><td>与此实例关联的节点 ID。</td></tr><tr><td>controller.quorum.voters</td><td>控制器选举的投票节点，格式为 <code>node-id@host:port</code>。</td></tr><tr><td>listeners</td><td>服务器监听的地址，格式为 <code>listener_name://host_name:port</code>。</td></tr><tr><td>inter.broker.listener.name</td><td>用于 broker 之间通信的监听器名称。</td></tr><tr><td>advertised.listeners</td><td>服务器向客户端宣告的监听器名称、主机名和端口。</td></tr><tr><td>controller.listener.names</td><td>控制器使用的监听器名称列表。</td></tr><tr><td>listener.security.protocol.map</td><td>监听器名称到安全协议的映射。默认情况下，它们是相同的。</td></tr><tr><td>num.network.threads</td><td>服务器用于从网络接收请求和向网络发送响应的线程数。</td></tr><tr><td>num.io.threads</td><td>服务器用于处理请求（可能包括磁盘 I&#x2F;O）的线程数。</td></tr><tr><td>socket.send.buffer.bytes</td><td>服务器用于发送数据的缓冲区大小。</td></tr><tr><td>socket.receive.buffer.bytes</td><td>服务器用于接收数据的缓冲区大小。</td></tr><tr><td>socket.request.max.bytes</td><td>服务器接受的请求的最大大小（用于防止内存溢出）。</td></tr><tr><td>log.dirs</td><td>用于存储日志文件的目录列表。</td></tr><tr><td>num.partitions</td><td>每个主题的默认日志分区数。</td></tr><tr><td>num.recovery.threads.per.data.dir</td><td>每个数据目录在启动时用于日志恢复和关闭时用于刷新的线程数。</td></tr><tr><td>offsets.topic.replication.factor</td><td>内部主题 “__consumer_offsets” 和 “__transaction_state” 的复制因子。</td></tr><tr><td>transaction.state.log.replication.factor</td><td>事务状态日志的复制因子。</td></tr><tr><td>transaction.state.log.min.isr</td><td>事务状态日志的最小同步副本数。</td></tr><tr><td>log.flush.interval.messages</td><td>强制将数据刷新到磁盘之前接受的消息数。</td></tr><tr><td>log.flush.interval.ms</td><td>消息在日志中停留的最大时间，超过这个时间就会强制刷新到磁盘。</td></tr><tr><td>log.retention.hours</td><td>由于年龄而使日志文件有资格被删除的最小年龄。</td></tr><tr><td>log.retention.bytes</td><td>基于大小的日志保留策略。</td></tr><tr><td>log.segment.bytes</td><td>日志段文件的最大大小。</td></tr><tr><td>log.retention.check.interval.ms</td><td>检查日志段是否可以根据保留策略被删除的间隔。</td></tr></tbody></table><p>请注意，这只是 Kafka 配置的一部分，Kafka 配置的完整列表可以在 <a target="_blank" rel="noopener" href="https://kafka.apache.org/36/documentation.html#configuration">Kafka 的官方文档</a>中找到。</p>
+          </div>
 
                 
               </div>
@@ -572,8 +542,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Kafka 集群部署</div>
-      <div>https://hedon.top/2023/11/22/kakfa-cluster-deploy/</div>
+      <div>Kafka 集群部署（KRaft）</div>
+      <div>https://hedon.top/2023/11/22/kafka-kraft-deploy/</div>
     </div>
     <div class="license-meta">
       
@@ -617,18 +587,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2023/11/22/kafka-kraft-deploy/" title="Kafka 集群部署（KRaft）">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Kafka 集群部署（KRaft）</span>
-                        <span class="visible-mobile">Previous</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2023/11/18/raft/" title="Raft-Extended 论文翻译">
-                        <span class="hidden-mobile">Raft-Extended 论文翻译</span>
+                      <a href="/2023/11/22/kakfa-cluster-deploy/" title="Kafka 集群部署">
+                        <span class="hidden-mobile">Kafka 集群部署</span>
                         <span class="visible-mobile">Next</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
