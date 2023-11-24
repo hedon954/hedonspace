@@ -261,7 +261,7 @@
       
       <a class="index-excerpt index-excerpt__noimg" href="/2023/11/23/kafka-ordered-msg/" target="_self">
         <div>
-          版本说明本文所有的讨论均在如下版本进行，其他版本可能会有所不同。  Kafka: 3.6.0 Pulsar: 2.9.0 RabbitMQ 3.7.8 RocketMQ 5.0  结论先行Kafka 只能保证单一分区内的顺序消息，无法保证多分区间的顺序消息。具体来说，要在 Kafka 实现顺序消息，至少需要保证以下几个条件：  同一生产者生产消息； 同步发送消息到 Kafka broker； 所有
+          本文详细介绍了如何实现 Kafka 的顺序消息，同时给出了消息队列顺序消息的通用实现思路，并简单介绍了 RabbitMQ、RocketMQ 和 Pulsar 在顺序消息方面的实现思路。
         </div>
       </a>
 
@@ -367,11 +367,11 @@
             
               <a href="/tags/Kafka/">#Kafka</a>
             
-              <a href="/tags/%E9%83%A8%E7%BD%B2/">#部署</a>
-            
               <a href="/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6/">#中间件</a>
             
               <a href="/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/">#消息队列</a>
+            
+              <a href="/tags/%E9%83%A8%E7%BD%B2/">#部署</a>
             
           </div>
         
@@ -434,11 +434,11 @@
             
               <a href="/tags/Kafka/">#Kafka</a>
             
-              <a href="/tags/%E9%83%A8%E7%BD%B2/">#部署</a>
-            
               <a href="/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6/">#中间件</a>
             
               <a href="/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/">#消息队列</a>
+            
+              <a href="/tags/%E9%83%A8%E7%BD%B2/">#部署</a>
             
           </div>
         
