@@ -30,7 +30,7 @@
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203003058976.png">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img6sR2uDuHwbkSNk3FuUxHmY-20231129143014805.png">
 <meta property="article:published_time" content="2023-11-29T02:49:51.000Z">
-<meta property="article:modified_time" content="2023-12-02T16:59:38.127Z">
+<meta property="article:modified_time" content="2023-12-02T17:08:06.508Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Go">
 <meta property="article:tag" content="编译原理">
@@ -327,7 +327,8 @@
 <li>Go 1.21</li>
 <li>maxOS monterey</li>
 </ul>
-<h2 id="官方文档"><a href="#官方文档" class="headerlink" title="官方文档"></a>官方文档</h2><p>Go 语言官方文档详细阐述了 Go 语言编译器的具体执行过程，Go1.21 版本可以看这个：<a target="_blank" rel="noopener" href="https://github.com/golang/go/tree/release-branch.go1.21/src/cmd/compile%EF%BC%8C%E5%A4%A7%E8%87%B4%E8%BF%87%E7%A8%8B%E5%A6%82%E4%B8%8B%EF%BC%9A">https://github.com/golang/go/tree/release-branch.go1.21/src/cmd/compile，大致过程如下：</a></p>
+<h2 id="官方文档"><a href="#官方文档" class="headerlink" title="官方文档"></a>官方文档</h2><p>Go 语言官方文档详细阐述了 Go 语言编译器的具体执行过程，Go1.21 版本可以看这个：<a target="_blank" rel="noopener" href="https://github.com/golang/go/tree/release-branch.go1.21/src/cmd/compile">https://github.com/golang/go/tree/release-branch.go1.21/src/cmd/compile</a></p>
+<p>大致过程如下：</p>
 <ol>
 <li><p><strong>解析</strong> (<code>cmd/compile/internal/syntax</code>):</p>
 <ul>
@@ -381,7 +382,7 @@
 <li><strong>中间端（Middle End）：</strong> 中间端的任务是对中间表示进行优化。这一阶段的优化是语言无关的，比如常量折叠、死代码消除、循环优化等。这些优化可以提高生成的代码的性能，但是不会改变程序的语义。</li>
 <li><strong>后端（Back End）：</strong> 后端的任务是将优化后的中间表示转换为目标机器代码。这一阶段会进行更多的优化，比如寄存器分配、指令选择、指令调度等。后端通常是依赖于具体机器的，比如 x86 的后端和 ARM 的后端就会有很大的不同。</li>
 </ul>
-<p>参考《Go 底层原理剖析（郑建勋）》一书，本文将 Go 语义编译器执行流程拆分为以下几个阶段：</p>
+<p>参考《Go 语言底层原理剖析（郑建勋）》一书，本文将 Go 语义编译器执行流程拆分为以下几个阶段：</p>
 <ul>
 <li>词法解析</li>
 <li>语法解析</li>
