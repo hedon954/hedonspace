@@ -23,13 +23,13 @@
 <meta property="og:site_name" content="HedonSpace">
 <meta property="og:description" content="本文参考《Rust 程序设计（第二版）》中第二章的示例，与读者分享**曼德博集**的绘制过程。">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/hedon954/mapStorage/img/image-20240118174407537.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/mandel.png">
 <meta property="article:published_time" content="2024-01-17T14:39:05.000Z">
-<meta property="article:modified_time" content="2024-01-19T13:05:27.657Z">
+<meta property="article:modified_time" content="2024-01-19T13:13:13.362Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="rust">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/hedon954/mapStorage/img/image-20240118174407537.png">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/mandel.png">
   
   
   
@@ -320,7 +320,7 @@
                 <h1 id="曼德博集">曼德博集</h1>
 <figure>
 <img
-src="https://cdn.jsdelivr.net/gh/hedon954/mapStorage/img/2560px-Mandelset_hires-20240118170914026.png" srcset="/img/loading.gif" lazyload
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/2560px-Mandelset_hires-20240118170914026.png" srcset="/img/loading.gif" lazyload
 alt="曼德博集" />
 <figcaption aria-hidden="true">曼德博集</figcaption>
 </figure>
@@ -357,7 +357,7 @@ target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%9B%BC%E5%
 分辨率大小的曼德博集图：</p>
 <figure>
 <img
-src="https://cdn.jsdelivr.net/gh/hedon954/mapStorage/img/image-20240118171322832.png" srcset="/img/loading.gif" lazyload
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240118171322832.png" srcset="/img/loading.gif" lazyload
 alt="截取曼德博集示意图" />
 <figcaption aria-hidden="true">截取曼德博集示意图</figcaption>
 </figure>
@@ -431,7 +431,12 @@ u64/f32 等数字，它们都需要能从字符串转化而来，即
 <li>确定截取曼德博集的哪一部分。</li>
 <li>要在这个部分中画多少个点。</li>
 </ol>
-<p><img src="https://cdn.jsdelivr.net/gh/hedon954/mapStorage/img/image-20240118174407537.png" srcset="/img/loading.gif" lazyload alt="目标区域中的像素点" style="zoom:50%;" /></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240118174407537.png" srcset="/img/loading.gif" lazyload
+alt="目标区域中的像素点" />
+<figcaption aria-hidden="true">目标区域中的像素点</figcaption>
+</figure>
 <p>这一步我们需要把 <code>x</code>
 点转为复数，即确定它的横坐标和纵坐标。这部分可能需要发挥一下你的几何数学能力了（🤡🤡🤡）。</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">/// 给定输出图像重像素的行和列，返回复平面中对应的坐标</span><br><span class="hljs-comment">///</span><br><span class="hljs-comment">/// `pixed` 是表示给图片中特定像素的 (column, row) 二元组。</span><br><span class="hljs-comment">/// `upper_left` 参数和 `lower_right` 参数是在复平面中表示指定图像覆盖范围的点。</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">pixed_to_point</span>(<br>    <span class="hljs-comment">/*</span><br><span class="hljs-comment">    ·--------------------&gt; bounds.0  re</span><br><span class="hljs-comment">    丨</span><br><span class="hljs-comment">    丨</span><br><span class="hljs-comment">    丨</span><br><span class="hljs-comment">    bounds.1  im</span><br><span class="hljs-comment">     */</span><br>    bounds: (<span class="hljs-type">usize</span>, <span class="hljs-type">usize</span>),<br>    pixed: (<span class="hljs-type">usize</span>, <span class="hljs-type">usize</span>),<br>    upper_left: Complex&lt;<span class="hljs-type">f64</span>&gt;,<br>    lower_right: Complex&lt;<span class="hljs-type">f64</span>&gt;,<br>) <span class="hljs-punctuation">-&gt;</span> Complex&lt;<span class="hljs-type">f64</span>&gt; &#123;<br>    <span class="hljs-keyword">let</span> (width, height) = (<br>        lower_right.re - upper_left.re, <span class="hljs-comment">// 右-左</span><br>        upper_left.im - lower_right.im, <span class="hljs-comment">// 上-下</span><br>    );<br><br>    Complex &#123;<br>        re: upper_left.re + pixed.<span class="hljs-number">0</span> <span class="hljs-keyword">as</span> <span class="hljs-type">f64</span> * width / bounds.<span class="hljs-number">0</span> <span class="hljs-keyword">as</span> <span class="hljs-type">f64</span>,<br>        im: upper_left.im - pixed.<span class="hljs-number">1</span> <span class="hljs-keyword">as</span> <span class="hljs-type">f64</span> * height / bounds.<span class="hljs-number">1</span> <span class="hljs-keyword">as</span> <span class="hljs-type">f64</span>,<br>    &#125;<br>&#125;<br><br><span class="hljs-meta">#[test]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_pixed_to_point</span>() &#123;<br>    <span class="hljs-built_in">assert_eq!</span>(<br>        <span class="hljs-title function_ invoke__">pixed_to_point</span>(<br>            (<span class="hljs-number">100</span>, <span class="hljs-number">200</span>),<br>            (<span class="hljs-number">25</span>, <span class="hljs-number">175</span>),<br>            Complex &#123; re: -<span class="hljs-number">1.0</span>, im: <span class="hljs-number">1.0</span> &#125;,<br>            Complex &#123; re: <span class="hljs-number">1.0</span>, im: -<span class="hljs-number">1.0</span> &#125;<br>        ),<br>        Complex &#123;<br>            re: -<span class="hljs-number">0.5</span>,<br>            im: -<span class="hljs-number">0.75</span>,<br>        &#125;<br>    );<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -443,8 +448,8 @@ z_n^2 + c\)</span> 了：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">complex_square_add_loop</span>(c: Complex&lt;<span class="hljs-type">f64</span>&gt;) &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">z</span> = Complex &#123; re: <span class="hljs-number">0.0</span>, im: <span class="hljs-number">0.0</span> &#125;;<br>    <span class="hljs-keyword">loop</span> &#123;<br>        z = z * z + c<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>其中我们将泛型结构体 <code>Complex</code> 的 <code>T</code> 确定为
 <code>f64</code>，并使用 <code>loop</code> 关键字进行无限循环。</p>
-<p>所以我们的目标是什么？<strong>找到令
-z<code>不会“飞到”无穷远的</code>c`</strong>。</p>
+<p>所以我们的目标是什么？<strong>找到令 <code>z</code>
+不会“飞到”无穷远的 <code>c</code></strong>。</p>
 <p>由于复数 <span class="math inline">\(c\)</span> 具有实部 re 和虚部
 im，因此可以把它们视为笛卡尔平面上某个点的 x 坐标和 y 坐标，如果 <span
 class="math inline">\(c\)</span>
@@ -530,15 +535,14 @@ class="math inline">\(c\)</span>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">./target/release/mandelbrot mandel.png 4000x3000 -1.20,0.35 -1,0.20<br></code></pre></td></tr></table></figure>
 <p>执行后你应该可以看到我们生成的曼德博集图如下：</p>
 <figure>
-<img
-src="https://cdn.jsdelivr.net/gh/hedon954/mapStorage/img/mandel.png" srcset="/img/loading.gif" lazyload
+<img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/mandel.png" srcset="/img/loading.gif" lazyload
 alt="程序生成的曼德博集" />
 <figcaption aria-hidden="true">程序生成的曼德博集</figcaption>
 </figure>
 <p>大概是处于这个位置：</p>
 <figure>
 <img
-src="https://cdn.jsdelivr.net/gh/hedon954/mapStorage/img/image-20240118191624303.png" srcset="/img/loading.gif" lazyload
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240118191624303.png" srcset="/img/loading.gif" lazyload
 alt="程序截取的局部曼德博集处于整个曼德博集中的位置" />
 <figcaption
 aria-hidden="true">程序截取的局部曼德博集处于整个曼德博集中的位置</figcaption>
