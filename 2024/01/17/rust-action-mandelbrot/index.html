@@ -16,16 +16,16 @@
   <meta name="author" content="Hedon Wang">
   <meta name="keywords" content="">
   
-    <meta name="description" content="本文分享了使用 Rust 绘制曼德博集的思路和整个过程，全文娓娓道来、由浅到深。最后还对项目开发中涉及到的 Rust 重要知识点进行总结归纳。">
+    <meta name="description" content="本文参考《Rust 程序设计（第二版）》中第二章的示例，与读者分享**曼德博集**的绘制过程。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust 实战丨绘制曼德博集">
 <meta property="og:url" content="https://hedon.top/2024/01/17/rust-action-mandelbrot/index.html">
 <meta property="og:site_name" content="HedonSpace">
-<meta property="og:description" content="本文分享了使用 Rust 绘制曼德博集的思路和整个过程，全文娓娓道来、由浅到深。最后还对项目开发中涉及到的 Rust 重要知识点进行总结归纳。">
+<meta property="og:description" content="本文参考《Rust 程序设计（第二版）》中第二章的示例，与读者分享**曼德博集**的绘制过程。">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://cdn.jsdelivr.net/gh/hedon954/mapStorage/img/image-20240118174407537.png">
 <meta property="article:published_time" content="2024-01-17T14:39:05.000Z">
-<meta property="article:modified_time" content="2024-01-18T14:40:14.220Z">
+<meta property="article:modified_time" content="2024-01-19T13:05:27.657Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="rust">
 <meta name="twitter:card" content="summary_large_image">
@@ -256,7 +256,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          12k words
+          11k words
         
       </span>
     
@@ -267,7 +267,7 @@
         
         
         
-          30 mins
+          27 mins
         
       </span>
     
@@ -317,27 +317,7 @@
             
               <div class="markdown-body">
                 
-                <h1 id="序">序</h1>
-<p>本文参考《Rust
-程序设计（第二版）》中第二章的示例，与读者分享<strong>曼德博集</strong>的绘制过程。笔者刚接触
-Rust
-不久，所以本文除了分享，另外一个主要目标是梳理其中的知识点，加深对其的理解，以及整理笔者的
-Rust 知识树。</p>
-<h1 id="版本">版本</h1>
-<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[package]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;mandelbrot&quot;</span><br><span class="hljs-attr">version</span> = <span class="hljs-string">&quot;0.1.0&quot;</span><br><span class="hljs-attr">edition</span> = <span class="hljs-string">&quot;2021&quot;</span><br><br><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">image</span> = &#123;version = <span class="hljs-string">&quot;0.13.0&quot;</span>, features = [<span class="hljs-string">&quot;default&quot;</span>, <span class="hljs-string">&quot;png&quot;</span>]&#125;<br><span class="hljs-attr">num</span> = <span class="hljs-string">&quot;0.4.1&quot;</span><br><span class="hljs-attr">crossbeam</span> = <span class="hljs-string">&quot;0.8&quot;</span><br></code></pre></td></tr></table></figure>
-<p>完整代码：https://github.com/hedon954/mandelbrot/blob/master/src/main.rs</p>
-<h1 id="能学到什么">能学到什么</h1>
-<ol type="1">
-<li>曼德博集是什么？</li>
-<li>Rust 中的复数的原理与应用。</li>
-<li>Rust 泛型初探。</li>
-<li>Rust 中的 Option 和 Result 初探。</li>
-<li>Rust 并发初探。</li>
-<li>Rust 中如何解析命令行参数？</li>
-<li>Rust 如何写入图像文件？</li>
-<li>Rust 如何写测试用例？</li>
-</ol>
-<h1 id="曼德博集">曼德博集</h1>
+                <h1 id="曼德博集">曼德博集</h1>
 <figure>
 <img
 src="https://cdn.jsdelivr.net/gh/hedon954/mapStorage/img/2560px-Mandelset_hires-20240118170914026.png" srcset="/img/loading.gif" lazyload
@@ -392,6 +372,22 @@ alt="截取曼德博集示意图" />
 <li>如何解析命令行参数？</li>
 <li>如何并发写入图片文件？</li>
 </ol>
+<h1 id="能学到什么">能学到什么</h1>
+<ol type="1">
+<li>曼德博集是什么？</li>
+<li>Rust 中的复数的原理与应用。</li>
+<li>Rust 泛型初探。</li>
+<li>Rust 中的 Option 和 Result 初探。</li>
+<li>Rust 并发初探。</li>
+<li>Rust 中如何解析命令行参数？</li>
+<li>Rust 如何写入图像文件？</li>
+<li>Rust 如何写测试用例？</li>
+<li>Rust 实用 crate
+<code>num</code>、<code>image</code>、<code>crossbeam</code>。</li>
+</ol>
+<h1 id="版本">版本</h1>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[package]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;mandelbrot&quot;</span><br><span class="hljs-attr">version</span> = <span class="hljs-string">&quot;0.1.0&quot;</span><br><span class="hljs-attr">edition</span> = <span class="hljs-string">&quot;2021&quot;</span><br><br><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">image</span> = &#123;version = <span class="hljs-string">&quot;0.13.0&quot;</span>, features = [<span class="hljs-string">&quot;default&quot;</span>, <span class="hljs-string">&quot;png&quot;</span>]&#125;<br><span class="hljs-attr">num</span> = <span class="hljs-string">&quot;0.4.1&quot;</span><br><span class="hljs-attr">crossbeam</span> = <span class="hljs-string">&quot;0.8&quot;</span><br></code></pre></td></tr></table></figure>
+<p>完整代码：https://github.com/hedon954/mandelbrot/blob/master/src/main.rs</p>
 <h1 id="编码实现">编码实现</h1>
 <h2 id="创建项目">0. 创建项目</h2>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">cargo new mandelbrot<br></code></pre></td></tr></table></figure>
@@ -453,7 +449,7 @@ z<code>不会“飞到”无穷远的</code>c`</strong>。</p>
 im，因此可以把它们视为笛卡尔平面上某个点的 x 坐标和 y 坐标，如果 <span
 class="math inline">\(c\)</span>
 在曼德博集中，就在其中用黑色着色，否则就用浅色。因此，对于图像中的每个像素，必须在复平面上相应点位运行前面的循环，看看它是否逃逸到无穷远还是永远绕着原点运行，并相应将其着色。</p>
-<p>无限循环肯定是不可能的，我们总要找到退出循环的机会，有 2 个思路：</p>
+<p>无限循环肯定是不现实的，我们总要找到退出循环的机会，有 2 个思路：</p>
 <ol type="1">
 <li>进行有限次数的迭代，这样可以获得该集合的一个不错的近似值，迭代的次数取决了精度的需要；</li>
 <li>业界已证明，<strong>一旦 <code>z</code> 离开了以原点为中心的半径 2
@@ -462,10 +458,6 @@ class="math inline">\(c\)</span>
 <p>所以我们最终确定的函数如下，其中 <code>norm_sqr()</code> 会返回
 <code>z</code> 跟复平面原点的距离的平方：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">/// 尝试测试 `c` 是否位于曼德博集中，使用最多 `limit` 次迭代来判定</span><br><span class="hljs-comment">///</span><br><span class="hljs-comment">/// 如果 `c` 不是集合成员之一，则返回 `Some(i)`，其中 `i` 是 `c` 离开以原点</span><br><span class="hljs-comment">/// 为中心的半径为 2 的圆时所需的迭代次数。如果 `c` 似乎是集群成员之一（确</span><br><span class="hljs-comment">/// 切而言是达到了迭代次数限制但仍然无法证明 `c` 不是成员），则返回 `None`</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">escape_time</span>(c: Complex&lt;<span class="hljs-type">f64</span>&gt;, limit: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;<span class="hljs-type">usize</span>&gt; &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">z</span> = Complex &#123; re: <span class="hljs-number">0.0</span>, im: <span class="hljs-number">0.0</span> &#125;;<br>    <span class="hljs-keyword">for</span> <span class="hljs-variable">i</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..limit &#123;<br>        <span class="hljs-keyword">if</span> z.<span class="hljs-title function_ invoke__">norm_sqr</span>() &gt; <span class="hljs-number">4.0</span> &#123;<br>            <span class="hljs-keyword">return</span> <span class="hljs-title function_ invoke__">Some</span>(i);<br>        &#125;<br>        z = z * z + c<br>    &#125;<br>    <span class="hljs-literal">None</span><br>&#125;<br></code></pre></td></tr></table></figure>
-<p>知识点：</p>
-<ul>
-<li><a href="#知识点-5流程控制">知识点 5：流程控制</a></li>
-</ul>
 <h2 id="写入图片文件">5. 写入图片文件</h2>
 <p>我们可以使用 <code>image</code> 这个 crate
 来写入图片文件，它支持多种格式图片的读写，并内置了多种颜色色值。</p>
@@ -580,72 +572,8 @@ aria-hidden="true">将像素缓冲区划分为一些条带以进行并发渲染<
 <figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs llvm">time ./<span class="hljs-keyword">target</span>/<span class="hljs-keyword">release</span>/mandelbrot mandel.png <span class="hljs-number">4000</span><span class="hljs-keyword">x</span><span class="hljs-number">3000</span> <span class="hljs-number">-1.20</span><span class="hljs-punctuation">,</span><span class="hljs-number">0.35</span> <span class="hljs-number">-1</span><span class="hljs-punctuation">,</span><span class="hljs-number">0.20</span><br>./<span class="hljs-keyword">target</span>/<span class="hljs-keyword">release</span>/mandelbrot mandel.png <span class="hljs-number">4000</span><span class="hljs-keyword">x</span><span class="hljs-number">3000</span> <span class="hljs-number">-1.20</span><span class="hljs-punctuation">,</span><span class="hljs-number">0.35</span> <span class="hljs-number">-1</span><span class="hljs-punctuation">,</span><span class="hljs-number">0.20</span>  <span class="hljs-number">3.57</span>s user <span class="hljs-number">0.01</span>s system <span class="hljs-number">335</span>% cpu <span class="hljs-number">1.067</span> total<br></code></pre></td></tr></table></figure>
 <p>可以看到虽然总共使用的 CPU 时间还是
 3~4s，但是整个程序的执行时间只缩短到 1s 左右了。</p>
-<p>实战部分到此结束。后面主要是整理项目中 Rust
-比较重要的知识点，以期望“在实战中学习”。已掌握或不感兴趣的读者可以直接跳过。</p>
-<h1 id="知识点汇总">知识点汇总</h1>
-<h2 id="知识点-1模式匹配">知识点 1：模式匹配</h2>
-<h2 id="知识点-2文档型注释">知识点 2：文档型注释</h2>
-<p><code>///</code> 是 Rust 中的文档型注释，这种注释会加入运行
-<code>cargo doc</code> 生成的文档中，具体可以看 <a
-target="_blank" rel="noopener" href="https://doc.rust-lang.org/1.75.0/rustdoc/">The rustdoc
-book</a>。</p>
-<h2 id="知识点-3optiont">知识点 3：Option&lt;T&gt;</h2>
-<p>在 Rust 中，<code>Option</code>
-类型是一个非常重要的枚举，用于处理可能有值或没有值的情况。它是 Rust
-标准库的一部分，定义在 <code>std::option</code>
-模块中。<code>Option</code>
-类型非常重要，因为它提供了一种安全的方式来处理空值（null values），这是
-Rust 设计中的一个核心概念。</p>
-<p>定义如下：</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">enum</span> <span class="hljs-title class_">Option</span>&lt;T&gt; &#123;<br>    <span class="hljs-comment">/// No value.</span><br>    <span class="hljs-literal">None</span>,<br>    <span class="hljs-comment">/// Some value of type `T`.</span><br>    <span class="hljs-title function_ invoke__">Some</span>(T),<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>这个枚举有两个变体：</p>
-<ul>
-<li><code>Some(T)</code>: 表示存在一个值，<code>T</code>
-是这个值的类型。</li>
-<li><code>None</code>: 表示没有值。</li>
-</ul>
-<p><code>Option</code> 类型在 Rust
-中的使用非常广泛，常见的几种场景包括：</p>
-<ol type="1">
-<li><strong>返回可能为空的函数结果</strong>：
-当函数可能没有一个有意义的返回值时，可以返回
-<code>Option&lt;T&gt;</code> 类型。这比使用裸指针或特殊值（如
--1）要安全得多。</li>
-<li><strong>代替空值</strong>： Rust 不使用空指针，而是使用
-<code>Option</code> 来表达可能的空值，这样可以避免很多运行时错误。</li>
-<li><strong>配置和可选参数</strong>：
-在配置对象或处理可选参数时，<code>Option</code>
-类型非常有用，允许你区分“没有值”和“有特定值”这两种情况。</li>
-</ol>
-<p><code>Option</code>
-类型提供了许多方法来处理它的两种状态，以下是一些常用的方法：</p>
-<ul>
-<li><code>is_some()</code> 和 <code>is_none()</code>：检查
-<code>Option</code> 是否分别是 <code>Some</code> 或
-<code>None</code>。</li>
-<li><code>unwrap()</code>：提取 <code>Some</code> 中的值，如果是
-<code>None</code> 则会引发 panic。</li>
-<li><code>unwrap_or(default)</code>：提取 <code>Some</code>
-中的值，如果是 <code>None</code> 则返回默认值。</li>
-<li><code>map(f)</code>：如果是 <code>Some</code>，则对其中的值应用函数
-<code>f</code>，否则返回 <code>None</code>。</li>
-<li><code>and_then(f)</code>：如果是 <code>Some</code>，则应用函数
-<code>f</code>，该函数返回 <code>Option</code> 类型；如果是
-<code>None</code>，则保持 <code>None</code> 状态。</li>
-</ul>
-<p>在这个例子中，<code>escape_time(c, limit)</code> 返回一个
-<code>Option&lt;usize&gt;</code> 来表示尝试迭代 <code>limit</code> 次后
-<span class="math inline">\(c\)</span> 是否在曼德博集中：</p>
-<ul>
-<li>如果在，则返回 <code>None</code>；</li>
-<li>如果不在，则返回
-<code>Some(i)</code>，表示迭代了多少次才发现它离开了半径为 2
-的圆，业界证明，只要离开这个圆，最终一定会飞到无穷远。</li>
-</ul>
-<h2 id="知识点-4rust-单元测试">知识点 4：Rust 单元测试</h2>
-<h2 id="知识点-5流程控制">知识点 5：流程控制</h2>
-<p><code>for i in 0..limit</code> 是 Rust 中 <code>fori</code>
-循环的表达方式，其表示遍历 [0,limit)。</p>
+<p>以上就是实用 Rust 绘制曼德博集实战的全部内容，enjoy，happy
+coding~</p>
 
                 
               </div>
