@@ -65,7 +65,7 @@
     
     <categories>
       
-      <category>rust</category>
+      <category>Rust</category>
       
       <category>web 框架</category>
       
@@ -74,9 +74,9 @@
     
     <tags>
       
-      <tag>rust</tag>
+      <tag>Rust</tag>
       
-      <tag>axum</tag>
+      <tag>Axum</tag>
       
     </tags>
     
