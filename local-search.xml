@@ -4,6 +4,33 @@
   
   
   <entry>
+    <title>Rust 实战丨HTTPie</title>
+    <link href="/2024/03/03/rust-action-httpie/"/>
+    <url>/2024/03/03/rust-action-httpie/</url>
+    
+    <content type="html"><![CDATA[]]></content>
+    
+    
+    <categories>
+      
+      <category>Rust</category>
+      
+      <category>Rust 实战</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Rust</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>深入探索 Rust 的 clap 库：命令行解析的艺术</title>
     <link href="/2024/03/02/rust-crate-clap/"/>
     <url>/2024/03/02/rust-crate-clap/</url>
