@@ -19,12 +19,12 @@
     <meta name="description" content="本文将深入探索 Rust 中一个非常流行的命令行解析工具 clap，本文会先详细介绍 clap Derive 和 Builder 两种构建命令行工具的方式，并实战 httpie 工具，最后还将 clap 与 Go 语言中在命令行解析同样流行的 cargo 进行比较。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="深入探索 Rust 的 clap 库：命令行解析的艺术">
-<meta property="og:url" content="https://hedon.top/2024/02/26/rust-crate-clap/index.html">
+<meta property="og:url" content="https://hedon.top/2024/03/02/rust-crate-clap/index.html">
 <meta property="og:site_name" content="HedonSpace">
 <meta property="og:description" content="本文将深入探索 Rust 中一个非常流行的命令行解析工具 clap，本文会先详细介绍 clap Derive 和 Builder 两种构建命令行工具的方式，并实战 httpie 工具，最后还将 clap 与 Go 语言中在命令行解析同样流行的 cargo 进行比较。">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2024-02-26T05:08:59.000Z">
-<meta property="article:modified_time" content="2024-03-02T10:46:16.681Z">
+<meta property="article:published_time" content="2024-03-02T12:08:59.000Z">
+<meta property="article:modified_time" content="2024-03-02T12:33:09.197Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Rust">
 <meta property="article:tag" content="clap">
@@ -243,8 +243,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-02-26 13:08" pubdate>
-          2024-02-26 01:08
+        <time datetime="2024-03-02 20:08" pubdate>
+          2024-03-02 08:08
         </time>
       </span>
     
@@ -255,7 +255,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          33k words
+          34k words
         
       </span>
     
@@ -266,7 +266,7 @@
         
         
         
-          82 mins
+          86 mins
         
       </span>
     
@@ -768,12 +768,6 @@ port 的校验，也可以自己实现。</p>
 </ul>
 <p>可以测试输出：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  learn-clap git:(master) ✗ ./target/release/examples/custom --<span class="hljs-built_in">help</span><br>this is the about from Cargo.toml<br><br>Usage: custom --port &lt;PORT&gt;<br><br>Options:<br>  -p, --port &lt;PORT&gt;  <br>  -h, --<span class="hljs-built_in">help</span>         Print <span class="hljs-built_in">help</span><br>  -V, --version      Print version<br>  <br>➜  learn-clap git:(master) ✗ ./target/release/examples/custom -p xxx<br>error: invalid value <span class="hljs-string">&#x27;xxx&#x27;</span> <span class="hljs-keyword">for</span> <span class="hljs-string">&#x27;--port &lt;PORT&gt;&#x27;</span>: `xxx` isn<span class="hljs-string">&#x27;t a port number`</span><br><span class="hljs-string"></span><br><span class="hljs-string">For more information, try &#x27;</span>--<span class="hljs-built_in">help</span><span class="hljs-string">&#x27;.</span><br><span class="hljs-string"></span><br><span class="hljs-string">➜  learn-clap git:(master) ✗ ./target/release/examples/custom -p 0  </span><br><span class="hljs-string">error: invalid value &#x27;</span>0<span class="hljs-string">&#x27; for &#x27;</span>--port &lt;PORT&gt;<span class="hljs-string">&#x27;: port not in range 1-65535</span><br><span class="hljs-string"></span><br><span class="hljs-string">For more information, try &#x27;</span>--<span class="hljs-built_in">help</span><span class="hljs-string">&#x27;.</span><br><span class="hljs-string"></span><br><span class="hljs-string">➜  learn-clap git:(master) ✗ ./target/release/examples/custom -p 9527</span><br><span class="hljs-string">port: 9527</span><br></code></pre></td></tr></table></figure>
-<p>进一步说明为什么需要是：</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">parse_port</span>(s: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Result</span>&lt;<span class="hljs-type">u16</span>, <span class="hljs-type">String</span>&gt; &#123;&#125;<br></code></pre></td></tr></table></figure>
-<p>我们来看看 <code>value_parser()</code> 需要什么参数：</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">value_parser</span>(<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>, parser: <span class="hljs-keyword">impl</span> <span class="hljs-title class_">IntoResettable</span>&lt;super::ValueParser&gt;) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span> &#123;<br>    <span class="hljs-keyword">self</span>.value_parser = parser.<span class="hljs-title function_ invoke__">into_resettable</span>().<span class="hljs-title function_ invoke__">into_option</span>();<br>    <span class="hljs-keyword">self</span><br>&#125;<br></code></pre></td></tr></table></figure>
-<p>它需要</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">impl</span>&lt;F, T, E&gt; TypedValueParser <span class="hljs-keyword">for</span> <span class="hljs-title class_">F</span><br><span class="hljs-keyword">where</span><br>    F: <span class="hljs-title function_ invoke__">Fn</span>(&amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Result</span>&lt;T, E&gt; + <span class="hljs-built_in">Clone</span> + <span class="hljs-built_in">Send</span> + <span class="hljs-built_in">Sync</span> + <span class="hljs-symbol">&#x27;static</span>,<br>    E: <span class="hljs-built_in">Into</span>&lt;<span class="hljs-type">Box</span>&lt;<span class="hljs-keyword">dyn</span> std::error::Error + <span class="hljs-built_in">Send</span> + <span class="hljs-built_in">Sync</span> + <span class="hljs-symbol">&#x27;static</span>&gt;&gt;,<br>    T: <span class="hljs-built_in">Send</span> + <span class="hljs-built_in">Sync</span> + <span class="hljs-built_in">Clone</span>,<br>&#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Value</span> = T;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">parse_ref</span>(<br>        &amp;<span class="hljs-keyword">self</span>,<br>        cmd: &amp;crate::Command,<br>        arg: <span class="hljs-type">Option</span>&lt;&amp;crate::Arg&gt;,<br>        value: &amp;std::ffi::OsStr,<br>    ) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Result</span>&lt;<span class="hljs-keyword">Self</span>::Value, crate::Error&gt; &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">value</span> = ok!(value.<span class="hljs-title function_ invoke__">to_str</span>().<span class="hljs-title function_ invoke__">ok_or_else</span>(|| &#123;<br>            crate::Error::<span class="hljs-title function_ invoke__">invalid_utf8</span>(<br>                cmd,<br>                crate::output::Usage::<span class="hljs-title function_ invoke__">new</span>(cmd).<span class="hljs-title function_ invoke__">create_usage_with_title</span>(&amp;[]),<br>            )<br>        &#125;));<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">value</span> = ok!((<span class="hljs-keyword">self</span>)(value).<span class="hljs-title function_ invoke__">map_err</span>(|e| &#123;<br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">arg</span> = arg<br>                .<span class="hljs-title function_ invoke__">map</span>(|a| a.<span class="hljs-title function_ invoke__">to_string</span>())<br>                .<span class="hljs-title function_ invoke__">unwrap_or_else</span>(|| <span class="hljs-string">&quot;...&quot;</span>.<span class="hljs-title function_ invoke__">to_owned</span>());<br>            crate::Error::<span class="hljs-title function_ invoke__">value_validation</span>(arg, value.<span class="hljs-title function_ invoke__">to_owned</span>(), e.<span class="hljs-title function_ invoke__">into</span>()).<span class="hljs-title function_ invoke__">with_cmd</span>(cmd)<br>        &#125;));<br>        <span class="hljs-title function_ invoke__">Ok</span>(value)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <h4 id="关联参数">3.5 关联参数</h4>
 <p>有时候参数直接还有关联关系，比如说：</p>
 <ul>
@@ -1004,8 +998,65 @@ crate，其中 <code>clap_complete</code> 只需在 build
 <p>这个时候你使用 <strong>myapp</strong> 命令的时候，按 <code>tap</code>
 键，就有自动补全了：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  ./target/debug/myapp <br>--<span class="hljs-built_in">help</span>    -h        \[file\]  <span class="hljs-built_in">help</span>      <span class="hljs-built_in">test</span> <br></code></pre></td></tr></table></figure>
-<h1 id="httpie">Httpie</h1>
+<h1 id="httpie">HTTPie</h1>
+<p>由于篇幅原因，实战 HTTPie 部分请看：[Rust 实战丨HTTPie]</p>
 <h1 id="与-go-语言-cobra-比较">与 Go 语言 cobra 比较</h1>
+<p>Go 的 <code>cobra</code> 也是用于构建命令行应用程序的库，它在 Go
+语言生态中非常受欢迎。</p>
+<p>为了直观展示这 2
+个库构建命令行应用程序的区别，我们来设计一个简单的命令行程序，用
+<code>clap</code> 和 <code>cobra</code>
+分别实现，以展示如何用这两个库实现相同的功能。</p>
+<p>让我们创建一个 CLI 程序，它有一个 <code>greet</code> 子命令，接受一个
+<code>-n</code> 或 <code>--name</code> 参数，并打印出一条欢迎信息。</p>
+<h2 id="rust-clap-实现">Rust clap 实现</h2>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> clap::&#123; Parser, Subcommand&#125;;<br><br><span class="hljs-meta">#[derive(Parser)]</span><br><span class="hljs-meta">#[command(bin_name = <span class="hljs-string">&quot;greet_app&quot;</span>)]</span><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Cli</span> &#123;<br>    <span class="hljs-meta">#[command(subcommand)]</span><br>    sub: <span class="hljs-type">Option</span>&lt;Sub&gt;,<br>&#125;<br><br><span class="hljs-meta">#[derive(Subcommand)]</span><br><span class="hljs-keyword">enum</span> <span class="hljs-title class_">Sub</span> &#123;<br>    Greet &#123;<br>        <span class="hljs-meta">#[arg(short, long)]</span><br>        name: <span class="hljs-type">String</span>,<br>    &#125;<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">cli</span> = Cli::<span class="hljs-title function_ invoke__">parse</span>();<br>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> <span class="hljs-variable">Some</span>(sub) = cli.sub &#123;<br>        <span class="hljs-keyword">match</span> sub &#123;<br>            Sub::Greet&#123;name&#125; =&gt; <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;greeting: &#123;:?&#125;&quot;</span>, name),<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="go-cobra-实现">Go cobra 实现</h2>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;fmt&quot;</span><br>	<span class="hljs-string">&quot;os&quot;</span><br><br>	<span class="hljs-string">&quot;github.com/spf13/cobra&quot;</span><br>)<br><br><span class="hljs-keyword">var</span> rootCmd = &amp;cobra.Command&#123;<br>	Use:   <span class="hljs-string">&quot;greet_app&quot;</span>,<br>	Short: <span class="hljs-string">&quot;A simple greeting application&quot;</span>,<br>	Long:  <span class="hljs-string">`This is a simple greeting application with a greet command.`</span>,<br>&#125;<br><br><span class="hljs-keyword">var</span> greetCmd = &amp;cobra.Command&#123;<br>	Use:   <span class="hljs-string">&quot;greet&quot;</span>,<br>	Short: <span class="hljs-string">&quot;Greets a user&quot;</span>,<br>	Long:  <span class="hljs-string">`Prints a greeting message for the specified user.`</span>,<br>	Run: <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(cmd *cobra.Command, args []<span class="hljs-type">string</span>)</span></span> &#123;<br>		name, _ := cmd.Flags().GetString(<span class="hljs-string">&quot;name&quot;</span>)<br>		fmt.Printf(<span class="hljs-string">&quot;Hello, %s!\n&quot;</span>, name)<br>	&#125;,<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">init</span><span class="hljs-params">()</span></span> &#123;<br>	rootCmd.AddCommand(greetCmd)<br>	greetCmd.Flags().StringP(<span class="hljs-string">&quot;name&quot;</span>, <span class="hljs-string">&quot;n&quot;</span>, <span class="hljs-string">&quot;&quot;</span>, <span class="hljs-string">&quot;Sets the name to greet&quot;</span>)<br>	greetCmd.MarkFlagRequired(<span class="hljs-string">&quot;name&quot;</span>)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	<span class="hljs-keyword">if</span> err := rootCmd.Execute(); err != <span class="hljs-literal">nil</span> &#123;<br>		fmt.Println(err)<br>		os.Exit(<span class="hljs-number">1</span>)<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>输出：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs bash">This is a simple greeting application with a greet <span class="hljs-built_in">command</span>.<br><br>Usage:<br>  greet_app [<span class="hljs-built_in">command</span>]<br><br>Available Commands:<br>  completion  Generate the autocompletion script <span class="hljs-keyword">for</span> the specified shell<br>  greet       Greets a user<br>  <span class="hljs-built_in">help</span>        Help about any <span class="hljs-built_in">command</span><br><br>Flags:<br>  -h, --<span class="hljs-built_in">help</span>   <span class="hljs-built_in">help</span> <span class="hljs-keyword">for</span> greet_app<br><br>Use <span class="hljs-string">&quot;greet_app [command] --help&quot;</span> <span class="hljs-keyword">for</span> more information about a <span class="hljs-built_in">command</span>.<br></code></pre></td></tr></table></figure>
+<h2 id="对比">对比</h2>
+<h3 id="设计哲学和易用性">设计哲学和易用性</h3>
+<p><strong>clap</strong>:</p>
+<ul>
+<li>使用 Rust 的宏来提供强大的编译时功能，如参数解析、验证等。</li>
+<li>利用 Rust 的类型安全特性，减少运行时错误。</li>
+<li>支持通过派生宏自动从结构体生成命令行解析代码，简化开发流程。</li>
+</ul>
+<p><strong>cobra</strong>:</p>
+<ul>
+<li>采用更传统的命令式编程模型，直观且易于上手。</li>
+<li>通过组合命令对象来构建复杂的命令行应用。</li>
+<li>提供了一套完整的生成工具来创建命令和配置，促进了开发速度。</li>
+</ul>
+<h3 id="功能和特性">功能和特性</h3>
+<p><strong>clap</strong>:</p>
+<ul>
+<li>自动生成帮助信息、版本信息等。</li>
+<li>支持多级子命令。</li>
+<li>支持自定义验证器和复杂的参数关系（如互斥、依赖等）。</li>
+</ul>
+<p><strong>cobra</strong>:</p>
+<ul>
+<li>支持自动生成帮助文档。</li>
+<li><strong>内置命令自动补全脚本生成功能</strong>。</li>
+<li><strong>支持持久化命令行标志到配置文件</strong>。</li>
+<li>通过插件支持增加额外的子命令。</li>
+<li>能够轻松地与其他 Go 库集成，如 Viper 用于配置管理。</li>
+</ul>
+<h3 id="性能">性能</h3>
+<p><strong>clap</strong>:</p>
+<ul>
+<li>由于 Rust 的编译时优化，<code>clap</code>
+在解析命令行参数时通常会有更好的性能。</li>
+<li>更少的运行时开销，尤其是在处理大量复杂命令行参数时。</li>
+</ul>
+<p><strong>cobra</strong>:</p>
+<ul>
+<li>性能对于大多数命令行应用来说已经足够，但可能不如 <code>clap</code>
+优化。</li>
+<li>Go 的运行时可能会引入额外的开销，尤其是在并发处理时。</li>
+</ul>
 
                 
               </div>
@@ -1061,7 +1112,7 @@ crate，其中 <code>clap_complete</code> 只需在 build
   <div class="license-box my-3">
     <div class="license-title">
       <div>深入探索 Rust 的 clap 库：命令行解析的艺术</div>
-      <div>https://hedon.top/2024/02/26/rust-crate-clap/</div>
+      <div>https://hedon.top/2024/03/02/rust-crate-clap/</div>
     </div>
     <div class="license-meta">
       
@@ -1073,7 +1124,7 @@ crate，其中 <code>clap_complete</code> 只需在 build
       
         <div class="license-meta-item license-meta-date">
           <div>Posted on</div>
-          <div>2024-02-26</div>
+          <div>2024-03-02</div>
         </div>
       
       
@@ -1105,18 +1156,12 @@ crate，其中 <code>clap_complete</code> 只需在 build
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2024/03/02/rust-crate-reqwest/" title="rust-crate-reqwest">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">rust-crate-reqwest</span>
-                        <span class="visible-mobile">Previous</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2024/01/20/go-gpm/" title="深入浅出 Go 语言的 GPM 模型（Go1.21）">
-                        <span class="hidden-mobile">深入浅出 Go 语言的 GPM 模型（Go1.21）</span>
+                      <a href="/2024/03/02/rust-crate-reqwest/" title="Rust request 简明教程">
+                        <span class="hidden-mobile">Rust request 简明教程</span>
                         <span class="visible-mobile">Next</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
