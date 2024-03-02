@@ -33,7 +33,7 @@
   
   
   <entry>
-    <title>Rust request 简明教程</title>
+    <title>Rust reqwest 简明教程</title>
     <link href="/2024/03/02/rust-crate-reqwest/"/>
     <url>/2024/03/02/rust-crate-reqwest/</url>
     
