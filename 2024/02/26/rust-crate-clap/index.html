@@ -24,7 +24,7 @@
 <meta property="og:description" content="本文将深入探索 Rust 中一个非常流行的命令行解析工具 clap，本文会先详细介绍 clap Derive 和 Builder 两种构建命令行工具的方式，并实战 httpie 工具，最后还将 clap 与 Go 语言中在命令行解析同样流行的 cargo 进行比较。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2024-02-26T05:08:59.000Z">
-<meta property="article:modified_time" content="2024-03-01T15:42:01.180Z">
+<meta property="article:modified_time" content="2024-03-02T10:46:16.681Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Rust">
 <meta property="article:tag" content="clap">
@@ -255,7 +255,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          30k words
+          33k words
         
       </span>
     
@@ -266,7 +266,7 @@
         
         
         
-          76 mins
+          82 mins
         
       </span>
     
@@ -322,7 +322,8 @@
 <li><a target="_blank" rel="noopener" href="https://docs.rs/clap/4.5.1/clap/index.html">clap:
 4.5.1</a></li>
 <li><a
-target="_blank" rel="noopener" href="https://docs.rs/clap_complete/4.5.1/clap_complete/index.html">clap_complete</a></li>
+target="_blank" rel="noopener" href="https://docs.rs/clap_complete/4.5.1/clap_complete/index.html">clap_complete
+4.5.1</a></li>
 <li><a
 target="_blank" rel="noopener" href="https://docs.rs/rpassword/7.3.1/rpassword/index.html">rpassword:
 7.3.1</a></li>
@@ -967,7 +968,42 @@ alt="Derive vs Builder" />
 <code>rpassword</code> crate 辅助完成。</p>
 <p>示例：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> clap::Parser;<br><span class="hljs-keyword">use</span> rpassword::read_password;<br><br><span class="hljs-meta">#[derive(Parser)]</span><br><span class="hljs-meta">#[command(version, author, about, long_about = None)]</span><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Cli</span> &#123;<br>    <span class="hljs-meta">#[arg(short, long)]</span><br>    username: <span class="hljs-type">String</span>,<br><br>    <span class="hljs-meta">#[arg(short, long, required = true)]</span><br>    password: <span class="hljs-type">bool</span>,<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">cli</span> = Cli::<span class="hljs-title function_ invoke__">parse</span>();<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">password</span> = <span class="hljs-keyword">if</span> cli.password &#123;<br>        <span class="hljs-comment">// Prompt user to enter password</span><br>        <span class="hljs-title function_ invoke__">read_password</span>().<span class="hljs-title function_ invoke__">expect</span>(<span class="hljs-string">&quot;Failed to read password&quot;</span>)<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-string">&quot;&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>()<br>    &#125;;<br><br>    <span class="hljs-comment">// Use username and password to do something</span><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;username: &#123;&#125;, password: &#123;&#125;&quot;</span>, cli.username, password);<br>&#125;<br></code></pre></td></tr></table></figure>
-<h2 id="clap_generation-实现自动补全">clap_generation 实现自动补全</h2>
+<h2 id="clap_complete-实现自动补全">clap_complete 实现自动补全</h2>
+<p>要实现自动补全，需要在 <code>.zshrc</code> 或 <code>.bashrc</code> 等
+<code>SHELL</code> 文件中加入命令自动补全脚本。这时候可以使用
+<code>clap_complete</code> 来实现这个功能。</p>
+<p>下面的示例目录结构如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs bash">├── Cargo.lock<br>├── Cargo.toml<br>├── build.rs<br>└── src<br>    ├── cli.rs<br>    └── main.rs<br></code></pre></td></tr></table></figure>
+<p>首先我们需要引入 <code>clap</code> 和 <code>clap_complete</code>
+crate，其中 <code>clap_complete</code> 只需在 build
+环境下即可，所以我们的 <code>Cargo.tmol</code> 如下：</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[package]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;myapp&quot;</span><br><span class="hljs-attr">version</span> = <span class="hljs-string">&quot;0.1.0&quot;</span><br><span class="hljs-attr">edition</span> = <span class="hljs-string">&quot;2021&quot;</span><br><br><span class="hljs-attr">build</span> = <span class="hljs-string">&quot;build.rs&quot;</span><br><br><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">clap</span> = &#123; version = <span class="hljs-string">&quot;4.5.1&quot;</span> &#125;<br><span class="hljs-attr">dirs</span> = <span class="hljs-string">&quot;5.0.1&quot;</span><br><br><span class="hljs-section">[build-dependencies]</span><br><span class="hljs-attr">clap</span> = &#123; version = <span class="hljs-string">&quot;4.5.1&quot;</span>&#125;<br><span class="hljs-attr">clap_complete</span> = <span class="hljs-string">&quot;4.5.1&quot;</span><br></code></pre></td></tr></table></figure>
+<p>我们先在 <code>src/cli.rs</code> 中实现一个简单的命令行程序
+<strong>myapp</strong>：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> clap::&#123;Arg, ArgAction, Command&#125;;<br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">build_cli</span>() <span class="hljs-punctuation">-&gt;</span> Command &#123;<br>    Command::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-string">&quot;myapp&quot;</span>)<br>        .<span class="hljs-title function_ invoke__">about</span>(<span class="hljs-string">&quot;Tests completions&quot;</span>)<br>        .<span class="hljs-title function_ invoke__">arg</span>(Arg::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-string">&quot;file&quot;</span>)<br>            .<span class="hljs-title function_ invoke__">help</span>(<span class="hljs-string">&quot;some input file&quot;</span>))<br>        .<span class="hljs-title function_ invoke__">subcommand</span>(Command::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-string">&quot;test&quot;</span>)<br>            .<span class="hljs-title function_ invoke__">about</span>(<span class="hljs-string">&quot;tests things&quot;</span>)<br>            .<span class="hljs-title function_ invoke__">arg</span>(Arg::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-string">&quot;case&quot;</span>)<br>                .<span class="hljs-title function_ invoke__">long</span>(<span class="hljs-string">&quot;case&quot;</span>)<br>                .<span class="hljs-title function_ invoke__">action</span>(ArgAction::Set)<br>                .<span class="hljs-title function_ invoke__">help</span>(<span class="hljs-string">&quot;the case to test&quot;</span>)))<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>我们主要是演示这个自动补全功能，为了省事，<code>src/main.rs</code>
+中就不实现具体逻辑了：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">mod</span> cli;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">_m</span> = cli::<span class="hljs-title function_ invoke__">build_cli</span>().<span class="hljs-title function_ invoke__">get_matches</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>接着，我们在项目根目录下实现
+<code>build.rs</code>，它将为我们指定的命令生成自动补全脚本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">touch</span> build.rs<br></code></pre></td></tr></table></figure>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> clap_complete::&#123;generate_to, shells::Bash&#125;;<br><span class="hljs-keyword">use</span> std::env;<br><span class="hljs-keyword">use</span> std::io::Error;<br><br>include!(<span class="hljs-string">&quot;src/cli.rs&quot;</span>);<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Result</span>&lt;(), Error&gt; &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">outdir</span> = <span class="hljs-keyword">match</span> env::<span class="hljs-title function_ invoke__">var_os</span>(<span class="hljs-string">&quot;OUT_DIR&quot;</span>) &#123;<br>        <span class="hljs-literal">None</span> =&gt; <span class="hljs-keyword">return</span> <span class="hljs-title function_ invoke__">Ok</span>(()),<br>        <span class="hljs-title function_ invoke__">Some</span>(outdir) =&gt; outdir,<br>    &#125;;<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">cmd</span> = <span class="hljs-title function_ invoke__">build_cli</span>();<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">path</span> = <span class="hljs-title function_ invoke__">generate_to</span>(<br>        Bash,<br>        &amp;<span class="hljs-keyword">mut</span> cmd, <span class="hljs-comment">// We need to specify what generator to use</span><br>        <span class="hljs-string">&quot;myapp&quot;</span>,  <span class="hljs-comment">// We need to specify the bin name manually</span><br>        outdir,   <span class="hljs-comment">// We need to specify where to write to</span><br>    )?;<br><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;cargo:warning=completion file is generated: &#123;path:?&#125;&quot;</span>);<br><br>    <span class="hljs-title function_ invoke__">Ok</span>(())<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>你需要把其中的 <strong>myapp</strong> 替换为你的命令。</p>
+<p>执行构建命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">cargo build<br></code></pre></td></tr></table></figure>
+<p>可以看到输出：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">warning: myapp@0.1.0: completion file is generated: <span class="hljs-string">&quot;/Users/hedon/RustroverProjects/learn-clap-complete/target/debug/build/myapp-42e401d08c044ca3/out/myapp.bash&quot;</span><br>    Finished dev [unoptimized + debuginfo] target(s) <span class="hljs-keyword">in</span> 1.90s<br></code></pre></td></tr></table></figure>
+<p>这里会输出生成脚本所在的位置，我这里是
+<code>/Users/hedon/RustroverProjects/learn-clap-complete/target/debug/build/myapp-42e401d08c044ca3/out/myapp.bash</code>。</p>
+<p>我的终端使用的是 zsh：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  <span class="hljs-built_in">echo</span> <span class="hljs-variable">$SHELL</span>      <br>/bin/zsh<br></code></pre></td></tr></table></figure>
+<p>所以我需要将这个文件的内容加到 <code>~/.zshrc</code> 文件的末尾：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">cat</span> /Users/hedon/RustroverProjects/learn-clap-complete/target/debug/build/myapp-42e401d08c044ca3/out/myapp.bash &gt;&gt; ~/.zshrc<br></code></pre></td></tr></table></figure>
+<p>重新加载配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">source</span> ~/.zshrc<br></code></pre></td></tr></table></figure>
+<p>这个时候你使用 <strong>myapp</strong> 命令的时候，按 <code>tap</code>
+键，就有自动补全了：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  ./target/debug/myapp <br>--<span class="hljs-built_in">help</span>    -h        \[file\]  <span class="hljs-built_in">help</span>      <span class="hljs-built_in">test</span> <br></code></pre></td></tr></table></figure>
 <h1 id="httpie">Httpie</h1>
 <h1 id="与-go-语言-cobra-比较">与 Go 语言 cobra 比较</h1>
 
@@ -1068,6 +1104,12 @@ alt="Derive vs Builder" />
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2024/03/02/rust-crate-reqwest/" title="rust-crate-reqwest">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">rust-crate-reqwest</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
