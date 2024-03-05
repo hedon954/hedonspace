@@ -24,7 +24,7 @@
 <meta property="og:description" content="x">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2024-03-02T17:22:02.000Z">
-<meta property="article:modified_time" content="2024-03-02T17:48:33.906Z">
+<meta property="article:modified_time" content="2024-03-05T15:43:41.241Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Rust">
 <meta name="twitter:card" content="summary_large_image">
@@ -254,7 +254,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          0 words
+          2.1k words
         
       </span>
     
@@ -265,7 +265,7 @@
         
         
         
-          1 mins
+          6 mins
         
       </span>
     
@@ -315,7 +315,112 @@
             
               <div class="markdown-body">
                 
-                
+                <h1 id="结论先行">结论先行</h1>
+<h1 id="开发思路">开发思路</h1>
+<h2 id="http-协议">HTTP 协议</h2>
+<p>回顾一下 HTTP 协议的请求体和响应体结构。</p>
+<p>请求结构：</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240303131157545.png" srcset="/img/loading.gif" lazyload
+alt="http request structure" />
+<figcaption aria-hidden="true">http request structure</figcaption>
+</figure>
+<p>响应结构：</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240303131123618.png" srcset="/img/loading.gif" lazyload
+alt="http response structure" />
+<figcaption aria-hidden="true">http response structure</figcaption>
+</figure>
+<h2 id="命令分析">命令分析</h2>
+<p>在本文中，我们就实现 HTTPie cli 官方的这个<a
+target="_blank" rel="noopener" href="https://github.com/httpie/cli?tab=readme-ov-file#examples">示例</a>：即允许指定请求方法、携带
+headers 和 json 数据发送请求。</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240303131445159.png" srcset="/img/loading.gif" lazyload
+alt="HTTPie 官方示例" />
+<figcaption aria-hidden="true">HTTPie 官方示例</figcaption>
+</figure>
+<p>我们来拆解一下，这个命令可以分为以下几个部分：</p>
+<figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs tex">httpie &lt;METHOD&gt; &lt;URL&gt; [headers | params]...<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>&lt;METHOD&gt;</code>: 请求方法，本案例中，我们仅支持 GET 和
+POST。</li>
+<li><code>&lt;URL&gt;</code>: 请求地址。</li>
+<li><code>&lt;HEADERS&gt;</code>: 请求头，格式为
+<code>h1:v1</code>。</li>
+<li><code>&lt;PARAMS&gt;</code>: 请求参数，格式为
+<code>k1=v1</code>，最终以 json 结构发送。</li>
+</ul>
+<h2 id="效果展示">效果展示</h2>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  httpie git:(master) ✗ ./Httpie --<span class="hljs-built_in">help</span>                                              <br>Usage: Httpie &lt;COMMAND&gt;<br><br>Commands:<br>  get   <br>  post  <br>  <span class="hljs-built_in">help</span>  Print this message or the <span class="hljs-built_in">help</span> of the given subcommand(s)<br><br>Options:<br>  -h, --<span class="hljs-built_in">help</span>     Print <span class="hljs-built_in">help</span><br>  -V, --version  Print version<br></code></pre></td></tr></table></figure>
+<p>其中 post 子命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs bash">Usage: Httpie post &lt;URL&gt; &lt;BODY&gt;...<br><br>Arguments:<br>  &lt;URL&gt;      Specify the url you wanna request to<br>  &lt;BODY&gt;...  Set the request body. Examples: headers: header1:value1 params: key1=value1<br><br>Options:<br>  -h, --<span class="hljs-built_in">help</span>  Print <span class="hljs-built_in">help</span><br></code></pre></td></tr></table></figure>
+<p>请求示例：</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240305225846224.png" srcset="/img/loading.gif" lazyload
+alt="httpie response demo" />
+<figcaption aria-hidden="true">httpie response demo</figcaption>
+</figure>
+<h2 id="思路梳理">思路梳理</h2>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240305232520113.png" srcset="/img/loading.gif" lazyload
+alt="httpie 开发思路梳理" />
+<figcaption aria-hidden="true">httpie 开发思路梳理</figcaption>
+</figure>
+<p><strong>第 1 步：解析命令行参数</strong></p>
+<p>本案例中 httpie 支持 2 个子命令：</p>
+<ul>
+<li>get 支持 url 参数</li>
+<li>post 支持 url、body 参数，因为其中 headers 和 params
+是变长的，我们统一用 <code>Vec&lt;String&gt;</code> 类型的 body
+来接收，然后用 <code>:</code> 和 <code>=</code> 来区分它们。</li>
+</ul>
+<p><strong>第 2 步：发送请求</strong></p>
+<ol type="1">
+<li>使用 reqwest 创建 http client；</li>
+<li>设置 method；</li>
+<li>设置 headers；</li>
+<li>设置 params；</li>
+<li>发送请求；</li>
+<li>获取响应体。</li>
+</ol>
+<p><strong>第 3 步：打印响应</strong></p>
+<ol type="1">
+<li>打印 http version 和 status，并使用 colored 赋予蓝色；</li>
+<li>打印 response headers，并使用 colored 赋予绿色；</li>
+<li>确定 content-type，如果是 json，我们就用 jsonxf 美化 json 串并使用
+colored 赋予蓝绿色输出，如果是其他类型，这里我们就输出原文即可。</li>
+</ol>
+<h1 id="实战过程">实战过程</h1>
+<h2 id="创建项目">1. 创建项目</h2>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">cargo new httpie<br></code></pre></td></tr></table></figure>
+<h2 id="添加依赖">2. 添加依赖</h2>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[package]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;httpie&quot;</span><br><span class="hljs-attr">version</span> = <span class="hljs-string">&quot;0.1.0&quot;</span><br><span class="hljs-attr">edition</span> = <span class="hljs-string">&quot;2021&quot;</span><br><br><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">anyhow</span> = <span class="hljs-string">&quot;1.0.80&quot;</span><br><span class="hljs-attr">clap</span> = &#123; version = <span class="hljs-string">&quot;4.5.1&quot;</span>, features = [<span class="hljs-string">&quot;derive&quot;</span>] &#125;<br><span class="hljs-attr">colored</span> = <span class="hljs-string">&quot;2.1.0&quot;</span><br><span class="hljs-attr">jsonxf</span> = <span class="hljs-string">&quot;1.1.1&quot;</span><br><span class="hljs-attr">mime</span> = <span class="hljs-string">&quot;0.3.17&quot;</span><br><span class="hljs-attr">reqwest</span> = &#123; version = <span class="hljs-string">&quot;0.11.24&quot;</span>, features = [<span class="hljs-string">&quot;json&quot;</span>] &#125;<br><span class="hljs-attr">tokio</span> = &#123; version = <span class="hljs-string">&quot;1.36.0&quot;</span>, features = [<span class="hljs-string">&quot;rt&quot;</span>, <span class="hljs-string">&quot;rt-multi-thread&quot;</span>, <span class="hljs-string">&quot;macros&quot;</span>] &#125;<br><span class="hljs-attr">serde</span> = <span class="hljs-string">&quot;1.0.197&quot;</span><br><span class="hljs-attr">serde_json</span> = <span class="hljs-string">&quot;1.0.114&quot;</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>anyhow</code>: 用于简化异常处理。</li>
+<li><code>clap</code>: 解析命令行参数，可参考 <a
+href="./rust-crate-clap.md">深入探索 Rust 的 clap
+库：命令行解析的艺术</a>。</li>
+<li><code>colored</code>: 为终端输出内容赋予颜色。</li>
+<li><code>jsonxf</code>: 美化 json 串。</li>
+<li><code>mime</code>: 提供了各种 Media Type 的类型封装。</li>
+<li><code>reqwest</code>: http 客户端，可参考 <a
+href="./rust-crate-reqwest.md">Rust reqwest 简明教程</a>。</li>
+<li><code>tokio</code>: 异步库，本案例种我们使用 reqwest
+的异步功能。</li>
+<li><code>serde</code>: 通用的序列化和反序列化工具，为数据实现 Serialize
+和 Deserialize trait，但是本身不直接支持任何特定的数据格式。</li>
+<li><code>serde_json</code>: 专门处理 json
+格式数据，<code>to_string</code> 函数可以将实现了 <code>Serialize</code>
+trait 的 Rust 数据结构转换成 JSON 字符串。相应的，<code>from_str</code>
+函数可以将 JSON 字符串转换成实现了 <code>Deserialize</code> trait 的
+Rust 数据结构。</li>
+</ul>
 
                 
               </div>
@@ -412,6 +517,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2024/03/05/rust-crate-anyhow/" title="Rust anyhow 简明教程">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Rust anyhow 简明教程</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
