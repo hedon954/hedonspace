@@ -23,9 +23,6 @@
 <meta property="og:site_name" content="HedonSpace">
 <meta property="og:description" content="本文详细介绍了如何实现 Kafka 的顺序消息，同时给出了消息队列顺序消息的通用实现思路，并简单介绍了 RabbitMQ、RocketMQ 和 Pulsar 在顺序消息方面的实现思路。">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231124235214392.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231125013322459.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231125003222491.png">
 <meta property="article:published_time" content="2023-11-23T15:42:34.000Z">
 <meta property="article:modified_time" content="2024-01-17T14:28:37.948Z">
 <meta property="article:author" content="Hedon Wang">
@@ -33,7 +30,6 @@
 <meta property="article:tag" content="中间件">
 <meta property="article:tag" content="消息队列">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231124235214392.png">
   
   
   
@@ -329,169 +325,251 @@
 <li>RabbitMQ 3.7.8</li>
 <li>RocketMQ 5.0</li>
 <li>Go1.21</li>
-<li><a target="_blank" rel="noopener" href="http://github.com/segmentio/kafka-go">github.com/segmentio/kafka-go</a> v0.4.45</li>
+<li>github.com/segmentio/kafka-go v0.4.45</li>
 </ul>
 <h2 id="结论先行">结论先行</h2>
-<p>Kafka 只能保证单一分区内的顺序消息，无法保证多分区间的顺序消息。具体来说，要在 Kafka 完全实现顺序消息，至少需要保证以下几个条件：</p>
-<ol>
+<p>Kafka
+只能保证单一分区内的顺序消息，无法保证多分区间的顺序消息。具体来说，要在
+Kafka 完全实现顺序消息，至少需要保证以下几个条件：</p>
+<ol type="1">
 <li>同一生产者生产消息；</li>
 <li>同步发送消息到 Kafka broker；</li>
 <li>所有消息发布到同一个分区；</li>
 <li>同一消费者同步按照顺序消费消息。</li>
 </ol>
 <p>而要满足第 3 点，常用的有 2 种思路：</p>
-<ol>
-<li>固定消息的 key，生产端采用 <code>key hash</code> 的方式写入  broker；</li>
+<ol type="1">
+<li>固定消息的 key，生产端采用 <code>key hash</code> 的方式写入
+broker；</li>
 <li>自定义分区策略，要保证顺序的消息都写入到指定的分区。</li>
 </ol>
 <h2 id="消息队列中的顺序消息如何实现">消息队列中的顺序消息如何实现</h2>
 <h3 id="顺序消息定义">顺序消息定义</h3>
 <p>生产端发送出来的消息的顺序和消费端接收到消息的顺序是一样的。</p>
 <h3 id="消息存储结构">消息存储结构</h3>
-<p>一般来说，消息队列都是基于<strong>顺序存储结构</strong>来存储数据的，不需要 B 树、B+ 树等复杂数据结构，利用文件的顺序读写，性能也很高。所以理想情况下，生产者按顺序发送消息，broker 会按顺序存储消息，消费者再按顺序消费消息，那么天然就实现了我们要的<strong>顺序消息</strong>了，如下：</p>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231124235214392.png" srcset="/img/loading.gif" lazyload alt="消息队列顺序存储结构"></p>
+<p>一般来说，消息队列都是基于<strong>顺序存储结构</strong>来存储数据的，不需要
+B 树、B+
+树等复杂数据结构，利用文件的顺序读写，性能也很高。所以理想情况下，生产者按顺序发送消息，broker
+会按顺序存储消息，消费者再按顺序消费消息，那么天然就实现了我们要的<strong>顺序消息</strong>了，如下：</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231124235214392.png" srcset="/img/loading.gif" lazyload
+alt="消息队列顺序存储结构" />
+<figcaption aria-hidden="true">消息队列顺序存储结构</figcaption>
+</figure>
 <h3 id="基本条件">基本条件</h3>
-<p>但是一般情况下，消息队列为了支持更高的并发和吞吐，大多数都有分区（partition）和消费者组（consumer group）机制，而为了高可用，一般也会有副本（replica）机制，所以情况就复杂得多了，如下面几个例子，就会导致消息失序：</p>
-<ol>
-<li>多个生产者同时发送消息，那么到达 broker 的时间也是不确定的，所以 broker 就无法保证落盘的顺序性了；</li>
-<li>单个生产者，但是采用异步发送，因为异步线程是并发执行的，由 CPU 进行调度，且有可能会因为发送失败而重试，所以也无法保证消息可以按照顺序到达 broker，同理，消费者异步处理消息，也无法保证顺序性；</li>
-<li>一个 topic 有多个分区，那么即使是同一个生产者，由于分区策略，消息可能会被分发到多个分区中，消费者也就无法保证顺序性了。</li>
+<p>但是一般情况下，消息队列为了支持更高的并发和吞吐，大多数都有分区（partition）和消费者组（consumer
+group）机制，而为了高可用，一般也会有副本（replica）机制，所以情况就复杂得多了，如下面几个例子，就会导致消息失序：</p>
+<ol type="1">
+<li>多个生产者同时发送消息，那么到达 broker 的时间也是不确定的，所以
+broker 就无法保证落盘的顺序性了；</li>
+<li>单个生产者，但是采用异步发送，因为异步线程是并发执行的，由 CPU
+进行调度，且有可能会因为发送失败而重试，所以也无法保证消息可以按照顺序到达
+broker，同理，消费者异步处理消息，也无法保证顺序性；</li>
+<li>一个 topic
+有多个分区，那么即使是同一个生产者，由于分区策略，消息可能会被分发到多个分区中，消费者也就无法保证顺序性了。</li>
 </ol>
 <p>所以到这里，我们可以总结出实现顺序消息，至少需要满足以下 3 点：</p>
-<ol>
+<ol type="1">
 <li>单一生产者同步发送；</li>
 <li>单一分区；</li>
 <li>单一消费者同步消费；</li>
 </ol>
-<p>第 1、3 点比较简单，Kafka 通过分区和 offset 的方式保证了消息的顺序。每个分区都是一个有序的、不可变的消息序列，每个消息在分区中都有一个唯一的序数标识，称为 <code>offset</code>。生产者在发送消息到分区时，Kafka 会自动为消息分配一个 offset。消费者在读取消息时，会按照 offset 的顺序来读取，从而保证了消息的顺序。</p>
+<p>第 1、3 点比较简单，Kafka 通过分区和 offset
+的方式保证了消息的顺序。每个分区都是一个有序的、不可变的消息序列，每个消息在分区中都有一个唯一的序数标识，称为
+<code>offset</code>。生产者在发送消息到分区时，Kafka
+会自动为消息分配一个 offset。消费者在读取消息时，会按照 offset
+的顺序来读取，从而保证了消息的顺序。</p>
 <p>下面我们主要来谈一谈第 2 点。</p>
-<h2 id="Kafka-顺序消息的实现">Kafka 顺序消息的实现</h2>
+<h2 id="kafka-顺序消息的实现">Kafka 顺序消息的实现</h2>
 <h3 id="写入消息的过程">写入消息的过程</h3>
-<ol>
-<li><strong>配置生产者</strong>：首先，你需要配置 Kafka 生产者。这包括指定 Kafka 集群的地址和端口，以及其他相关配置项，如消息序列化器、分区策略等。</li>
-<li><strong>创建生产者实例</strong>：在应用程序中，你需要创建一个 Kafka 生产者的实例。这个实例将用于与 Kafka 集群进行通信。</li>
-<li><strong>序列化消息</strong>：在将消息发送到 Kafka 集群之前，你需要将消息进行序列化。Kafka 使用字节数组来表示消息的内容，因此你需要将消息对象序列化为字节数组。这通常涉及将消息对象转换为 JSON、Avro、Protobuf 等格式。</li>
-<li><strong>选择分区</strong>：Kafka 的主题（topic）被分为多个分区（partition），每个分区都是有序且持久化的消息日志。当你发送消息时，你可以选择将消息发送到特定的分区，或者让 Kafka 根据分区策略自动选择分区。</li>
-<li><strong>发送消息</strong>：一旦消息被序列化并选择了目标分区，你可以使用 Kafka 生产者的 <code>send()</code> 方法将消息发送到 Kafka 集群。发送消息时，生产者会将消息发送到对应分区的 leader 副本。</li>
-<li><strong>异步发送</strong>：Kafka 生产者通常使用异步方式发送消息，这样可以提高吞吐量。生产者将消息添加到一个发送缓冲区（send buffer）中，并在后台线程中批量发送消息到 Kafka 集群。</li>
-<li><strong>消息持久化</strong>：一旦消息被发送到 Kafka 集群的 leader 副本，它将被持久化并复制到其他副本，以确保数据的高可靠性和冗余性。只有当消息被成功写入到指定数量的副本后，生产者才会收到确认（acknowledgement）。</li>
+<ol type="1">
+<li><strong>配置生产者</strong>：首先，你需要配置 Kafka
+生产者。这包括指定 Kafka
+集群的地址和端口，以及其他相关配置项，如消息序列化器、分区策略等。</li>
+<li><strong>创建生产者实例</strong>：在应用程序中，你需要创建一个 Kafka
+生产者的实例。这个实例将用于与 Kafka 集群进行通信。</li>
+<li><strong>序列化消息</strong>：在将消息发送到 Kafka
+集群之前，你需要将消息进行序列化。Kafka
+使用字节数组来表示消息的内容，因此你需要将消息对象序列化为字节数组。这通常涉及将消息对象转换为
+JSON、Avro、Protobuf 等格式。</li>
+<li><strong>选择分区</strong>：Kafka
+的主题（topic）被分为多个分区（partition），每个分区都是有序且持久化的消息日志。当你发送消息时，你可以选择将消息发送到特定的分区，或者让
+Kafka 根据分区策略自动选择分区。</li>
+<li><strong>发送消息</strong>：一旦消息被序列化并选择了目标分区，你可以使用
+Kafka 生产者的 <code>send()</code> 方法将消息发送到 Kafka
+集群。发送消息时，生产者会将消息发送到对应分区的 leader 副本。</li>
+<li><strong>异步发送</strong>：Kafka
+生产者通常使用异步方式发送消息，这样可以提高吞吐量。生产者将消息添加到一个发送缓冲区（send
+buffer）中，并在后台线程中批量发送消息到 Kafka 集群。</li>
+<li><strong>消息持久化</strong>：一旦消息被发送到 Kafka 集群的 leader
+副本，它将被持久化并复制到其他副本，以确保数据的高可靠性和冗余性。只有当消息被成功写入到指定数量的副本后，生产者才会收到确认（acknowledgement）。</li>
 <li><strong>错误处理和重试</strong>：如果发送消息时发生错误，生产者可以根据配置进行错误处理和重试。你可以设置重试次数、重试间隔等参数来控制重试行为。</li>
 </ol>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231125013322459.png" srcset="/img/loading.gif" lazyload alt="Kafka 生产者组件 -《Kafka权威指南第2版》"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231125013322459.png" srcset="/img/loading.gif" lazyload
+alt="Kafka 生产者组件 -《Kafka权威指南第2版》" />
+<figcaption aria-hidden="true">Kafka 生产者组件
+-《Kafka权威指南第2版》</figcaption>
+</figure>
 <h3 id="实现单一分区">实现单一分区</h3>
 <p>再 Kafka 中，我们要实现将消息写入到同一个分区，有 3 种思路：</p>
 <ul>
-<li>配置 <code>num.partitions=1</code> 或者创建 topic 的时候指定只有 1 个分区，但这会显著降低 Kafka 的吞吐量。</li>
-<li><strong>固定消息的 key</strong>，然后采用 <strong>key hash</strong> 的分区策略，这样就可以让所有消息都被分到同一个分区中。</li>
+<li>配置 <code>num.partitions=1</code> 或者创建 topic 的时候指定只有 1
+个分区，但这会显著降低 Kafka 的吞吐量。</li>
+<li><strong>固定消息的 key</strong>，然后采用 <strong>key hash</strong>
+的分区策略，这样就可以让所有消息都被分到同一个分区中。</li>
 <li>实现并指定<strong>自定义分区策略</strong>，可以根据业务需求，将需要顺序消费的消息都分到固定一个分区中。</li>
 </ul>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// 如下例子，所有使用&quot;same-key&quot;作为key的消息都会被发送到同一个Partition</span><br>ProducerRecord&lt;String, String&gt; record = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ProducerRecord</span>&lt;String, String&gt;(<span class="hljs-string">&quot;topic&quot;</span>, <span class="hljs-string">&quot;same-key&quot;</span>, <span class="hljs-string">&quot;message&quot;</span>);<br>producer.send(record);<br></code></pre></td></tr></table></figure>
 <h3 id="重平衡带来的问题">重平衡带来的问题</h3>
-<p>如果采用上述的第 2 种思路：<strong>固定消息 key，依靠 key hash 分区策略，实现单一分区</strong>。在我们只有 1 个消费者的情况下是没有问题的，但是如果我们使用的是消费者组，那么，在发生<strong>重平衡</strong>操作的时候，就可能会有问题了。</p>
-<p>Kafka 的重平衡（Rebalance）是指 Kafka 消费者组（Consumer Group）中的消费者实例对分区的重新分配。这个过程主要发生在以下几种情况：</p>
-<ol>
+<p>如果采用上述的第 2 种思路：<strong>固定消息 key，依靠 key hash
+分区策略，实现单一分区</strong>。在我们只有 1
+个消费者的情况下是没有问题的，但是如果我们使用的是消费者组，那么，在发生<strong>重平衡</strong>操作的时候，就可能会有问题了。</p>
+<p>Kafka 的重平衡（Rebalance）是指 Kafka 消费者组（Consumer
+Group）中的消费者实例对分区的重新分配。这个过程主要发生在以下几种情况：</p>
+<ol type="1">
 <li>消费者组中新的消费者加入。</li>
 <li>消费者组中的消费者离开或者挂掉。</li>
 <li>订阅的 Topic 的分区数发生变化。</li>
-<li>消费者调用了 <code>#unsubscribe()</code> 或者 <code>#subscribe()</code> 方法。</li>
+<li>消费者调用了 <code>#unsubscribe()</code> 或者
+<code>#subscribe()</code> 方法。</li>
 </ol>
 <p>重平衡的过程主要包括以下几个步骤：</p>
-<ol>
-<li><strong>Revoke</strong>：首先，Kafka 会撤销消费者组中所有消费者当前持有的分区。</li>
-<li><strong>Assignment</strong>：然后，Kafka 会重新计算分区的分配情况，然后将分区分配给消费者。</li>
+<ol type="1">
+<li><strong>Revoke</strong>：首先，Kafka
+会撤销消费者组中所有消费者当前持有的分区。</li>
+<li><strong>Assignment</strong>：然后，Kafka
+会重新计算分区的分配情况，然后将分区分配给消费者。</li>
 <li><strong>Resume</strong>：最后，消费者会开始消费新分配到的分区。</li>
 </ol>
-<p>重平衡的目的是为了保证消费者组中的消费者能够公平地消费 Topic 的分区。通过重平衡，Kafka 可以在消费者的数量发生变化时，动态地调整消费者对分区的分配，从而实现负载均衡。</p>
+<p>重平衡的目的是为了保证消费者组中的消费者能够公平地消费 Topic
+的分区。通过重平衡，Kafka
+可以在消费者的数量发生变化时，动态地调整消费者对分区的分配，从而实现负载均衡。</p>
 <p>然而，当发生重平衡时，分区可能会被重新分配给不同的消费者，这可能会影响消息的消费顺序。</p>
 <p>举个例子：</p>
-<ol>
-<li>假设消费者 A 正在消费分区 P 的消息，它已经消费了消息 1，消息 2，正在处理消息 3。</li>
+<ol type="1">
+<li>假设消费者 A 正在消费分区 P 的消息，它已经消费了消息 1，消息
+2，正在处理消息 3。</li>
 <li>此时，发生了重平衡，分区 P 被重新分配给了消费者 B。</li>
-<li>消费者 B 开始消费分区 P，它会从上一次提交的偏移量（offset）开始消费。假设消费者 A 在处理消息 3 时发生了故障，没有提交偏移量，那么消费者 B 会从消息 3 开始消费。</li>
-<li>这样，消息 3 可能会被消费两次，而且如果消费者 B 处理消息 3 的速度快于消费者A，那么消息 3 可能会在消息 2 之后被处理，这就打破了消息的顺序性。</li>
+<li>消费者 B 开始消费分区
+P，它会从上一次提交的偏移量（offset）开始消费。假设消费者 A 在处理消息 3
+时发生了故障，没有提交偏移量，那么消费者 B 会从消息 3 开始消费。</li>
+<li>这样，消息 3 可能会被消费两次，而且如果消费者 B 处理消息 3
+的速度快于消费者A，那么消息 3 可能会在消息 2
+之后被处理，这就打破了消息的顺序性。</li>
 </ol>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231125003222491.png" srcset="/img/loading.gif" lazyload alt="重平衡导致消息失序"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231125003222491.png" srcset="/img/loading.gif" lazyload
+alt="重平衡导致消息失序" />
+<figcaption aria-hidden="true">重平衡导致消息失序</figcaption>
+</figure>
 <p>再举个例子：</p>
-<ol>
-<li>topic-A 本来只有 3 个分区，按照 key hash，key 为 <code>same-key</code> 的消息应该都发到 第 2 个分区；</li>
-<li>但是后来 topic-A 变成了 4 个分区，按照 key hash，key 为 <code>same-key</code> 的消息可能就被发到第 3 个分区了；</li>
+<ol type="1">
+<li>topic-A 本来只有 3 个分区，按照 key hash，key 为
+<code>same-key</code> 的消息应该都发到 第 2 个分区；</li>
+<li>但是后来 topic-A 变成了 4 个分区，按照 key hash，key 为
+<code>same-key</code> 的消息可能就被发到第 3 个分区了；</li>
 <li>这就无法做到单一分区，可能会导致消息失序。</li>
 </ol>
 <p>当然这个例子不是由重平衡直接引起的，但是这种情况也是有可能导致消息失序的。</p>
 <h3 id="缓解重平衡的问题">缓解重平衡的问题</h3>
 <ul>
-<li><strong>避免动态改变分区数</strong>：在需要严格保持消息顺序的场景下，应避免动态地改变分区数。这意味着在设计 Kafka 主题时，应提前规划好所需的分区数，以避免日后需要进行更改。</li>
+<li><strong>避免动态改变分区数</strong>：在需要严格保持消息顺序的场景下，应避免动态地改变分区数。这意味着在设计
+Kafka 主题时，应提前规划好所需的分区数，以避免日后需要进行更改。</li>
 <li><strong>使用单个分区</strong>：对于严格顺序要求的场景，可以考虑使用单分区主题。虽然这会限制吞吐量和并发性，但可以保证消息的全局顺序。</li>
 <li><strong>使用其他策略保持顺序</strong>：在某些情况下，可以通过在应用层实现逻辑来保持顺序，比如在消息中包含顺序号或时间戳，并在消费时根据这些信息重建正确的顺序。</li>
 <li><strong>使用静态成员功能</strong>：它允许消费者在断开和重新连接时保持其消费者组内的身份，这可以减少因短暂的网络问题或消费者重启导致的不必要的重平衡。</li>
 </ul>
-<p>上面这些措施，只能减少重平衡带来的问题，并无法根除，如果非要实现严格意义上的顺序消息，要么在消息中加入时间戳等标记，在业务层保证顺序消费，要么就只能采用 <code>单一生产者同步发送 + 单一分区 +单一消费者同步消费</code> 这种模式了。</p>
+<p>上面这些措施，只能减少重平衡带来的问题，并无法根除，如果非要实现严格意义上的顺序消息，要么在消息中加入时间戳等标记，在业务层保证顺序消费，要么就只能采用
+<code>单一生产者同步发送 + 单一分区 +单一消费者同步消费</code>
+这种模式了。</p>
 <h3 id="静态成员功能">静态成员功能</h3>
-<p>Kafka 2.3.0 版本引入了一项新功能：静态成员（Static Membership）。这个功能主要是为了减少由于消费者重平衡（rebalance）引起的开销和延迟。在传统的 Kafka 消费者组中，当新的消费者加入或离开消费者组时，会触发重平衡。这个过程可能会导致消息的处理延迟，并且在高吞吐量的场景下可能会对性能造成影响。静态成员功能旨在缓解这些问题。以下是它的一些关键点：</p>
+<p>Kafka 2.3.0 版本引入了一项新功能：静态成员（Static
+Membership）。这个功能主要是为了减少由于消费者重平衡（rebalance）引起的开销和延迟。在传统的
+Kafka
+消费者组中，当新的消费者加入或离开消费者组时，会触发重平衡。这个过程可能会导致消息的处理延迟，并且在高吞吐量的场景下可能会对性能造成影响。静态成员功能旨在缓解这些问题。以下是它的一些关键点：</p>
 <p>静态成员的工作原理：</p>
-<ol>
-<li>
-<p><strong>静态成员标识</strong>：消费者在加入消费者组时可以提供一个静态成员标识（Static Member ID）。这允许 Kafka Broker 识别特定的消费者实例，而不是仅仅依赖于消费者组内的动态分配。</p>
-</li>
-<li>
-<p><strong>重平衡优化</strong>：当使用静态成员功能时，如果一个已知的消费者由于某种原因（如网络问题）短暂断开后重新连接，Kafka 不会立即触发重平衡。相反，Kafka 会等待一个预设的超时期限（<a target="_blank" rel="noopener" href="http://session.timeout.ms">session.timeout.ms</a>），在此期间如果消费者重新连接，它将保留原来的分区分配。</p>
-</li>
-<li>
-<p><strong>减少重平衡次数</strong>：这大大减少了由于消费者崩溃和恢复、网络问题或维护操作引起的不必要的重平衡次数。</p>
-</li>
+<ol type="1">
+<li><p><strong>静态成员标识</strong>：消费者在加入消费者组时可以提供一个静态成员标识（Static
+Member ID）。这允许 Kafka Broker
+识别特定的消费者实例，而不是仅仅依赖于消费者组内的动态分配。</p></li>
+<li><p><strong>重平衡优化</strong>：当使用静态成员功能时，如果一个已知的消费者由于某种原因（如网络问题）短暂断开后重新连接，Kafka
+不会立即触发重平衡。相反，Kafka
+会等待一个预设的超时期限（session.timeout.ms），在此期间如果消费者重新连接，它将保留原来的分区分配。</p></li>
+<li><p><strong>减少重平衡次数</strong>：这大大减少了由于消费者崩溃和恢复、网络问题或维护操作引起的不必要的重平衡次数。</p></li>
 </ol>
 <p>使用静态成员的优点：</p>
-<ol>
-<li>
-<p><strong>提高稳定性</strong>：减少重平衡可以提高消费者组的整体稳定性，尤其是在大型消费者组和高吞吐量的情况下。</p>
-</li>
-<li>
-<p><strong>减少延迟</strong>：由于减少了重平衡的次数，可以减少因重平衡导致的消息处理延迟。</p>
-</li>
-<li>
-<p><strong>持久的消费者分区分配</strong>：这使得消费者在分区分配上更加持久，有助于更好地管理和优化消息的消费。</p>
-</li>
+<ol type="1">
+<li><p><strong>提高稳定性</strong>：减少重平衡可以提高消费者组的整体稳定性，尤其是在大型消费者组和高吞吐量的情况下。</p></li>
+<li><p><strong>减少延迟</strong>：由于减少了重平衡的次数，可以减少因重平衡导致的消息处理延迟。</p></li>
+<li><p><strong>持久的消费者分区分配</strong>：这使得消费者在分区分配上更加持久，有助于更好地管理和优化消息的消费。</p></li>
 </ol>
 <p>如何使用：</p>
 <ul>
-<li>要使用静态成员功能，需要在 Kafka 消费者的配置中设置 <code>group.instance.id</code>。这个 ID 应该是唯一的，并且在消费者重启或重新连接时保持不变。同时，还需要配置 <code>session.timeout.ms</code>，以决定在触发重平衡之前消费者可以离线多长时间。</li>
+<li>要使用静态成员功能，需要在 Kafka 消费者的配置中设置
+<code>group.instance.id</code>。这个 ID
+应该是唯一的，并且在消费者重启或重新连接时保持不变。同时，还需要配置
+<code>session.timeout.ms</code>，以决定在触发重平衡之前消费者可以离线多长时间。</li>
 </ul>
 <p>注意事项：</p>
 <ul>
 <li>虽然静态成员功能可以减少重平衡的发生，但它不会完全消除重平衡。在消费者组成员的长期变化（如新消费者的加入或永久离开）时，仍然会发生重平衡。</li>
-<li>需要合理设置 <code>session.timeout.ms</code>，以避免消费者由于短暂的网络问题或其他原因的断开而过早触发重平衡。</li>
+<li>需要合理设置
+<code>session.timeout.ms</code>，以避免消费者由于短暂的网络问题或其他原因的断开而过早触发重平衡。</li>
 </ul>
-<p>静态成员功能在处理大规模 Kafka 应用时尤其有用，它提供了一种机制来优化消费者组的性能和稳定性。</p>
+<p>静态成员功能在处理大规模 Kafka
+应用时尤其有用，它提供了一种机制来优化消费者组的性能和稳定性。</p>
 <h3 id="幂等性">幂等性</h3>
-<p>Kafka 0.11 版本后提供了幂等性生产者，这意味着即使生产者因为某些错误重试发送相同的消息，这些消息也只会被记录一次。这是通过给每一批发送到 Kafka 的消息分配一个序列号实现的，broker 使用这个序列号来删除重复发送的消息。使用幂等性生产者，可以减少重复消息的风险，这意味着即使在网络重试等情况下，消息的顺序也能得到更好的保证。因为重复消息不会被多次记录，所以不会破坏已有消息的顺序。</p>
-<h2 id="其他常见消息队列顺序消息的实现">其他常见消息队列顺序消息的实现</h2>
-<h3 id="Pulsar">Pulsar</h3>
-<p>Pulsar 和 Kafka 一样，都是通过生产端按 Key Hash 的方案将数据写入到同一个分区。</p>
-<h3 id="RabbitMQ">RabbitMQ</h3>
-<p>RabbitMQ 在生产时没有生产分区分配的过程。它是通过 <code>Exchange</code> 和 <code>Route Key</code> 机制来实现顺序消息的。<code>Exchange</code> 会根据设置好的 <code>Route Key</code> 将数据路由到不同的 <code>Queue</code> 中存储。此时 <code>Route Key</code> 的作用和 Kafka 的消息的 <code>Key</code> 是一样的。</p>
-<h3 id="RocketMQ">RocketMQ</h3>
-<p>RocektMQ 支持<code>消息组（MessageGroup）</code>的概念。在生产端指定消息组，则同一个消息组的消息就会被发送到同一个分区中。此时这个消息组起到的作用和 Kakfa 的消息的 Key 是一样的。</p>
-<h2 id="实战-Kafka-实现顺序消息">实战 Kafka 实现顺序消息</h2>
+<p>Kafka 0.11
+版本后提供了幂等性生产者，这意味着即使生产者因为某些错误重试发送相同的消息，这些消息也只会被记录一次。这是通过给每一批发送到
+Kafka 的消息分配一个序列号实现的，broker
+使用这个序列号来删除重复发送的消息。使用幂等性生产者，可以减少重复消息的风险，这意味着即使在网络重试等情况下，消息的顺序也能得到更好的保证。因为重复消息不会被多次记录，所以不会破坏已有消息的顺序。</p>
+<h2
+id="其他常见消息队列顺序消息的实现">其他常见消息队列顺序消息的实现</h2>
+<h3 id="pulsar">Pulsar</h3>
+<p>Pulsar 和 Kafka 一样，都是通过生产端按 Key Hash
+的方案将数据写入到同一个分区。</p>
+<h3 id="rabbitmq">RabbitMQ</h3>
+<p>RabbitMQ 在生产时没有生产分区分配的过程。它是通过
+<code>Exchange</code> 和 <code>Route Key</code>
+机制来实现顺序消息的。<code>Exchange</code> 会根据设置好的
+<code>Route Key</code> 将数据路由到不同的 <code>Queue</code>
+中存储。此时 <code>Route Key</code> 的作用和 Kafka 的消息的
+<code>Key</code> 是一样的。</p>
+<h3 id="rocketmq">RocketMQ</h3>
+<p>RocektMQ
+支持<code>消息组（MessageGroup）</code>的概念。在生产端指定消息组，则同一个消息组的消息就会被发送到同一个分区中。此时这个消息组起到的作用和
+Kakfa 的消息的 Key 是一样的。</p>
+<h2 id="实战-kafka-实现顺序消息">实战 Kafka 实现顺序消息</h2>
 <blockquote>
-<p>代码仓库：<a target="_blank" rel="noopener" href="https://github.com/hedon954/kafka-go-examples/tree/master/orderedmsg">https://github.com/hedon954/kafka-go-examples/tree/master/orderedmsg</a></p>
+<p>代码仓库：https://github.com/hedon954/kafka-go-examples/tree/master/orderedmsg</p>
 </blockquote>
-<p>下面我们来写一写实战用例，更加直观地感受一下 Kafka 顺序消息的实现细节。</p>
-<p>首先我们在集群上创建一个 topic <code>ordered-msg-topic</code>，分区为 <code>3</code> 个，运行以下命令：</p>
+<p>下面我们来写一写实战用例，更加直观地感受一下 Kafka
+顺序消息的实现细节。</p>
+<p>首先我们在集群上创建一个 topic <code>ordered-msg-topic</code>，分区为
+<code>3</code> 个，运行以下命令：</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/kafka-3.6.0/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic ordered-msg-topic --partitions 3 --replication-factor 1<br></code></pre></td></tr></table></figure>
-<p>搭建 Kafka 集群可以看这两篇：<a href="https://hedon.top/2023/11/22/kakfa-cluster-deploy/">Kafka集群搭建(Zookeeper)</a>、<a href="https://hedon.top/2023/11/22/kafka-kraft-deploy/">Kafka集群搭建(KRaft)</a>。</p>
+<p>搭建 Kafka 集群可以看这两篇：<a
+href="https://hedon.top/2023/11/22/kakfa-cluster-deploy/">Kafka集群搭建(Zookeeper)</a>、<a
+href="https://hedon.top/2023/11/22/kafka-kraft-deploy/">Kafka集群搭建(KRaft)</a>。</p>
 <h3 id="单生产者单消费者">单生产者单消费者</h3>
-<p>正常情况下，使用单一生产者同步发送和单一消费者同步发送，只要我们保证 key 是固定的，则所有消息都会写到同一个分区，是可以实现顺序消息的。</p>
+<p>正常情况下，使用单一生产者同步发送和单一消费者同步发送，只要我们保证
+key 是固定的，则所有消息都会写到同一个分区，是可以实现顺序消息的。</p>
 <p>代码目录如下：</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">├─config<br>│      config.go		<span class="hljs-comment"># 常量定义</span><br>├─consumer<br>│      consumer.go		<span class="hljs-comment"># 消费者</span><br>└─producer<br>        producer.go		<span class="hljs-comment"># 生产者</span><br></code></pre></td></tr></table></figure>
 <p>首先我们先定义一些常量：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;github.com/segmentio/kafka-go&quot;</span><br><br><span class="hljs-keyword">var</span> (<br>	Topic      = <span class="hljs-string">&quot;ordered-msg-topic&quot;</span><br>	Brokers    = []<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;kafka1.com:9092&quot;</span>, <span class="hljs-string">&quot;kafka2.com:9092&quot;</span>, <span class="hljs-string">&quot;kafka3.com:9092&quot;</span>&#125;<br>	Addr       = kafka.TCP(Brokers...)<br>	GroupId    = <span class="hljs-string">&quot;ordered-msg-group&quot;</span><br>	MessageKey = []<span class="hljs-type">byte</span>(<span class="hljs-string">&quot;message-key&quot;</span>)<br>)<br></code></pre></td></tr></table></figure>
-<p>我们先实现生产者端，主要是不断往 <code>ordered-msg-topic</code> 中写入数据：</p>
+<p>我们先实现生产者端，主要是不断往 <code>ordered-msg-topic</code>
+中写入数据：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;context&quot;</span><br>	<span class="hljs-string">&quot;fmt&quot;</span><br>	<span class="hljs-string">&quot;time&quot;</span><br><br>	<span class="hljs-string">&quot;kafka-go-examples/orderedmsg/config&quot;</span><br><br>	<span class="hljs-string">&quot;github.com/segmentio/kafka-go&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">NewProducer</span><span class="hljs-params">()</span></span> *kafka.Writer &#123;<br>	<span class="hljs-keyword">return</span> &amp;kafka.Writer&#123;<br>		Addr:     config.Addr,<br>		Topic:    config.Topic,<br>		Balancer: &amp;kafka.Hash&#123;&#125;, <span class="hljs-comment">// 哈希分区</span><br>	&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">NewMessages</span><span class="hljs-params">(count <span class="hljs-type">int</span>)</span></span> []kafka.Message &#123;<br>	res := <span class="hljs-built_in">make</span>([]kafka.Message, count)<br>	<span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; count; i++ &#123;<br>		res[i] = kafka.Message&#123;<br>			Key:   config.MessageKey,<br>			Value: []<span class="hljs-type">byte</span>(fmt.Sprintf(<span class="hljs-string">&quot;msg-%d&quot;</span>, i+<span class="hljs-number">1</span>)),<br>		&#125;<br>	&#125;<br>	<span class="hljs-keyword">return</span> res<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	producer := NewProducer()<br>	messages := NewMessages(<span class="hljs-number">100</span>)<br>	<span class="hljs-keyword">if</span> err := producer.WriteMessages(context.Background(), messages...); err != <span class="hljs-literal">nil</span> &#123;<br>		<span class="hljs-built_in">panic</span>(err)<br>	&#125;<br>	_ = producer.Close()<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>我们再来实现消费者，目前我们就启动 1 个消费者：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;context&quot;</span><br>	<span class="hljs-string">&quot;fmt&quot;</span><br>	<span class="hljs-string">&quot;time&quot;</span><br><br>	<span class="hljs-string">&quot;kafka-go-examples/orderedmsg/config&quot;</span><br><br>	<span class="hljs-string">&quot;github.com/segmentio/kafka-go&quot;</span><br>)<br><br><span class="hljs-keyword">type</span> Consumer <span class="hljs-keyword">struct</span> &#123;<br>	Id <span class="hljs-type">string</span><br>	*kafka.Reader<br>&#125;<br><br><span class="hljs-comment">// NewConsumer 创建一个消费者，它属于 config.GroupId 这个消费者组</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">NewConsumer</span><span class="hljs-params">(id <span class="hljs-type">string</span>)</span></span> *Consumer &#123;<br>	c := &amp;Consumer&#123;<br>		Id: id,<br>		Reader: kafka.NewReader(kafka.ReaderConfig&#123;<br>			Brokers: config.Brokers,<br>			GroupID: config.GroupId,<br>			Topic:   config.Topic,<br>			Dialer: &amp;kafka.Dialer&#123;<br>				ClientID: id,<br>			&#125;,<br>		&#125;),<br>	&#125;<br>	<span class="hljs-keyword">return</span> c<br>&#125;<br><br><span class="hljs-comment">// Read 读取消息，intervalMs 用来控制消费者的消费速度</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(c *Consumer)</span></span> Read(intervalMs <span class="hljs-type">int</span>) &#123;<br>	fmt.Printf(<span class="hljs-string">&quot;%s start read\n&quot;</span>, c.Id)<br>	<span class="hljs-keyword">for</span> &#123;<br>		msg, err := c.ReadMessage(context.Background())<br>		<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>			fmt.Printf(<span class="hljs-string">&quot;%s read msg err: %v\n&quot;</span>, c.Id, err)<br>			<span class="hljs-keyword">return</span><br>		&#125;<br>		<span class="hljs-comment">// 模拟消费速度</span><br>		time.Sleep(time.Millisecond * time.Duration(intervalMs))<br>		fmt.Printf(<span class="hljs-string">&quot;%s read msg: %s, time: %s\n&quot;</span>, c.Id, <span class="hljs-type">string</span>(msg.Value), time.Now().Format(<span class="hljs-string">&quot;03-04-05&quot;</span>))<br>	&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	c1 := NewConsumer(<span class="hljs-string">&quot;consumer-1&quot;</span>)<br>	c1.Read(<span class="hljs-number">500</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>启动生产者生产消息，然后启动消费者，观察控制台，不难看出这种情况下就是顺序消费：</p>
 <figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs tex">consumer-1 read msg: msg-10, time: 04:29:10<br>consumer-1 read msg: msg-11, time: 04:29:11<br>consumer-1 read msg: msg-12, time: 04:29:12<br>consumer-1 read msg: msg-13, time: 04:29:13<br>consumer-1 read msg: msg-14, time: 04:29:14<br>consumer-1 read msg: msg-15, time: 04:29:15<br>consumer-1 read msg: msg-16, time: 04:29:16<br></code></pre></td></tr></table></figure>
-<h3 id="重平衡带来的问题-2">重平衡带来的问题</h3>
+<h3 id="重平衡带来的问题-1">重平衡带来的问题</h3>
 <p>我们先重建 topic，清楚掉之前的数据：</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/kafka-3.6.0/bin/kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic ordered-msg-topic<br></code></pre></td></tr></table></figure>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/kafka-3.6.0/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic ordered-msg-topic --partitions 3 --replication-factor 1<br></code></pre></td></tr></table></figure>
@@ -501,14 +579,23 @@
 <p>先启动生产者重新生产数据，然后再启动消费者消费数据，观察控制台：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs bash">consumer-1 start <span class="hljs-built_in">read</span><br>consumer-1 <span class="hljs-built_in">read</span> msg: msg-1, time: 04:44:28<br>consumer-1 <span class="hljs-built_in">read</span> msg: msg-2, time: 04:44:28<br>consumer-1 <span class="hljs-built_in">read</span> msg: msg-3, time: 04:44:29		<span class="hljs-comment"># consumer-1 按顺序消费</span><br>consumer-2 start <span class="hljs-built_in">read</span>						  <span class="hljs-comment"># consumer-2 进来</span><br>consumer-1 <span class="hljs-built_in">read</span> msg: msg-4, time: 04:44:30<br>consumer-1 <span class="hljs-built_in">read</span> msg: msg-5, time: 04:44:30<br>consumer-1 <span class="hljs-built_in">read</span> msg: msg-6, time: 04:44:31      <span class="hljs-comment"># 这里相差了 6s，就是在进行重平衡</span><br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-7, time: 04:44:37      <span class="hljs-comment"># 重平衡后发现原来的分区给 consumer-2 消费了</span><br>consumer-1 <span class="hljs-built_in">read</span> msg: msg-7, time: 04:44:37	    <span class="hljs-comment"># 这里发生了重复消费</span><br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-8, time: 04:44:37<br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-9, time: 04:44:37<br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-10, time: 04:44:38<br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-11, time: 04:44:38<br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-12, time: 04:44:38<br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-13, time: 04:44:39<br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-14, time: 04:44:39<br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-15, time: 04:44:39      <span class="hljs-comment"># consumer-2 按顺序消息</span><br>consumer-4 start <span class="hljs-built_in">read</span>						   <span class="hljs-comment"># consumer-3 和 consumer-4 进来</span><br>consumer-3 start <span class="hljs-built_in">read</span><br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-16, time: 04:44:40	   <br>consumer-4 <span class="hljs-built_in">read</span> msg: msg-17, time: 04:44:46      <span class="hljs-comment"># 这里发生重平衡</span><br>consumer-4 <span class="hljs-built_in">read</span> msg: msg-18, time: 04:44:46      <span class="hljs-comment"># 重平衡后由 consumer-4 负责该分区</span><br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-17, time: 04:44:46      <span class="hljs-comment"># 这里由于 2 的速度比 4 慢很多，所以就乱序了，还重复消费</span><br>consumer-4 <span class="hljs-built_in">read</span> msg: msg-19, time: 04:44:46<br>consumer-4 <span class="hljs-built_in">read</span> msg: msg-20, time: 04:44:46<br><span class="hljs-comment"># ...</span><br></code></pre></td></tr></table></figure>
 <h3 id="总结">总结</h3>
-<p>当我们采用消费者组的时候，由于重平衡机制的存在，单纯从 Kafka 的角度来说是无法完全实现顺序消息的，只能通过静态成员功能、避免分区数量变化和减少消费者组成员数量变化等方式来尽可能减少重平衡的发生，进而尽可能维持消息的顺序性。</p>
+<p>当我们采用消费者组的时候，由于重平衡机制的存在，单纯从 Kafka
+的角度来说是无法完全实现顺序消息的，只能通过静态成员功能、避免分区数量变化和减少消费者组成员数量变化等方式来尽可能减少重平衡的发生，进而尽可能维持消息的顺序性。</p>
 <h2 id="参考">参考</h2>
 <ul>
-<li><a target="_blank" rel="noopener" href="https://time.geekbang.com/column/intro/100552001">极客时间 - 深入拆解消息队列 47 讲（许文强）</a></li>
-<li><a target="_blank" rel="noopener" href="https://www.qidian.com/book/1035938080/">《Kafka 权威指南（第 2 版）》</a></li>
-<li><a target="_blank" rel="noopener" href="https://pulsar.staged.apache.org/docs/zh-CN/next/concepts-messaging/#%E9%A1%BA%E5%BA%8F%E4%BF%9D%E8%AF%81">Pulsar 官方文档-分区topic-顺序保证</a></li>
-<li><a target="_blank" rel="noopener" href="https://rocketmq.apache.org/zh/docs/featureBehavior/03fifomessage">RocketMQ 官方文档-功能特性-顺序消息</a></li>
-<li><a target="_blank" rel="noopener" href="https://www.rabbitmq.com/tutorials/tutorial-two-go.html">RabbitMQ 官方文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://time.geekbang.com/column/intro/100552001">极客时间
+- 深入拆解消息队列 47 讲（许文强）</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.qidian.com/book/1035938080/">《Kafka
+权威指南（第 2 版）》</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://pulsar.staged.apache.org/docs/zh-CN/next/concepts-messaging/#%E9%A1%BA%E5%BA%8F%E4%BF%9D%E8%AF%81">Pulsar
+官方文档-分区topic-顺序保证</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://rocketmq.apache.org/zh/docs/featureBehavior/03fifomessage">RocketMQ
+官方文档-功能特性-顺序消息</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://www.rabbitmq.com/tutorials/tutorial-two-go.html">RabbitMQ
+官方文档</a></li>
 </ul>
 
                 
