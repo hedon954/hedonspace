@@ -24,7 +24,7 @@
 <meta property="og:description" content="我们深入探讨了如何使用 Rust 语言来实现一个类似于 HTTPie 的命令行工具。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2024-03-06T14:22:02.000Z">
-<meta property="article:modified_time" content="2024-03-06T14:54:56.473Z">
+<meta property="article:modified_time" content="2024-03-06T15:05:03.735Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Rust">
 <meta name="twitter:card" content="summary_large_image">
@@ -454,18 +454,12 @@ colored 赋予蓝绿色输出，如果是其他类型，这里我们就输出原
 <h2 id="添加依赖">2. 添加依赖</h2>
 <figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[package]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;httpie&quot;</span><br><span class="hljs-attr">version</span> = <span class="hljs-string">&quot;0.1.0&quot;</span><br><span class="hljs-attr">edition</span> = <span class="hljs-string">&quot;2021&quot;</span><br><br><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">anyhow</span> = <span class="hljs-string">&quot;1.0.80&quot;</span><br><span class="hljs-attr">clap</span> = &#123; version = <span class="hljs-string">&quot;4.5.1&quot;</span>, features = [<span class="hljs-string">&quot;derive&quot;</span>] &#125;<br><span class="hljs-attr">colored</span> = <span class="hljs-string">&quot;2.1.0&quot;</span><br><span class="hljs-attr">jsonxf</span> = <span class="hljs-string">&quot;1.1.1&quot;</span><br><span class="hljs-attr">mime</span> = <span class="hljs-string">&quot;0.3.17&quot;</span><br><span class="hljs-attr">reqwest</span> = &#123; version = <span class="hljs-string">&quot;0.11.24&quot;</span>, features = [<span class="hljs-string">&quot;json&quot;</span>] &#125;<br><span class="hljs-attr">tokio</span> = &#123; version = <span class="hljs-string">&quot;1.36.0&quot;</span>, features = [<span class="hljs-string">&quot;rt&quot;</span>, <span class="hljs-string">&quot;rt-multi-thread&quot;</span>, <span class="hljs-string">&quot;macros&quot;</span>] &#125;<br></code></pre></td></tr></table></figure>
 <ul>
-<li><code>anyhow</code>: 用于简化异常处理，可参考 <a
-href="https://hedon.top/2024/03/05/rust-crate-anyhow/">Rust anyhow
-简明教程</a>。</li>
-<li><code>clap</code>: 解析命令行参数，可参考 <a
-href="https://hedon.top/2024/03/06/rust-crate-clap/">深入探索 Rust 的
-clap 库：命令行解析的艺术</a>。</li>
+<li><code>anyhow</code>: 用于简化异常处理。</li>
+<li><code>clap</code>: 解析命令行参数。</li>
 <li><code>colored</code>: 为终端输出内容赋予颜色。</li>
 <li><code>jsonxf</code>: 美化 json 串。</li>
 <li><code>mime</code>: 提供了各种 Media Type 的类型封装。</li>
-<li><code>reqwest</code>: http 客户端，可参考 <a
-href="https://hedon.top/2024/03/02/rust-crate-reqwest/">Rust reqwest
-简明教程</a>。</li>
+<li><code>reqwest</code>: http 客户端。</li>
 <li><code>tokio</code>: 异步库，本案例种我们使用 reqwest
 的异步功能。</li>
 </ul>
