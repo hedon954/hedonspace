@@ -24,7 +24,7 @@
 <meta property="og:description" content="本文从一个经典问题 0.1+0.2 !&#x3D; 0.3 出发，详细介绍了 IEEE-754 标准下的浮点数表示方法，细致阐述了 3 种浮点数类型的表示逻辑，包括规格化值、非规格化值和特殊值。还介绍了浮点数舍入的 4 种模式，以及浮点数的基本运算。最后，本文结合 Go 语言给出了浮点数不同的输出方式的例子，以及简单介绍了 Go 语言中的 math&#x2F;big 库在大数运算和精度更高的运算场景中的应用。本文包含">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2023-12-23T13:51:52.000Z">
-<meta property="article:modified_time" content="2024-01-17T14:28:37.947Z">
+<meta property="article:modified_time" content="2024-03-16T10:51:12.651Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="计算机原理">
 <meta property="article:tag" content="浮点数">
@@ -333,26 +333,30 @@ alt="IEEE-754 浮点数" />
 <figcaption aria-hidden="true">IEEE-754 浮点数</figcaption>
 </figure>
 <h2 id="定点数">定点数</h2>
-<p>要理解浮点数的第一步是考虑含有小数值的二进制数字。在这之前，我们来看看更加熟悉的十进制表示法：
-<span class="math display">\[
+<p>要理解浮点数的第一步是考虑含有小数值的二进制数字。在这之前，我们来看看更加熟悉的十进制表示法：</p>
+<p><span class="math display">\[
 d_md_{m-1} ··· d_1d_0 . d_{-1}d_{-2}··· d_{-n}
-\]</span> 小数点 <code>.</code>
+\]</span></p>
+<p>小数点 <code>.</code>
 左边是整数部分，右边是小数部分。其中每个十进制数 <code>di</code>
 的取值范围是 0~9。</p>
-<p>如十进制的 <code>12.34</code> 即可以表示为： <span
-class="math display">\[
+<p>如十进制的 <code>12.34</code> 即可以表示为：</p>
+<p><span class="math display">\[
 1×10^1+2×10^0+3×10^{-1}+4×10^{-2}
-\]</span> 那其实二进制也是一样的道理，只不过把其中的 <code>10</code>
-换成 <code>2</code>，而 <code>di</code> 的取值范围为 0~1。</p>
-<p>如二进制的 <code>101.11</code> 可以表示为： <span
-class="math display">\[
+\]</span></p>
+<p>那其实二进制也是一样的道理，只不过把其中的 <code>10</code> 换成
+<code>2</code>，而 <code>di</code> 的取值范围为 0~1。</p>
+<p>如二进制的 <code>101.11</code> 可以表示为：</p>
+<p><span class="math display">\[
 1×2^2+0×2^1+1×2^0+1×2^{-1}+1×2^{-2}
-\]</span> 如果我们仅考虑有限长度的编码，那么十进制表示法不能准确表达像
-1/3 和 5/7
-这样的数。类似的，小数的二进制表示法只能表示那些能够被写成以下形式的数：
-<span class="math display">\[
+\]</span></p>
+<p>如果我们仅考虑有限长度的编码，那么十进制表示法不能准确表达像 1/3 和
+5/7
+这样的数。类似的，小数的二进制表示法只能表示那些能够被写成以下形式的数：</p>
+<p><span class="math display">\[
 x × 2^y
-\]</span> 其他的值就只能近似地表示。</p>
+\]</span></p>
+<p>其他的值就只能近似地表示。</p>
 <p>定点数的整数部分是小数部分的位数是固定不变的，在位数有限的情况下，定点数的取值范围和精度都比较差。于是就有了
 IEEE-754 提出的浮点数表示法。</p>
 <h2 id="浮点数">浮点数</h2>
@@ -360,9 +364,11 @@ IEEE-754 提出的浮点数表示法。</p>
 numbers），即小数点可以“<strong>浮动</strong>”，即小数点的位置不是固定的，而是可以根据数值的大小和精度需求移动的。这种表示法允许在广泛的范围内表示数值，同时保持相对恒定的精度。</p>
 <p>在计算机中，浮点数通常遵循 IEEE-754
 标准。这个标准定义了浮点数的存储和运算方式，确保了不同计算机系统之间的一致性。IEEE-754
-用以下形式来表示一个数： <span class="math display">\[
+用以下形式来表示一个数：</p>
+<p><span class="math display">\[
 V = (-1)^s×M×2^E
-\]</span> 其中：</p>
+\]</span></p>
+<p>其中：</p>
 <ul>
 <li><strong>s 符号位（Sign bit）</strong>：表示数值的正负。</li>
 <li><strong>M 尾数（Mantissa）</strong>：表示数值的有效数字。</li>
@@ -464,7 +470,8 @@ class="math inline">\(V=(-1)^s×M×2^E\)</span>
 <li><strong>指数部分</strong>：全为 0。</li>
 <li><strong>尾数部分</strong>：全为 0 则表示无穷大，不全为 0 则表示
 NaN。</li>
-<li><strong>作用</strong>：特殊值用于表示那些无法用常规数值表示的情况，如无穷大、非数（NaN）等。这些值通常用于操作的错误或特殊情况的结果，如除以0、无效操作等。</li>
+<li><strong>作用</strong>：特殊值用于表示那些无法用常规数值表示的情况，如无穷大、非数（NaN）等。这些值通常用于操作的错误或特殊情况的结果，如除以
+0、无效操作等。</li>
 </ul>
 <h3 id="规格化的值-normalize-values">规格化的值 Normalize Values</h3>
 <ul>
@@ -488,9 +495,11 @@ class="math inline">\(bias=2^{11-1}-1=2^{10}-1=1024-1=1023\)</span></li>
 </ul>
 <p>其中 <code>f</code> 为 <code>frac</code> 表示的数，范围 <span
 class="math inline">\(0≤f&lt;1\)</span>。</p>
-<p>所以一个规格化数，具体可以表示为： <span class="math display">\[
+<p>所以一个规格化数，具体可以表示为：</p>
+<p><span class="math display">\[
 V=(-1)^{sign}×1.frac×2^{(exp-bias)}
-\]</span> 这里有 4个问题：</p>
+\]</span></p>
+<p>这里有 4 个问题：</p>
 <ol type="1">
 <li>这个 <code>bias</code> 是什么？</li>
 <li>为什么 <code>E</code> 要 <code>e</code> 去减掉一个
@@ -527,14 +536,14 @@ IEEE-754 标准不同）。</p>
 <p>我们想要比较这两个数的大小，需要怎么做呢？</p>
 <p>我们先解析这 2 个数：</p>
 <ul>
-<li>符号位：对于 <code>A</code> 和
-<code>B</code>，符号位都是0，表示这是两个正数。</li>
+<li>符号位：对于 <code>A</code> 和 <code>B</code>，符号位都是
+0，表示这是两个正数。</li>
 <li>指数部分（使用补码表示）
 <ul>
 <li><code>A</code> 的指数为 <code>0000010</code>，解读为正数 +2。</li>
 <li><code>B</code> 的指数为
-<code>1111110</code>，在补码表示中，这是一个负数。先加 1
-后取反转换为正数 <code>00000010</code>，它表示 -2。</li>
+<code>1111110</code>，在补码表示中，这是一个负数。先加取反后加 1
+转换为正数 <code>00000010</code>，它表示 -2。</li>
 </ul></li>
 </ul>
 <p>要比较这 2 个数：</p>
@@ -542,12 +551,12 @@ IEEE-754 标准不同）。</p>
 <li>当我们比较 <code>A</code> 和 <code>B</code>
 时，首先需要考虑它们的指数。</li>
 <li>指数 <code>A</code> 为 +2，而 <code>B</code> 为
--2。即使它们的尾数部分相同（在这个例子中都是0），<code>A</code>
+-2。即使它们的尾数部分相同（在这个例子中都是 0），<code>A</code>
 的实际值要大于
 <code>B</code>，因为正指数表示的数值范围远大于负指数。</li>
 </ul>
 <p>可以看出：使用补码表示指数增加了比较过程的复杂性，因为我们需要解读补码并考虑其正负。特别是在涉及到负指数的情况下，我们不能仅仅比较二进制表示的大小，而必须将补码转换为实际的数值，然后再进行比较。</p>
-<p>现在回过头来看看 IEEE-754 的设计，假设我们有两个单精度（32位）浮点数
+<p>现在回过头来看看 IEEE-754 的设计，假设我们有两个单精度（32 位）浮点数
 <code>A</code> 和 <code>B</code>：</p>
 <ul>
 <li><code>A</code>
@@ -617,8 +626,8 @@ Values</h3>
 class="math inline">\(M≥1\)</span>，所以无法表示 0。</li>
 <li>用于表示非常接近于 0
 的数值，这些数值太小，无法用规格化格式表示。它们填补了 0
-和最小规格化正数之间的间隙，提供了渐近于
-0的连续表示，防止了所谓的“下溢”。</li>
+和最小规格化正数之间的间隙，提供了渐近于 0
+的连续表示，防止了所谓的“下溢”。</li>
 </ul></li>
 </ul>
 <p>在非规格化值中：</p>
@@ -626,9 +635,11 @@ class="math inline">\(M≥1\)</span>，所以无法表示 0。</li>
 <li><span class="math inline">\(E=1-bias\)</span></li>
 <li><span class="math inline">\(M=f\)</span></li>
 </ul>
-<p>所以一个规格化数，具体可以表示为： <span class="math display">\[
+<p>所以一个规格化数，具体可以表示为：</p>
+<p><span class="math display">\[
 V=(-1)^{sign}×0.frac×2^{(1-bias)}
-\]</span> 那这里又有 2 个问题了：</p>
+\]</span></p>
+<p>那这里又有 2 个问题了：</p>
 <ol type="1">
 <li>为什么指数部分不是 <span class="math inline">\(0-bias\)</span> 而是
 <span class="math inline">\(1-bias\)</span>？</li>
@@ -680,7 +691,8 @@ src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224130157112.
 alt="8 位浮点数 - 非规格化值" />
 <figcaption aria-hidden="true">8 位浮点数 - 非规格化值</figcaption>
 </figure>
-<p>以 <code>0 0000 001</code> 为例： <span class="math display">\[
+<p>以 <code>0 0000 001</code> 为例：</p>
+<p><span class="math display">\[
 V = (-1)^s×M×2^E \\
 = (-1)^s×0.frac×2^{1-bias} \\
 = (-1)^0×(0+(1/8))×2^{1-7} \\
@@ -695,7 +707,8 @@ src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224130849986.
 alt="8 位浮点数 - 规格化值" />
 <figcaption aria-hidden="true">8 位浮点数 - 规格化值</figcaption>
 </figure>
-<p>以 <code>0 0110 110</code> 为例： <span class="math display">\[
+<p>以 <code>0 0110 110</code> 为例：</p>
+<p><span class="math display">\[
 V = (-1)^s×M×2^E \\
 = (-1)^s×1.frac×2^{e-bias} \\
 = (-1)^0×(1+6/8)×2^{6-7} \\
@@ -707,21 +720,30 @@ V = (-1)^s×M×2^E \\
 <p>下面以一个例子来直观感受一下一个整型是如何转为浮点型的。</p>
 <p>现在我们有一个 int32 的整型
 <code>123</code>，我们希望将其转为单精度浮点型 <code>123.0</code>。</p>
-<p><strong>1. 将整型用二进制表示出来</strong> <span
-class="math display">\[
+<p><strong>1. 将整型用二进制表示出来</strong></p>
+<p><span class="math display">\[
 12345_{(10)} = 1111011_{(2)}
-\]</span> <strong>2. 规范化表示</strong> <span class="math display">\[
+\]</span></p>
+<p><strong>2. 规范化表示</strong></p>
+<p><span class="math display">\[
 1111011= 1.111011×2^6
-\]</span> <strong>3. 计算指数</strong> <span class="math display">\[
+\]</span></p>
+<p><strong>3. 计算指数</strong></p>
+<p><span class="math display">\[
 exp = 6 + 127 = 133_{(10)} = 10000101_{(2)}
-\]</span> <strong>4. 确定尾数</strong>**</p>
+\]</span></p>
+<p><strong>4. 确定尾数**</strong></p>
 <p>这是个规范化值，所以 <code>1.frac</code> 的 <code>1</code>
 省略，又因为单精度浮点数 <code>frac</code> 占 23 位，所以我们需要在
-<code>111011</code> 后面再填 17 个 0，即： <span class="math display">\[
+<code>111011</code> 后面再填 17 个 0，即：</p>
+<p><span class="math display">\[
 frac = 111011 0000 0000 0000 0000 0
-\]</span> <strong>5. 确定符号位</strong> <span class="math display">\[
+\]</span></p>
+<p><strong>5. 确定符号位</strong></p>
+<p><span class="math display">\[
 s = 0_{(2)}
-\]</span> <strong>6. 组合起来</strong></p>
+\]</span></p>
+<p><strong>6. 组合起来</strong></p>
 <p><code>12345.0</code> =
 <code>0  10000101 11101100000000000000000</code></p>
 <h2 id="浮点数舍入">浮点数舍入</h2>
@@ -731,7 +753,8 @@ s = 0_{(2)}
 <p><strong>最近舍入（Round to Nearest）</strong>:</p>
 <ul>
 <li>这是最常用的舍入模式，也是默认的模式。</li>
-<li>规则是向最接近的可表示值舍入。如果精确结果位于两个可表示值的中点，通常舍入到最近的偶数（即尾数的最后一位为0）。</li>
+<li>规则是向最接近的可表示值舍入。如果精确结果位于两个可表示值的中点，通常舍入到最近的偶数（即尾数的最后一位为
+0）。</li>
 <li>这种方法减少了累积误差，确保了在多次运算后的总体精度。</li>
 </ul>
 <p><strong>向零舍入（Round Toward Zero）</strong>:</p>
@@ -811,12 +834,16 @@ s = 0_{(2)}
 <li>对结果进行规范化和舍入。</li>
 </ol>
 <p>注意，浮点数的加减法<strong>不满足</strong>结合律、交换律和分配律，这你简单分析下应该就可以理解了，这里不赘述了。</p>
-<p>假设我们要在单精度浮点数格式下计算： <span class="math display">\[
+<p>假设我们要在单精度浮点数格式下计算：</p>
+<p><span class="math display">\[
 12.375 + 0.1 = ?
-\]</span> <strong>第 1 步：转为二进制表示</strong></p>
-<p>其中 12.375 我们可以用二进制精确表示： <span class="math display">\[
+\]</span></p>
+<p><strong>第 1 步：转为二进制表示</strong></p>
+<p>其中 12.375 我们可以用二进制精确表示：</p>
+<p><span class="math display">\[
 12.375_{(10)} = 1100.011_{(2)}
-\]</span> 而 0.1 就比较特殊了，用二进制表示的话它会无限循环。</p>
+\]</span></p>
+<p>而 0.1 就比较特殊了，用二进制表示的话它会无限循环。</p>
 <blockquote>
 <p>将十进制小数转换为二进制表示涉及到重复乘以 2
 的过程，并提取每次乘法后整数部分作为二进制位。这个过程是一个不断重复的过程，直到小数部分变为
@@ -883,19 +910,22 @@ class="math inline">\(0\;01111011\;10011001100110011001100\)</span></li>
 的尾数 <code>1.10011001100110011001100</code>需要右移 <code>7</code>
 位，即：<code>0.00000011001100110011001</code>。</p>
 <p><strong>第 4 步：相加</strong></p>
-<p>现在两个数的指数相同了，我们可以直接把它们的尾数相加： <span
-class="math display">\[
+<p>现在两个数的指数相同了，我们可以直接把它们的尾数相加：</p>
+<p><span class="math display">\[
 \;\;\;1.10001100000000000000000 \\
 +\;0.00000011001100110011001 \\
 =\;1.10001111001100110011001
-\]</span> <strong>第 5 步：规范化结果</strong></p>
+\]</span></p>
+<p><strong>第 5 步：规范化结果</strong></p>
 <p>这里无需规范化。</p>
 <p><strong>第 6 步：舍入</strong></p>
 <p>这里没有进位，不需要舍入。</p>
-<p><strong>第 7 步：浮点化表示</strong> <span class="math display">\[
+<p><strong>第 7 步：浮点化表示</strong></p>
+<p><span class="math display">\[
 0\;10000010\;10001111001100110011001
-\]</span> <strong>第 8 步：转为十进制</strong> <span
-class="math display">\[
+\]</span></p>
+<p><strong>第 8 步：转为十进制</strong></p>
+<p><span class="math display">\[
 V =(-1)^s×M×2^E \\
 = (-1)^s×1.frac×2^{e-bias} \\
 = 1.10001111001100110011001 × 2^3 \\
@@ -906,27 +936,36 @@ V =(-1)^s×M×2^E \\
 <h3 id="浮点数乘法">浮点数乘法</h3>
 <ol type="1">
 <li><strong>符号位计算</strong>：结果的符号由两个操作数的符号位决定。如果符号位相同（都是正数或都是负数），结果为正；如果符号位不同，结果为负。</li>
-<li><strong>指数相加</strong>：两个数的指数相加，并减去偏置值（单精度浮点数中为127，双精度为1023）。</li>
-<li><strong>尾数相乘</strong>：两个数的尾数相乘。这里的尾数包括隐含的最高位1。</li>
+<li><strong>指数相加</strong>：两个数的指数相加，并减去偏置值（单精度浮点数中为
+127，双精度为 1023）。</li>
+<li><strong>尾数相乘</strong>：两个数的尾数相乘。这里的尾数包括隐含的最高位
+1。</li>
 <li><strong>结果规范化</strong>：如果乘法的结果需要规范化（即调整为
 <code>1.xxxx</code> 的形式），则相应调整指数。</li>
 <li><strong>舍入处理</strong>：如果需要，对结果进行舍入以适应目标格式。</li>
 <li><strong>检查溢出或下溢</strong>：如果指数超出了表示范围，则发生溢出（结果可能为无穷大或特殊值）；如果指数太小，发生下溢（结果可能为
 0 或非规格化数）。</li>
 </ol>
-<p>假设我们要在单精度浮点数格式下计算： <span class="math display">\[
+<p>假设我们要在单精度浮点数格式下计算：</p>
+<p><span class="math display">\[
 2.0 × 3.0 = ?
-\]</span> <strong>第 1 步：转为二进制表示</strong> <span
-class="math display">\[
+\]</span></p>
+<p><strong>第 1 步：转为二进制表示</strong></p>
+<p><span class="math display">\[
 2.0_{(10)} = 1_{(2)} \\
 3.0_{(10)} = 11_{(2)}
-\]</span> <strong>第 2 步：规范化</strong> <span class="math display">\[
+\]</span></p>
+<p><strong>第 2 步：规范化</strong></p>
+<p><span class="math display">\[
 1 = 1.0 × 2^0 \\
 11 = 1.1 × 2^1
-\]</span> <strong>第 3 步：浮点化</strong> <span class="math display">\[
+\]</span></p>
+<p><strong>第 3 步：浮点化</strong></p>
+<p><span class="math display">\[
 2.0 = 0\;00000001\;00000000000000000000000 \\
 3.0 = 0\;00000001\;10000000000000000000000
-\]</span> <strong>第 4 步：乘法操作</strong></p>
+\]</span></p>
+<p><strong>第 4 步：乘法操作</strong></p>
 <ul>
 <li>符号位：正正得正：<span class="math inline">\(0_{(2)} × 0_{(2)} =
 0_{(2)}\)</span></li>
@@ -939,10 +978,12 @@ class="math inline">\((127+1)+(127+1)-127=129\)</span></li>
 <p>这里无需规范化。</p>
 <p><strong>第 6 步：舍入</strong></p>
 <p>这里无需舍入。</p>
-<p><strong>第 7 步：浮点化结果</strong> <span class="math display">\[
+<p><strong>第 7 步：浮点化结果</strong></p>
+<p><span class="math display">\[
 0\;00000010\;10000000000000000000000
-\]</span> <strong>第 8 步：转为十进制</strong> <span
-class="math display">\[
+\]</span></p>
+<p><strong>第 8 步：转为十进制</strong></p>
+<p><span class="math display">\[
 V = (-1)^s×1.frac×2^{(e-127)} \\
 = 0 × 1.1 × 2^2 \\
 = 110_{(2)} \\
@@ -958,19 +999,26 @@ V = (-1)^s×1.frac×2^{(e-127)} \\
 <li><strong>舍入处理</strong>：如果需要，对结果进行舍入。</li>
 <li><strong>检查溢出或下溢</strong>：与乘法类似的检查。</li>
 </ol>
-<p>假设我们要在单精度浮点数格式下计算： <span class="math display">\[
+<p>假设我们要在单精度浮点数格式下计算：</p>
+<p><span class="math display">\[
 6.0 ÷ 3.0 =?
-\]</span> <strong>第 1 步：转为二进制表示</strong> <span
-class="math display">\[
+\]</span></p>
+<p><strong>第 1 步：转为二进制表示</strong></p>
+<p><span class="math display">\[
 6.0_{(10)} = 110_{(2)} \\
 3.0_{(10)} = 11_{(2)}
-\]</span> <strong>第 2 步：规范化</strong> <span class="math display">\[
+\]</span></p>
+<p><strong>第 2 步：规范化</strong></p>
+<p><span class="math display">\[
 6.0 = 110 = 1.10 × 2^2 \\
 3.0 = 11 = 1.1 × 2^1
-\]</span> <strong>第 3 步：浮点化</strong> <span class="math display">\[
+\]</span></p>
+<p><strong>第 3 步：浮点化</strong></p>
+<p><span class="math display">\[
 6.0 = 0\;00000020\;10000000000000000000000 \\
 3.0 = 0\;00000001\;10000000000000000000000
-\]</span> <strong>第 4 步：除法操作</strong></p>
+\]</span></p>
+<p><strong>第 4 步：除法操作</strong></p>
 <ul>
 <li>符号位：正正得正：<span class="math inline">\(0_{(2)} × 0_{(2)} =
 0_{(2)}\)</span></li>
@@ -983,10 +1031,12 @@ class="math inline">\((127+2)-(127+1)+127=128\)</span></li>
 <p>这里无需规范化。</p>
 <p><strong>第 6 步：舍入</strong></p>
 <p>这里无需舍入。</p>
-<p><strong>第 7 步：浮点化结果</strong> <span class="math display">\[
+<p><strong>第 7 步：浮点化结果</strong></p>
+<p><span class="math display">\[
 0\;00000001\;00000000000000000000000
-\]</span> <strong>第 8 步：转为十进制</strong> <span
-class="math display">\[
+\]</span></p>
+<p><strong>第 8 步：转为十进制</strong></p>
+<p><span class="math display">\[
 V = (-1)^s×1.frac×2^{(e-127)} \\
 = 0 × 1.0 × 2^1 \\
 = 10_{(2)} \\
