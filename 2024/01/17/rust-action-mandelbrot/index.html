@@ -25,7 +25,7 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/mandel.png">
 <meta property="article:published_time" content="2024-01-17T14:39:05.000Z">
-<meta property="article:modified_time" content="2024-01-20T05:12:32.899Z">
+<meta property="article:modified_time" content="2024-04-02T14:19:13.737Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Rust">
 <meta name="twitter:card" content="summary_large_image">
@@ -256,7 +256,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          11k words
+          12k words
         
       </span>
     
@@ -267,7 +267,7 @@
         
         
         
-          27 mins
+          30 mins
         
       </span>
     
@@ -386,7 +386,7 @@ alt="截取曼德博集示意图" />
 <code>num</code>、<code>image</code>、<code>crossbeam</code>。</li>
 </ol>
 <h1 id="版本">版本</h1>
-<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[package]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;mandelbrot&quot;</span><br><span class="hljs-attr">version</span> = <span class="hljs-string">&quot;0.1.0&quot;</span><br><span class="hljs-attr">edition</span> = <span class="hljs-string">&quot;2021&quot;</span><br><br><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">image</span> = &#123;version = <span class="hljs-string">&quot;0.13.0&quot;</span>, features = [<span class="hljs-string">&quot;default&quot;</span>, <span class="hljs-string">&quot;png&quot;</span>]&#125;<br><span class="hljs-attr">num</span> = <span class="hljs-string">&quot;0.4.1&quot;</span><br><span class="hljs-attr">crossbeam</span> = <span class="hljs-string">&quot;0.8&quot;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[package]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;mandelbrot&quot;</span><br><span class="hljs-attr">version</span> = <span class="hljs-string">&quot;0.1.0&quot;</span><br><span class="hljs-attr">edition</span> = <span class="hljs-string">&quot;2021&quot;</span><br><br><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">image</span> = &#123;version = <span class="hljs-string">&quot;0.13.0&quot;</span>, features = [<span class="hljs-string">&quot;default&quot;</span>, <span class="hljs-string">&quot;png&quot;</span>]&#125;<br><span class="hljs-attr">num</span> = <span class="hljs-string">&quot;0.4.1&quot;</span><br><span class="hljs-attr">crossbeam</span> = <span class="hljs-string">&quot;0.8&quot;</span><br><span class="hljs-attr">rayon</span> = <span class="hljs-string">&quot;1.10.0&quot;</span><br></code></pre></td></tr></table></figure>
 <p>完整代码：https://github.com/hedon954/mandelbrot/blob/master/src/main.rs</p>
 <h1 id="编码实现">编码实现</h1>
 <h2 id="创建项目">0. 创建项目</h2>
@@ -576,6 +576,42 @@ aria-hidden="true">将像素缓冲区划分为一些条带以进行并发渲染<
 <figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs llvm">time ./<span class="hljs-keyword">target</span>/<span class="hljs-keyword">release</span>/mandelbrot mandel.png <span class="hljs-number">4000</span><span class="hljs-keyword">x</span><span class="hljs-number">3000</span> <span class="hljs-number">-1.20</span><span class="hljs-punctuation">,</span><span class="hljs-number">0.35</span> <span class="hljs-number">-1</span><span class="hljs-punctuation">,</span><span class="hljs-number">0.20</span><br>./<span class="hljs-keyword">target</span>/<span class="hljs-keyword">release</span>/mandelbrot mandel.png <span class="hljs-number">4000</span><span class="hljs-keyword">x</span><span class="hljs-number">3000</span> <span class="hljs-number">-1.20</span><span class="hljs-punctuation">,</span><span class="hljs-number">0.35</span> <span class="hljs-number">-1</span><span class="hljs-punctuation">,</span><span class="hljs-number">0.20</span>  <span class="hljs-number">3.57</span>s user <span class="hljs-number">0.01</span>s system <span class="hljs-number">335</span>% cpu <span class="hljs-number">1.067</span> total<br></code></pre></td></tr></table></figure>
 <p>可以看到虽然总共使用的 CPU 时间还是
 3~4s，但是整个程序的执行时间只缩短到 1s 左右了。</p>
+<h2 id="rayon-工作窃取">9. rayon 工作窃取</h2>
+<p>前面我们使用 8 个工作线程优化了曼德博集的绘制速度，大概是 4
+倍的速度提升。其实这还不够快。</p>
+<p>问题的根源在于我们没有平均分配工作量。计算图像的一个像素相当于运行一个循环。事实上，图像的浅灰色部分（循环会快速退出的地方）比黑色部分（循环会运行整整
+255
+次迭代的地方）渲染速度要快得多。因此，虽然我们将整个区域划分成了大小相等的水平条带，但创建了不均等的工作负载，</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image00879.jpeg" srcset="/img/loading.gif" lazyload
+alt="曼德博集程序中的工作分配不均等" />
+<figcaption
+aria-hidden="true">曼德博集程序中的工作分配不均等</figcaption>
+</figure>
+<p>使用 rayon
+很容易解决这个问题。我们可以为输出中的每一行像素启动一个并行任务。这会创建数百个任务，而
+rayon
+可以在其线程中分配这些任务。有了工作窃取机制，任务的规模是无关紧要的。rayon
+会对这些工作进行平衡。</p>
+<p>我们先引入 <code>rayon</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">cargo add rayon<br></code></pre></td></tr></table></figure>
+<p>在 <code>main.rs</code> 中引入 <code>rayon</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> rayon::prelude::*;<br></code></pre></td></tr></table></figure>
+<p>然后 <code>main</code> 中并发绘制的部分替换为下面的代码：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">bands</span>: <span class="hljs-type">Vec</span>&lt;(<span class="hljs-type">usize</span>, &amp;<span class="hljs-keyword">mut</span> [<span class="hljs-type">u8</span>])&gt; = pixels.<span class="hljs-title function_ invoke__">chunks_mut</span>(bounds.<span class="hljs-number">0</span>).<span class="hljs-title function_ invoke__">enumerate</span>().<span class="hljs-title function_ invoke__">collect</span>();<br><br>bands.<span class="hljs-title function_ invoke__">into_par_iter</span>().for_each(|(i, band)| &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">top</span> = i;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">band_bounds</span> = (bounds.<span class="hljs-number">0</span>, <span class="hljs-number">1</span>);<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">band_upper_left</span> = <span class="hljs-title function_ invoke__">pixed_to_point</span>(bounds, (<span class="hljs-number">0</span>, top), upper_left, lower_right);<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">band_lower_right</span> = <span class="hljs-title function_ invoke__">pixed_to_point</span>(bounds, (bounds.<span class="hljs-number">0</span>, top + <span class="hljs-number">1</span>), upper_left, lower_right);<br>    <span class="hljs-title function_ invoke__">render</span>(band, band_bounds, band_upper_left, band_lower_right);<br>&#125;);<br></code></pre></td></tr></table></figure>
+<p>首先，创建 bands，也就是要传给 rayon
+的任务集合。每个任务只是一个元组类型 (usize, &amp;mut
+[u8])：第一个是计算所需的行号，第二个是要填充的 pixels 切片。我们使用
+chunks_mut 方法将图像缓冲区分成一些行，enumerate
+则会给每一行添加行号，然后 collect
+会将所有数值切片对放入一个向量中。（这里需要一个向量，因为 rayon
+只能从数组和向量中创建并行迭代器。）</p>
+<p>编译：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">cargo build --release<br></code></pre></td></tr></table></figure>
+<p>再次执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">time ./target/release/mandelbrot mandel.png 4000x3000 -1.20,0.35 -1,0.20<br>./target/release/mandelbrot mandel.png 4000x3000 -1.20,0.35 -1,0.20  3.96s user 0.01s system 973% cpu 0.408 total<br></code></pre></td></tr></table></figure>
+<p>可以看到，这次速度提升更加明显，总共只用了 0.4s 左右的时间。</p>
 <p>以上就是实用 Rust 绘制曼德博集实战的全部内容，enjoy，happy
 coding~</p>
 
