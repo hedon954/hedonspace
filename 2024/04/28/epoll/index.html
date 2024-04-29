@@ -24,7 +24,7 @@
 <meta property="og:description" content="x">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2024-04-28T12:27:29.000Z">
-<meta property="article:modified_time" content="2024-04-28T12:51:45.528Z">
+<meta property="article:modified_time" content="2024-04-29T02:38:07.016Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="epoll">
 <meta property="article:tag" content="网络编程">
@@ -419,19 +419,24 @@ FD 及其对应的事件（如可读、可写等）。</p>
 <code>epoll</code> 实例的事件表中。这些 FD 上的 I/O
 操作状态变化时，内核需要能够快速检测到这些变化，并进行相应的处理。</p>
 <h2 id="事件检测和通知机制">3. 事件检测和通知机制</h2>
-<p>内核使用多种机制来检测这些注册的 FD 上的事件： -
-<strong>回调机制</strong>：每个 FD
-在内核中都关联有一组回调函数，这些函数会在特定事件（如数据可读写）发生时被触发。例如，当一个网络套接字接收到数据时，与该套接字关联的回调函数会被调用。
-- <strong>状态变化</strong>：这些回调函数会检查与 FD 关联的事件是否与
+<p>内核使用多种机制来检测这些注册的 FD 上的事件：</p>
+<ul>
+<li><strong>回调机制</strong>：每个 FD
+在内核中都关联有一组回调函数，这些函数会在特定事件（如数据可读写）发生时被触发。例如，当一个网络套接字接收到数据时，与该套接字关联的回调函数会被调用。</li>
+<li><strong>状态变化</strong>：这些回调函数会检查与 FD 关联的事件是否与
 <code>epoll</code> 实例中注册的事件相匹配。如果匹配，FD
 的引用和事件类型会被添加到就绪列表中，这个列表是专门用来存储那些有待处理事件的
-FD 的。</p>
+FD 的。</li>
+</ul>
 <h2 id="epoll_wait-调用">4. <code>epoll_wait</code> 调用</h2>
-<p>当应用程序调用 <code>epoll_wait</code> 时，内核会检查就绪列表： -
-如果列表中已经有就绪的 FD，<code>epoll_wait</code> 会立即返回这些 FD
-和它们对应的事件。 - 如果没有就绪的
+<p>当应用程序调用 <code>epoll_wait</code> 时，内核会检查就绪列表：</p>
+<ul>
+<li>如果列表中已经有就绪的 FD，<code>epoll_wait</code> 会立即返回这些 FD
+和它们对应的事件。</li>
+<li>如果没有就绪的
 FD，调用进程会被挂起（进入睡眠状态），直到至少有一个事件发生或者发生超时。这个挂起是非常高效的，因为它使用了
-Linux 的调度和进程管理机制。</p>
+Linux 的调度和进程管理机制。</li>
+</ul>
 <h2 id="唤醒机制">5. 唤醒机制</h2>
 <p>当一个或多个 FD 上的事件发生时，内核会将调用了
 <code>epoll_wait</code>
