@@ -16,15 +16,15 @@
   <meta name="author" content="Hedon Wang">
   <meta name="keywords" content="">
   
-    <meta name="description" content="x">
+    <meta name="description" content="本文总结了高性能网络服务器中大量使用的 I&#x2F;O 多路复用技术 epoll，涵盖工作原理、数据结构、事件监听和中断等相关内容。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="epoll">
 <meta property="og:url" content="https://hedon.top/2024/04/28/epoll/index.html">
 <meta property="og:site_name" content="HedonSpace">
-<meta property="og:description" content="x">
+<meta property="og:description" content="本文总结了高性能网络服务器中大量使用的 I&#x2F;O 多路复用技术 epoll，涵盖工作原理、数据结构、事件监听和中断等相关内容。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2024-04-28T12:27:29.000Z">
-<meta property="article:modified_time" content="2024-04-28T13:18:44.569Z">
+<meta property="article:modified_time" content="2024-05-06T09:11:27.155Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="epoll">
 <meta property="article:tag" content="网络编程">
@@ -257,7 +257,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.6k words
+          4.2k words
         
       </span>
     
@@ -268,7 +268,7 @@
         
         
         
-          12 mins
+          11 mins
         
       </span>
     
@@ -318,14 +318,18 @@
             
               <div class="markdown-body">
                 
-                <h1 id="简介">简介</h1>
+                <h1 id="前言">前言</h1>
 <p><code>epoll</code> 是一种 I/O
 多路复用技术，主要用于高性能的网络服务器中，特别是在处理大量并发连接时。它是
 Linux 特有的，自 Linux 内核 2.5.44
 版本引入，并在后续版本中不断优化。<code>epoll</code>
 能够帮助服务器高效地管理数以千计的客户端连接，是 <code>select</code> 和
 <code>poll</code> 方法的现代替代品。</p>
-<p>主要特点：</p>
+<p>本文不对 <code>epoll</code>
+的源码进行分析，仅做原理上的总结，方便快速查阅回顾。各大论坛很多大佬都对
+<code>epoll</code>
+的源码进行了详尽的分析，感兴趣的读者可以看「参考」篇章。</p>
+<h1 id="主要特点">主要特点</h1>
 <ol type="1">
 <li><strong>效率高</strong>: 相较于 <code>select</code> 和
 <code>poll</code>，<code>epoll</code>
@@ -340,6 +344,13 @@ CPU 开销。</li>
 两种模式。边缘触发模式只在文件描述符状态改变时才通知应用程序，适用于非阻塞
 I/O；而水平触发模式则在有事件可读或可写时都会通知应用程序，更容易使用但效率略低。</li>
 </ol>
+<h1 id="结论先行">结论先行</h1>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240429121302958.png" srcset="/img/loading.gif" lazyload
+alt="epoll flow chart" />
+<figcaption aria-hidden="true">epoll flow chart</figcaption>
+</figure>
 <h1 id="工作原理">工作原理</h1>
 <p><code>epoll</code> 的工作可以分为三个主要步骤：</p>
 <ol type="1">
@@ -401,47 +412,28 @@ I/O 操作。</li>
 会被添加到一个就绪列表中。这个列表仅包含实际有事件发生的文件描述符，从而减少了
 <code>epoll_wait</code> 调用的处理时间。</li>
 </ol>
+<h1 id="工作细节">工作细节</h1>
 <figure>
 <img
 src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/epoll_principle.jpg" srcset="/img/loading.gif" lazyload
 alt="epoll data structure" />
 <figcaption aria-hidden="true">epoll data structure</figcaption>
 </figure>
-<h1 id="工作细节">工作细节</h1>
-<p><code>epoll_wait</code> 的底层实现在 Linux
-内核中是一个精细和复杂的过程，它涉及多个核心组件和优化策略。以下是对
-<code>epoll_wait</code> 函数如何工作的详细解析：</p>
-<h2 id="监听文件描述符fd">1. 监听文件描述符（FD）</h2>
-<p>当应用程序调用 <code>epoll_create</code> 创建一个 <code>epoll</code>
-实例时，内核会为该实例创建一个事件表，通常实现为一个红黑树。这个红黑树存储了所有需要监听的
-FD 及其对应的事件（如可读、可写等）。</p>
-<h2 id="注册事件">2. 注册事件</h2>
-<p>应用程序通过 <code>epoll_ctl</code> 将特定的 FD 和事件注册到
-<code>epoll</code> 实例的事件表中。这些 FD 上的 I/O
-操作状态变化时，内核需要能够快速检测到这些变化，并进行相应的处理。</p>
-<h2 id="事件检测和通知机制">3. 事件检测和通知机制</h2>
-<p>内核使用多种机制来检测这些注册的 FD 上的事件： -
-<strong>回调机制</strong>：每个 FD
-在内核中都关联有一组回调函数，这些函数会在特定事件（如数据可读写）发生时被触发。例如，当一个网络套接字接收到数据时，与该套接字关联的回调函数会被调用。
-- <strong>状态变化</strong>：这些回调函数会检查与 FD 关联的事件是否与
-<code>epoll</code> 实例中注册的事件相匹配。如果匹配，FD
-的引用和事件类型会被添加到就绪列表中，这个列表是专门用来存储那些有待处理事件的
-FD 的。</p>
-<h2 id="epoll_wait-调用">4. <code>epoll_wait</code> 调用</h2>
-<p>当应用程序调用 <code>epoll_wait</code> 时，内核会检查就绪列表： -
-如果列表中已经有就绪的 FD，<code>epoll_wait</code> 会立即返回这些 FD
-和它们对应的事件。 - 如果没有就绪的
-FD，调用进程会被挂起（进入睡眠状态），直到至少有一个事件发生或者发生超时。这个挂起是非常高效的，因为它使用了
-Linux 的调度和进程管理机制。</p>
-<h2 id="唤醒机制">5. 唤醒机制</h2>
-<p>当一个或多个 FD 上的事件发生时，内核会将调用了
-<code>epoll_wait</code>
-的进程/线程唤醒。这种唤醒是通过内核的调度器实现的，它能够确保在事件发生后尽快将控制权交还给应用程序。</p>
-<h2 id="性能优化">6. 性能优化</h2>
-<p><code>epoll</code> 的实现考虑到了性能和可扩展性，尤其在高并发环境下：
-- <strong>事件的批处理</strong>：<code>epoll</code> 会尝试在每次
-<code>epoll_wait</code> 调用中返回尽可能多的事件，减少系统调用的次数。 -
-<strong>避免锁竞争</strong>：通过优化数据结构和内核同步机制，减少了锁的使用和竞争，这对于多核处理器尤其重要。</p>
+<ol type="1">
+<li>通过调用 <code>epoll_create()</code> 函数创建并初始化一个
+<code>eventpoll</code> 对象。</li>
+<li>通过调用 <code>epoll_ctl()</code> 函数把被监听的文件句柄 (如 socket
+句柄) 封装成 <code>epitem</code> 对象并且添加到 <code>eventpoll</code>
+对象的红黑树中进行管理。</li>
+<li>通过调用 <code>epoll_wait()</code>
+函数等待被监听的文件状态发生改变。</li>
+<li>当被监听的文件状态发生改变时（如 socket
+接收到数据），会把文件句柄对应 <code>epitem</code> 对象添加到
+<code>eventpoll</code> 对象的就绪队列 <code>rdllist</code>
+中。并且把就绪队列的文件列表复制到 <code>epoll_wait()</code> 函数的
+<code>events</code> 参数中。</li>
+<li>唤醒调用 <code>epoll_wait()</code> 函数被阻塞（睡眠）的进程。</li>
+</ol>
 <h1 id="事件监听">事件监听</h1>
 <p>内核中的事件监听和回调机制是通过高效的事件驱动模型实现的，而不是简单的循环检查（如在用户空间中的轮询）。这种机制利用了现代操作系统的中断和回调系统，以及针对异步事件的优化处理策略。</p>
 <p>以下是这个过程的详细解释：</p>
@@ -482,7 +474,8 @@ CPU 需要处理某些事件。中断机制的实现并不依赖于类似于 <co
 <ol type="1">
 <li><p><strong>中断请求线（IRQ）</strong>：外部设备通过连接到处理器的一个特定的硬件线路（IRQ）发送中断信号。这个线路直接与处理器内的中断控制单元（Interrupt
 Controller）相连。</p></li>
-<li><p><strong>中断控制器</strong>：大多数现代计算机系统使用一个或多个中断控制器来管理中断信号。中断控制器的任务是接收来自各种外部设备的中断请求，并将这些请求优先级排序后发送给CPU。</p></li>
+<li><p><strong>中断控制器</strong>：大多数现代计算机系统使用一个或多个中断控制器来管理中断信号。中断控制器的任务是接收来自各种外部设备的中断请求，并将这些请求优先级排序后发送给
+CPU。</p></li>
 <li><p><strong>中断向量</strong>：当中断控制器接收到一个中断信号后，它会根据中断源确定一个中断向量。这个向量是一个数字，指向中断向量表中对应的入口，该入口包含了处理该中断的中断服务例程（ISR）的地址。</p></li>
 </ol>
 <h2 id="cpu-如何处理中断">CPU 如何处理中断</h2>
@@ -492,7 +485,8 @@ Controller）相连。</p></li>
 <li><p><strong>保存上下文</strong>：一旦当前指令执行完毕，CPU
 会自动保存当前的程序状态，包括程序计数器（PC）、寄存器和其他必要的状态信息。这些信息通常被推送到当前的栈上。</p></li>
 <li><p><strong>跳转到 ISR</strong>：CPU
-使用中断向量来访问中断向量表，找到与中断号对应的中断服务例程（ISR）的地址，并跳转到该地址开始执行ISR。这个过程是自动的，由处理器的内部机制控制。</p></li>
+使用中断向量来访问中断向量表，找到与中断号对应的中断服务例程（ISR）的地址，并跳转到该地址开始执行
+ISR。这个过程是自动的，由处理器的内部机制控制。</p></li>
 <li><p><strong>执行
 ISR</strong>：中断服务例程会执行必要的操作来处理中断，比如读取数据缓冲区、清除设备状态或发送信号等。</p></li>
 <li><p><strong>恢复上下文并返回</strong>：一旦 ISR
@@ -502,7 +496,24 @@ ISR</strong>：中断服务例程会执行必要的操作来处理中断，比�
 <p>这一过程大量依赖于处理器的硬件支持，如中断向量表通常是固定在处理器的特定内存地址上的。此外，现代处理器如
 x86
 架构还提供了更高级的功能，比如支持多重中断控制器和高级可编程中断控制器（APIC）等。</p>
-<p>这种基于硬件的中断响应机制允许CPU快速有效地处理各种外部事件，确保系统的响应性和稳定性。</p>
+<p>这种基于硬件的中断响应机制允许 CPU
+快速有效地处理各种外部事件，确保系统的响应性和稳定性。</p>
+<h1 id="参考">参考</h1>
+<ul>
+<li><a
+target="_blank" rel="noopener" href="https://blog.csdn.net/zhangyanfei01/article/details/114959103">图解
+| 深入揭秘 epoll 是如何实现 IO 多路复用的！</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://blog.csdn.net/zhpCSDN921011/article/details/125580548">一图总结
+epoll 的总体工作流程</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://thetechsolo.wordpress.com/2016/02/29/scalable-io-events-vs-multithreading-based/">scalable-io-events-vs-multithreading-based</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://github.com/liexusong/linux-source-code-analyze/blob/master/epoll-principle.md">Epoll
+实现原理</a></li>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/667412830">网络编程之 epoll
+源码深度剖析</a></li>
+</ul>
 
                 
               </div>
