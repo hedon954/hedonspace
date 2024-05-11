@@ -16,24 +16,22 @@
   <meta name="author" content="Hedon Wang">
   <meta name="keywords" content="">
   
-    <meta name="description" content="本文总结了高性能网络服务器中大量使用的 I&#x2F;O 多路复用技术 epoll，涵盖工作原理、数据结构、事件监听和中断等相关内容。">
+    <meta name="description" content="本文全面的指南深入介绍了如何在 Rust 中使用 chrono 库来精确处理和转换时间与日期。从基本概念到高级功能，本文提供了实用的代码示例和详尽的解释，帮助你在任何 Rust 项目中高效管理时间。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="epoll">
-<meta property="og:url" content="https://hedon.top/2024/04/28/epoll/index.html">
+<meta property="og:title" content="时间处理基础：Rust 的 chrono 库教程">
+<meta property="og:url" content="https://hedon.top/2024/05/11/rust-crate-chrono/index.html">
 <meta property="og:site_name" content="HedonSpace">
-<meta property="og:description" content="本文总结了高性能网络服务器中大量使用的 I&#x2F;O 多路复用技术 epoll，涵盖工作原理、数据结构、事件监听和中断等相关内容。">
+<meta property="og:description" content="本文全面的指南深入介绍了如何在 Rust 中使用 chrono 库来精确处理和转换时间与日期。从基本概念到高级功能，本文提供了实用的代码示例和详尽的解释，帮助你在任何 Rust 项目中高效管理时间。">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2024-04-28T12:27:29.000Z">
-<meta property="article:modified_time" content="2024-05-06T09:11:27.155Z">
+<meta property="article:published_time" content="2024-05-11T15:52:55.000Z">
+<meta property="article:modified_time" content="2024-05-11T16:55:05.777Z">
 <meta property="article:author" content="Hedon Wang">
-<meta property="article:tag" content="epoll">
-<meta property="article:tag" content="网络编程">
-<meta property="article:tag" content="非阻塞 I&#x2F;0">
+<meta property="article:tag" content="Rust">
 <meta name="twitter:card" content="summary_large_image">
   
   
   
-  <title>epoll - HedonSpace</title>
+  <title>时间处理基础：Rust 的 chrono 库教程 - HedonSpace</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -223,13 +221,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/banner/epoll.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/banner/rust-crate-chrono.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle">epoll</span>
+            <span id="subtitle">时间处理基础：Rust 的 chrono 库教程</span>
           
         </div>
 
@@ -245,8 +243,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-04-28 20:27" pubdate>
-          2024-04-28 20:27
+        <time datetime="2024-05-11 23:52" pubdate>
+          2024-05-11 23:52
         </time>
       </span>
     
@@ -257,7 +255,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.2k words
+          3.8k words
         
       </span>
     
@@ -268,7 +266,7 @@
         
         
         
-          11 mins
+          10 mins
         
       </span>
     
@@ -313,207 +311,164 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">epoll</h1>
+            <h1 id="seo-header">时间处理基础：Rust 的 chrono 库教程</h1>
             
             
               <div class="markdown-body">
                 
-                <h1 id="前言">前言</h1>
-<p><code>epoll</code> 是一种 I/O
-多路复用技术，主要用于高性能的网络服务器中，特别是在处理大量并发连接时。它是
-Linux 特有的，自 Linux 内核 2.5.44
-版本引入，并在后续版本中不断优化。<code>epoll</code>
-能够帮助服务器高效地管理数以千计的客户端连接，是 <code>select</code> 和
-<code>poll</code> 方法的现代替代品。</p>
-<p>本文不对 <code>epoll</code>
-的源码进行分析，仅做原理上的总结，方便快速查阅回顾。各大论坛很多大佬都对
-<code>epoll</code>
-的源码进行了详尽的分析，感兴趣的读者可以看「参考」篇章。</p>
-<h1 id="主要特点">主要特点</h1>
-<ol type="1">
-<li><strong>效率高</strong>: 相较于 <code>select</code> 和
-<code>poll</code>，<code>epoll</code>
-可以更高效地处理大量的并发连接。<code>select</code> 和 <code>poll</code>
-的效率随着监视的文件描述符数量增加而线性下降，而 <code>epoll</code>
-则不会因为监视的文件描述符数量增加而显著降低效率。</li>
-<li><strong>扩展性好</strong>: <code>epoll</code>
-使用一种称为事件通知的机制，只会处理那些真正发生了事件的文件描述符。这意味着系统不必重新检查所有文件描述符，从而大大减少了不必要的
-CPU 开销。</li>
-<li><strong>支持边缘触发和水平触发</strong>: <code>epoll</code> 支持
-<code>Edge Triggered</code> 和水平触发 <code>Level Triggered</code>
-两种模式。边缘触发模式只在文件描述符状态改变时才通知应用程序，适用于非阻塞
-I/O；而水平触发模式则在有事件可读或可写时都会通知应用程序，更容易使用但效率略低。</li>
-</ol>
+                <p>在开发过程中，我们经常有对时间和日期处理的需求。不论是日历应用、日程安排、还是时间戳记录，准确的时间数据处理都是必不可少的。Rust
+社区提供的 <code>chrono</code> 库以其强大的功能和灵活的接口，在 Rust
+开发者中广受欢迎。本文将简单介绍 <code>chrono</code>
+库，展示如何利用它来精确处理和转换时间和日期，帮助你在任何 Rust
+项目中都能高效地管理时间。</p>
+<h1 id="版本">版本</h1>
+<ul>
+<li><code>chrono</code>: 0.4.38</li>
+</ul>
 <h1 id="结论先行">结论先行</h1>
 <figure>
 <img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240429121302958.png" srcset="/img/loading.gif" lazyload
-alt="epoll flow chart" />
-<figcaption aria-hidden="true">epoll flow chart</figcaption>
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512005044076.png" srcset="/img/loading.gif" lazyload
+alt="chrono 各种时间类型转换图" />
+<figcaption aria-hidden="true">chrono 各种时间类型转换图</figcaption>
 </figure>
-<h1 id="工作原理">工作原理</h1>
-<p><code>epoll</code> 的工作可以分为三个主要步骤：</p>
-<ol type="1">
-<li><strong>创建 epoll 实例</strong>: 使用 <code>epoll_create</code>
-函数创建一个 <code>epoll</code> 实例。</li>
-<li><strong>添加/修改/删除文件描述符</strong>: 使用
-<code>epoll_ctl</code> 函数将新的文件描述符添加到 <code>epoll</code>
-实例中，或者修改、删除已存在的文件描述符。这些操作与文件描述符的数量无关，因此执行速度非常快。</li>
-<li><strong>等待事件发生</strong>: 使用 <code>epoll_wait</code>
-函数等待事件的发生。这个函数可以同时监控多个文件描述符，当指定的文件描述符上发生了注册的事件时，函数返回，并告知哪些文件描述符上发生了事件。</li>
-</ol>
-<h1 id="et-lt">ET &amp; LT</h1>
-<p>在 <code>epoll</code> 中，边缘触发（ET, Edge
-Triggered）和水平触发（LT, Level
-Triggered）是两种不同的事件通知方式，它们定义了操作系统如何通知应用程序文件描述符上的
-I/O 事件。</p>
-<p>这两种模式的主要区别在于何时以及如何多次通知应用程序关于某个文件描述符的事件。</p>
-<h2 id="水平触发level-triggered">水平触发（Level Triggered）</h2>
+<h1 id="时间相关概念">时间相关概念</h1>
+<table>
+
+<thead>
+<tr class="header">
+<th>概念</th>
+<th>理解</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>UNIX 时间戳（UNIX Timestamp）</td>
+<td>也称为 POSIX 时间或 Epoch 时间，是自 1970 年 1 月 1 日（UTC
+时区）以来经过的秒数，不计入闰秒。这是一种非常通用的时间表示方法，在编程中广泛使用，因为它可以简化时间差的计算。</td>
+</tr>
+<tr class="even">
+<td>UTC（协调世界时）</td>
+<td>全称为协调世界时（Coordinated Universal
+Time），是目前国际上广泛采用的时间标准。它基本上与格林威治平均时（GMT）相同，但在技术上更加精确，因为它使用原子钟来保持时间准确。世界各地的时间都是以
+UTC 为基础，加上或减去一定的小时数来定义的。</td>
+</tr>
+<tr class="odd">
+<td>时区（Time Zone）</td>
+<td>时区是地球上划分的标准时间区域。由于地球自西向东旋转，每向东移动一定角度，当地的太阳时间就会相应地提前。世界被分成了
+24
+个时区，每个时区通常相差一小时。时区允许地区内的人们能在大致相同的时间内，经历类似的日夜更替模式。</td>
+</tr>
+<tr class="even">
+<td>UTC+8</td>
+<td>UTC+8 是 UTC 时间加上 8
+小时的时间区。中国大陆就是位于这个时区。例如，当 UTC 时间为 00:00
+时，UTC+8 的时间就是 08:00。</td>
+</tr>
+</tbody>
+</table>
+<h1 id="chrono-关键类型">chrono 关键类型</h1>
+<table>
+
+<thead>
+<tr class="header">
+<th>类型</th>
+<th>含义</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>DateTime&lt;Tz&gt;</td>
+<td>一个带有时区的日期和时间类型，其中 <code>Tz</code> 是实现了
+<code>TimeZone</code> 特质的类型，如 <code>Utc</code> 和
+<code>Local</code> 。这意味着 <code>DateTime</code>
+考虑了时区的影响，可以表示全球任意地点的精确时间。</td>
+<td>广泛用于需要考虑时区转换的场景，如存储用户的本地时间或在不同地区之间转换时间。</td>
+</tr>
+<tr class="even">
+<td>NaiveDateTime</td>
+<td>一个“天真的”日期和时间，即不包含任何时区信息的日期和时间。这种类型仅仅表示一个日历日期和一天中的时间，而没有任何关于地理或政治时区的数据。</td>
+<td>对于一些时区不重要的场景非常有用，比如记录电影的发行日期或历史事件的日期。</td>
+</tr>
+<tr class="odd">
+<td>NaiveDate</td>
+<td>仅表示一个日历日期，不包括时间或时区信息。</td>
+<td>它用于处理只需要日期而不关心具体时间的场景，如生日、节日等。</td>
+</tr>
+<tr class="even">
+<td>NaiveTime</td>
+<td>是一个只表示一天中时间的类型，它不包含日期或时区信息。</td>
+<td>这个类型适用于需要处理具体某个时间点（如开会时间、日常活动的开始时间）但不需要日期数据的情景。</td>
+</tr>
+</tbody>
+</table>
+<h1 id="chrono-时区类型">chrono 时区类型</h1>
+<p><code>chrono</code>
+支持多种时区类型，方便进行全球时间的转换和计算：</p>
 <ul>
-<li><strong>定义</strong>: 在水平触发模式下，只要文件描述符上有未处理的
-I/O 事件存在，<code>epoll_wait</code>
-就会通知应用程序。这意味着，如果数据可读取但未被完全读取，<code>epoll_wait</code>
-会在下次调用时再次返回该文件描述符。</li>
-<li><strong>行为</strong>:
-这种模式更容易编程，因为应用程序可以不用担心在一个操作中处理所有数据。如果数据还在，<code>epoll_wait</code>
-会继续通知你。</li>
-<li><strong>适用场景</strong>:
-更适合那些简单的应用或者对实时性要求不是非常高的应用，因为它简化了处理逻辑。</li>
+<li><strong><code>Utc</code></strong>: 用于处理协调世界时。</li>
+<li><strong><code>Local</code></strong>:
+代表服务器或用户的本地时区。</li>
+<li><strong><code>FixedOffset</code></strong>:
+允许定义任意的小时和分钟偏移量，适合固定偏移的时间计算。</li>
 </ul>
-<h2 id="边缘触发edge-triggered">边缘触发（Edge Triggered）</h2>
-<ul>
-<li><strong>定义</strong>:
-在边缘触发模式下，只有状态变化时（例如从无数据到有数据），<code>epoll_wait</code>
-才会通知应用程序。一旦通知了应用程序某事件发生，除非有新的数据到达或状态再次发生变化，否则不会再次通知应用程序该事件。</li>
-<li><strong>行为</strong>:
-这要求应用程序必须立即处理所有事件，因为之后不会再收到关于这些事件的通知。这意味着应用程序必须循环读取或写入，直到数据被完全处理完，以确保不遗漏任何事件。</li>
-<li><strong>适用场景</strong>:
-适合需要高性能的场景，因为它减少了事件处理的次数，但要求程序必须更加小心地管理
-I/O 操作。</li>
-</ul>
-<h2 id="比较和选择">比较和选择</h2>
-<ul>
-<li><strong>性能</strong>:
-边缘触发通常提供更高的性能，因为它减少了系统调用的次数和不必要的事件处理。</li>
-<li><strong>编程复杂性</strong>:
-边缘触发模式编程比水平触发复杂，因为需要确保每次事件被彻底处理，并且更容易遇到如“惊群效应”（多个进程或线程被同一个事件唤醒）等问题。</li>
-<li><strong>可靠性</strong>:
-水平触发因为其简单的行为模式，在可靠性处理上更为直接和容易。</li>
-</ul>
-<p>通常，选择哪种模式取决于应用的具体需求、预期的负载以及开发者对事件处理逻辑的控制程度。高性能服务器通常选择边缘触发模式，以最大化其效率，而简单的或者低负载应用可能会更倾向于使用水平触发，以简化开发和调试过程。</p>
-<h1 id="数据结构">数据结构</h1>
-<p><code>epoll</code> 使用 2
-种关键的数据结构来维护和跟踪文件描述符（FD）和事件：</p>
-<ol type="1">
-<li><strong>红黑树（Red-Black Tree）</strong>:
-用于存储所有注册的文件描述符及其事件。红黑树是一种自平衡二叉搜索树，能够在对数时间内完成插入、删除和查找操作，这使得管理大量文件描述符变得高效。</li>
-<li><strong>就绪列表（Ready List）</strong>:
-当事件发生（如可读、可写等）并被内核检测到时，相应的 FD
-会被添加到一个就绪列表中。这个列表仅包含实际有事件发生的文件描述符，从而减少了
-<code>epoll_wait</code> 调用的处理时间。</li>
-</ol>
-<h1 id="工作细节">工作细节</h1>
+<h1 id="常用功能">常用功能</h1>
+<h2 id="获取当前时间">获取当前时间</h2>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">local_datetime</span>: DateTime&lt;Local&gt; = Local::<span class="hljs-title function_ invoke__">now</span>();<br><span class="hljs-keyword">let</span> <span class="hljs-variable">utc_datetime</span>: DateTime&lt;Utc&gt; = Utc::<span class="hljs-title function_ invoke__">now</span>();<br></code></pre></td></tr></table></figure>
+<h2 id="datetime-转-string">DateTime 转 String</h2>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, local_datetime.<span class="hljs-title function_ invoke__">to_rfc2822</span>()); <span class="hljs-comment">// Sun, 12 May 2024 00:15:55 +0800</span><br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, local_datetime.<span class="hljs-title function_ invoke__">to_rfc3339</span>()); <span class="hljs-comment">// 2024-05-12T00:15:55.325058+08:00</span><br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, local_datetime.<span class="hljs-title function_ invoke__">to_string</span>()); <span class="hljs-comment">// 2024-05-12 00:15:55.325058 +08:00</span><br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, local_datetime.format(<span class="hljs-string">&quot;%Y-%m-%d %H:%M:%S&quot;</span>)) <span class="hljs-comment">// 2024-05-12 00:15:55</span><br></code></pre></td></tr></table></figure>
+<h2 id="string-转-datetime">String 转 DateTime</h2>
+<p>字符串带时区信息，使用
+<code>DateTime::parse_from_str(s, f)</code>。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">format_withzone</span> = <span class="hljs-string">&quot;%Y-%m-%d %H:%M:%S %z&quot;</span>;<br><span class="hljs-keyword">let</span> <span class="hljs-variable">datetime_withzone_str</span> = <span class="hljs-string">&quot;2024-01-01 00:00:00 +08:00&quot;</span>;<br><span class="hljs-keyword">let</span> <span class="hljs-variable">local_datetime</span> =<br>    DateTime::<span class="hljs-title function_ invoke__">parse_from_str</span>(&amp;datetime_withzone_str, &amp;format_withzone).<span class="hljs-title function_ invoke__">unwrap</span>();<br></code></pre></td></tr></table></figure>
+<p>字符串无时区信息，使用
+<code>NaiveDateTime::parse_from_str(s, f)</code>。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">format</span> = <span class="hljs-string">&quot;%Y-%m-%d %H:%M:%S&quot;</span>;<br><span class="hljs-keyword">let</span> <span class="hljs-variable">datetime_str</span> = <span class="hljs-string">&quot;2024-01-01 00:00:00&quot;</span>;<br><span class="hljs-keyword">let</span> <span class="hljs-variable">local_datetime</span> = NaiveDateTime::<span class="hljs-title function_ invoke__">parse_from_str</span>(&amp;datetime_str, &amp;format)<br>    .<span class="hljs-title function_ invoke__">unwrap</span>()<br>    .<span class="hljs-title function_ invoke__">and_local_timezone</span>(Local) <span class="hljs-comment">// 转为带时区的 DateTime</span><br>    .<span class="hljs-title function_ invoke__">unwrap</span>();<br></code></pre></td></tr></table></figure>
+<h2 id="datetime-转-timestamp">DateTime 转 timestamp</h2>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">local_datetime</span> = Local::<span class="hljs-title function_ invoke__">now</span>();<br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;seconds: &#123;&#125;&quot;</span>, local_datetime.<span class="hljs-title function_ invoke__">timestamp</span>()); <span class="hljs-comment">// 1715444324</span><br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;millis: &#123;&#125;&quot;</span>, local_datetime.<span class="hljs-title function_ invoke__">timestamp_millis</span>()); <span class="hljs-comment">// 1715444338610</span><br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;micros: &#123;&#125;&quot;</span>, local_datetime.<span class="hljs-title function_ invoke__">timestamp_micros</span>()); <span class="hljs-comment">// 1715444338610873</span><br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;nacos: &#123;&#125;&quot;</span>, local_datetime.<span class="hljs-title function_ invoke__">timestamp_nanos_opt</span>().<span class="hljs-title function_ invoke__">unwrap</span>()); <span class="hljs-comment">// 1715444338610873000</span><br></code></pre></td></tr></table></figure>
+<h2 id="timestamp-转-datetime">timestamp 转 DateTime</h2>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">utc_datetime</span>: DateTime&lt;Utc&gt; = DateTime::<span class="hljs-title function_ invoke__">from_timestamp</span>(<span class="hljs-number">1704139200</span>, <span class="hljs-number">0</span>).<span class="hljs-title function_ invoke__">unwrap</span>(); <span class="hljs-comment">// 默认是 Utc</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">local_datetime</span>: DateTime&lt;Local&gt; = DateTime::<span class="hljs-title function_ invoke__">from_timestamp</span>(<span class="hljs-number">1704139200</span>, <span class="hljs-number">0</span>).<span class="hljs-title function_ invoke__">unwrap</span>().<span class="hljs-title function_ invoke__">into</span>(); <span class="hljs-comment">// 使用 into() 转为 Local</span><br></code></pre></td></tr></table></figure>
+<h2 id="时区转换">时区转换</h2>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> chrono::&#123;DateTime, FixedOffset, Utc&#125;;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">utc_date_time</span>: DateTime&lt;Utc&gt; = Utc::<span class="hljs-title function_ invoke__">now</span>();<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">fixed_offset</span> = FixedOffset::<span class="hljs-title function_ invoke__">east</span>(<span class="hljs-number">8</span> * <span class="hljs-number">3600</span>); <span class="hljs-comment">// 转为 utc+8 东八区</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">local_date_time</span> = utc_date_time.<span class="hljs-title function_ invoke__">with_timezone</span>(&amp;fixed_offset);<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Local time in UTC+8: &#123;&#125;&quot;</span>, local_date_time);<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="时间计算">时间计算</h2>
+<p>时间加减：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> chrono::&#123;Duration, Local&#125;;<br><br><span class="hljs-keyword">let</span> <span class="hljs-variable">now</span> = Local::<span class="hljs-title function_ invoke__">now</span>();<br><span class="hljs-keyword">let</span> <span class="hljs-variable">yesterday</span> = now - Duration::<span class="hljs-title function_ invoke__">hours</span>(<span class="hljs-number">24</span>);<br></code></pre></td></tr></table></figure>
 <figure>
 <img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/epoll_principle.jpg" srcset="/img/loading.gif" lazyload
-alt="epoll data structure" />
-<figcaption aria-hidden="true">epoll data structure</figcaption>
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512002330526.png" srcset="/img/loading.gif" lazyload
+alt="chrono time duration methods" />
+<figcaption aria-hidden="true">chrono time duration methods</figcaption>
 </figure>
-<ol type="1">
-<li>通过调用 <code>epoll_create()</code> 函数创建并初始化一个
-<code>eventpoll</code> 对象。</li>
-<li>通过调用 <code>epoll_ctl()</code> 函数把被监听的文件句柄 (如 socket
-句柄) 封装成 <code>epitem</code> 对象并且添加到 <code>eventpoll</code>
-对象的红黑树中进行管理。</li>
-<li>通过调用 <code>epoll_wait()</code>
-函数等待被监听的文件状态发生改变。</li>
-<li>当被监听的文件状态发生改变时（如 socket
-接收到数据），会把文件句柄对应 <code>epitem</code> 对象添加到
-<code>eventpoll</code> 对象的就绪队列 <code>rdllist</code>
-中。并且把就绪队列的文件列表复制到 <code>epoll_wait()</code> 函数的
-<code>events</code> 参数中。</li>
-<li>唤醒调用 <code>epoll_wait()</code> 函数被阻塞（睡眠）的进程。</li>
-</ol>
-<h1 id="事件监听">事件监听</h1>
-<p>内核中的事件监听和回调机制是通过高效的事件驱动模型实现的，而不是简单的循环检查（如在用户空间中的轮询）。这种机制利用了现代操作系统的中断和回调系统，以及针对异步事件的优化处理策略。</p>
-<p>以下是这个过程的详细解释：</p>
-<h2 id="中断和中断处理">1. 中断和中断处理</h2>
-<p>在硬件层面，大多数 I/O 操作（如网络通信、磁盘
-I/O）都是通过中断驱动的。当一个 I/O
-设备准备好数据或需要服务时，它会产生一个中断信号，这个信号被发送到
-CPU。CPU 响应中断，并执行一个预定的中断处理程序（Interrupt Service
-Routine, ISR），该程序是由设备的驱动程序提供的。</p>
-<h2 id="事件和回调">2. 事件和回调</h2>
-<p>在 ISR
-中，与设备相关的事件（例如网络包的接收、硬盘读取完成）会被检测到，并且可以在此阶段调用特定的回调函数。这些回调函数是在设备驱动或相关的内核模块中定义的，用来通知内核其他部分或者相关的进程有关事件的发生。</p>
-<h2 id="文件描述符的回调机制">3. 文件描述符的回调机制</h2>
-<p>对于 <code>epoll</code> 等 I/O
-多路复用技术，内核为每个文件描述符维护了一个事件处理机制。当文件描述符被创建时，相关的设备或资源会注册一组回调函数，这些函数会在特定的操作（如读、写、错误）上被触发。例如，一个网络套接字可能会在数据到达时触发一个“可读”事件的回调。</p>
-<h2 id="epoll-的事件绑定">4. <code>epoll</code> 的事件绑定</h2>
-<p>当一个文件描述符被加入到 <code>epoll</code>
-监听队列中，<code>epoll</code>
-会利用这些回调来获得事件通知。<code>epoll</code>
-操作相关的代码会将一个额外的回调函数绑定到这些文件描述符上。当文件描述符的状态改变时（如数据可读），这个回调函数将被触发，然后它会将相应的文件描述符标记为“就绪”，并放入
-<code>epoll</code> 的就绪队列。</p>
-<h2 id="事件通知和唤醒">5. 事件通知和唤醒</h2>
-<p>当 <code>epoll_wait</code>
-被调用且有事件就绪时，内核会检查就绪队列，并将这些事件传递给等待的进程。如果没有事件就绪，进程将被挂起直到有事件发生。事件的发生会触发内核调度程序唤醒相应的进程。</p>
-<h2 id="效率和性能">6. 效率和性能</h2>
-<p>这种基于中断的事件通知机制意味着内核不需要不断循环检查每个文件描述符的状态，从而极大地提高了效率。事件只有在实际发生时才被处理，且处理通常是由硬件中断直接触发的，这使得整个系统更加响应快速，减少了无效的
-CPU 使用。</p>
-<p>这种设计使得 Linux 内核在处理大量并发 I/O
-操作时能够保持高效和稳定，适合构建高性能的网络服务和应用。</p>
-<h1 id="中断">中断</h1>
-<p>中断机制是计算机硬件和操作系统核心功能之一，它允许外设或硬件异步地通知
-CPU 需要处理某些事件。中断机制的实现并不依赖于类似于 <code>for</code>
-循环的轮询检查，而是建立在更为直接和高效的硬件和处理器架构支持之上。</p>
-<p>当 CPU
-接收到中断信号时，它是通过一套内建于硬件的协调机制来识别和响应中断的。这个过程涉及硬件电路设计、处理器架构和操作系统的中断管理功能。</p>
-<p>以下是 CPU 如何知道有中断发生，并且如何处理这一中断的详细步骤：</p>
-<h2 id="中断信号的检测和响应">中断信号的检测和响应</h2>
-<ol type="1">
-<li><p><strong>中断请求线（IRQ）</strong>：外部设备通过连接到处理器的一个特定的硬件线路（IRQ）发送中断信号。这个线路直接与处理器内的中断控制单元（Interrupt
-Controller）相连。</p></li>
-<li><p><strong>中断控制器</strong>：大多数现代计算机系统使用一个或多个中断控制器来管理中断信号。中断控制器的任务是接收来自各种外部设备的中断请求，并将这些请求优先级排序后发送给
-CPU。</p></li>
-<li><p><strong>中断向量</strong>：当中断控制器接收到一个中断信号后，它会根据中断源确定一个中断向量。这个向量是一个数字，指向中断向量表中对应的入口，该入口包含了处理该中断的中断服务例程（ISR）的地址。</p></li>
-</ol>
-<h2 id="cpu-如何处理中断">CPU 如何处理中断</h2>
-<ol type="1">
-<li><p><strong>当前指令的完成</strong>：当 CPU
-接收到中断控制器发出的中断信号时，它首先会完成当前执行的指令。这是为了保证程序的状态能够正确保存，从而在中断处理完毕后可以无缝地恢复执行。</p></li>
-<li><p><strong>保存上下文</strong>：一旦当前指令执行完毕，CPU
-会自动保存当前的程序状态，包括程序计数器（PC）、寄存器和其他必要的状态信息。这些信息通常被推送到当前的栈上。</p></li>
-<li><p><strong>跳转到 ISR</strong>：CPU
-使用中断向量来访问中断向量表，找到与中断号对应的中断服务例程（ISR）的地址，并跳转到该地址开始执行
-ISR。这个过程是自动的，由处理器的内部机制控制。</p></li>
-<li><p><strong>执行
-ISR</strong>：中断服务例程会执行必要的操作来处理中断，比如读取数据缓冲区、清除设备状态或发送信号等。</p></li>
-<li><p><strong>恢复上下文并返回</strong>：一旦 ISR
-执行完成，处理器会从栈上恢复之前保存的程序状态，并将控制权返回到被中断的程序，继续执行。</p></li>
-</ol>
-<h2 id="硬件支持">硬件支持</h2>
-<p>这一过程大量依赖于处理器的硬件支持，如中断向量表通常是固定在处理器的特定内存地址上的。此外，现代处理器如
-x86
-架构还提供了更高级的功能，比如支持多重中断控制器和高级可编程中断控制器（APIC）等。</p>
-<p>这种基于硬件的中断响应机制允许 CPU
-快速有效地处理各种外部事件，确保系统的响应性和稳定性。</p>
-<h1 id="参考">参考</h1>
+<p>时间间隔：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> chrono::&#123;Duration, Local&#125;;<br><br><span class="hljs-keyword">let</span> <span class="hljs-variable">now</span> = Local::<span class="hljs-title function_ invoke__">now</span>();<br><span class="hljs-keyword">let</span> <span class="hljs-variable">yesterday</span> = now - Duration::<span class="hljs-title function_ invoke__">hours</span>(<span class="hljs-number">24</span>);<br><span class="hljs-keyword">let</span> <span class="hljs-variable">hour_interval</span> = (now - yesterday).<span class="hljs-title function_ invoke__">num_hours</span>();<br></code></pre></td></tr></table></figure>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512002106738.png" srcset="/img/loading.gif" lazyload
+alt="chrono time interval methods" />
+<figcaption aria-hidden="true">chrono time interval methods</figcaption>
+</figure>
+<h1 id="总结">总结</h1>
+<p>通过本文的详细介绍和实用示例，我们了解了如何使用 Rust 的
+<code>chrono</code> 库来精确处理时间和日期。<code>chrono</code>
+不仅支持复杂的时区计算和全球时间管理，还提供了方便的日期时间解析和格式化工具，以及灵活的时间运算功能。掌握了这些技能后，你将能够在任何需要精确时间数据处理的
+Rust 应用中，提供稳定和高效的解决方案。</p>
+<p>时间是每个程序的基石，而 <code>chrono</code>
+就是那把能够操纵时间的魔杖。</p>
+<p>希望本文能对你有帮助，peace! enjoy coding~</p>
+<blockquote>
+<p>参考：</p>
 <ul>
+<li><a target="_blank" rel="noopener" href="https://docs.rs/chrono/latest/chrono/">chrono
+crate</a></li>
 <li><a
-target="_blank" rel="noopener" href="https://blog.csdn.net/zhangyanfei01/article/details/114959103">图解
-| 深入揭秘 epoll 是如何实现 IO 多路复用的！</a></li>
-<li><a
-target="_blank" rel="noopener" href="https://blog.csdn.net/zhpCSDN921011/article/details/125580548">一图总结
-epoll 的总体工作流程</a></li>
-<li><a
-target="_blank" rel="noopener" href="https://thetechsolo.wordpress.com/2016/02/29/scalable-io-events-vs-multithreading-based/">scalable-io-events-vs-multithreading-based</a></li>
-<li><a
-target="_blank" rel="noopener" href="https://github.com/liexusong/linux-source-code-analyze/blob/master/epoll-principle.md">Epoll
-实现原理</a></li>
-<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/667412830">网络编程之 epoll
-源码深度剖析</a></li>
+target="_blank" rel="noopener" href="https://blog.stackademic.com/rust-working-with-date-and-time-30e003cd59e8">rust-working-with-date-and-time</a></li>
 </ul>
+<p>作图：</p>
+<ul>
+<li>https://excalidraw.com/</li>
+</ul>
+</blockquote>
 
                 
               </div>
@@ -532,8 +487,15 @@ target="_blank" rel="noopener" href="https://github.com/liexusong/linux-source-c
     
       <span class="category-chain">
         
-  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" class="category-chain-item">计算机基础</a>
+  <a href="/categories/Rust/" class="category-chain-item">Rust</a>
   
+  
+    <span>></span>
+    
+  <a href="/categories/Rust/Rust-%E5%B8%B8%E7%94%A8%E5%BA%93/" class="category-chain-item">Rust 常用库</a>
+  
+  
+
   
 
       </span>
@@ -547,11 +509,7 @@ target="_blank" rel="noopener" href="https://github.com/liexusong/linux-source-c
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/epoll/" class="print-no-link">#epoll</a>
-      
-        <a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" class="print-no-link">#网络编程</a>
-      
-        <a href="/tags/%E9%9D%9E%E9%98%BB%E5%A1%9E-I-0/" class="print-no-link">#非阻塞 I/0</a>
+        <a href="/tags/Rust/" class="print-no-link">#Rust</a>
       
     </div>
   
@@ -563,8 +521,8 @@ target="_blank" rel="noopener" href="https://github.com/liexusong/linux-source-c
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>epoll</div>
-      <div>https://hedon.top/2024/04/28/epoll/</div>
+      <div>时间处理基础：Rust 的 chrono 库教程</div>
+      <div>https://hedon.top/2024/05/11/rust-crate-chrono/</div>
     </div>
     <div class="license-meta">
       
@@ -576,7 +534,7 @@ target="_blank" rel="noopener" href="https://github.com/liexusong/linux-source-c
       
         <div class="license-meta-item license-meta-date">
           <div>Posted on</div>
-          <div>2024-04-28</div>
+          <div>2024-05-11</div>
         </div>
       
       
@@ -608,18 +566,12 @@ target="_blank" rel="noopener" href="https://github.com/liexusong/linux-source-c
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2024/05/11/rust-crate-chrono/" title="时间处理基础：Rust 的 chrono 库教程">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">时间处理基础：Rust 的 chrono 库教程</span>
-                        <span class="visible-mobile">Previous</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2024/04/23/rust-action-inverted-index-concurrency/" title="Rust 实战丨并发构建倒排索引">
-                        <span class="hidden-mobile">Rust 实战丨并发构建倒排索引</span>
+                      <a href="/2024/04/28/epoll/" title="epoll">
+                        <span class="hidden-mobile">epoll</span>
                         <span class="visible-mobile">Next</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
