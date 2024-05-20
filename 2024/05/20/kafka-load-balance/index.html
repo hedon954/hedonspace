@@ -24,7 +24,7 @@
 <meta property="og:description" content="本文转载自 Agoda Enginnering, 介绍了 Kafka 负载均衡的实际应用过程中的负载均衡挑战及解决思路。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2024-05-20T02:37:10.000Z">
-<meta property="article:modified_time" content="2024-05-20T06:53:20.548Z">
+<meta property="article:modified_time" content="2024-05-20T08:15:56.804Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Kafka">
 <meta property="article:tag" content="中间件">
@@ -257,7 +257,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.6k words
+          3.5k words
         
       </span>
     
@@ -318,8 +318,10 @@
             
               <div class="markdown-body">
                 
-                <p>本文《Kafka 负载均衡挑战及解决思路》转载自Agoda
-Engineering，介绍了在实际应用中，如何应对Kafka负载均衡所遇到的各种挑战，并提出相应的解决思路。本文详细阐述了Kafka的并行性机制、常用的分区策略以及在实际操作中遇到的异构硬件、不均匀工作负载等问题。通过深入分析这些挑战，并提供具体的解决方案，本文旨在帮助读者更好地理解和应用Kafka的负载均衡技术，从而提高系统的整体性能和稳定性。</p>
+                <p>本文转载自 Agoda Engineering，介绍了在实际应用中，如何应对 Kafka
+负载均衡所遇到的各种挑战，并提出相应的解决思路。本文简要阐述了 Kafka
+的并行性机制、常用的分区策略以及在实际操作中遇到的异构硬件、不均匀工作负载等问题。通过深入分析这些挑战，并提供具体的解决方案，本文旨在帮助读者更好地理解和应用
+Kafka 的负载均衡技术，从而提高系统的整体性能和稳定性。</p>
 <p>以下大部分内容翻译自原文 <a
 target="_blank" rel="noopener" href="https://medium.com/agoda-engineering/how-we-solve-load-balancing-challenges-in-apache-kafka-8cd88fdad02b">how-we-solve-load-balancing-challenges-in-apache-kafka</a>，并已获得原作者同意。</p>
 <h1 id="思维导图">思维导图</h1>
