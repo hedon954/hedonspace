@@ -16,23 +16,24 @@
   <meta name="author" content="Hedon Wang">
   <meta name="keywords" content="">
   
-    <meta name="description" content="本文主要是记录笔者在学习《用 Go 自制解释器 Monkey》过程中涉及的重要设计理念和思考。">
+    <meta name="description" content="本文转载自 Agoda Enginnering, 介绍了 Kafka 负载均衡的实际应用过程中的负载均衡挑战及解决思路。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="学习记录：用 Go 自制解释器 Monkey">
-<meta property="og:url" content="https://hedon.top/2024/05/12/monkey-language/index.html">
+<meta property="og:title" content="Kafka 负载均衡挑战及解决思路">
+<meta property="og:url" content="https://hedon.top/2024/05/20/kafka-load-balance/index.html">
 <meta property="og:site_name" content="HedonSpace">
-<meta property="og:description" content="本文主要是记录笔者在学习《用 Go 自制解释器 Monkey》过程中涉及的重要设计理念和思考。">
+<meta property="og:description" content="本文转载自 Agoda Enginnering, 介绍了 Kafka 负载均衡的实际应用过程中的负载均衡挑战及解决思路。">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2024-05-11T19:44:15.000Z">
-<meta property="article:modified_time" content="2024-05-12T11:59:36.393Z">
+<meta property="article:published_time" content="2024-05-20T02:37:10.000Z">
+<meta property="article:modified_time" content="2024-05-21T14:41:10.216Z">
 <meta property="article:author" content="Hedon Wang">
-<meta property="article:tag" content="Go">
-<meta property="article:tag" content="编译原理">
+<meta property="article:tag" content="Kafka">
+<meta property="article:tag" content="中间件">
+<meta property="article:tag" content="消息队列">
 <meta name="twitter:card" content="summary_large_image">
   
   
   
-  <title>学习记录：用 Go 自制解释器 Monkey - HedonSpace</title>
+  <title>Kafka 负载均衡挑战及解决思路 - HedonSpace</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -222,13 +223,13 @@
   
 
 <div id="banner" class="banner" parallax=true
-     style="background: url('/banner/monkey-language.jpg') no-repeat center center; background-size: cover;">
+     style="background: url('/banner/kafka-load-balance.jpg') no-repeat center center; background-size: cover;">
   <div class="full-bg-img">
     <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle">学习记录：用 Go 自制解释器 Monkey</span>
+            <span id="subtitle">Kafka 负载均衡挑战及解决思路</span>
           
         </div>
 
@@ -244,8 +245,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-05-12 03:44" pubdate>
-          2024-05-12 03:44
+        <time datetime="2024-05-20 10:37" pubdate>
+          2024-05-20 10:37
         </time>
       </span>
     
@@ -256,7 +257,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.7k words
+          3.5k words
         
       </span>
     
@@ -267,7 +268,7 @@
         
         
         
-          5 mins
+          9 mins
         
       </span>
     
@@ -312,38 +313,186 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">学习记录：用 Go 自制解释器 Monkey</h1>
+            <h1 id="seo-header">Kafka 负载均衡挑战及解决思路</h1>
             
             
               <div class="markdown-body">
                 
-                <h1 id="词法分析">词法分析</h1>
-<p>TDD：测试驱动开发</p>
-<p>先写测试用例，再进行词法分析逻辑的完善。</p>
-<h1 id="语法分析">语法分析</h1>
-<p>递归下降语法分析伪代码</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><code class="hljs go">function parseProgram() &#123;<br>    program = newProgramASTNode()<br>    advanceTokens()<br>    <span class="hljs-keyword">for</span> (currentToken() != EOF_TOKEN) &#123;<br>        statement = null<br>        <span class="hljs-keyword">if</span> (currentToken() == LET_TOKEN) &#123;<br>            statement = parseLetStatement()<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (currentToken() == RETURN_TOKEN) &#123;<br>            statement = parseReturnStatement()<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (currentToken() == IF_TOKEN) &#123;<br>            statement = parseIfStatement()<br>        &#125;<br>        <span class="hljs-keyword">if</span> (statement != null) &#123;<br>            program.Statements.push(statement)<br>        &#125;<br>        advanceTokens()<br>    &#125;<br>    <span class="hljs-keyword">return</span> program<br>&#125;<br>function parseLetStatement() &#123;<br>    advanceTokens()<br>    identifier = parseIdentifier()<br>    advanceTokens()<br>    <span class="hljs-keyword">if</span> currentToken() != EQUAL_TOKEN &#123;<br>        parseError(<span class="hljs-string">&quot;no equal sign!&quot;</span>)<br>        <span class="hljs-keyword">return</span> null<br>    &#125;<br>    advanceTokens()<br>    value = parseExpression()<br>    variableStatement = newVariableStatementASTNode()<br>    variableStatement.identifier = identifier<br>    variableStatement.value = value<br>    <span class="hljs-keyword">return</span> variableStatement<br>&#125;<br>function parseIdentifier() &#123;<br>    identifier = newIdentifierASTNode()<br>    identifier.token = currentToken()<br>    <span class="hljs-keyword">return</span> identifier<br>&#125;<br>function parseExpression() &#123;<br>    <span class="hljs-keyword">if</span> (currentToken() == INTEGER_TOKEN) &#123;<br>        <span class="hljs-keyword">if</span> (nextToken() == PLUS_TOKEN) &#123;<br>            <span class="hljs-keyword">return</span> parseOperatorExpression()<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (nextToken() == SEMICOLON_TOKEN) &#123;<br>            <span class="hljs-keyword">return</span> parseIntegerLiteral()<br>        &#125;<br>    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (currentToken() == LEFT_PAREN) &#123;<br>        <span class="hljs-keyword">return</span> parseGroupedExpression()<br>    &#125;<br><span class="hljs-comment">// [...]</span><br>&#125;<br>function parseOperatorExpression() &#123;<br>    operatorExpression = newOperatorExpression()<br>    operatorExpression.left = parseIntegerLiteral()<br>    operatorExpression.operator = currentToken()<br>    operatorExpression.right = parseExpression()<br>    <span class="hljs-keyword">return</span> operatorExpression()<br>&#125;<br></code></pre></td></tr></table></figure>
+                <p>本文转载自 Agoda Engineering，介绍了在实际应用中，如何应对 Kafka
+负载均衡所遇到的各种挑战，并提出相应的解决思路。本文简要阐述了 Kafka
+的并行性机制、常用的分区策略以及在实际操作中遇到的异构硬件、不均匀工作负载等问题。通过深入分析这些挑战，并提供具体的解决方案，本文旨在帮助读者更好地理解和应用
+Kafka 的负载均衡技术，从而提高系统的整体性能和稳定性。</p>
+<p>以下大部分内容翻译自原文 <a
+target="_blank" rel="noopener" href="https://medium.com/agoda-engineering/how-we-solve-load-balancing-challenges-in-apache-kafka-8cd88fdad02b">how-we-solve-load-balancing-challenges-in-apache-kafka</a>，并已获得原作者同意。</p>
+<h1 id="思维导图">思维导图</h1>
 <figure>
 <img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512042659060.png" srcset="/img/loading.gif" lazyload
-alt="递归下降分析法" />
-<figcaption aria-hidden="true">递归下降分析法</figcaption>
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/Kafka%20%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88.png" srcset="/img/loading.gif" lazyload
+alt="Kafka 负载均衡解决方案" />
+<figcaption aria-hidden="true">Kafka 负载均衡解决方案</figcaption>
 </figure>
-<h2 id="let-x5">let x=5</h2>
+<h1 id="kafka-并行性">Kafka 并行性</h1>
+<p>Kafka
+通过分区来实现并行性，如下图所示，生产者（Producer）产生的消息会按照一定的分区策略分配到多个分区（Partition）中，消费组中的每个消费者会分别负责消费其中的若干个分区。</p>
 <figure>
 <img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512035446100.png" srcset="/img/loading.gif" lazyload
-alt="let stmt AST structure" />
-<figcaption aria-hidden="true">let stmt AST structure</figcaption>
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*ixosAmhBDsyBBhoS.png" srcset="/img/loading.gif" lazyload
+alt="Kafka 分区演示" />
+<figcaption aria-hidden="true">Kafka 分区演示</figcaption>
 </figure>
-<h2 id="return-5">return 5</h2>
+<p>分区策略：</p>
+<ul>
+<li>轮询（Round Robin）：默认情况下，Kafka
+使用轮询策略将消息均匀地分配到所有分区。</li>
+<li>哈希（Key Hashing）：如果消息有分区键，Kafka
+会对键进行哈希计算，将消息分配到特定的分区。</li>
+<li>自定义分区策略：开发者可以实现自定义的分区器（Partitioner）逻辑，以满足特定需求。</li>
+</ul>
+<p>如果要使用轮询或者哈希策略来达到“负载均衡”的目的，那么需要满足以下 2
+个假设：</p>
+<ol type="1">
+<li>消费者拥有相同的处理能力，</li>
+<li>消息的工作量相等。</li>
+</ol>
+<p>然而，在实践中，这些假设往往不成立。</p>
+<h1 id="现实挑战">现实挑战</h1>
+<h2 id="异构硬件">1. 异构硬件</h2>
+<p>不同代的服务器硬件性能不同，导致处理速率存在差异。例如，使用不同代硬件进行处理的基准显示性能存在显着差异：</p>
 <figure>
 <img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512045650041.png" srcset="/img/loading.gif" lazyload
-alt="return stmt AST structue" />
-<figcaption aria-hidden="true">return stmt AST structue</figcaption>
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/1*B6svY0ZjYVy-uJ7ZA18Jtg.png" srcset="/img/loading.gif" lazyload
+alt="不同服务器处理速率差异举例" />
+<figcaption aria-hidden="true">不同服务器处理速率差异举例</figcaption>
 </figure>
-<h2 id="普拉特解析">普拉特解析</h2>
+<h2 id="每条-kafka-消息的工作负载不均匀">2. 每条 Kafka
+消息的工作负载不均匀</h2>
+<p>下图显示了在一个时间窗口内到达的 12
+条消息。在这里，生产者向该主题中的六个分区中的每一个发布两条消息。因此，每个
+worker 消耗来自 2 个分区的数据，这意味着每个 worker 需要处理 4
+条消息。</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*VwPda5gNsHRL2tJV.png" srcset="/img/loading.gif" lazyload
+alt="使用循环分区器和循环分配器来分发消息的先前供应系统的演示。每个 worker 都分配有相同数量的消息。" />
+<figcaption
+aria-hidden="true">使用循环分区器和循环分配器来分发消息的先前供应系统的演示。每个
+worker 都分配有相同数量的消息。</figcaption>
+</figure>
+<p>不同的消息可能需要不同的处理步骤集。例如，处理消息可能涉及调用第三方
+HTTP
+端点，并且不同的响应大小或延迟可能会影响处理速率。此外，对于涉及数据库操作的应用程序，其数据库查询的延迟可能会根据查询参数而波动，从而导致处理速率发生变化。</p>
+<h2 id="过度配置问题">3. 过度配置问题</h2>
+<p>由于工作负载和处理效率不同，为了达到系统吞吐量的需求，可能会出现过度配置问题，从而导致资源浪费。</p>
+<p>假设我们的高吞吐量和低吞吐量的处理速率分别为 20 msg/s 和 10
+msg/s（根据表 1
+中的数据进行简化）。使用两个较快的处理器和一个较慢的处理器，我们预计总容量为
+20+20+10 = 50
+条消息/秒。但是，当保持消息的循环分配时，我们无法达到此容量。下图显示了如果流量持续达到每秒
+50 条消息时会发生什么情况。</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*P-Qa3gyPgXtIeZMx.png" srcset="/img/loading.gif" lazyload
+alt="如果传入流量保持在 50 条消息/秒，则慢速处理器无法处理总体消息 1/3 的负载，从而导致累积延迟。为了避免高延迟，向该系统添加了额外的资源以维持处理。" />
+<figcaption aria-hidden="true">如果传入流量保持在 50
+条消息/秒，则慢速处理器无法处理总体消息 1/3
+的负载，从而导致累积延迟。为了避免高延迟，向该系统添加了额外的资源以维持处理。</figcaption>
+</figure>
+<p>从这个例子中我们可以看到，我们的处理器服务一次最多只能接受 30
+条消息，以防止滞后并确保及时传递更新。</p>
+<p>在这种情况下，要实际每秒处理 50 条消息，我们必须总共扩展到 5
+台机器，以保证及时处理所有消息。由于这种不适当的分配逻辑（66.7％的过度配置），我们会向该系统过度配置额外的两台机器。</p>
+<p>为了每秒处理 50
+条消息，我们需要扩展到五台机器以确保及时处理所有消息。由于这种不适当的分配逻辑（66.7%
+的过度配置），这会导致向该系统过度配置两台额外的机器。</p>
+<h1 id="静态解决方案">静态解决方案</h1>
+<h2 id="在相同的-pod机器上部署">1. 在相同的 Pod（机器）上部署</h2>
+<p>考虑控制服务部署中使用的硬件类型以缓解问题。如果您在虚拟机上部署服务并拥有充足的资源和性能相同的硬件，则此方法是可行的。</p>
+<p>然而，由于成本效益和灵活性下降，在私有云环境中通常不建议采用这种策略，主要是因为同时升级所有现有硬件可能具有挑战性。如果它非常适合您的情况，则可以使用<a
+target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/">Kubernetes
+关联性将 Pod 分配给某些类型的节点。</a></p>
+<h2 id="加权负载均衡">2. 加权负载均衡</h2>
+<p>如果容量是可预测的并且大部分时间保持静态，则为不同的消费者分配不同的权重可以帮助最大限度地利用可用资源。例如，在为表现较好的消费者赋予更高的权重后，我们可以将更多流量路由给这些消费者。</p>
+<h1 id="动态解决方案">动态解决方案</h1>
+<p>虽然我们可以估计消息的容量和工作负载来设计静态规则来确定加权负载平衡策略，但由于以下几个因素，这种方法在实际生产环境中可能并不总是可行：</p>
+<ul>
+<li>消息的工作负载并不统一，这使得估计机器容量变得困难。</li>
+<li>依赖关系（例如网络和第三方连接）不稳定，有时会导致实际处理中的容量发生变化。</li>
+<li>该系统经常添加新功能，增加额外的维护工作以保持权重更新。</li>
+</ul>
+<p>为了解决这些问题，我们可以动态监控每个分区中的当前滞后并根据当前流量状况做出相应响应。</p>
+<p>有 2 种思路：</p>
+<ol type="1">
+<li><strong>生产者角度</strong>：使用自定义算法根据滞后的消息数量来确定每个分区的流量，这种生产者称为滞后感知生产者（Lag-aware
+Producer）。</li>
+<li><strong>消费者角度</strong>：这些消费者旨在监控当前滞后的消息数量，并可以在必要时取消订阅以触发负载重新平衡。通常，可以采用自定义的重新平衡策略来调整分区分配。这种消费者称为滞后感知消费者（Lag-aware
+Comsumer）。</li>
+</ol>
+<h2 id="从生产者角度出发">1. 从生产者角度出发</h2>
+<p>如此图所示，生产者可以使用自定义算法根据滞后确定每个分区的流量。为了减少对
+Kafka
+代理的调用次数，系统可以维护一个内部延迟缓存，而不是在发布每条消息之前调用
+Kafka 代理。</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*Mg1lxKzMTy7LRAXT.png" srcset="/img/loading.gif" lazyload
+alt="在此示例中，分区 4 和 6 的延迟比其他分区高得多。应减少从内部生产者发送到这些分区的流量。" />
+<figcaption aria-hidden="true">在此示例中，分区 4 和 6
+的延迟比其他分区高得多。应减少从内部生产者发送到这些分区的流量。</figcaption>
+</figure>
+<p>使用滞后数据，定制的算法被设计为向经历高滞后的分区发布更少的流量，向低滞后的分区发布更多流量，以平衡每个分区上的工作负载。当滞后平衡且稳定时，此方法应确保消息的均匀分布。</p>
+<p>不适用情况：</p>
+<ol type="1">
+<li><strong>纯消费者应用程序</strong>：您的应用程序不控制消息生成。</li>
+<li><strong>多个消费者组：</strong>当生成的消息被多个消费者组消费时，生产者可能会为其他消费者组产生不必要的倾斜负载，因为滞后只是特定于一个消费者组的信息。</li>
+</ol>
+<h3 id="相同队列长度算法">相同队列长度算法</h3>
+<p>该算法将每个分区滞后视为处理的队列大小。获取滞后信息后，它会发布适当数量的消息以填充短队列。此方法更适合由于异构硬件而导致的倾斜滞后分布，其中高性能
+Pod（机器）在大多数情况下能够更快地处理。</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*zp-S1Y_GbIzbjCX4.png" srcset="/img/loading.gif" lazyload
+alt="相同队列长度算法的演示。最初，不同队列的长度不同。该算法尝试生成不同数量的消息，以在所有队列中实现相同的队列长度。这里，队列长度和 Kafka lag 是同一个概念，代表尚未处理的消息数量" />
+<figcaption
+aria-hidden="true">相同队列长度算法的演示。最初，不同队列的长度不同。该算法尝试生成不同数量的消息，以在所有队列中实现相同的队列长度。这里，队列长度和
+Kafka lag 是同一个概念，代表尚未处理的消息数量</figcaption>
+</figure>
+<h3 id="异常值检测算法">异常值检测算法</h3>
+<p>该算法利用统计方法来确定所有分区的上离群值，并暂时停止那些慢速离群值的发布过程。在原文章中，针对
+Agoda 的特定需求，他们提出了 IQR（四分位距）和
+STD（标准差）异常值检测算法。算法流程图如下所示。</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*pjkj5kF6aFcWwBwU.png" srcset="/img/loading.gif" lazyload
+alt="异常值检查算法流程" />
+<figcaption aria-hidden="true">异常值检查算法流程</figcaption>
+</figure>
+<ul>
+<li><strong>慢速分区：</strong>（已关闭）由于存在延迟，这些分区的消息生成已停止。</li>
+<li><strong>好的分区</strong>：（打开）照常发布并均匀分发到所有好的分区。</li>
+<li><strong>OK
+分区：</strong>（观察/半开放）为了提高性能不佳的机器的性能，当系统尝试将慢速分区提升为良好分区时，会添加一个观察期。通过仅生成一小部分消息并进行观察，可以将该观察阶段优化为“半开放”状态。当滞后获取间隔相对较长时，半开放是有益的，因为它可以防止消费者延迟等待传入消息而更新的滞后数据尚未查询的情况。</li>
+</ul>
+<h2 id="从消费者角度出发">2. 从消费者角度出发</h2>
+<p>这里 Adoga
+提出的思路是：<strong>遇到高延迟的实例可以主动取消订阅主题以触发重新平衡。在重新平衡期间，可以使用自定义的分配器来平衡所有消费者实例之间的分区。</strong></p>
+<p>触发重新平衡的成本非常昂贵，因为急切的重新平衡会停止消费者组中的所有处理。Kafka
+2.4中引入的<a
+target="_blank" rel="noopener" href="https://www.confluent.io/blog/incremental-cooperative-rebalancing-in-kafka/">增量协作再平衡协议</a>已经最大限度地减少了性能影响，允许更频繁的再平衡以更好地分配每个分区上的负载。</p>
+<p>为了增强重新分配的灵活性，分区的数量应该大于 worker
+的数量。这一比率应根据应用程序而有所不同，并假设一个工作线程至少可以处理来自一个分区的负载以避免饥饿。</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*68P7QtdFGeIzwZSs.png" srcset="/img/loading.gif" lazyload
+alt="在此示例中，工作程序 3 在速度较慢的硬件上运行，导致分区 5 和 6 出现更高的延迟。因此，工作程序 3 可能会主动取消订阅主题以触发重新平衡并更有效地重新分配分区。在此示例中，应实现自定义分配器以根据机器指标和滞后信息重新分配分区。" />
+<figcaption aria-hidden="true">在此示例中，工作程序 3
+在速度较慢的硬件上运行，导致分区 5 和 6 出现更高的延迟。因此，工作程序 3
+可能会主动取消订阅主题以触发重新平衡并更有效地重新分配分区。在此示例中，应实现自定义分配器以根据机器指标和滞后信息重新分配分区。</figcaption>
+</figure>
+<h1 id="总结">总结</h1>
+<p>本文从 Kafka 并行性的一般实现出发，探讨了 Kafka
+实现负载均衡在现实实践中可能遇到的各种挑战，并从静态调整和动态调整两个方面给出了解决思路，特别注重讨论了动态调整策略，并分别从生产者和消费者的角度提出了解决方案。</p>
+<p>总之，通过在 Kafka
+中实现负载均衡，可以有效地将工作负载分配到可用资源之间，从而显著提高服务性能。具体的算法和策略需要根据实际情况进行选择和调整。</p>
 
                 
               </div>
@@ -362,15 +511,8 @@ alt="return stmt AST structue" />
     
       <span class="category-chain">
         
-  <a href="/categories/Go/" class="category-chain-item">Go</a>
+  <a href="/categories/Kafka/" class="category-chain-item">Kafka</a>
   
-  
-    <span>></span>
-    
-  <a href="/categories/Go/Go-%E5%AE%9E%E6%88%98/" class="category-chain-item">Go 实战</a>
-  
-  
-
   
 
       </span>
@@ -384,9 +526,11 @@ alt="return stmt AST structue" />
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/Go/" class="print-no-link">#Go</a>
+        <a href="/tags/Kafka/" class="print-no-link">#Kafka</a>
       
-        <a href="/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/" class="print-no-link">#编译原理</a>
+        <a href="/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6/" class="print-no-link">#中间件</a>
+      
+        <a href="/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/" class="print-no-link">#消息队列</a>
       
     </div>
   
@@ -398,8 +542,8 @@ alt="return stmt AST structue" />
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>学习记录：用 Go 自制解释器 Monkey</div>
-      <div>https://hedon.top/2024/05/12/monkey-language/</div>
+      <div>Kafka 负载均衡挑战及解决思路</div>
+      <div>https://hedon.top/2024/05/20/kafka-load-balance/</div>
     </div>
     <div class="license-meta">
       
@@ -411,7 +555,7 @@ alt="return stmt AST structue" />
       
         <div class="license-meta-item license-meta-date">
           <div>Posted on</div>
-          <div>2024-05-12</div>
+          <div>2024-05-20</div>
         </div>
       
       
@@ -443,9 +587,9 @@ alt="return stmt AST structue" />
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2024/05/20/kafka-load-balance/" title="Kafka 负载均衡挑战及解决思路">
+                      <a href="/2024/05/21/go-xgo-use/" title="xgo 使用经验">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Kafka 负载均衡挑战及解决思路</span>
+                        <span class="hidden-mobile">xgo 使用经验</span>
                         <span class="visible-mobile">Previous</span>
                       </a>
                     
@@ -453,8 +597,8 @@ alt="return stmt AST structue" />
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2024/05/11/rust-crate-chrono/" title="时间处理基础：Rust 的 chrono 库教程">
-                        <span class="hidden-mobile">时间处理基础：Rust 的 chrono 库教程</span>
+                      <a href="/2024/05/12/monkey-language/" title="学习记录：用 Go 自制解释器 Monkey">
+                        <span class="hidden-mobile">学习记录：用 Go 自制解释器 Monkey</span>
                         <span class="visible-mobile">Next</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

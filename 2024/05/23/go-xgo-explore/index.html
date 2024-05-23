@@ -1,0 +1,1180 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/hedon.png">
+  <link rel="icon" href="/img/hedon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Hedon Wang">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="xgo 是一个通过代码重写来实现 mock、trace 和 coverage 功能的单元测试框架。本文将探讨 xgo 最核心的底层原理 -toolexec，并通过 6 个简单的小阶段，一步步实现一个丐版 xgo，进一步展示 xgo 的设计理念。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xgo 原理探索">
+<meta property="og:url" content="https://hedon.top/2024/05/23/go-xgo-explore/index.html">
+<meta property="og:site_name" content="HedonSpace">
+<meta property="og:description" content="xgo 是一个通过代码重写来实现 mock、trace 和 coverage 功能的单元测试框架。本文将探讨 xgo 最核心的底层原理 -toolexec，并通过 6 个简单的小阶段，一步步实现一个丐版 xgo，进一步展示 xgo 的设计理念。">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-05-23T13:15:10.000Z">
+<meta property="article:modified_time" content="2024-05-23T13:36:47.103Z">
+<meta property="article:author" content="Hedon Wang">
+<meta property="article:tag" content="Go">
+<meta property="article:tag" content="开源项目">
+<meta property="article:tag" content="单元测试">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>xgo 原理探索 - HedonSpace</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"hedon.top","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":30,"cursorChar":"_","loop":false,"scope":["home"]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":4},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"Eig99zG5BYQGKXxcMOU7DH7e-gzGzoHsz","app_key":"dBP7lew0wt2GQdNdo6t2EE5m","server_url":"https://eig99zg5.lc-cn-n1-shared.com","path":"window.location.pathname","ignore_local":true}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+    <!-- Google tag (gtag.js) -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        Fluid.utils.createScript("https://www.googletagmanager.com/gtag/js?id=", function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+          gtag('js', new Date());
+          gtag('config', '');
+        });
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.0.0"><link rel="alternate" href="/atom.xml" title="HedonSpace" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>HedonSpace</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>Home</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>Archives</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>Categories</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>Tags</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>About</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/banner/go-xgo-explore.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">xgo 原理探索</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        Hedon Wang
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-05-23 21:15" pubdate>
+          2024-05-23 21:15
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          32k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          80 mins
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="leancloud-page-views"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">xgo 原理探索</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="go-单测-mock-方案">Go 单测 mock 方案</h1>
+<table>
+
+<thead>
+<tr class="header">
+<th>Mock 方法</th>
+<th>原理</th>
+<th>依赖</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>接口 Mock</td>
+<td>为依赖项定义接口，并提供接口的 Mock 实现。</td>
+<td>需要定义接口和 Mock 实现。</td>
+<td>灵活，遵循 Go 的类型系统；易于替换实现。</td>
+<td>需要更多的样板代码来定义接口和 Mock 实现。</td>
+</tr>
+<tr class="even">
+<td>Monkey Patching（Gomonkey）</td>
+<td>使用反射和 unsafe 包在运行时替换函数。</td>
+<td>需要 Gomonkey 库和反射、unsafe 包的知识。</td>
+<td>强大，可以 Mock 任何函数，甚至第三方库的函数。</td>
+<td>复杂，容易出错；依赖 Go 的内部实现；依赖系统架构。</td>
+</tr>
+</tbody>
+</table>
+<h1 id="gomonkey-弊端">gomonkey 弊端</h1>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/agiledragon/gomonkey">gomonkey</a> 🐒</p>
+</blockquote>
+<p>gomonkey
+的核心功能是能够在运行时替换某个函数的实现。实现这个功能的步骤大致如下：</p>
+<ul>
+<li><strong>获取函数指针</strong>：使用反射机制获取目标函数的指针。</li>
+<li><strong>保存原始函数指针</strong>：将原始函数指针保存下来，以便在测试结束后恢复。</li>
+<li><strong>创建新的函数实现</strong>：定义一个新的函数实现，用于替换原始函数。</li>
+<li><strong>替换函数指针</strong>：使用 <code>unsafe</code>
+包将目标函数的指针替换为新的函数实现的指针。</li>
+</ul>
+<p>有以下几个弊端：</p>
+<ol type="1">
+<li>并发不安全</li>
+<li>兼容性差</li>
+<li>依赖架构指令集</li>
+</ol>
+<h1 id="先看-xgo-怎么用">先看 xgo 怎么用</h1>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/xhd2015/xgo">xgo</a> 😈</p>
+</blockquote>
+<p>代码结构如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go">.<br>├── greet.<span class="hljs-keyword">go</span><br>└── greet_test.<span class="hljs-keyword">go</span><br></code></pre></td></tr></table></figure>
+<p>现在在 <code>greet.go</code> 中有一个函数 <code>greet</code>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">greet</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello &quot;</span> + s<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>在真实的生产环境中，<code>greet</code>
+可能要复杂得多，它可能会依赖各种第三方
+API，也可能会依赖数据库等多种外部组件。所以在测试的时候，我们希望对其进行
+<strong>mock</strong>，使其返回一个固定的值，便于我们撰写单元测试。</p>
+<p><code>xgo</code> 参考了 <code>go-monkey</code> 的思想，但是不从
+<strong>修改指令</strong> 这个途径入手，而是另辟蹊径，从
+<strong>代码重写</strong> 的角度实现了 <strong>mock</strong>
+的能力。</p>
+<p>为了使用 <code>xgo</code>，我们需要先安装 <code>xgo</code>
+这个命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">go install github.com/xhd2015/xgo/cmd/xgo@latest<br></code></pre></td></tr></table></figure>
+<p>同时在我们的项目中需要引入 <code>xgo</code> 依赖：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">go get <span class="hljs-string">&quot;github.com/xhd2015/xgo/runtime/mock&quot;</span><br></code></pre></td></tr></table></figure>
+<p>我们编写的 <code>greet_test.go</code> 如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> xgo_use<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;testing&quot;</span><br><br>	<span class="hljs-string">&quot;github.com/xhd2015/xgo/runtime/mock&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">TestOriginGreet</span><span class="hljs-params">(t *testing.T)</span></span> &#123;<br>	res := greet(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;hello world&quot;</span> &#123;<br>		t.Fatalf(<span class="hljs-string">&quot;greet() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;hello world&quot;</span>)<br>	&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">TestMockGreet</span><span class="hljs-params">(t *testing.T)</span></span> &#123;<br>	mock.Patch(greet, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;mock &quot;</span> + s<br>	&#125;)<br>	res := greet(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;mock world&quot;</span> &#123;<br>		t.Fatalf(<span class="hljs-string">&quot;greet() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;mock world&quot;</span>)<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>可以看到在 <code>TestMockGreet</code> 这个单元测试中，我们将
+<code>greet</code> 进行了 mock，返回 <code>"mock " + s</code>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go">mock.Patch(greet, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>  <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;mock &quot;</span> + s<br>&#125;)<br></code></pre></td></tr></table></figure>
+<p>为了使用 <code>xgo</code>
+的能力，我们在执行单元测试的时候，需要运行以下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">xgo <span class="hljs-built_in">test</span> -v ./<br></code></pre></td></tr></table></figure>
+<p>输出大致如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  xgo-use git:(master) xgo <span class="hljs-built_in">test</span> -v ./<br>xgo is taking a <span class="hljs-keyword">while</span> to setup, please <span class="hljs-built_in">wait</span>...<br>=== RUN   TestOriginGreet<br>--- PASS: TestOriginGreet (0.00s)<br>=== RUN   TestMockGreet<br>--- PASS: TestMockGreet (0.00s)<br>PASS<br>ok      xgo-explore/xgo-use     (cached)<br></code></pre></td></tr></table></figure>
+<h1 id="xgo-的核心原理">xgo 的核心原理</h1>
+<p><code>xgo</code> 的核心原理是利用 <code>go build -toolexec</code>
+的能力。</p>
+<p>运行以下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">go <span class="hljs-built_in">help</span> build<br></code></pre></td></tr></table></figure>
+<p>找到 <code>toolexec</code> 的相关说明：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs bash">-toolexec <span class="hljs-string">&#x27;cmd args&#x27;</span><br>        a program to use to invoke toolchain programs like vet and asm.<br>        For example, instead of running asm, the go <span class="hljs-built_in">command</span> will run<br>        <span class="hljs-string">&#x27;cmd args /path/to/asm &lt;arguments for asm&gt;&#x27;</span>.<br>        The TOOLEXEC_IMPORTPATH environment variable will be <span class="hljs-built_in">set</span>,<br>        matching <span class="hljs-string">&#x27;go list -f &#123;&#123;.ImportPath&#125;&#125;&#x27;</span> <span class="hljs-keyword">for</span> the package being built.<br></code></pre></td></tr></table></figure>
+<p>一言以蔽之：<code>-toolexec</code> 允许对 go 工具链进行拦截，包括
+<code>vet</code>、<code>asm</code>、<code>compile</code> 和
+<code>link</code>。</p>
+<p>这种技术也被称为：插桩（stubbing）、增强（instrumentation）和代码重写（rewriting）。</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/Km9eLWtYFJMiFYP0uC-B29J__5mGvLlSsrD52hWgS_S2nOGSx9PnMybHuqcQljAtTUr5QVVqaHGyyAEwqVPowhPqJvAZHLALdQpj6gzHzb60NLLe91tX87_sAerIGq2mwYMVdBcptglQpJ0QkfmDC-ZHoQ=s2048.png" srcset="/img/loading.gif" lazyload
+alt="-toolexec 示意图" />
+<figcaption aria-hidden="true">-toolexec 示意图</figcaption>
+</figure>
+<p>基于上述分析，<code>xgo</code> 提出了 <strong>代码重写</strong>
+的思路，实现了 <strong>在编译过程中插入拦截器代码</strong> 的功能：</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240523164815047.png" srcset="/img/loading.gif" lazyload
+alt="xgo 在 go build 中的作用位置" />
+<figcaption aria-hidden="true">xgo 在 go build 中的作用位置</figcaption>
+</figure>
+<p>所以上述我们的 <code>greet.go</code> 文件中的源代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">greet</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello &quot;</span> + s<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>经过 <code>xgo</code> 编译后最终实际编译的代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;runtime&quot;</span><br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">greet</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> (r0 <span class="hljs-type">string</span>) &#123;<br>  stop, post := runtime.__xgo_trap(Greet, &amp;s, &amp;r0)<br>  <span class="hljs-keyword">if</span> stop &#123;<br>    <span class="hljs-keyword">return</span><br>  &#125;<br>  <span class="hljs-keyword">defer</span> post()<br>  <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello&quot;</span> + s<br>&#125;<br></code></pre></td></tr></table></figure>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/5e020865-fd1d-49d3-be72-7ee2233a3c5f.png" srcset="/img/loading.gif" lazyload
+alt="greet 函数重写变化示意图（来源：https://blog.xhd2015.xyz/zh/posts/xgo-monkey-patching-in-go-using-toolexec/）" />
+<figcaption aria-hidden="true">greet
+函数重写变化示意图（来源：https://blog.xhd2015.xyz/zh/posts/xgo-monkey-patching-in-go-using-toolexec/）</figcaption>
+</figure>
+<p>如图所示，一旦函数被调用，它的控制流首先转移到
+<code>Trap</code>，然后一系列拦截器将根据其目的检查当前调用是否应该被
+Mock、修改、记录或停止。</p>
+<p>如果 <code>greet</code> 注册了 mock 函数，那么就会在
+<code>__xgo_trap</code> 中调用 mock 的函数，并将返回值设置到
+<code>r0</code> 上进行返回，而跳过原始的执行逻辑。</p>
+<h1 id="第-1-步死代码实现">第 1 步：死代码实现</h1>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  01-deadcode git:(master) tree<br>.<br>├── greet.go<br>├── greet_test.go<br>└── mock.go<br></code></pre></td></tr></table></figure>
+<p>我们先从最简单的实现开始，采用侵入性代码实现 <code>xgo</code>
+的核心功能，这里我们还用不到 <code>-toolexec</code>。</p>
+<p>代码结构如上所示，在 <code>mock.go</code> 中，我们有如下代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> mockFuncs = sync.Map&#123;&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">RegisterMockFunc</span><span class="hljs-params">(funcName <span class="hljs-type">string</span>, fun <span class="hljs-keyword">interface</span>&#123;&#125;)</span></span> &#123;<br>	mockFuncs.Store(funcName, fun)<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>mockFuncs</code>: 用于承载函数与 mock 函数的对应关系，其中 key
+为函数名称，value 为 mock 函数。我们使用 <code>sync.Map</code>
+来保证并发安全。</li>
+<li><code>RegisterMockFunc</code> 用于为指定的 funcName 注册 mock
+函数。</li>
+</ul>
+<p>在 <code>greet.go</code> 中，我们有一个 <code>Greet</code> 函数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Greet</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello &quot;</span> + s<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>如果我们要对其支持 mock，那么需要修改其实现为：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Greet</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>	fun, ok := mockFuncs.Load(<span class="hljs-string">&quot;Greet&quot;</span>)<br>	<span class="hljs-keyword">if</span> ok &#123;<br>		f, ok := fun.(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span>)<br>		<span class="hljs-keyword">if</span> ok &#123;<br>			<span class="hljs-keyword">return</span> f(s)<br>		&#125;<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello &quot;</span> + s<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>在修改后的代码中，我们先判断是否存在 mock 函数，如果存在，则执行 mock
+函数，否则执行原始逻辑。</p>
+<p>现在我们在 <code>greet_test.go</code> 中编写测试代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">TestMockGreet</span><span class="hljs-params">(t *testing.T)</span></span> &#123;<br>	RegisterMockFunc(<span class="hljs-string">&quot;Greet&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;mock &quot;</span> + s<br>	&#125;)<br>	res := Greet(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;mock world&quot;</span> &#123;<br>		t.Fatalf(<span class="hljs-string">&quot;Greet() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;mock world&quot;</span>)<br>	&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">TestOriginGreet</span><span class="hljs-params">(t *testing.T)</span></span> &#123;<br>	res := Greet(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;hello world&quot;</span> &#123;<br>		t.Fatalf(<span class="hljs-string">&quot;Greet() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;hello world&quot;</span>)<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>执行测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># 单独执行 TestMockGreet</span><br>➜  01-deadcode git:(master) ✗ go <span class="hljs-built_in">test</span> -v -run TestMockGreet<br>=== RUN   TestMockGreet<br>--- PASS: TestMockGreet (0.00s)<br>PASS<br>ok      xgo-explore/01-deadcode 0.103s<br><br><span class="hljs-comment"># 单独执行 TestOriginGreet</span><br>➜  01-deadcode git:(master) ✗ go <span class="hljs-built_in">test</span> -v -run TestOriginGreet<br>=== RUN   TestOriginGreet<br>--- PASS: TestOriginGreet (0.00s)<br>PASS<br>ok      xgo-explore/01-deadcode 0.102s<br><br><span class="hljs-comment"># 一起执行</span><br>➜  01-deadcode git:(master) ✗ go <span class="hljs-built_in">test</span> -v -run $Test$<br>=== RUN   TestMockGreet<br>--- PASS: TestMockGreet (0.00s)<br>=== RUN   TestOriginGreet<br>    greet_test.go:20: Greet() = <span class="hljs-string">&quot;mock world&quot;</span>; want <span class="hljs-string">&quot;hello world&quot;</span><br>--- FAIL: TestOriginGreet (0.00s)<br>FAIL<br><span class="hljs-built_in">exit</span> status 1<br>FAIL    xgo-explore/01-deadcode 0.102s<br></code></pre></td></tr></table></figure>
+<p>我们会发现单独执行都是 ok 的，不过一起执行的话
+<code>TestOriginGreet</code> 就失败了，这是因为先执行了
+<code>TestMockGreet</code>，这个时候已经往 <code>mockFunc</code>
+中注册了 mock 函数了，所以 <code>TessOriginGreet</code>
+就执行失败了。</p>
+<p>这里需要在协程层面上做 mock 隔离，<code>xgo</code>
+的思路是在编译时注入 <code>getg()</code>
+函数来获取当前协程信息从而实现在注册 mock
+函数时进行协程隔离。本文将聚焦在 <code>xgo</code> 的核心原理
+<strong>代码重写</strong> 上，故暂时不考虑这一块。</p>
+<p>Ok，那么短短几行代码，我们就将 <code>xgo</code>
+的最核心思想给展示出来了。可以看到，<code>xgo</code>
+的核心思想是往源代码中加入 <strong>合法的 Go
+代码</strong>，所以不涉及指令重写，故而只要你的机器能执行 Go
+程序，天然就支持 mock
+功能，这就天然达到了架构无关的兼容性了。同时我们也使用了
+<code>sync.Map</code> 来保证了并发安全。</p>
+<h1 id="第-2-步死代码拦截器">第 2 步：死代码拦截器</h1>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  02-deadcode-interceptor git:(master) tree<br>.<br>├── greet.go<br>├── greet_test.go<br>└── mock.go<br></code></pre></td></tr></table></figure>
+<p>在第 1 步中，这段代码我觉得有点冗长了：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go">fun, ok := mockFuncs.Load(<span class="hljs-string">&quot;Greet&quot;</span>)<br><span class="hljs-keyword">if</span> ok &#123;<br>  f, ok := fun.(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span>)<br>  <span class="hljs-keyword">if</span> ok &#123;<br>    <span class="hljs-keyword">return</span> f(s)<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>参考 <code>xgo</code> 的函数签名，我们对其进行优化，在
+<code>mock.go</code> 中加入一个 <strong>丐版拦截器</strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// mock.go</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">InterceptMock</span><span class="hljs-params">(funcName <span class="hljs-type">string</span>, arg <span class="hljs-type">string</span>, result *<span class="hljs-type">string</span>)</span></span> <span class="hljs-type">bool</span> &#123;<br>	fn, ok := mockFuncs.Load(funcName)<br>	<span class="hljs-keyword">if</span> ok &#123;<br>		f, ok := fn.(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span>)<br>		<span class="hljs-keyword">if</span> ok &#123;<br>			*result = f(arg)<br>			<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span><br>		&#125;<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-literal">false</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>对应 <code>greet.go</code> 中 <code>Greet</code> 函数就修改为：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Greet</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> (res <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">if</span> InterceptMock(<span class="hljs-string">&quot;Greet&quot;</span>, s, &amp;res) &#123;<br>		<span class="hljs-keyword">return</span> res<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello &quot;</span> + s<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这看起来就清爽多了。再次执行测试代码，一样是可以通过的。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  02-deadcode-interceptor git:(master) go <span class="hljs-built_in">test</span> -v -run TestOriginGreet<br>=== RUN   TestOriginGreet<br>--- PASS: TestOriginGreet (0.00s)<br>PASS<br>ok      xgo-explore/02-deadcode-interceptor     0.331s<br><br>➜  02-deadcode-interceptor git:(master) go <span class="hljs-built_in">test</span> -v -run TestMockGreet<br>=== RUN   TestMockGreet<br>--- PASS: TestMockGreet (0.00s)<br>PASS<br>ok      xgo-explore/02-deadcode-interceptor     0.103s<br></code></pre></td></tr></table></figure>
+<h1 id="第-3-步toolexec-初探">第 3 步：toolexec 初探</h1>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  03-toolexec-static git:(master) tree<br>.<br>├── cmd<br>│   └── mytool<br>│       └── mytool.go<br>├── greet.go<br>├── main.go<br>├── mock.go<br>└── script.sh<br></code></pre></td></tr></table></figure>
+<p>这里 <code>mock.go</code> 没有任何变化。我们期望使用
+<code>-toolexec</code> 来修改源代码，以实现 mock
+无源代码侵入的特性，所以我们在 <code>greet.to</code> 中将
+<code>Greet</code> 函数恢复为只关注实际功能的样子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Greet</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> (res <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello &quot;</span> + s<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>同时为了更好地测试使用 <code>-toolexec</code>
+编译后的运行结果，这里将 <code>greet_test.go</code> 删除了并新增了
+<code>main.go</code> 文件，内容如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	res := Greet(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;hello world&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Greet() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;hello world&quot;</span>)<br>	&#125;<br><br>	RegisterMockFunc(<span class="hljs-string">&quot;Greet&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;mock &quot;</span> + s<br>	&#125;)<br>	res = Greet(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;mock world&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Greet() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;mock world&quot;</span>)<br>	&#125;<br><br>	log.Println(<span class="hljs-string">&quot;run successfully&quot;</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>那么 <code>-toolexec</code> 要执行的命令怎么实现呢？在 Google 搜索
+<strong>go toolexec</strong> 你会看到官方给出的一个案例：<a
+target="_blank" rel="noopener" href="https://go.dev/src/cmd/go/testdata/script/toolexec.txt">toolexec.txt</a>。</p>
+<p>核心部分在最下面，参考这个示例，我们来实现自己的
+<code>toolexec</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">mkdir</span> -p cmd/mytool<br><span class="hljs-built_in">touch</span> cmd/mytool/mytool.go<br></code></pre></td></tr></table></figure>
+<p>在<code>mytool.go</code>
+中，我们先写这么点代码，看一下会输出什么。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	tool, args := os.Args[<span class="hljs-number">1</span>], os.Args[<span class="hljs-number">2</span>:]<br>	<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(args) &gt; <span class="hljs-number">0</span> &amp;&amp; args[<span class="hljs-number">0</span>] == <span class="hljs-string">&quot;-V=full&quot;</span> &#123;<br>		<span class="hljs-comment">// don&#x27;t do anything to infuence the version full output.</span><br>	&#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(args) &gt; <span class="hljs-number">0</span> &#123;<br>		fmt.Printf(<span class="hljs-string">&quot;tool: %s\n&quot;</span>, tool)<br>		fmt.Printf(<span class="hljs-string">&quot;args: %v\n&quot;</span>, args)<br>	&#125;<br>  <span class="hljs-comment">// 继续执行之前的命令</span><br>	cmd := exec.Command(tool, args...)<br>	cmd.Stdout = os.Stdout<br>	cmd.Stderr = os.Stderr<br><br>	<span class="hljs-keyword">if</span> err := cmd.Run(); err != <span class="hljs-literal">nil</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;run command error: %v\n&quot;</span>, err)<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里我们企图输出执行的工具 <code>tool</code> 及传给它的参数
+<code>args</code>。由于 <code>-V=full</code>
+的作用是在终端输出版本信息，所以我们要跳过它，避免产生干扰。输出日志后，我们暂且先继续执行原始的命令，不对编译过程做其他的干扰。</p>
+<p>Ok，现在就来看看这个 <code>-toolexec</code> 到底做了什么，在
+<code>03-toolexec-static</code> 目录下执行以下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># 清除缓存，一直使用最新的编译结果</span><br>go clean -cache -modcache -i -r<br><span class="hljs-comment"># 编译 mytool</span><br>go build ./cmd/mytool<br><span class="hljs-comment"># 编译业务程序</span><br>go build -toolexec=./mytool -o main<br></code></pre></td></tr></table></figure>
+<p>因为这几个命令经常会用到，所以我们可以将其封装到
+<code>script.sh</code> 文件中：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">touch</span> script.sh<br><span class="hljs-built_in">chmod</span> +x script.sh<br></code></pre></td></tr></table></figure>
+<p>内容如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-meta">#!/bin/bash</span><br><br>go clean -cache -modcache -i -r<br>go build ./cmd/mytool<br>go build -toolexec=./mytool -o main<br></code></pre></td></tr></table></figure>
+<p>执行上述命令后，可以看到以下输出：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  03-toolexec-static git:(master) ./script.sh<br><span class="hljs-comment"># xgo-explore/03-toolexec-static</span><br>tool: /opt/homebrew/Cellar/go/1.22.3/libexec/pkg/tool/darwin_arm64/compile<br>args: [-o <span class="hljs-variable">$WORK</span>/b001/_pkg_.a -trimpath <span class="hljs-variable">$WORK</span>/b001=&gt; -p main -lang=go1.22 -complete -buildid PcS9clqF_ny_Ds5N0i_s/PcS9clqF_ny_Ds5N0i_s -goversion go1.22.3 -c=4 -shared -nolocalimports -importcfg <span class="hljs-variable">$WORK</span>/b001/importcfg -pack ./greet.go ./main.go ./mock.go]<br><span class="hljs-comment"># xgo-explore/03-toolexec-static</span><br>tool: /opt/homebrew/Cellar/go/1.22.3/libexec/pkg/tool/darwin_arm64/link<br>args: [-o <span class="hljs-variable">$WORK</span>/b001/exe/a.out -importcfg <span class="hljs-variable">$WORK</span>/b001/importcfg.link -buildmode=pie -buildid=KgnnCoU_6enHkOm-T62Z/PcS9clqF_ny_Ds5N0i_s/H80dtgGZw1L8mTtVqJBf/KgnnCoU_6enHkOm-T62Z -extld=cc <span class="hljs-variable">$WORK</span>/b001/_pkg_.a]<br></code></pre></td></tr></table></figure>
+<p>可以看到执行了 <code>compile</code> 和 <code>link</code>
+两个工具，<code>compile</code> 是编译过程，将生成 <code>&#123;&#125;.out</code>
+文件，而 <code>link</code> 是将多个 <code>&#123;&#125;.out</code>
+文件链接成一个可执行文件。这是很经典的编译过程，如果对 Go
+语言的编译过程感兴趣，也可以参考官方的 <a
+target="_blank" rel="noopener" href="https://github.com/golang/go/tree/release-branch.go1.22/src/cmd/compile">Go
+Compile Readme</a>，或者笔者撰写的 <a
+href="https://hedon.top/2023/11/29/go-compilation/">Go1.21.0
+程序编译过程</a>。</p>
+<p>这里我们需要重点关注的是 <code>compile</code>
+命令，它是负责编译源代码的，涉及到的源代码文件会通过
+<code>-pack ./greet.go ./main.go ./mock.go</code> 传递给
+<code>compile</code> 命令。</p>
+<p>结合 <code>-toolexec</code> 的帮助信息：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs bash">-toolexec <span class="hljs-string">&#x27;cmd args&#x27;</span><br>        a program to use to invoke toolchain programs like vet and asm.<br>        For example, instead of running asm, the go <span class="hljs-built_in">command</span> will run<br>        <span class="hljs-string">&#x27;cmd args /path/to/asm &lt;arguments for asm&gt;&#x27;</span>.<br>        The TOOLEXEC_IMPORTPATH environment variable will be <span class="hljs-built_in">set</span>,<br>        matching <span class="hljs-string">&#x27;go list -f &#123;&#123;.ImportPath&#125;&#125;&#x27;</span> <span class="hljs-keyword">for</span> the package being built.<br></code></pre></td></tr></table></figure>
+<p>我们只需要在执行 <code>compile</code> 命令之前，在
+<code>cmd args</code> 这个环节，进行 <strong>代码重写</strong>
+就可以实现我们想要的功能了。</p>
+<p>我们现在是要对 <code>greet.go</code> 里面的 <code>Greet</code>
+函数进行重写，先看看之前的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Greet</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> (res <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello &quot;</span> + s<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>重写后的代码应该跟我们之前 <strong>第 2 步</strong> 是一样的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Greet</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> (res <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">if</span> InterceptMock(<span class="hljs-string">&quot;Greet&quot;</span>, s, &amp;res) &#123;<br>	 	<span class="hljs-keyword">return</span> res<br>    &#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello &quot;</span> + s<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里有 n
+多种方式可以做到，现在笔者决定使用最暴力的方式，直接临时创建一个包含这段代码的文件
+<code>tmp.go</code>，并替换掉传给 <code>compile</code> 的参数，即将
+<code>-pack ./greet.go ./main.go ./mock.go</code> 替换为
+<code>-pack tmp.go ./main.go ./mock.go</code></p>
+<p>综上，<code>cmd/mytool/mytool/go</code> 实现的代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	tool, args := os.Args[<span class="hljs-number">1</span>], os.Args[<span class="hljs-number">2</span>:]<br><br>	<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(args) &gt; <span class="hljs-number">0</span> &amp;&amp; args[<span class="hljs-number">0</span>] == <span class="hljs-string">&quot;-V=full&quot;</span> &#123;<br>		<span class="hljs-comment">// don&#x27;t do anything to infuence the version full output.</span><br>	&#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(args) &gt; <span class="hljs-number">0</span> &#123;<br>		<span class="hljs-keyword">if</span> filepath.Base(tool) == <span class="hljs-string">&quot;compile&quot;</span> &#123;<br>			index := findGreetFile(args)<br>			<span class="hljs-keyword">if</span> index &gt; <span class="hljs-number">-1</span> &#123;<br>				f, err := os.Create(<span class="hljs-string">&quot;tmp.go&quot;</span>)<br>				<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>					log.Fatalf(<span class="hljs-string">&quot;create tmp.go error: %v\n&quot;</span>, err)<br>				&#125;<br>				<span class="hljs-keyword">defer</span> f.Close()<br>				<span class="hljs-keyword">defer</span> os.Remove(<span class="hljs-string">&quot;tmp.go&quot;</span>)<br>				_, _ = f.WriteString(newCode)<br>				args[index] = <span class="hljs-string">&quot;tmp.go&quot;</span><br>			&#125;<br>		&#125;<br>		fmt.Printf(<span class="hljs-string">&quot;tool: %s\n&quot;</span>, tool)<br>		fmt.Printf(<span class="hljs-string">&quot;args: %v\n&quot;</span>, args)<br>	&#125;<br>	<span class="hljs-comment">// 继续执行之前的命令</span><br>	cmd := exec.Command(tool, args...)<br>	cmd.Stdout = os.Stdout<br>	cmd.Stderr = os.Stderr<br><br>	<span class="hljs-keyword">if</span> err := cmd.Run(); err != <span class="hljs-literal">nil</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;run command error: %v\n&quot;</span>, err)<br>	&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">findGreetFile</span><span class="hljs-params">(args []<span class="hljs-type">string</span>)</span></span> <span class="hljs-type">int</span> &#123;<br>	<span class="hljs-keyword">for</span> i, arg := <span class="hljs-keyword">range</span> args &#123;<br>		<span class="hljs-keyword">if</span> strings.Contains(arg, <span class="hljs-string">&quot;greet.go&quot;</span>) &#123;<br>			<span class="hljs-keyword">return</span> i<br>		&#125;<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-number">-1</span><br>&#125;<br><br><span class="hljs-keyword">var</span> newCode = <span class="hljs-string">`</span><br><span class="hljs-string">package main</span><br><span class="hljs-string"></span><br><span class="hljs-string">func Greet(s string) (res string) &#123;</span><br><span class="hljs-string">	if InterceptMock(&quot;Greet&quot;, s, &amp;res) &#123;</span><br><span class="hljs-string">	 	return res</span><br><span class="hljs-string">    &#125;</span><br><span class="hljs-string">	return &quot;hello &quot; + s</span><br><span class="hljs-string">&#125;</span><br><span class="hljs-string">`</span><br></code></pre></td></tr></table></figure>
+<p>这里我先使用 <code>findGreetFile</code> 来查找 <code>greet.go</code>
+文件所处的参数位置，如果找到了，则生成新的 <code>tmp.go</code>
+文件，并替换参数，最后在 本次 <code>compile</code> 命令执行完毕后，删除
+<code>tmp.go</code>，“毁尸灭迹”。</p>
+<p>执行 <code>./script.sh</code> 重新编译：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  03-toolexec-static git:(master) ✗ ./script.sh<br><span class="hljs-comment"># xgo-explore/03-toolexec-static</span><br>tool: /opt/homebrew/Cellar/go/1.22.3/libexec/pkg/tool/darwin_arm64/compile<br>args: [-o <span class="hljs-variable">$WORK</span>/b001/_pkg_.a -trimpath <span class="hljs-variable">$WORK</span>/b001=&gt; -p main -lang=go1.22 -complete -buildid PcS9clqF_ny_Ds5N0i_s/PcS9clqF_ny_Ds5N0i_s -goversion go1.22.3 -c=4 -shared -nolocalimports -importcfg <span class="hljs-variable">$WORK</span>/b001/importcfg -pack tmp.go ./main.go ./mock.go]<br><span class="hljs-comment"># xgo-explore/03-toolexec-static</span><br>tool: /opt/homebrew/Cellar/go/1.22.3/libexec/pkg/tool/darwin_arm64/link<br>args: [-o <span class="hljs-variable">$WORK</span>/b001/exe/a.out -importcfg <span class="hljs-variable">$WORK</span>/b001/importcfg.link -buildmode=pie -buildid=KgnnCoU_6enHkOm-T62Z/PcS9clqF_ny_Ds5N0i_s/H80dtgGZw1L8mTtVqJBf/KgnnCoU_6enHkOm-T62Z -extld=cc <span class="hljs-variable">$WORK</span>/b001/_pkg_.a]<br></code></pre></td></tr></table></figure>
+<p>输出的结果中可以看到已经将 <code>compile</code> 的参数替换为
+<code>-pack tmp.go ./main.go ./mock.go</code> 了。</p>
+<p>现在我们来执行生成的程序文件，可以看到是执行成功的。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  03-toolexec-static git:(master) ✗ ./main<br>2024/05/23 17:53:52 run successfully<br></code></pre></td></tr></table></figure>
+<p>如果我们不使用 <code>-toolexec</code>，是执行不成功的：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  03-toolexec-static git:(master) ✗ go clean -cache -modcache -i -r<br>➜  03-toolexec-static git:(master) ✗ go build -o main<br>➜  03-toolexec-static git:(master) ✗ ./main<br>2024/05/23 17:54:33 Greet() = <span class="hljs-string">&quot;hello world&quot;</span>; want <span class="hljs-string">&quot;mock world&quot;</span><br></code></pre></td></tr></table></figure>
+<h1 id="第-4-步使用-ast-在函数前插入代码">第 4 步：使用 AST
+在函数前插入代码</h1>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  04-toolexec-ast git:(master) ✗ tree<br>.<br>├── cmd<br>│   └── mytool<br>│       └── mytool.go<br>├── greet.go<br>├── main.go<br>├── mock.go<br>└── script.sh<br></code></pre></td></tr></table></figure>
+<p>暴力替换源代码文件的方式可能是不太优雅哈，假如我们的
+<code>greet.go</code> 内容改成下面这样：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Greet</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> (res <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello &quot;</span> + s<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Greet2</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> (res <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello 2 &quot;</span> + s<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>如果我们想对 <code>Greet2</code> 也进行
+<strong>代码重写</strong>，那就需要修改前面 <code>newCode</code>
+字段的内容，而且它是写死的，确实不太优雅。现在我们正式来面对这件事，对比修改后的函数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Greet</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> (res <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">if</span> InterceptMock(<span class="hljs-string">&quot;Greet&quot;</span>, s, &amp;res) &#123;<br>	 	<span class="hljs-keyword">return</span> res<br>    &#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello &quot;</span> + s<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>其实就是在每个函数前加上这么一段：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">if</span> InterceptMock(<span class="hljs-string">&quot;Greet&quot;</span>, s, &amp;res) &#123;<br>	<span class="hljs-keyword">return</span> res<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>了解过编译原理的读者应该可以想到，我们可以通过操作源代码的 AST
+结构，往函数的开头插入这段代码即可。如果我们先不考虑参数和返回值的话，那这段代码我们需要替换的地方就是函数名称了，所以它的结构如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">if</span> InterceptMock(<span class="hljs-string">&quot;$&#123;funcName&#125;&quot;</span>, s, &amp;res) &#123;<br>	<span class="hljs-keyword">return</span> res<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里我们需要用到几个标准库工具：</p>
+<ul>
+<li><code>go/ast</code>: 包定义了 Go
+编程语言的抽象语法树（AST），核心有以下几种类型：
+<ul>
+<li><code>File</code>: 表示一个 Go 源文件。</li>
+<li><code>Decl</code>:
+表示一个声明，包括函数声明、变量声明、类型声明等。</li>
+<li><code>Stmt</code>: 表示一个语句。</li>
+<li><code>Expr</code>: 表示一个表达式。</li>
+</ul></li>
+<li><code>go/token</code>: 定义了处理 Go
+源代码的词法元素的基础设施，包括位置、标记和标识符等。这个包提供了用于管理源代码位置的信息，可以帮助定位代码中的特定部分。</li>
+<li><code>go/parser</code>: 将一个 <code>.go</code> 文件以解析成 AST
+结构。</li>
+<li><code>go/printer</code>: 提供了将 AST 格式化并输出为 Go
+源码的功能</li>
+</ul>
+<p>修改后的 <code>cmd/mytool/mytool.go</code> 代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	tool, args := os.Args[<span class="hljs-number">1</span>], os.Args[<span class="hljs-number">2</span>:]<br><br>	<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(args) &gt; <span class="hljs-number">0</span> &amp;&amp; args[<span class="hljs-number">0</span>] == <span class="hljs-string">&quot;-V=full&quot;</span> &#123;<br>		<span class="hljs-comment">// don&#x27;t do anything to infuence the version full output.</span><br>	&#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(args) &gt; <span class="hljs-number">0</span> &#123;<br>		<span class="hljs-keyword">if</span> filepath.Base(tool) == <span class="hljs-string">&quot;compile&quot;</span> &#123;<br>			index := findGreetFile(args)<br>			<span class="hljs-keyword">if</span> index &gt; <span class="hljs-number">-1</span> &#123;<br>				filename := args[index]<br>				f, err := os.Create(<span class="hljs-string">&quot;tmp.go&quot;</span>)<br>				<span class="hljs-keyword">defer</span> f.Close()<br>				<span class="hljs-keyword">defer</span> os.Remove(<span class="hljs-string">&quot;tmp.go&quot;</span>)<br>				<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>					log.Fatalf(<span class="hljs-string">&quot;create tmp.go error: %v\n&quot;</span>, err)<br>				&#125;<br>				_, _ = f.WriteString(insertCode(filename))<br>				args[index] = <span class="hljs-string">&quot;tmp.go&quot;</span><br>			&#125;<br>		&#125;<br>		fmt.Printf(<span class="hljs-string">&quot;tool: %s\n&quot;</span>, tool)<br>		fmt.Printf(<span class="hljs-string">&quot;args: %v\n&quot;</span>, args)<br>	&#125;<br>	<span class="hljs-comment">// 继续执行之前的命令</span><br>	cmd := exec.Command(tool, args...)<br>	cmd.Stdout = os.Stdout<br>	cmd.Stderr = os.Stderr<br><br>	<span class="hljs-keyword">if</span> err := cmd.Run(); err != <span class="hljs-literal">nil</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;run command error: %v\n&quot;</span>, err)<br>	&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">findGreetFile</span><span class="hljs-params">(args []<span class="hljs-type">string</span>)</span></span> <span class="hljs-type">int</span> &#123;<br>	<span class="hljs-keyword">for</span> i, arg := <span class="hljs-keyword">range</span> args &#123;<br>		<span class="hljs-keyword">if</span> strings.Contains(arg, <span class="hljs-string">&quot;greet.go&quot;</span>) &#123;<br>			<span class="hljs-keyword">return</span> i<br>		&#125;<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-number">-1</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">insertCode</span><span class="hljs-params">(filename <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>	fset := token.NewFileSet()<br>	fast, err := parser.ParseFile(fset, filename, <span class="hljs-literal">nil</span>, parser.AllErrors)<br>	<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;parse file error: %v\n&quot;</span>, err)<br>	&#125;<br><br>	<span class="hljs-keyword">for</span> _, decl := <span class="hljs-keyword">range</span> fast.Decls &#123;<br>		fun, ok := decl.(*ast.FuncDecl)<br>		<span class="hljs-keyword">if</span> !ok &#123;<br>			<span class="hljs-keyword">continue</span><br>		&#125;<br><br>		f, err := os.Create(<span class="hljs-string">&quot;tmp2.go&quot;</span>)<br>		<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>			log.Fatalf(<span class="hljs-string">&quot;create tmp2.go error: %v\n&quot;</span>, err)<br>		&#125;<br>		_, _ = f.WriteString(fmt.Sprintf(newCodeFormat, fun.Name.Name))<br>		f.Close()<br><br>		tmpFset := token.NewFileSet()<br>		tmpF, err := parser.ParseFile(tmpFset, <span class="hljs-string">&quot;tmp2.go&quot;</span>, <span class="hljs-literal">nil</span>, parser.AllErrors)<br>		<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>			log.Fatalf(<span class="hljs-string">&quot;parse tmp2.go error: %v\n&quot;</span>, err)<br>		&#125;<br>		fun.Body.List = <span class="hljs-built_in">append</span>(tmpF.Decls[<span class="hljs-number">0</span>].(*ast.FuncDecl).Body.List, fun.Body.List...)<br>		os.Remove(<span class="hljs-string">&quot;tmp2.go&quot;</span>)<br>	&#125;<br><br>	<span class="hljs-keyword">var</span> buf bytes.Buffer<br>	printer.Fprint(&amp;buf, fset, fast)<br><br>	fmt.Println(buf.String())<br><br>	<span class="hljs-keyword">return</span> buf.String()<br>&#125;<br><br><span class="hljs-keyword">var</span> newCodeFormat = <span class="hljs-string">`</span><br><span class="hljs-string">package main</span><br><span class="hljs-string"></span><br><span class="hljs-string">func TmpFunc() &#123;</span><br><span class="hljs-string">	if InterceptMock(&quot;%s&quot;, s, &amp;res) &#123;</span><br><span class="hljs-string">	 	return res</span><br><span class="hljs-string">    &#125;</span><br><span class="hljs-string">&#125;</span><br><span class="hljs-string">`</span><br></code></pre></td></tr></table></figure>
+<p>核心的修改在于 <code>insertCode</code> 函数：</p>
+<ol type="1">
+<li><p>使用 <code>parser.ParseFile</code> 将源代码文件解析成 AST
+结构；</p></li>
+<li><p>遍历 AST 结构，找到所有的声明（Decl）结构，并使用
+<code>decl(.ast.FuncDecl)</code> 找到所有的函数；</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs go">FuncDecl <span class="hljs-keyword">struct</span> &#123;<br>  Doc  *CommentGroup <span class="hljs-comment">// associated documentation; or nil</span><br>  Recv *FieldList    <span class="hljs-comment">// receiver (methods); or nil (functions)</span><br>  Name *Ident        <span class="hljs-comment">// function/method name</span><br>  Type *FuncType     <span class="hljs-comment">// function signature: type and value parameters, results, and position of &quot;func&quot; keyword</span><br>  Body *BlockStmt    <span class="hljs-comment">// function body; or nil for external (non-Go) function</span><br>&#125;<br><br>BlockStmt <span class="hljs-keyword">struct</span> &#123;<br>  Lbrace token.Pos <span class="hljs-comment">// position of &quot;&#123;&quot;</span><br>  List   []Stmt<br>  Rbrace token.Pos <span class="hljs-comment">// position of &quot;&#125;&quot;, if any (may be absent due to syntax error)</span><br>&#125;<br></code></pre></td></tr></table></figure></li>
+<li><p>查看 <code>ast.FuncDecl</code> 的结构后，可以得出下一步就是往
+<code>FuncDecl.Body.List</code> 列表前面插入一些
+<code>Stmt</code>；</p></li>
+<li><p>笔者没找到类似 <code>parseStmt</code>
+方法，所以取了个巧，我定义了一段代码的 <code>format</code>，里面的
+<code>%s</code> 会使用 <code>fun.Name.Name</code>
+获取函数名并进行替换。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> newCodeFormat = <span class="hljs-string">`</span><br><span class="hljs-string">package main</span><br><span class="hljs-string"></span><br><span class="hljs-string">func TmpFunc() &#123;</span><br><span class="hljs-string">	if InterceptMock(&quot;%s&quot;, s, &amp;res) &#123;</span><br><span class="hljs-string">	 	return res</span><br><span class="hljs-string">    &#125;</span><br><span class="hljs-string">&#125;</span><br><span class="hljs-string">`</span><br></code></pre></td></tr></table></figure></li>
+<li><p>创建一个临时文件 <code>tmp2.go</code>
+并写入格式化后的代码，然后再次调用 <code>parser.ParseFile</code>
+得到解析这段代码的抽象语法树结构 <code>tmpF</code> 了；</p></li>
+<li><p>然后通过 <code>tmpF.Decls[0].(*ast.FuncDecl).Body.List</code>
+就可以得到 <code>TmpFunc</code> 中的语句 <code>Stmt</code> 了；</p></li>
+<li><p>将其加在源代码函数的前面即可：<code>fun.Body.List = append(tmpF.Decls[0].(*ast.FuncDecl).Body.List, fun.Body.List...)</code>；</p></li>
+<li><p>然后再使用 <code>go/printer</code> 将修改后的 AST
+输出为新文件内容。</p></li>
+</ol>
+<p>通过上述步骤，我们就可以为 <code>greet.go</code>
+中的每个函数前面都插入打桩代码了。</p>
+<p>修改 <code>main.go</code> 里面的内容，加入对 <code>Greet2</code>
+的测试：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	res := Greet(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;hello world&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Greet() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;hello world&quot;</span>)<br>	&#125;<br><br>	RegisterMockFunc(<span class="hljs-string">&quot;Greet&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;mock &quot;</span> + s<br>	&#125;)<br>	res = Greet(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;mock world&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Greet() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;mock world&quot;</span>)<br>	&#125;<br><br>	log.Println(<span class="hljs-string">&quot;run greet 1 successfully&quot;</span>)<br><br>	RegisterMockFunc(<span class="hljs-string">&quot;Greet2&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;mock 2 &quot;</span> + s<br>	&#125;)<br>	res = Greet2(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;mock 2 world&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Greet2() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;mock 2 world&quot;</span>)<br>	&#125;<br><br>	log.Println(<span class="hljs-string">&quot;run greet 2 successfully&quot;</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>执行脚本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">./script.sh<br></code></pre></td></tr></table></figure>
+<p>输出应该还是跟之前是一样的，我们运行生成的可执行函数，得到如下结果那就说明我们又成功进了一步了~</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  04-toolexec-ast git:(master) ✗ ./main<br>2024/05/23 20:03:22 run greet 1 successfully<br>2024/05/23 20:03:22 run greet 2 successfully<br></code></pre></td></tr></table></figure>
+<h1 id="第-5-步使用-reflect-反射动态获取参数和返回值名称">第 5 步：使用
+reflect 反射动态获取参数和返回值名称</h1>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  05-toolexec-general git:(master) ✗ tree<br>.<br>├── cmd<br>│   └── mytool<br>│       └── mytool.go<br>├── greet.go<br>├── main.go<br>├── mock.go<br>└── script.sh<br></code></pre></td></tr></table></figure>
+<p>接下来我们来处理函数签名中的参数和返回值部分，我们的样板代码中，写死了参数的名称和返回值的名称，现在我们需要来动态获取函数参数的名称和返回值的名称，如果返回值没有名称，那我们还需要手动设置名称。</p>
+<p>我们将 <code>greet.to</code> 修改为以下内容：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Greet</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> (res <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello &quot;</span> + s<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Greet2</span><span class="hljs-params">(s2 <span class="hljs-type">string</span>)</span></span> (res2 <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello 2 &quot;</span> + s2<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Greet3</span><span class="hljs-params">(s3 <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello 3 &quot;</span> + s3<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>函数的信息当然都在前面获得的 <code>ast.FuncDecl</code>
+结构中，再次观察其结构：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go">FuncDecl <span class="hljs-keyword">struct</span> &#123;<br>		Doc  *CommentGroup <span class="hljs-comment">// associated documentation; or nil</span><br>		Recv *FieldList    <span class="hljs-comment">// receiver (methods); or nil (functions)</span><br>		Name *Ident        <span class="hljs-comment">// function/method name</span><br>		Type *FuncType     <span class="hljs-comment">// function signature: type and value parameters, results, and position of &quot;func&quot; keyword</span><br>		Body *BlockStmt    <span class="hljs-comment">// function body; or nil for external (non-Go) function</span><br>	&#125;<br></code></pre></td></tr></table></figure>
+<p>通过注释就可以知道 <code>Type</code>
+字段就包含了参数和返回值的相关信息，查看 <code>FuncType</code>
+结构，如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs go">FuncType <span class="hljs-keyword">struct</span> &#123;<br>  Func       token.Pos  <span class="hljs-comment">// position of &quot;func&quot; keyword (token.NoPos if there is no &quot;func&quot;)</span><br>  TypeParams *FieldList <span class="hljs-comment">// type parameters; or nil</span><br>  Params     *FieldList <span class="hljs-comment">// (incoming) parameters; non-nil</span><br>  Results    *FieldList <span class="hljs-comment">// (outgoing) results; or nil</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>Params</code>：函数参数</li>
+<li><code>Results</code>：函数返回值</li>
+</ul>
+<p>查看 <code>FieldList</code> 结构，可知参数列表和返回值列表都在相应的
+<code>List</code> 字段中，而其中的 <code>Names</code>
+字段就是参数的名称了。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> FieldList <span class="hljs-keyword">struct</span> &#123;<br>	Opening token.Pos <span class="hljs-comment">// position of opening parenthesis/brace/bracket, if any</span><br>	List    []*Field  <span class="hljs-comment">// field list; or nil</span><br>	Closing token.Pos <span class="hljs-comment">// position of closing parenthesis/brace/bracket, if any</span><br>&#125;<br><br><span class="hljs-keyword">type</span> Field <span class="hljs-keyword">struct</span> &#123;<br>	Doc     *CommentGroup <span class="hljs-comment">// associated documentation; or nil</span><br>	Names   []*Ident      <span class="hljs-comment">// field/method/(type) parameter names; or nil</span><br>	Type    Expr          <span class="hljs-comment">// field/method/parameter type; or nil</span><br>	Tag     *BasicLit     <span class="hljs-comment">// field tag; or nil</span><br>	Comment *CommentGroup <span class="hljs-comment">// line comments; or nil</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>补充一下，这里为什么 <code>Names</code> 类型是 <code>[]*Ident</code>
+呢？因为函数有以下的命名方式：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">hello</span><span class="hljs-params">(s1, s2 <span class="hljs-type">string</span>)</span></span> (r1, r1 <span class="hljs-type">string</span>) &#123;&#125;<br></code></pre></td></tr></table></figure>
+<p>那么在当下，只有 1 个参数和只有 1 个返回值的情况下，我们就可以通过
+<code>fun.Type.Params.List[0].Names[0].Name</code>
+来获取参数名称，也可以通过 <code>fun.Type.Results.List[0].Names</code>
+来获取返回值名称，如果返回值没有名称，那我们就为其设置名称
+<code>__xgo_res_1</code> 并写回源 AST
+结构。这样就都有名称，就很好处理了。</p>
+<p>经上分析， <code>cmd/mytool/mytool.go</code> 中我们只需要修改
+<code>insertCode</code> 部分，修改的结果如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">insertCode</span><span class="hljs-params">(filename <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>	fset := token.NewFileSet()<br>	fast, err := parser.ParseFile(fset, filename, <span class="hljs-literal">nil</span>, parser.AllErrors)<br>	<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;parse file error: %v\n&quot;</span>, err)<br>	&#125;<br><br>	<span class="hljs-keyword">for</span> _, decl := <span class="hljs-keyword">range</span> fast.Decls &#123;<br>		fun, ok := decl.(*ast.FuncDecl)<br>		<span class="hljs-keyword">if</span> !ok &#123;<br>			<span class="hljs-keyword">continue</span><br>		&#125;<br><br>		f, err := os.Create(<span class="hljs-string">&quot;tmp.go&quot;</span>)<br>		<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>			log.Fatalf(<span class="hljs-string">&quot;create tmp.go error: %v\n&quot;</span>, err)<br>		&#125;<br>		_, _ = f.WriteString(newCode(fun))<br>		f.Close()<br><br>		tmpFset := token.NewFileSet()<br>		tmpF, err := parser.ParseFile(tmpFset, <span class="hljs-string">&quot;tmp.go&quot;</span>, <span class="hljs-literal">nil</span>, parser.AllErrors)<br>		<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>			log.Fatalf(<span class="hljs-string">&quot;parse tmp.go error: %v\n&quot;</span>, err)<br>		&#125;<br>		fun.Body.List = <span class="hljs-built_in">append</span>(tmpF.Decls[<span class="hljs-number">0</span>].(*ast.FuncDecl).Body.List, fun.Body.List...)<br>		os.Remove(<span class="hljs-string">&quot;tmp.go&quot;</span>)<br>	&#125;<br><br>	<span class="hljs-keyword">var</span> buf bytes.Buffer<br>	printer.Fprint(&amp;buf, fset, fast)<br><br>	fmt.Println(buf.String())<br><br>	<span class="hljs-keyword">return</span> buf.String()<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">newCode</span><span class="hljs-params">(fun *ast.FuncDecl)</span></span> <span class="hljs-type">string</span> &#123;<br><br>	<span class="hljs-comment">/*</span><br><span class="hljs-comment">		&amp;&#123;Doc:&lt;nil&gt; Names:[s] Type:string Tag:&lt;nil&gt; Comment:&lt;nil&gt;&#125;</span><br><span class="hljs-comment">		&amp;&#123;Doc:&lt;nil&gt; Names:[res] Type:string Tag:&lt;nil&gt; Comment:&lt;nil&gt;&#125;</span><br><span class="hljs-comment">		&amp;&#123;Doc:&lt;nil&gt; Names:[s2] Type:string Tag:&lt;nil&gt; Comment:&lt;nil&gt;&#125;</span><br><span class="hljs-comment">		&amp;&#123;Doc:&lt;nil&gt; Names:[res2] Type:string Tag:&lt;nil&gt; Comment:&lt;nil&gt;&#125;</span><br><span class="hljs-comment">		&amp;&#123;Doc:&lt;nil&gt; Names:[s3] Type:string Tag:&lt;nil&gt; Comment:&lt;nil&gt;&#125;</span><br><span class="hljs-comment">		&amp;&#123;Doc:&lt;nil&gt; Names:[] Type:string Tag:&lt;nil&gt; Comment:&lt;nil&gt;&#125;</span><br><span class="hljs-comment">	*/</span><br><br>	<span class="hljs-comment">// 函数名称</span><br>	funcName := fun.Name.Name<br><br>	<span class="hljs-comment">// 参数列表</span><br>	argName := fun.Type.Params.List[<span class="hljs-number">0</span>].Names[<span class="hljs-number">0</span>].Name<br><br>	<span class="hljs-comment">// 返回值列表</span><br>	resNames := fun.Type.Results.List[<span class="hljs-number">0</span>].Names<br>	<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(resNames) == <span class="hljs-number">0</span> &#123;<br>		resNames = <span class="hljs-built_in">append</span>(resNames, &amp;ast.Ident&#123;Name: <span class="hljs-string">&quot;_xgo_res_1&quot;</span>&#125;)<br>		fun.Type.Results.List[<span class="hljs-number">0</span>].Names = resNames<br>	&#125;<br>	resName := resNames[<span class="hljs-number">0</span>].Name<br>	<span class="hljs-keyword">return</span> fmt.Sprintf(newCodeFormat, funcName, argName, resName, resName)<br>&#125;<br><br><span class="hljs-keyword">var</span> newCodeFormat = <span class="hljs-string">`</span><br><span class="hljs-string">package main</span><br><span class="hljs-string"></span><br><span class="hljs-string">func TmpFunc() &#123;</span><br><span class="hljs-string">	if InterceptMock(&quot;%s&quot;, %s, &amp;%s) &#123;</span><br><span class="hljs-string">	 	return %s</span><br><span class="hljs-string">    &#125;</span><br><span class="hljs-string">&#125;</span><br><span class="hljs-string">`</span><br></code></pre></td></tr></table></figure>
+<p>现在我们就可以动态获取参数名称和返回值名称了。</p>
+<p>修改我们的 <code>main.go</code>，以测试所有的情况：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	res := Greet(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;hello world&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Greet() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;hello world&quot;</span>)<br>	&#125;<br><br>	RegisterMockFunc(<span class="hljs-string">&quot;Greet&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;mock &quot;</span> + s<br>	&#125;)<br>	res = Greet(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;mock world&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Greet() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;mock world&quot;</span>)<br>	&#125;<br><br>	log.Println(<span class="hljs-string">&quot;run greet 1 successfully&quot;</span>)<br><br>	RegisterMockFunc(<span class="hljs-string">&quot;Greet2&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;mock 2 &quot;</span> + s<br>	&#125;)<br>	res = Greet2(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;mock 2 world&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Greet2() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;mock 2 world&quot;</span>)<br>	&#125;<br><br>	log.Println(<span class="hljs-string">&quot;run greet 2 successfully&quot;</span>)<br><br>	RegisterMockFunc(<span class="hljs-string">&quot;Greet3&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;mock 3 &quot;</span> + s<br>	&#125;)<br>	res = Greet3(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;mock 3 world&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Greet3() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;mock 3 world&quot;</span>)<br>	&#125;<br><br>	log.Println(<span class="hljs-string">&quot;run greet 3 successfully&quot;</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>执行编译脚本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">./script.sh<br></code></pre></td></tr></table></figure>
+<p>执行编译产生的可执行程序，输出如下就说明我们又成功进了一大步~</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  05-toolexec-general git:(master) ✗ ./main<br>2024/05/23 20:15:08 run greet 1 successfully<br>2024/05/23 20:15:08 run greet 2 successfully<br>2024/05/23 20:15:08 run greet 3 successfully<br></code></pre></td></tr></table></figure>
+<h1 id="第-6-步支持多参数和多返回值">第 6 步：支持多参数和多返回值</h1>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  06-toolexec-multi git:(master) ✗ tree<br>.<br>├── cmd<br>│   └── mytool<br>│       └── mytool.go<br>├── greet.go<br>├── main.go<br>├── mock.go<br>└── script.sh<br></code></pre></td></tr></table></figure>
+<p>本文的最后一步，我们来面对一下多参数和多返回值的问题。假设我们又如下函数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Pair1</span><span class="hljs-params">(s1, s2 <span class="hljs-type">string</span>)</span></span> (res <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;pair 1 &quot;</span> + s1 + <span class="hljs-string">&quot; &quot;</span> + s2<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这个时候我们 <strong>代码重写</strong>
+后应该长什么样子呢？可以是下面这样的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Pair1</span><span class="hljs-params">(s1, s2 <span class="hljs-type">string</span>)</span></span> (res <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">if</span> InterceptMock(<span class="hljs-string">&quot;Pair1&quot;</span>, s1, s2, &amp;res) &#123;<br>		<span class="hljs-keyword">return</span> res<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;pair 1 &quot;</span> + s1 + <span class="hljs-string">&quot; &quot;</span> + s2<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>按照这个思路，下面这个函数呢？</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Pair2</span><span class="hljs-params">(s1, s2 <span class="hljs-type">string</span>)</span></span> (res1, res2 <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;pair 1 &quot;</span> + s1, <span class="hljs-string">&quot;pair 2 &quot;</span> + s2<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>那就是这样的？</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Pair2</span><span class="hljs-params">(s1, s2 <span class="hljs-type">string</span>)</span></span> (res1, res2 <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">if</span> InterceptMock(<span class="hljs-string">&quot;Pair2&quot;</span>, s1, s2, &amp;res1, &amp;res2) &#123;<br>		<span class="hljs-keyword">return</span> res1, res2<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;pair 1 &quot;</span> + s1, <span class="hljs-string">&quot;pair 2 &quot;</span> + s2<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这种思路当然也能实现，换一种更优雅的思路呢？既然是一个列表，那么就可以用切片来承载，也就是可以是这样的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Pair2</span><span class="hljs-params">(s1, s2 <span class="hljs-type">string</span>)</span></span> (res1, res2 <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">if</span> InterceptMock(<span class="hljs-string">&quot;Pair2&quot;</span>, []<span class="hljs-keyword">interface</span>&#123;&#125;&#123;s1, s2&#125;, []<span class="hljs-keyword">interface</span>&#123;&#125;&#123;&amp;res1, &amp;res2&#125;) &#123;<br>		<span class="hljs-keyword">return</span> res1, res2<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;pair 1 &quot;</span> + s1, <span class="hljs-string">&quot;pair 2 &quot;</span> + s2<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>那我们就可以抽象出插入代码的模板了：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">if</span> InterceptMock(<span class="hljs-string">&quot;$&#123;funcName&#125;&quot;</span>, []<span class="hljs-keyword">interface</span>&#123;&#125;&#123;$&#123;paramList&#125;&#125;, []<span class="hljs-keyword">interface</span>&#123;&#125;&#123;$&#123;returnListWith&amp;&#125;&#125;) &#123;<br>  <span class="hljs-keyword">return</span> $&#123;returnListWithout&amp;&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>为了实现这个，我们需要先修改一下 <code>mock.go</code> 中的
+<code>InterceptMock</code> 函数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">InterceptMock</span><span class="hljs-params">(funcName <span class="hljs-type">string</span>, args []<span class="hljs-keyword">interface</span>&#123;&#125;, results []<span class="hljs-keyword">interface</span>&#123;&#125;)</span></span> <span class="hljs-type">bool</span> &#123;<br>	mockFn, ok := mockFuncs.Load(funcName)<br>	<span class="hljs-keyword">if</span> !ok &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-literal">false</span><br>	&#125;<br><br><br>	in := <span class="hljs-built_in">make</span>([]reflect.Value, <span class="hljs-built_in">len</span>(args))<br>	<span class="hljs-keyword">for</span> i, arg := <span class="hljs-keyword">range</span> args &#123;<br>		in[i] = reflect.ValueOf(arg)<br>	&#125;<br><br>  mockFnValue := reflect.ValueOf(mockFn)<br>	out := mockFnValue.Call(in)<br>	<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(out) != <span class="hljs-built_in">len</span>(results) &#123;<br>		<span class="hljs-built_in">panic</span>(<span class="hljs-string">&quot;mock function return value number is not equal to results number&quot;</span>)<br>	&#125;<br><br>	<span class="hljs-keyword">for</span> i, result := <span class="hljs-keyword">range</span> results &#123;<br>		reflect.ValueOf(result).Elem().Set(out[i])<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>拦截器的具体实现如下：</p>
+<ol type="1">
+<li>判断是否注册了 mock 函数，没有则直接返回；</li>
+<li>将所有参数都放到 <code>[]refect.Value</code> 中；</li>
+<li>通过反射 <code>refect.ValueOf</code> 获取 mockFn 的值；</li>
+<li>调用 <code>mockFnValue.Call()</code>
+来执行函数，并返回结果列表；</li>
+<li>遍历传进来的返回值引用列表，调用
+<code>reflect.ValueOf(result).Elem().Set(out[i])</code>
+将返回值设置回去。</li>
+</ol>
+<p>现在我们来修改我们的 <code>-toolexec</code> 工具，来根据函数的 AST
+结构，获取参数列表和返回值列表，生成代插入的模板代码，并将其插入到每个函数的开头。这次在
+<code>cmd/mytool/mytool.go</code> 中，我们只需修改 <code>newCode</code>
+函数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">insertCode</span><span class="hljs-params">(filename <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>	fset := token.NewFileSet()<br>	fast, err := parser.ParseFile(fset, filename, <span class="hljs-literal">nil</span>, parser.AllErrors)<br>	<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;parse file error: %v\n&quot;</span>, err)<br>	&#125;<br><br>	<span class="hljs-keyword">for</span> _, decl := <span class="hljs-keyword">range</span> fast.Decls &#123;<br>		fun, ok := decl.(*ast.FuncDecl)<br>		<span class="hljs-keyword">if</span> !ok &#123;<br>			<span class="hljs-keyword">continue</span><br>		&#125;<br><br>		f, err := os.Create(<span class="hljs-string">&quot;tmp.go&quot;</span>)<br>		<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>			log.Fatalf(<span class="hljs-string">&quot;create tmp.go error: %v\n&quot;</span>, err)<br>		&#125;<br>		_, _ = f.WriteString(newCode(fun))<br>		f.Close()<br><br>		tmpFset := token.NewFileSet()<br>		tmpF, err := parser.ParseFile(tmpFset, <span class="hljs-string">&quot;tmp.go&quot;</span>, <span class="hljs-literal">nil</span>, parser.AllErrors)<br>		<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>			log.Fatalf(<span class="hljs-string">&quot;parse tmp.go error: %v\n&quot;</span>, err)<br>		&#125;<br>		fun.Body.List = <span class="hljs-built_in">append</span>(tmpF.Decls[<span class="hljs-number">0</span>].(*ast.FuncDecl).Body.List, fun.Body.List...)<br>		os.Remove(<span class="hljs-string">&quot;tmp.go&quot;</span>)<br>	&#125;<br><br>	<span class="hljs-keyword">var</span> buf bytes.Buffer<br>	printer.Fprint(&amp;buf, fset, fast)<br><br>	fmt.Println(buf.String())<br><br>	<span class="hljs-keyword">return</span> buf.String()<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">newCode</span><span class="hljs-params">(fun *ast.FuncDecl)</span></span> <span class="hljs-type">string</span> &#123;<br>	<span class="hljs-comment">// 函数名称</span><br>	funcName := fun.Name.Name<br><br>	<span class="hljs-comment">// 参数列表</span><br>	args := <span class="hljs-built_in">make</span>([]<span class="hljs-type">string</span>, <span class="hljs-number">0</span>)<br>	<span class="hljs-keyword">for</span> _, arg := <span class="hljs-keyword">range</span> fun.Type.Params.List &#123;<br>		<span class="hljs-keyword">for</span> _, name := <span class="hljs-keyword">range</span> arg.Names &#123;<br>			args = <span class="hljs-built_in">append</span>(args, name.Name)<br>		&#125;<br>	&#125;<br>	<span class="hljs-comment">// 返回值列表</span><br>	returns := <span class="hljs-built_in">make</span>([]<span class="hljs-type">string</span>, <span class="hljs-number">0</span>)<br>	returnRefs := <span class="hljs-built_in">make</span>([]<span class="hljs-type">string</span>, <span class="hljs-number">0</span>)<br>	returnNames := fun.Type.Results.List[<span class="hljs-number">0</span>].Names<br>	<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(returnNames) == <span class="hljs-number">0</span> &#123;<br>		<span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; fun.Type.Results.NumFields(); i++ &#123;<br>			fun.Type.Results.List[<span class="hljs-number">0</span>].Names = <span class="hljs-built_in">append</span>(fun.Type.Results.List[<span class="hljs-number">0</span>].Names,<br>				&amp;ast.Ident&#123;Name: fmt.Sprintf(<span class="hljs-string">&quot;_xgo_res_%d&quot;</span>, i+<span class="hljs-number">1</span>)&#125;)<br>		&#125;<br>	&#125;<br>	<span class="hljs-keyword">for</span> _, re := <span class="hljs-keyword">range</span> fun.Type.Results.List[<span class="hljs-number">0</span>].Names &#123;<br>		returns = <span class="hljs-built_in">append</span>(returns, re.Name)<br>		returnRefs = <span class="hljs-built_in">append</span>(returnRefs, <span class="hljs-string">&quot;&amp;&quot;</span>+re.Name)<br>	&#125;<br>	<span class="hljs-keyword">return</span> fmt.Sprintf(newCodeFormat,<br>		funcName,<br>		strings.Join(args, <span class="hljs-string">&quot;,&quot;</span>),<br>		strings.Join(returnRefs, <span class="hljs-string">&quot;,&quot;</span>),<br>		strings.Join(returns, <span class="hljs-string">&quot;,&quot;</span>))<br>&#125;<br><br><span class="hljs-keyword">var</span> newCodeFormat = <span class="hljs-string">`</span><br><span class="hljs-string">package main</span><br><span class="hljs-string"></span><br><span class="hljs-string">func TmpFunc() &#123;</span><br><span class="hljs-string">	if InterceptMock(&quot;%s&quot;, []interface&#123;&#125;&#123;%s&#125;, []interface&#123;&#125;&#123;%s&#125;) &#123;</span><br><span class="hljs-string">		return %s</span><br><span class="hljs-string">	&#125;</span><br><span class="hljs-string">&#125;</span><br><span class="hljs-string">`</span><br></code></pre></td></tr></table></figure>
+<p>思路跟之前第 5
+步大同小异，不过是用遍历的方式来支持多个参数和多个返回值罢了。</p>
+<p>现在我们为 <code>greet.go</code> 添加更多的测试函数，代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Greet</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> (res <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello &quot;</span> + s<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Greet2</span><span class="hljs-params">(s2 <span class="hljs-type">string</span>)</span></span> (res2 <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello 2 &quot;</span> + s2<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Greet3</span><span class="hljs-params">(s3 <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello 3 &quot;</span> + s3<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Pair1</span><span class="hljs-params">(s1, s2 <span class="hljs-type">string</span>)</span></span> (res <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;pair 1 &quot;</span> + s1 + <span class="hljs-string">&quot; &quot;</span> + s2<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Pair2</span><span class="hljs-params">(s1, s2 <span class="hljs-type">string</span>)</span></span> (res1, res2 <span class="hljs-type">string</span>) &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;pair 1 &quot;</span> + s1, <span class="hljs-string">&quot;pair 2 &quot;</span> + s2<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Other</span><span class="hljs-params">(i <span class="hljs-type">int</span>, s <span class="hljs-type">string</span>, f <span class="hljs-type">float64</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>	<span class="hljs-keyword">return</span> fmt.Sprintf(<span class="hljs-string">&quot;int: %d, string: %s, float: %f&quot;</span>, i, s, f)<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>为了测试，我们再次修改 <code>main.go</code>，使其覆盖所有的情况：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br><br>	RegisterMockFunc(<span class="hljs-string">&quot;Other&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(i <span class="hljs-type">int</span>, s <span class="hljs-type">string</span>, f <span class="hljs-type">float64</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>		<span class="hljs-keyword">return</span> fmt.Sprintf(<span class="hljs-string">&quot;mock %d %s %.2f&quot;</span>, i, s, f)<br>	&#125;)<br>	res := Other(<span class="hljs-number">1</span>, <span class="hljs-string">&quot;hello&quot;</span>, <span class="hljs-number">3.14</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;mock 1 hello 3.14&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Other() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;mock 1 hello 3.14&quot;</span>)<br>	&#125;<br>	log.Println(<span class="hljs-string">&quot;run other successfully&quot;</span>)<br><br>	RegisterMockFunc(<span class="hljs-string">&quot;Pair1&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s1, s2 <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;mock 1 &quot;</span> + s1 + <span class="hljs-string">&quot; &quot;</span> + s2<br>	&#125;)<br>	res = Pair1(<span class="hljs-string">&quot;hello&quot;</span>, <span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;mock 1 hello world&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Pair1() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;mock 1 hello world&quot;</span>)<br>	&#125;<br>	log.Println(<span class="hljs-string">&quot;run pair1 successfully&quot;</span>)<br><br>	RegisterMockFunc(<span class="hljs-string">&quot;Pair2&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s1, s2 <span class="hljs-type">string</span>)</span></span> (<span class="hljs-type">string</span>, <span class="hljs-type">string</span>) &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;mock 2 &quot;</span> + s1, <span class="hljs-string">&quot;mock 2 &quot;</span> + s2<br>	&#125;)<br>	res1, res2 := Pair2(<span class="hljs-string">&quot;hello&quot;</span>, <span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res1 != <span class="hljs-string">&quot;mock 2 hello&quot;</span> || res2 != <span class="hljs-string">&quot;mock 2 world&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Pair2() = %q, %q; want %q, %q&quot;</span>, res1, res2, <span class="hljs-string">&quot;mock 2 hello&quot;</span>, <span class="hljs-string">&quot;mock 2 world&quot;</span>)<br>	&#125;<br>	log.Println(<span class="hljs-string">&quot;run pair2 successfully&quot;</span>)<br><br>	res = Greet(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;hello world&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Greet() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;hello world&quot;</span>)<br>	&#125;<br><br>	RegisterMockFunc(<span class="hljs-string">&quot;Greet&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;mock &quot;</span> + s<br>	&#125;)<br>	res = Greet(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;mock world&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Greet() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;mock world&quot;</span>)<br>	&#125;<br><br>	log.Println(<span class="hljs-string">&quot;run greet 1 successfully&quot;</span>)<br><br>	RegisterMockFunc(<span class="hljs-string">&quot;Greet2&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;mock 2 &quot;</span> + s<br>	&#125;)<br>	res = Greet2(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;mock 2 world&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Greet2() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;mock 2 world&quot;</span>)<br>	&#125;<br><br>	log.Println(<span class="hljs-string">&quot;run greet 2 successfully&quot;</span>)<br><br>	RegisterMockFunc(<span class="hljs-string">&quot;Greet3&quot;</span>, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;mock 3 &quot;</span> + s<br>	&#125;)<br>	res = Greet3(<span class="hljs-string">&quot;world&quot;</span>)<br>	<span class="hljs-keyword">if</span> res != <span class="hljs-string">&quot;mock 3 world&quot;</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;Greet3() = %q; want %q&quot;</span>, res, <span class="hljs-string">&quot;mock 3 world&quot;</span>)<br>	&#125;<br><br>	log.Println(<span class="hljs-string">&quot;run greet 3 successfully&quot;</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>编译代码：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">./script.sh<br></code></pre></td></tr></table></figure>
+<p>执行生成的可执行程序，如果有以下输出，那我们就又成功进了一大大步了~</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  06-toolexec-multi git:(master) ✗ ./main<br>2024/05/23 20:31:10 run other successfully<br>2024/05/23 20:31:10 run pair1 successfully<br>2024/05/23 20:31:10 run pair2 successfully<br>2024/05/23 20:31:10 run greet 1 successfully<br>2024/05/23 20:31:10 run greet 2 successfully<br>2024/05/23 20:31:10 run greet 3 successfully<br></code></pre></td></tr></table></figure>
+<h1 id="更进一步">更进一步</h1>
+<p>通过上面 6 个简单的小阶段，我们就已经把 <code>xgo</code>
+最最核心的功能给实现了，在一些小场景下还勉强能用？🤡</p>
+<p>我们来看看包含测试代码和样例函数，总共用了多少代码：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  06-toolexec-multi git:(master) ✗ tokei .<br>===============================================================================<br> Language            Files        Lines         Code     Comments       Blanks<br>===============================================================================<br> Go                      4          281          224           11           46<br> Shell                   1            5            3            1            1<br>===============================================================================<br> Total                   5          286          227           12           47<br>===============================================================================<br></code></pre></td></tr></table></figure>
+<p>短短 <strong>224</strong> 行代码，这是一个非常了不起的成就！</p>
+<p>当然，优秀的读者肯定可以发现我们这个 <strong>丐版 xgo</strong>
+有太多的不足和缺陷了。这是必然的，我们来看看 <code>xgo</code> 截止
+<code>1.0.37</code> 版本，总共有多少行代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs go">➜  xgo git:(master) tokei .<br>===============================================================================<br> Language            Files        Lines         Code     Comments       Blanks<br>===============================================================================<br> BASH                    <span class="hljs-number">1</span>          <span class="hljs-number">104</span>           <span class="hljs-number">81</span>           <span class="hljs-number">11</span>           <span class="hljs-number">12</span><br> CSS                     <span class="hljs-number">1</span>          <span class="hljs-number">153</span>          <span class="hljs-number">118</span>            <span class="hljs-number">5</span>           <span class="hljs-number">30</span><br> Go                    <span class="hljs-number">369</span>        <span class="hljs-number">33232</span>        <span class="hljs-number">26836</span>         <span class="hljs-number">2588</span>         <span class="hljs-number">3808</span><br> JavaScript              <span class="hljs-number">1</span>          <span class="hljs-number">170</span>          <span class="hljs-number">146</span>           <span class="hljs-number">10</span>           <span class="hljs-number">14</span><br> JSON                    <span class="hljs-number">2</span>          <span class="hljs-number">435</span>          <span class="hljs-number">435</span>            <span class="hljs-number">0</span>            <span class="hljs-number">0</span><br> PowerShell              <span class="hljs-number">1</span>           <span class="hljs-number">28</span>           <span class="hljs-number">16</span>            <span class="hljs-number">3</span>            <span class="hljs-number">9</span><br> Shell                   <span class="hljs-number">3</span>          <span class="hljs-number">288</span>          <span class="hljs-number">251</span>            <span class="hljs-number">4</span>           <span class="hljs-number">33</span><br> SVG                     <span class="hljs-number">1</span>           <span class="hljs-number">41</span>           <span class="hljs-number">41</span>            <span class="hljs-number">0</span>            <span class="hljs-number">0</span><br> Plain Text              <span class="hljs-number">7</span>          <span class="hljs-number">192</span>            <span class="hljs-number">0</span>          <span class="hljs-number">174</span>           <span class="hljs-number">18</span><br>-------------------------------------------------------------------------------<br> HTML                    <span class="hljs-number">1</span>           <span class="hljs-number">19</span>           <span class="hljs-number">16</span>            <span class="hljs-number">3</span>            <span class="hljs-number">0</span><br> |- JavaScript           <span class="hljs-number">1</span>            <span class="hljs-number">6</span>            <span class="hljs-number">6</span>            <span class="hljs-number">0</span>            <span class="hljs-number">0</span><br> (Total)                             <span class="hljs-number">25</span>           <span class="hljs-number">22</span>            <span class="hljs-number">3</span>            <span class="hljs-number">0</span><br>-------------------------------------------------------------------------------<br> Markdown               <span class="hljs-number">17</span>         <span class="hljs-number">1455</span>            <span class="hljs-number">0</span>         <span class="hljs-number">1083</span>          <span class="hljs-number">372</span><br> |- Go                   <span class="hljs-number">8</span>          <span class="hljs-number">820</span>          <span class="hljs-number">635</span>           <span class="hljs-number">72</span>          <span class="hljs-number">113</span><br> |- JSON                 <span class="hljs-number">1</span>           <span class="hljs-number">80</span>           <span class="hljs-number">80</span>            <span class="hljs-number">0</span>            <span class="hljs-number">0</span><br> (Total)                           <span class="hljs-number">2355</span>          <span class="hljs-number">715</span>         <span class="hljs-number">1155</span>          <span class="hljs-number">485</span><br>===============================================================================<br> Total                 <span class="hljs-number">404</span>        <span class="hljs-number">36117</span>        <span class="hljs-number">27940</span>         <span class="hljs-number">3881</span>         <span class="hljs-number">4296</span><br>===============================================================================<br></code></pre></td></tr></table></figure>
+<p>光 Go 代码就有 <strong>26836</strong> 行了。所以可知 <code>xgo</code>
+的作者是做了很多的付出和努力的。不过我们用了不到百分之一的代码量，就将
+<code>xgo</code>
+最核心的原理展示得淋漓尽致了，感兴趣的读者可以进一步阅读
+<code>xgo</code> 的源码，可以进一步探索如何抽象出更通用更简洁更易扩展的
+interceptor，如何支持协程隔离，如何优化依赖管理，以及如何实现其他的
+trace、coverage 功能。再次为 <code>xgo</code> 打 call 👏！</p>
+<h1 id="参考">参考</h1>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/xhd2015/xgo">xgo repo</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://docs.google.com/presentation/d/1U5yTdrUjnManxztzsMPGBAePrE3HvJcDtRjV6h3HelA/edit#slide=id.g2705943ae25_0_50">xgo:
+基于代码重写实现 Monkey Patch 和 Trace</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://github.com/golang/go/tree/release-branch.go1.22/src/cmd/compile">go
+compile README</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://blog.xhd2015.xyz/zh/posts/xgo-monkey-patching-in-go-using-toolexec/">xgo:
+在 go 中使用-toolexec 实现猴子补丁</a></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Go/" class="category-chain-item">Go</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/Go/%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE/" class="category-chain-item">开源项目</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Go/" class="print-no-link">#Go</a>
+      
+        <a href="/tags/%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE/" class="print-no-link">#开源项目</a>
+      
+        <a href="/tags/%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95/" class="print-no-link">#单元测试</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>xgo 原理探索</div>
+      <div>https://hedon.top/2024/05/23/go-xgo-explore/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Hedon Wang</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>2024-05-23</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>Licensed under</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/05/21/go-xgo-use/" title="xgo 使用经验">
+                        <span class="hidden-mobile">xgo 使用经验</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"hedon954/hedonspace","repo-id":"R_kgDOKt17sQ","category":"Q&A","category-id":"DIC_kwDOKt17sc4CbAt-","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":0,"input-position":"top","lang":"en"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>Table of Contents</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="leancloud-site-pv-container" style="display: none">
+        总访问量 
+        <span id="leancloud-site-pv"></span>
+         次
+      </span>
+    
+    
+      <span id="leancloud-site-uv-container" style="display: none">
+        总访客数 
+        <span id="leancloud-site-uv"></span>
+         人
+      </span>
+    
+    
+
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/leancloud.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>
