@@ -24,7 +24,7 @@
 <meta property="og:description" content="xgo 是一个通过代码重写来实现 mock、trace 和 coverage 功能的单元测试框架。本文将探讨 xgo 最核心的底层原理 -toolexec，并通过 6 个简单的小阶段，一步步实现一个丐版 xgo，进一步展示 xgo 的设计理念。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2024-05-23T13:15:10.000Z">
-<meta property="article:modified_time" content="2024-05-23T13:36:47.103Z">
+<meta property="article:modified_time" content="2024-05-23T13:52:38.061Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Go">
 <meta property="article:tag" content="开源项目">
@@ -268,7 +268,7 @@
         
         
         
-          80 mins
+          81 mins
         
       </span>
     
@@ -411,16 +411,18 @@ API，也可能会依赖数据库等多种外部组件。所以在测试的时�
 <figure>
 <img
 src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/Km9eLWtYFJMiFYP0uC-B29J__5mGvLlSsrD52hWgS_S2nOGSx9PnMybHuqcQljAtTUr5QVVqaHGyyAEwqVPowhPqJvAZHLALdQpj6gzHzb60NLLe91tX87_sAerIGq2mwYMVdBcptglQpJ0QkfmDC-ZHoQ=s2048.png" srcset="/img/loading.gif" lazyload
-alt="-toolexec 示意图" />
-<figcaption aria-hidden="true">-toolexec 示意图</figcaption>
+alt="-toolexec 示意图（来源：https://blog.xhd2015.xyz/zh/posts/xgo-monkey-patching-in-go-using-toolexec/）" />
+<figcaption aria-hidden="true">-toolexec
+示意图（来源：https://blog.xhd2015.xyz/zh/posts/xgo-monkey-patching-in-go-using-toolexec/）</figcaption>
 </figure>
 <p>基于上述分析，<code>xgo</code> 提出了 <strong>代码重写</strong>
 的思路，实现了 <strong>在编译过程中插入拦截器代码</strong> 的功能：</p>
 <figure>
 <img
 src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240523164815047.png" srcset="/img/loading.gif" lazyload
-alt="xgo 在 go build 中的作用位置" />
-<figcaption aria-hidden="true">xgo 在 go build 中的作用位置</figcaption>
+alt="xgo 在 go build 中的作用位置（来源：https://blog.xhd2015.xyz/zh/posts/xgo-monkey-patching-in-go-using-toolexec/）" />
+<figcaption aria-hidden="true">xgo 在 go build
+中的作用位置（来源：https://blog.xhd2015.xyz/zh/posts/xgo-monkey-patching-in-go-using-toolexec/）</figcaption>
 </figure>
 <p>所以上述我们的 <code>greet.go</code> 文件中的源代码：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">greet</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;hello &quot;</span> + s<br>&#125;<br></code></pre></td></tr></table></figure>
