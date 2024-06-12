@@ -1,0 +1,926 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/hedon.png">
+  <link rel="icon" href="/img/hedon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Hedon Wang">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="x">
+<meta property="og:type" content="article">
+<meta property="og:title" content="KCP 源码分析与原理总结">
+<meta property="og:url" content="https://hedon.top/2024/06/12/kcp/index.html">
+<meta property="og:site_name" content="HedonSpace">
+<meta property="og:description" content="x">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-06-12T03:08:02.000Z">
+<meta property="article:modified_time" content="2024-06-12T04:25:56.404Z">
+<meta property="article:author" content="Hedon Wang">
+<meta property="article:tag" content="KCP">
+<meta property="article:tag" content="TCP">
+<meta property="article:tag" content="网络">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>KCP 源码分析与原理总结 - HedonSpace</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"hedon.top","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":30,"cursorChar":"_","loop":false,"scope":["home"]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":4},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"Eig99zG5BYQGKXxcMOU7DH7e-gzGzoHsz","app_key":"dBP7lew0wt2GQdNdo6t2EE5m","server_url":"https://eig99zg5.lc-cn-n1-shared.com","path":"window.location.pathname","ignore_local":true}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+    <!-- Google tag (gtag.js) -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        Fluid.utils.createScript("https://www.googletagmanager.com/gtag/js?id=", function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+          gtag('js', new Date());
+          gtag('config', '');
+        });
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.0.0"><link rel="alternate" href="/atom.xml" title="HedonSpace" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>HedonSpace</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>Home</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>Archives</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>Categories</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>Tags</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>About</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/banner/kcp.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">KCP 源码分析与原理总结</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        Hedon Wang
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-06-12 11:08" pubdate>
+          2024-06-12 11:08
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.5k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          9 mins
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="leancloud-page-views"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">KCP 源码分析与原理总结</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="序言">序言</h1>
+<h1 id="结论先行">结论先行</h1>
+<p>KCP 是一个快速可靠协议，能以比 TCP 浪费 10%-20%
+的带宽的代价，换取平均延迟降低
+30%-40%，且最大延迟降低三倍的传输效果。</p>
+<p>TCP 是为流量设计的（每秒内可以传输多少 KB
+的数据），讲究的是充分利用带宽。而 KCP
+是为流速设计的（单个数据包从一端发送到一端需要多少时间），以 10%-20%
+带宽浪费的代价换取了比 TCP 快 30%-40% 的传输速度。TCP
+信道是一条流速很慢，但每秒流量很大的大运河，而 KCP
+是水流湍急的小激流。</p>
+<h2 id="kcp-增加的带宽在哪里增加的速度又在哪里">KCP
+增加的带宽在哪里？增加的速度又在哪里？</h2>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240612111337839.png" srcset="/img/loading.gif" lazyload
+alt="为什么 KCP 能以比 TCP 浪费 10%-20% 的带宽的代价，换取平均延迟降低 30%-40%？" />
+<figcaption aria-hidden="true">为什么 KCP 能以比 TCP 浪费 10%-20%
+的带宽的代价，换取平均延迟降低 30%-40%？</figcaption>
+</figure>
+<h2 id="kcp-核心特性">KCP 核心特性</h2>
+<p><strong>快速重传</strong>： KCP支持快速重传机制，不像 TCP
+那样依赖超时重传。KCP
+可以根据接收方返回的确认信息快速判断哪些数据包已经丢失，并迅速进行重传。</p>
+<p><strong>选择性确认（Selective Acknowledgment, SACK）</strong>： KCP
+支持
+SACK，这允许接收端告知发送端哪些包已经收到，从而仅重传未被确认接收的数据包，减少不必要的重传。</p>
+<p><strong>无连接操作</strong>： 基于 UDP 的实现使得 KCP
+在传输数据前不需要像 TCP
+那样进行三次握手建立连接，这减少了初始的延迟，并使其能在连接性较差的网络环境下更加灵活和快速。</p>
+<p><strong>拥塞控制</strong>： KCP 实现了类似 TCP
+的拥塞控制算法，但更为简化，能够快速适应网络条件的变化，如带宽波动和丢包。</p>
+<p><strong>流量控制</strong>： KCP
+允许调整发送和接收的窗口大小，使得发送方可以根据接收方的处理能力和网络条件调整数据发送速率，优化网络利用率和减少拥塞。</p>
+<p><strong>可配置的传输策略</strong>： KCP
+允许用户根据应用需求调整内部参数，如传输间隔、窗口大小等，以达到最优的传输效率和延迟。</p>
+<p><strong>前向错误校正（Forward Error Correction, FEC）</strong>： KCP
+还可以结合使用 FEC
+技术，通过发送额外的冗余数据来恢复丢失的包，进一步提高在高丢包环境下的数据传输可靠性。</p>
+<h2 id="为什么-tcp-做不到-kcp-这样">为什么 TCP 做不到 KCP 这样？</h2>
+<p>TCP
+作为一种成熟且广泛使用的传输协议，在设计上注重可靠性和通用性，因此在拥塞控制和流量控制方面相对保守，以确保在各种网络条件下都能稳定运行。然而，这些设计上的保守性也导致了
+TCP 在某些情况下的灵活性和自适应性不如 KCP。</p>
+<h3 id="拥塞控制机制的固定性">1. 拥塞控制机制的固定性</h3>
+<p><strong>TCP</strong></p>
+<ul>
+<li><strong>固定算法</strong>：TCP 的拥塞控制算法，如慢启动（Slow
+Start）、拥塞避免（Congestion Avoidance）、快速重传（Fast
+Retransmit）和快速恢复（Fast
+Recovery），在设计时考虑了广泛的兼容性和可靠性。这些算法虽然有效，但其调整机制相对固定，响应速度较慢。</li>
+<li><strong>保守的调整策略</strong>：TCP
+的拥塞控制算法采用了保守的调整策略，例如指数增长和线性增长，这在高丢包率或高延迟网络中，可能会导致拥塞窗口（cwnd）增长速度较慢，影响传输效率。</li>
+</ul>
+<p><strong>KCP</strong>：</p>
+<ul>
+<li><strong>灵活算法</strong>：KCP
+的拥塞控制机制更为灵活，可以根据实时网络状况进行快速调整。例如，KCP
+的快速重传和选择性重传机制，使其能更快速地响应网络丢包情况。</li>
+<li><strong>动态调整策略</strong>：KCP
+的拥塞窗口调整更为灵活，可以根据网络状况快速增加或减少窗口大小，提高传输效率。</li>
+</ul>
+<h3 id="重传机制的延迟">2. 重传机制的延迟</h3>
+<p><strong>TCP</strong>： - <strong>固定重传间隔</strong>：TCP
+使用固定的重传超时（RTO），并随着每次重传逐渐增加（指数回退），这种保守的重传机制在高延迟和高丢包率网络中可能导致重传延迟较长。
+- <strong>多次确认触发重传</strong>：TCP 的快速重传需要等待三个重复的
+ACK 才能触发，这在丢包率较高的情况下，可能会导致较长的延迟。</p>
+<p><strong>KCP</strong>：</p>
+<ul>
+<li><strong>快速重传</strong>：KCP
+在检测到丢包后立即进行重传，而不需要等待多个重复的
+ACK，这显著减少了重传延迟。</li>
+<li><strong>选择性重传</strong>：KCP
+只重传丢失的数据包，而不是所有未确认的数据包，减少了不必要的重传开销。</li>
+</ul>
+<h3 id="流量控制的灵活性">3. 流量控制的灵活性</h3>
+<p><strong>TCP</strong>：</p>
+<ul>
+<li><strong>固定流量控制</strong>：TCP
+的流量控制主要依赖于接收窗口（rwnd）和发送窗口（swnd），在处理突发流量或变化较大的网络条件时，调整速度较慢。</li>
+<li><strong>通用性设计</strong>：TCP
+作为一种通用协议，其设计必须兼顾各种网络环境，因此在流量控制上相对保守，以确保在任何环境下都能稳定运行。</li>
+</ul>
+<p><strong>KCP</strong>： - <strong>自适应流量控制</strong>：KCP
+的流量控制机制可以根据实际应用需求进行更细粒度的调整。例如，KCP
+可以根据延迟抖动、丢包率等动态参数调整发送速率，确保在不同网络条件下都能保持高效传输。
+- <strong>应用层反馈</strong>：KCP
+可以根据应用层的实时反馈，动态调整发送窗口和重传策略，进一步优化传输效率。</p>
+<h3 id="应用场景的差异">4. 应用场景的差异</h3>
+<p><strong>TCP</strong>： - <strong>广泛应用</strong>：TCP
+设计用于广泛的网络环境，包括稳定的有线网络和不稳定的无线网络，因此其机制必须足够通用和保守，保证在各种情况下的可靠性。
+- <strong>标准化要求</strong>：作为互联网的基础协议，TCP
+的各项机制经过严格标准化，任何修改都需要广泛测试和验证，以确保不会影响现有网络的稳定性。</p>
+<p><strong>KCP</strong>：</p>
+<ul>
+<li><strong>特定优化</strong>：KCP
+设计初衷是优化特定场景下的传输性能，特别是高丢包率和高延迟网络，因此在设计上更加灵活，能够根据实时网络状况进行调整。</li>
+<li><strong>灵活实现</strong>：KCP
+可以根据具体应用需求进行优化，例如在实时通信和在线游戏等场景中，灵活的流量控制和快速重传机制显著提升了传输效率。</li>
+</ul>
+<h3 id="结论">结论</h3>
+<p>虽然 TCP
+在拥塞控制和流量控制方面具备基本的动态调整能力，但其保守的设计和标准化要求使得其在高丢包率和高延迟网络中的适应性和灵活性不如
+KCP。KCP
+通过灵活的拥塞控制、快速重传和自适应流量控制机制，能够更有效地应对不同网络条件下的传输需求，提供更高效的传输性能。</p>
+<h2 id="kcp-一定比-tcp-快吗">KCP 一定比 TCP 快吗？</h2>
+<p><font color="red">不一定</font>。KCP 并不一定在所有情况下都比 TCP
+快。虽然 KCP
+在某些特定网络环境（如高丢包率和高延迟的网络）中表现更优异，但在某些情况下，TCP
+可能更合适。</p>
+<h3 id="网络环境">1. 网络环境</h3>
+<p><strong>高丢包率和高延迟网络</strong>：</p>
+<ul>
+<li><strong>KCP</strong>：KCP
+通过快速重传和选择性重传机制，以及动态调整的窗口和重传间隔，能够更好地应对高丢包率和高延迟网络，减少传输延迟，提高传输效率。</li>
+<li><strong>TCP</strong>：TCP
+的重传机制和保守的拥塞控制在这种环境中可能导致较高的延迟和较低的带宽利用率。</li>
+</ul>
+<p><strong>低丢包率和低延迟网络</strong>：</p>
+<ul>
+<li><strong>KCP</strong>：在稳定的低丢包率和低延迟网络中，KCP
+的频繁重传和控制报文可能会导致额外的带宽开销，未必有明显的性能优势。</li>
+<li><strong>TCP</strong>：TCP
+在这种环境中表现稳定，且由于其带宽开销较小，可能比 KCP 更高效。</li>
+</ul>
+<h3 id="带宽利用率">2. 带宽利用率</h3>
+<p><strong>带宽充足的网络</strong>： - <strong>KCP</strong>：KCP
+由于其频繁的重传和控制报文，可能会占用更多的带宽，但如果带宽充足，这种开销对整体性能影响较小，且其低延迟优势可能更明显。
+- <strong>TCP</strong>：TCP 的带宽利用率较高，适合带宽充足的环境。</p>
+<p><strong>带宽受限的网络</strong>：</p>
+<ul>
+<li><strong>KCP</strong>：KCP
+的额外带宽开销在带宽受限的网络中可能会显著影响整体传输效率。</li>
+<li><strong>TCP</strong>：TCP
+的较低带宽开销使其在带宽受限的环境中更有优势。</li>
+</ul>
+<h3 id="应用场景">3. 应用场景</h3>
+<p><strong>实时应用</strong>（如在线游戏、视频会议）： -
+<strong>KCP</strong>：KCP
+的低延迟和快速响应能力使其非常适合实时应用，在这些场景中，传输的及时性比带宽利用率更重要。
+- <strong>TCP</strong>：TCP 在这些场景中的表现可能不如
+KCP，特别是在高丢包率和高延迟的网络中。</p>
+<p><strong>非实时应用</strong>（如文件传输、网页浏览）： -
+<strong>KCP</strong>：KCP 在这些场景中可能不如 TCP
+高效，特别是在网络稳定且带宽有限的情况下。 - <strong>TCP</strong>：TCP
+的可靠性和高带宽利用率使其非常适合非实时应用。</p>
+<h3 id="实现和配置">4. 实现和配置</h3>
+<p><strong>实现复杂性</strong>： - <strong>KCP</strong>：实现和配置 KCP
+可能比 TCP 更复杂，需要根据具体应用和网络环境进行优化和调整。 -
+<strong>TCP</strong>：TCP
+是一个成熟的协议，系统和库的支持较好，配置和使用相对简单。</p>
+<h3 id="总结">总结</h3>
+<p>KCP 在某些特定环境和应用场景中确实比 TCP
+更快，尤其是高丢包率和高延迟的网络环境，以及对低延迟要求较高的实时应用。但在网络稳定、带宽有限或非实时应用场景中，TCP
+可能表现更好。因此，选择使用 KCP 还是 TCP
+应根据具体的网络条件和应用需求进行权衡。</p>
+<h1 id="前置准备">前置准备</h1>
+<p>笔者不想那么快就贴出大段大段的代码进行分析，这可能会使读者不知所云。为了更好地阐述
+KCP
+的底层原理，笔者的设想是先对原理部分进行概要总结，然后再带着这些结论去分析源码，进一步填充里面的边角细节。</p>
+<p>但是呢，为了更好地理解 KCP
+的原理，又不得不对涉及源码的一些重要设计，为了避免在原理分析阶段，对源码进行过多的涉及，笔者决定添加这单独的一章内容，对
+KCP 的“接口设计”、“报文段”、“KCP
+控制块”以及“队列和缓冲区”先进行简要概述，以辅助读者更好地理解后续的内容。</p>
+<h2 id="接口设计">接口设计</h2>
+<h2 id="报文段">报文段</h2>
+<h2 id="kcp-控制块-ikcpcb">KCP 控制块 ikcpcb</h2>
+<h2 id="队列和缓冲区">队列和缓冲区</h2>
+<h1 id="原理分析">原理分析</h1>
+<h1 id="源码分析">源码分析</h1>
+<h1 id="参考">参考</h1>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/skywind3000/kcp">KCP repo</a></li>
+<li><a target="_blank" rel="noopener" href="https://luyuhuang.tech/2020/12/09/kcp.html">详解 KCP
+协议的原理和实现</a></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" class="category-chain-item">计算机基础</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" class="category-chain-item">计算机网络</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/KCP/" class="print-no-link">#KCP</a>
+      
+        <a href="/tags/TCP/" class="print-no-link">#TCP</a>
+      
+        <a href="/tags/%E7%BD%91%E7%BB%9C/" class="print-no-link">#网络</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>KCP 源码分析与原理总结</div>
+      <div>https://hedon.top/2024/06/12/kcp/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Hedon Wang</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>2024-06-12</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>Licensed under</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/06/06/rust-action-sse/" title="Rust 实战丨SSE(Server-Sent Events)">
+                        <span class="hidden-mobile">Rust 实战丨SSE(Server-Sent Events)</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"hedon954/hedonspace","repo-id":"R_kgDOKt17sQ","category":"Q&A","category-id":"DIC_kwDOKt17sc4CbAt-","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":0,"input-position":"top","lang":"en"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>Table of Contents</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="leancloud-site-pv-container" style="display: none">
+        总访问量 
+        <span id="leancloud-site-pv"></span>
+         次
+      </span>
+    
+    
+      <span id="leancloud-site-uv-container" style="display: none">
+        总访客数 
+        <span id="leancloud-site-uv"></span>
+         人
+      </span>
+    
+    
+
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/leancloud.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>
