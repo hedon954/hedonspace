@@ -23,19 +23,11 @@
 <meta property="og:site_name" content="HedonSpace">
 <meta property="og:description" content="本文将带您全面深入地探索 Go 语言中结构体的各个方面，从基本定义、初始化和使用，到高级特性如结构体的组合、方法定义、内存对齐等。">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/go-struct.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310154903219.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310155353882.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310160412598.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310163126556.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310165025700.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310164933867.png">
 <meta property="article:published_time" content="2024-03-09T08:59:34.000Z">
 <meta property="article:modified_time" content="2024-11-12T19:14:55.775Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Go">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/go-struct.png">
   
   
   
@@ -274,7 +266,7 @@
         
         
         
-          52 mins
+          53 mins
         
       </span>
     
@@ -324,19 +316,36 @@
             
               <div class="markdown-body">
                 
-                <p>Go 语言，作为一种高效、静态类型的编程语言，自其问世以来便以其并发处理能力和简洁的语法结构广受开发者欢迎。虽然 Go 不是传统意义上的面向对象语言，它却以独特的方式支持面向对象编程的核心概念，其中结构体扮演了非常关键的角色。</p>
-<p>结构体在 Go 语言中是一种复合数据类型，允许我们将不同类型的数据聚合到一起。它不仅提高了数据管理的效率和逻辑清晰度，还是 Go 语言中实现面向对象编程思想如封装、组合等概念的基石。了解和掌握结构体的使用，对于深入理解 Go 语言的特性和编写高效、可维护的 Go 代码至关重要。</p>
-<p>本文将带您全面深入地探索 Go 语言中结构体的各个方面，从基本定义、初始化和使用，到高级特性如结构体的组合、方法定义、内存对齐等，每一个细节都将一一展开。无论您是 Go 语言的新手，还是有一定经验的开发者，相信本文都能为您提供有价值的见解和帮助。让我们一起探索 Go 结构体的奥秘，揭开其背后的原理，优化我们的代码结构，提升编程效率。</p>
-<h1>版本声明</h1>
+                <p>Go
+语言，作为一种高效、静态类型的编程语言，自其问世以来便以其并发处理能力和简洁的语法结构广受开发者欢迎。虽然
+Go
+不是传统意义上的面向对象语言，它却以独特的方式支持面向对象编程的核心概念，其中结构体扮演了非常关键的角色。</p>
+<p>结构体在 Go
+语言中是一种复合数据类型，允许我们将不同类型的数据聚合到一起。它不仅提高了数据管理的效率和逻辑清晰度，还是
+Go
+语言中实现面向对象编程思想如封装、组合等概念的基石。了解和掌握结构体的使用，对于深入理解
+Go 语言的特性和编写高效、可维护的 Go 代码至关重要。</p>
+<p>本文将带您全面深入地探索 Go
+语言中结构体的各个方面，从基本定义、初始化和使用，到高级特性如结构体的组合、方法定义、内存对齐等，每一个细节都将一一展开。无论您是
+Go
+语言的新手，还是有一定经验的开发者，相信本文都能为您提供有价值的见解和帮助。让我们一起探索
+Go
+结构体的奥秘，揭开其背后的原理，优化我们的代码结构，提升编程效率。</p>
+<h1 id="版本声明">版本声明</h1>
 <ul>
 <li>Go 1.22.1</li>
-<li><a target="_blank" rel="noopener" href="http://gopkg.in/yaml.v3">gopkg.in/yaml.v3</a> v3.0.1</li>
+<li>gopkg.in/yaml.v3 v3.0.1</li>
 <li>os: m2max</li>
 </ul>
-<h1>全文概览</h1>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/go-struct.png" srcset="/img/loading.gif" lazyload alt="Go 语言结构体"></p>
-<h1>1. 结构体的基本使用</h1>
-<h2 id="1-1-定义结构体">1.1 定义结构体</h2>
+<h1 id="全文概览">全文概览</h1>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/go-struct.png" srcset="/img/loading.gif" lazyload
+alt="Go 语言结构体" />
+<figcaption aria-hidden="true">Go 语言结构体</figcaption>
+</figure>
+<h1 id="结构体的基本使用">1. 结构体的基本使用</h1>
+<h2 id="定义结构体">1.1 定义结构体</h2>
 <p>结构体类型的定义形式如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> T <span class="hljs-keyword">struct</span> &#123;<br>  Field T1,<br>  Field T2,<br>  ....<br>  FieldN Tn,<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>比如：</p>
@@ -347,15 +356,18 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Person <span class="hljs-keyword">struct</span> &#123;<br>	person  Person<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>这里会报错：不允许引用自身。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">./main.go:5:6: invalid recursive <span class="hljs-built_in">type</span>: Person refers to itself<br></code></pre></td></tr></table></figure>
-<p>这是因为 Go 语言在编译时需要知道每个类型的确切大小，以便正确地分配内存。但在这个定义中，因为 <code>Person</code> 包含自身，编译器无法确定 <code>Person</code> 的大小，因此会报错。</p>
+<p>这是因为 Go
+语言在编译时需要知道每个类型的确切大小，以便正确地分配内存。但在这个定义中，因为
+<code>Person</code> 包含自身，编译器无法确定 <code>Person</code>
+的大小，因此会报错。</p>
 <p>如果你需要在一个结构体中引用相同类型的数据，你应该使用指针。指针的大小是固定的，因此编译器可以确定结构体的大小。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Person <span class="hljs-keyword">struct</span> &#123;<br>  person *Person<br>&#125;<br></code></pre></td></tr></table></figure>
-<h2 id="1-2-初始化结构体">1.2 初始化结构体</h2>
+<h2 id="初始化结构体">1.2 初始化结构体</h2>
 <p>假设我们有以下结构体：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Person <span class="hljs-keyword">struct</span> &#123;<br>	Name      <span class="hljs-type">string</span><br>	Age       <span class="hljs-type">int</span><br>	ExtraInfo <span class="hljs-keyword">map</span>[<span class="hljs-type">string</span>]<span class="hljs-keyword">interface</span>&#123;&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>可以有以下几种初始化：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// 逐个字段赋值，顺序不重要，也可以只赋值部分字段</span><br>person1 := Person&#123;<br>  Age:       <span class="hljs-number">18</span>,<br>  Name:      <span class="hljs-string">&quot;hedon&quot;</span>,<br>  ExtraInfo: <span class="hljs-built_in">make</span>(<span class="hljs-keyword">map</span>[<span class="hljs-type">string</span>]<span class="hljs-keyword">interface</span>&#123;&#125;),<br>&#125;<br>fmt.Println(person1) <span class="hljs-comment">// &#123;hedon 18 map[]&#125;</span><br><br><span class="hljs-comment">// 可以不指定字段，严格按照顺序</span><br>person2 := Person&#123;<span class="hljs-string">&quot;hedon2&quot;</span>, <span class="hljs-number">19</span>, <span class="hljs-built_in">make</span>(<span class="hljs-keyword">map</span>[<span class="hljs-type">string</span>]<span class="hljs-keyword">interface</span>&#123;&#125;)&#125;<br>fmt.Println(person2) <span class="hljs-comment">// &#123;hedon2 19 map[]&#125;</span><br><br><span class="hljs-comment">// 默认初始化，则结构体中的每个字段都会被默认赋予其对应类型的“零值”</span><br><span class="hljs-keyword">var</span> person3 Person<br>fmt.Println(person3)                  <span class="hljs-comment">// &#123; 0 map[]&#125;</span><br>fmt.Println(person3.ExtraInfo == <span class="hljs-literal">nil</span>) <span class="hljs-comment">// true</span><br><br><span class="hljs-comment">// 也可以使用 new() 或 &amp; 来初始化并返回指针</span><br>person3 := <span class="hljs-built_in">new</span>(Person)<br>fmt.Println(person3)  <span class="hljs-comment">// &amp;&#123; 0 map[]&#125;</span><br></code></pre></td></tr></table></figure>
-<h2 id="1-3-空结构体">1.3 空结构体</h2>
+<h2 id="空结构体">1.3 空结构体</h2>
 <p>有一种特殊的结构体，它一个字段都没有，我们称之为“空结构体”：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Empty <span class="hljs-keyword">struct</span>&#123;&#125;<br></code></pre></td></tr></table></figure>
 <p>空结构体非常特殊，它不占据任何空间！你可以自己验证一下：</p>
@@ -364,23 +376,29 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Empty <span class="hljs-keyword">struct</span>&#123;&#125;<br><span class="hljs-keyword">type</span> Empty1 <span class="hljs-keyword">struct</span>&#123;&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	e := Empty&#123;&#125;<br>	e1 := Empty1&#123;&#125;<br>	fmt.Printf(<span class="hljs-string">&quot;the address of empty: %p\n&quot;</span>, &amp;e) <span class="hljs-comment">// the address of empty: 0x10460f520</span><br>	fmt.Printf(<span class="hljs-string">&quot;the address of empty1: %p\n&quot;</span>, &amp;e1)  <span class="hljs-comment">// the address of empty1: 0x10460f520</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>这是因为 Go 语言为所有大小为 0 的变量都指向了同一个值：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// base address for all 0-byte allocations</span><br><span class="hljs-keyword">var</span> zerobase <span class="hljs-type">uintptr</span><br></code></pre></td></tr></table></figure>
-<p>好处就是减少了内存的浪费。典型的用法就是我们可以使用 map 来实现 Set，这样就只花费了存储键的空间，而值不占用任何空间。</p>
+<p>好处就是减少了内存的浪费。典型的用法就是我们可以使用 map 来实现
+Set，这样就只花费了存储键的空间，而值不占用任何空间。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Set = <span class="hljs-keyword">map</span>[<span class="hljs-type">string</span>]<span class="hljs-keyword">struct</span>&#123;&#125;<br></code></pre></td></tr></table></figure>
-<h2 id="1-4-访问和修改结构体">1.4 访问和修改结构体</h2>
+<h2 id="访问和修改结构体">1.4 访问和修改结构体</h2>
 <ul>
-<li>结构体属性的可见性跟 Go 包的可见性规则一样：大写对包外可见，小写仅包内可见。</li>
+<li>结构体属性的可见性跟 Go
+包的可见性规则一样：大写对包外可见，小写仅包内可见。</li>
 <li>使用 <code>.</code> 访问和修改结构体中的属性。</li>
-<li>Go 语言中只有“<strong>值传递</strong>”，所以如果你要将结构体示例传入一个 func 进行修改，则需要传入其引用。</li>
+<li>Go
+语言中只有“<strong>值传递</strong>”，所以如果你要将结构体示例传入一个
+func 进行修改，则需要传入其引用。</li>
 </ul>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Person <span class="hljs-keyword">struct</span> &#123;<br>	Name <span class="hljs-type">string</span><br>	Age  <span class="hljs-type">int</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	p := Person&#123;Name: <span class="hljs-string">&quot;hedon&quot;</span>, Age: <span class="hljs-number">18</span>&#125;<br>	UpdatePersonName(p)<br>	fmt.Println(<span class="hljs-string">&quot;1:&quot;</span>, p)<br>	UpdatePersonNameWithRef(&amp;p)<br>	fmt.Println(<span class="hljs-string">&quot;2:&quot;</span>, p)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">UpdatePersonName</span><span class="hljs-params">(p Person)</span></span> &#123;<br>	p.Name = <span class="hljs-string">&quot;hedon-1&quot;</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">UpdatePersonNameWithRef</span><span class="hljs-params">(p *Person)</span></span> &#123;<br>	p.Name = <span class="hljs-string">&quot;hedon-2&quot;</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>输出：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">1: &#123;hedon 18&#125;<br>2: &#123;hedon-2 18&#125;<br></code></pre></td></tr></table></figure>
-<h1>2. 结构体的高级特性</h1>
-<h2 id="2-1-结构体组合">2.1 结构体组合</h2>
-<p>在 Go 语言中，倡导的是“组合优于继承”的哲学，即倡导使用组合而不是继承来实现代码的复用。该理念鼓励开发者通过组合和接口来构建灵活、可维护的代码，而不是依赖于更严格、更易出错的继承关系。这种方式促进了代码的解耦，增强了代码的灵活性和可重用性，同时也使得代码更加清晰和易于理解。</p>
-<p>在 Go 中，组合是通过将一个或多个类型（通常是结构体）嵌入到另一个结构体中来实现的。这使得嵌入的类型的方法被“提升”到包含它的结构体中，允许你调用这些方法就像它们是外部结构体的一部分一样。</p>
+<h1 id="结构体的高级特性">2. 结构体的高级特性</h1>
+<h2 id="结构体组合">2.1 结构体组合</h2>
+<p>在 Go
+语言中，倡导的是“组合优于继承”的哲学，即倡导使用组合而不是继承来实现代码的复用。该理念鼓励开发者通过组合和接口来构建灵活、可维护的代码，而不是依赖于更严格、更易出错的继承关系。这种方式促进了代码的解耦，增强了代码的灵活性和可重用性，同时也使得代码更加清晰和易于理解。</p>
+<p>在 Go
+中，组合是通过将一个或多个类型（通常是结构体）嵌入到另一个结构体中来实现的。这使得嵌入的类型的方法被“提升”到包含它的结构体中，允许你调用这些方法就像它们是外部结构体的一部分一样。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Engine <span class="hljs-keyword">struct</span> &#123;<br>    Power <span class="hljs-type">int</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(e *Engine)</span></span> Start() &#123;<br>    <span class="hljs-comment">// 启动引擎的逻辑</span><br>&#125;<br><br><span class="hljs-keyword">type</span> Car <span class="hljs-keyword">struct</span> &#123;<br>    Engine <span class="hljs-comment">// 通过组合的方式嵌入 Engine</span><br>&#125;<br><br><span class="hljs-comment">// 现在 Car 可以直接调用 Start 方法</span><br>car := Car&#123;Engine&#123;Power: <span class="hljs-number">100</span>&#125;&#125;<br>car.Start() <span class="hljs-comment">// 调用的是 Engine 的 Start 方法</span><br></code></pre></td></tr></table></figure>
-<h2 id="2-2-结构体的方法">2.2 结构体的方法</h2>
+<h2 id="结构体的方法">2.2 结构体的方法</h2>
 <p>假设我们定义了一个结构体 Person：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Person <span class="hljs-keyword">struct</span> &#123;<br>	Name <span class="hljs-type">string</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>在 Go 中，你可以为结构体的值或指针实现特定的方法：</p>
@@ -393,7 +411,12 @@
 <p>但是这里我想再补充两个小点。请先思考一下下面这两段代码是否可以编译通过？如果可以输出是什么？</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	p := Person&#123;Name: <span class="hljs-string">&quot;hedon&quot;</span>&#125;<br>	p.SetName(<span class="hljs-string">&quot;new_name&quot;</span>)<br>	fmt.Println(<span class="hljs-string">&quot;person name after set:&quot;</span>, p.Name)<br><br>	pt := reflect.TypeOf(p)<br>	fmt.Println(<span class="hljs-string">&quot;the number of person&#x27;s method: &quot;</span>, pt.NumMethod())<br><br>	p2 := &amp;Person&#123;&#125;<br>	pt = reflect.TypeOf(p2)<br>	fmt.Println(<span class="hljs-string">&quot;the number of &amp;person&#x27;s method: &quot;</span>, pt.NumMethod())<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(p *Person)</span></span> SetName(name <span class="hljs-type">string</span>) &#123;<br>	p.Name = name<br>&#125;<br></code></pre></td></tr></table></figure>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	p := Person&#123;Name: <span class="hljs-string">&quot;hedon&quot;</span>&#125;<br>	p.SetName(<span class="hljs-string">&quot;new_name&quot;</span>)<br>	fmt.Println(<span class="hljs-string">&quot;person name after set:&quot;</span>, p.Name)<br><br>	pt := reflect.TypeOf(p)<br>	fmt.Println(<span class="hljs-string">&quot;the number of person&#x27;s method: &quot;</span>, pt.NumMethod())<br><br>	p2 := &amp;Person&#123;&#125;<br>	pt = reflect.TypeOf(p2)<br>	fmt.Println(<span class="hljs-string">&quot;the number of &amp;person&#x27;s method: &quot;</span>, pt.NumMethod())<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(p Person)</span></span> SetName(name <span class="hljs-type">string</span>) &#123;<br>	p.Name = name<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>很明显这两段代码的唯一区别就是，第一段代码我们是为 <code>*Person</code> 实现了 <code>SetName</code> 方法，而第二段代码我们是为 <code>Person</code> 实现了 <code>SetName</code> 方法。两段代码我们都打印了调用 <code>SetName</code> 后 <code>p.name</code> 的值，以及利用方式分别获取 <code>Person</code> 和 <code>*Person</code> 实现的方法个数。</p>
+<p>很明显这两段代码的唯一区别就是，第一段代码我们是为
+<code>*Person</code> 实现了 <code>SetName</code>
+方法，而第二段代码我们是为 <code>Person</code> 实现了
+<code>SetName</code> 方法。两段代码我们都打印了调用 <code>SetName</code>
+后 <code>p.name</code> 的值，以及利用方式分别获取 <code>Person</code> 和
+<code>*Person</code> 实现的方法个数。</p>
 <p>第一段代码的输出如下：</p>
 <figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs tex">person name after set: new<span class="hljs-built_in">_</span>name<br>the number of person&#x27;s method:  0<br>the number of <span class="hljs-built_in">&amp;</span>person&#x27;s method:  1<br></code></pre></td></tr></table></figure>
 <p>第二段代码的输出如下：</p>
@@ -412,58 +435,99 @@
 <p>对于 ②，我们可以通过 Plan9 汇编代码一探究竟。</p>
 <p>我们为第一段代码执行以下命令：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">go build -gcflags -S main.go<br></code></pre></td></tr></table></figure>
-<p>在输出的最上面，可以看到只有 <code>main.(*Person).GetName</code>。</p>
+<p>在输出的最上面，可以看到只有
+<code>main.(*Person).GetName</code>。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"># command-line-arguments<br>main.main STEXT size=<span class="hljs-number">128</span> args=<span class="hljs-number">0x0</span> locals=<span class="hljs-number">0x48</span> funcid=<span class="hljs-number">0x0</span> align=<span class="hljs-number">0x0</span><br>        ...<br>main.(*Person).GetName STEXT size=<span class="hljs-number">16</span> args=<span class="hljs-number">0x8</span> locals=<span class="hljs-number">0x0</span> funcid=<span class="hljs-number">0x0</span> align=<span class="hljs-number">0x0</span> leaf<br>       ...<br></code></pre></td></tr></table></figure>
-<p>我们再来为第二段代码执行相同的命令。可以在输出的最上面，看到不仅有 <code>main.Person.GetName</code>，还可以发现编译器自动帮我们生成了 <code>main.(*Person).GetName</code>。</p>
+<p>我们再来为第二段代码执行相同的命令。可以在输出的最上面，看到不仅有
+<code>main.Person.GetName</code>，还可以发现编译器自动帮我们生成了
+<code>main.(*Person).GetName</code>。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># command-line-arguments</span><br>main.main STEXT size=480 args=0x0 locals=0xe8 funcid=0x0 align=0x0<br>	...<br>main.Person.SetName STEXT size=16 args=0x28 locals=0x0 funcid=0x0 align=0x0 leaf<br>   ...<br>main.(*Person).SetName STEXT dupok size=128 args=0x18 locals=0x8 funcid=0x16 align=0x0<br>	...<br></code></pre></td></tr></table></figure>
 <p>对于 ②，笔者其实有一个不太理解的地方，比如下面这段代码：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	p := &amp;Person&#123;Name: <span class="hljs-string">&quot;hedon&quot;</span>&#125;<br>	p.SetName(<span class="hljs-string">&quot;new_name&quot;</span>)<br>	fmt.Println(<span class="hljs-string">&quot;person name after set:&quot;</span>, p.Name) <span class="hljs-comment">// hedon</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(p Person)</span></span> SetName(name <span class="hljs-type">string</span>) &#123;<br>	p.Name = name<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>这里 <code>p</code> 是引用类型，下面实现的是 <code>Person.SetName</code>，按照我们上面的结论，编译器会自动帮我们实现 <code>(*Person).SetName</code>。按照这种思路，输出 <code>new_name</code> 也是解释得通的。因为既然我们声明的是一个引用类型，那么 <code>p</code> 完全可以去调用自动生成的 <code>(*Person).SetName</code>。但是最终的结果还是输出 <code>hedon</code>，所以这里编译器自动帮我们将 <code>p</code> 进行解引用，然后调用了 <code>Person.SetName</code>。</p>
+<p>这里 <code>p</code> 是引用类型，下面实现的是
+<code>Person.SetName</code>，按照我们上面的结论，编译器会自动帮我们实现
+<code>(*Person).SetName</code>。按照这种思路，输出 <code>new_name</code>
+也是解释得通的。因为既然我们声明的是一个引用类型，那么 <code>p</code>
+完全可以去调用自动生成的
+<code>(*Person).SetName</code>。但是最终的结果还是输出
+<code>hedon</code>，所以这里编译器自动帮我们将 <code>p</code>
+进行解引用，然后调用了 <code>Person.SetName</code>。</p>
 <p>这是比较困扰笔者的一个地方，欢迎评论区讨论~</p>
-<p>可能编译器还是更希望对于开发者来说“所见即所得”，既然开发者实现的是 <code>Person.SetName</code>，那么对于开发者来说，应该就是希望不影响原始结构体的值，所以编译器还是选择遵循这种“意愿”，不乱操作。</p>
-<h2 id="2-3-结构体比较">2.3 结构体比较</h2>
+<p>可能编译器还是更希望对于开发者来说“所见即所得”，既然开发者实现的是
+<code>Person.SetName</code>，那么对于开发者来说，应该就是希望不影响原始结构体的值，所以编译器还是选择遵循这种“意愿”，不乱操作。</p>
+<h2 id="结构体比较">2.3 结构体比较</h2>
 <p>Go 允许直接比较两个结构体实例，但有一定的限制：</p>
-<ol>
-<li><strong>可比较性</strong>：只有当结构体中的所有字段都是可比较的时，结构体才是可比较的。基本数据类型（如 int、string 等）是可比较的，但切片、映射、函数等类型不可比较。</li>
-<li><strong>相等性检测</strong>：当两个结构体的对应字段都相等时，这两个结构体被认为是相等的。可以使用 <code>==</code> 和 <code>!=</code> 操作符来进行比较。</li>
+<ol type="1">
+<li><strong>可比较性</strong>：只有当结构体中的所有字段都是可比较的时，结构体才是可比较的。基本数据类型（如
+int、string 等）是可比较的，但切片、映射、函数等类型不可比较。</li>
+<li><strong>相等性检测</strong>：当两个结构体的对应字段都相等时，这两个结构体被认为是相等的。可以使用
+<code>==</code> 和 <code>!=</code> 操作符来进行比较。</li>
 </ol>
-<p>下面这段示例，<code>p3==p4</code> 返回了 <code>true</code>，这符合我们上面总结的结论。<code>p1==p2</code> 返回了 <code>false</code>，因为这其实不是结构体之间的比较了，这是指针的比较了。</p>
+<p>下面这段示例，<code>p3==p4</code> 返回了
+<code>true</code>，这符合我们上面总结的结论。<code>p1==p2</code> 返回了
+<code>false</code>，因为这其实不是结构体之间的比较了，这是指针的比较了。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs go">p1 := &amp;Person&#123;Name: <span class="hljs-string">&quot;hedon&quot;</span>, Age: <span class="hljs-number">18</span>&#125;<br>p2 := &amp;Person&#123;Name: <span class="hljs-string">&quot;hedon&quot;</span>, Age: <span class="hljs-number">18</span>&#125;<br>fmt.Println(p1 == p2) <span class="hljs-comment">// false</span><br>p3 := Person&#123;Name: <span class="hljs-string">&quot;hedon&quot;</span>, Age: <span class="hljs-number">18</span>&#125;<br>p4 := Person&#123;Name: <span class="hljs-string">&quot;hedon&quot;</span>, Age: <span class="hljs-number">18</span>&#125;<br>fmt.Println(p3 == p4) <span class="hljs-comment">// true</span><br></code></pre></td></tr></table></figure>
-<p>结构体的比较只支持 <code>==</code> 和 <code>!=</code>，不支持 <code>&lt;</code> 和 <code>&gt;</code> 等其他运算符的比较。而 Go 语言又不支持比较符重载。所以如果你要比较两个结构体的大小，那么只能自行封装类型 <code>compare</code> 的函数。在这我们排序结构体数组或切片的时候，经常使用到，比如我们希望按 <code>Age</code> 字段从小到大排序：</p>
+<p>结构体的比较只支持 <code>==</code> 和 <code>!=</code>，不支持
+<code>&lt;</code> 和 <code>&gt;</code> 等其他运算符的比较。而 Go
+语言又不支持比较符重载。所以如果你要比较两个结构体的大小，那么只能自行封装类型
+<code>compare</code>
+的函数。在这我们排序结构体数组或切片的时候，经常使用到，比如我们希望按
+<code>Age</code> 字段从小到大排序：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go">sort.Slice(persons, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(i, j <span class="hljs-type">int</span>)</span></span> <span class="hljs-type">bool</span> &#123;<br>  <span class="hljs-keyword">return</span> persons[i].Age &lt; persons[j].Age<br>&#125;)<br></code></pre></td></tr></table></figure>
-<h2 id="2-4-结构体复制">2.4 结构体复制</h2>
-<p>在 Go 中，结构体也是值类型，这意味着当它们被赋值给新的变量或作为函数参数传递时，实际上是进行了一次深拷贝：</p>
-<ol>
+<h2 id="结构体复制">2.4 结构体复制</h2>
+<p>在 Go
+中，结构体也是值类型，这意味着当它们被赋值给新的变量或作为函数参数传递时，实际上是进行了一次深拷贝：</p>
+<ol type="1">
 <li><strong>值复制</strong>：当将一个结构体赋值给一个新变量时，新变量会获得原始结构体的一个副本，它们在内存中占有不同的位置。</li>
 <li><strong>独立性</strong>：因为是深拷贝，所以原始结构体和副本结构体是完全独立的；修改其中一个不会影响另一个。</li>
 </ol>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Point <span class="hljs-keyword">struct</span> &#123;<br>    X, Y <span class="hljs-type">int</span><br>&#125;<br><br>original := Point&#123;<span class="hljs-number">1</span>, <span class="hljs-number">2</span>&#125;<br><span class="hljs-built_in">copy</span> := original<br><span class="hljs-built_in">copy</span>.X = <span class="hljs-number">3</span><br><br>fmt.Println(original) <span class="hljs-comment">// &#123;1, 2&#125;</span><br>fmt.Println(<span class="hljs-built_in">copy</span>)     <span class="hljs-comment">// &#123;3, 2&#125;</span><br></code></pre></td></tr></table></figure>
-<h1>3. 结构体与接口</h1>
-<p>在 Go 语言中，如果一个类型实现了接口中所有的方法，则这个类型就实现了该接口。关于接口部分的知识点，比如接口定义、多态和断言等，本文就不赘述了。</p>
+<h1 id="结构体与接口">3. 结构体与接口</h1>
+<p>在 Go
+语言中，如果一个类型实现了接口中所有的方法，则这个类型就实现了该接口。关于接口部分的知识点，比如接口定义、多态和断言等，本文就不赘述了。</p>
 <p>在这里我主要想从另外一个角度继续来验证前面我们总结的：<strong>为值类型（<code>Person</code>）实现的方法，既属于值类型也属于指针类型（<code>*Person</code>）的方法集</strong>。</p>
 <p>请看这段代码：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;fmt&quot;</span><br><br><span class="hljs-keyword">type</span> Person <span class="hljs-keyword">interface</span> &#123;<br>	GetName() <span class="hljs-type">string</span><br>&#125;<br><br><span class="hljs-keyword">type</span> Man <span class="hljs-keyword">struct</span> &#123;<br>	Name <span class="hljs-type">string</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(m Man)</span></span> GetName() <span class="hljs-type">string</span> &#123;<br>	<span class="hljs-keyword">return</span> m.Name<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">PrintPersonName</span><span class="hljs-params">(p Person)</span></span> &#123;<br>	fmt.Println(p.GetName())<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	m1 := Man&#123;Name: <span class="hljs-string">&quot;hedon1&quot;</span>&#125;<br>	PrintPersonName(m1)<br>	m2 := &amp;Man&#123;Name: <span class="hljs-string">&quot;hedon2&quot;</span>&#125;<br>	PrintPersonName(m2)<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>这段代码我们定义了 <code>Person</code> 接口，它只有一个方法 <code>GetName</code>。然后我们定义了一个结构体 <code>Man</code>，并为它的值类型实现了 <code>Person</code> 接口。通过我们上面的结论，这里 <code>Man</code> 和 <code>*Man</code> 其实都实现了 <code>Person</code> 接口，所以上面的代码是可以编译通过的。</p>
+<p>这段代码我们定义了 <code>Person</code> 接口，它只有一个方法
+<code>GetName</code>。然后我们定义了一个结构体
+<code>Man</code>，并为它的值类型实现了 <code>Person</code>
+接口。通过我们上面的结论，这里 <code>Man</code> 和 <code>*Man</code>
+其实都实现了 <code>Person</code>
+接口，所以上面的代码是可以编译通过的。</p>
 <p>如果改成为指针类型实现接口呢？你可以试一下~</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(m *Man)</span></span> GetName() <span class="hljs-type">string</span> &#123;<br>	<span class="hljs-keyword">return</span> m.Name<br>&#125;<br></code></pre></td></tr></table></figure>
-<h1>4. 泛型结构体</h1>
-<p>Go 语言在其 1.18 版本中引入了泛型支持，这包括了对泛型结构体的支持。通过使用泛型，你可以创建更灵活和可重用的数据结构和函数。</p>
+<h1 id="泛型结构体">4. 泛型结构体</h1>
+<p>Go 语言在其 1.18
+版本中引入了泛型支持，这包括了对泛型结构体的支持。通过使用泛型，你可以创建更灵活和可重用的数据结构和函数。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Container[T any] <span class="hljs-keyword">struct</span> &#123;<br>	items []T<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>可以看到 Go 语言用 <code>[]</code> 来实现泛型，而不像其他语言一样用 <code>&lt;&gt;</code>，真是喜欢搞特殊啊 🤡，又丑又容易跟 map 和 slice 混淆。</p>
-<h1>5. 结构体的标签（Tag）</h1>
-<p>在结构体字段后面，我们可以用 <strong>``</strong> 来指定标签，这允许我们对结构体定制化一些常用操作，最经典的就是序列化与反序列化。</p>
-<h2 id="5-1-序列化与反序列化">5.1 序列化与反序列化</h2>
-<p>对于常见的数据结构，如 <code>json</code>、<code>yaml</code>、<code>xml</code> 或 <code>toml</code>，我们都可以通过在结构体中指定标签，然后使用对应解析库进行序列化和反序列化。比如：</p>
+<p>可以看到 Go 语言用 <code>[]</code> 来实现泛型，而不像其他语言一样用
+<code>&lt;&gt;</code>，真是喜欢搞特殊啊 🤡，又丑又容易跟 map 和 slice
+混淆。</p>
+<h1 id="结构体的标签tag">5. 结构体的标签（Tag）</h1>
+<p>在结构体字段后面，我们可以用 <strong>``</strong>
+来指定标签，这允许我们对结构体定制化一些常用操作，最经典的就是序列化与反序列化。</p>
+<h2 id="序列化与反序列化">5.1 序列化与反序列化</h2>
+<p>对于常见的数据结构，如
+<code>json</code>、<code>yaml</code>、<code>xml</code> 或
+<code>toml</code>，我们都可以通过在结构体中指定标签，然后使用对应解析库进行序列化和反序列化。比如：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;encoding/json&quot;</span><br>	<span class="hljs-string">&quot;fmt&quot;</span><br>)<br><br><span class="hljs-keyword">type</span> Person <span class="hljs-keyword">struct</span> &#123;<br>	Name <span class="hljs-type">string</span> <span class="hljs-string">`json:&quot;name&quot;`</span><br>	Age  <span class="hljs-type">int</span>    <span class="hljs-string">`json:&quot;age&quot;`</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	p := Person&#123;Name: <span class="hljs-string">&quot;hedon&quot;</span>, Age: <span class="hljs-number">18</span>&#125;<br>	bs, _ := json.Marshal(p) <span class="hljs-comment">// 序列化</span><br>	fmt.Println(<span class="hljs-type">string</span>(bs))  <span class="hljs-comment">// &#123;&quot;name&quot;:&quot;hedon&quot;,&quot;age&quot;:18&#125;</span><br>	newP := Person&#123;&#125;<br>	_ = json.Unmarshal(bs, &amp;newP) <span class="hljs-comment">// 反序列化</span><br>	fmt.Println(newP)             <span class="hljs-comment">// &#123;hedon 18&#125;</span><br>&#125;<br></code></pre></td></tr></table></figure>
-<p>在笔者的实践过程中，在结构体组合的场景下，不同数据格式的解析会有一些小差别，这在实战过程中你需要重点关注和验证。比如 <code>json</code> 和 <code>yaml</code> 就会有一些不同。</p>
-<p>比如说我这里定义了下面 2 个结构体，其中 <code>Person</code> 组合了 <code>School</code>：</p>
+<p>在笔者的实践过程中，在结构体组合的场景下，不同数据格式的解析会有一些小差别，这在实战过程中你需要重点关注和验证。比如
+<code>json</code> 和 <code>yaml</code> 就会有一些不同。</p>
+<p>比如说我这里定义了下面 2 个结构体，其中 <code>Person</code> 组合了
+<code>School</code>：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Person <span class="hljs-keyword">struct</span> &#123;<br>	Name <span class="hljs-type">string</span> <span class="hljs-string">`json:&quot;name&quot; yaml:&quot;name&quot;`</span><br>	Age  <span class="hljs-type">int</span>    <span class="hljs-string">`json:&quot;age&quot; yaml:&quot;age&quot;`</span><br>	School<br>&#125;<br><br><span class="hljs-keyword">type</span> School <span class="hljs-keyword">struct</span> &#123;<br>	SchoolName    <span class="hljs-type">string</span> <span class="hljs-string">`json:&quot;school_name&quot; yaml:&quot;school_name&quot;`</span><br>	SchoolAddress <span class="hljs-type">string</span> <span class="hljs-string">`json:&quot;school_address&quot; json:&quot;school_address&quot;`</span><br>&#125;<br></code></pre></td></tr></table></figure>
-<p>它们都加上了 <code>json</code> 和 <code>yaml</code> 标签，对于 <code>json</code> 类型，你可以用标准库的 <code>encoding/json</code> 来进行序列化和反序列化，而 <code>yaml</code> 你可以使用第三方库：<a target="_blank" rel="noopener" href="https://github.com/go-yaml/yaml">go-yaml</a>。</p>
+<p>它们都加上了 <code>json</code> 和 <code>yaml</code> 标签，对于
+<code>json</code> 类型，你可以用标准库的 <code>encoding/json</code>
+来进行序列化和反序列化，而 <code>yaml</code> 你可以使用第三方库：<a
+target="_blank" rel="noopener" href="https://github.com/go-yaml/yaml">go-yaml</a>。</p>
 <p>先来看系列化结果：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	p := Person&#123;Name: <span class="hljs-string">&quot;hedon&quot;</span>, Age: <span class="hljs-number">18</span>, School: School&#123;SchoolName: <span class="hljs-string">&quot;nb_school&quot;</span>, SchoolAddress: <span class="hljs-string">&quot;a_good_school_place&quot;</span>&#125;&#125;<br>	bs, _ := json.Marshal(p)<br>	fmt.Println(<span class="hljs-string">&quot;json:\n&quot;</span>, <span class="hljs-type">string</span>(bs))<br>	bs, _ = yaml.Marshal(p)<br>	fmt.Println(<span class="hljs-string">&quot;yaml:\n&quot;</span>, <span class="hljs-type">string</span>(bs))<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>输出如下：</p>
 <figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs tex">json:<br> &#123;&quot;name&quot;:&quot;hedon&quot;,&quot;age&quot;:18,&quot;school<span class="hljs-built_in">_</span>name&quot;:&quot;nb<span class="hljs-built_in">_</span>school&quot;,&quot;school<span class="hljs-built_in">_</span>address&quot;:&quot;a<span class="hljs-built_in">_</span>good<span class="hljs-built_in">_</span>school<span class="hljs-built_in">_</span>place&quot;&#125;<br>yaml:<br> name: hedon<br> age: 18<br> school:<br>    school<span class="hljs-built_in">_</span>name: nb<span class="hljs-built_in">_</span>school<br>    school<span class="hljs-built_in">_</span>address: a<span class="hljs-built_in">_</span>good<span class="hljs-built_in">_</span>school<span class="hljs-built_in">_</span>place<br></code></pre></td></tr></table></figure>
-<p>通过观察你可以发现哈，在 <code>json</code> 中，组合的时候（没有给 School 加标签）直接将 <code>School</code> 平铺在 <code>Person</code> 中，所以在序列化的结果中，找不到 <code>&quot;school&quot;: &#123;&#125;</code>。而在 <code>yaml</code> 中，并不是直接平铺的。</p>
+<p>通过观察你可以发现哈，在 <code>json</code> 中，组合的时候（没有给
+School 加标签）直接将 <code>School</code> 平铺在 <code>Person</code>
+中，所以在序列化的结果中，找不到 <code>"school": &#123;&#125;</code>。而在
+<code>yaml</code> 中，并不是直接平铺的。</p>
 <p>这个区别在你解析配置文件的时候尤其重要，如果不注意，那么可能会导致配置解析失败。</p>
 <p>我准备了 4 个配置文件，分别是：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs json"><span class="hljs-comment">// person1.json</span><br><span class="hljs-punctuation">&#123;</span><br>  <span class="hljs-attr">&quot;name&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;hedon_json&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;age&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">18</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;school&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">&#123;</span><br>    <span class="hljs-attr">&quot;school_name&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;nb_json_school&quot;</span><span class="hljs-punctuation">,</span><br>    <span class="hljs-attr">&quot;school_address&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;a_good_place_in_json&quot;</span><br>  <span class="hljs-punctuation">&#125;</span><br><span class="hljs-punctuation">&#125;</span><br></code></pre></td></tr></table></figure>
@@ -474,119 +538,180 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	filenames := []<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;person1.json&quot;</span>, <span class="hljs-string">&quot;person1.yaml&quot;</span>, <span class="hljs-string">&quot;person2.json&quot;</span>, <span class="hljs-string">&quot;person2.yaml&quot;</span>&#125;<br>	<span class="hljs-keyword">for</span> i, fn := <span class="hljs-keyword">range</span> filenames &#123;<br>		bs := readFileIntoBytes(fn)<br>		p := Person&#123;&#125;<br>		<span class="hljs-keyword">if</span> i%<span class="hljs-number">2</span> == <span class="hljs-number">0</span> &#123;<br>			_ = json.Unmarshal(bs, &amp;p)<br>		&#125; <span class="hljs-keyword">else</span> &#123;<br>			_ = yaml.Unmarshal(bs, &amp;p)<br>		&#125;<br>		fmt.Printf(<span class="hljs-string">&quot;%s -&gt; %v\n&quot;</span>, fn, p)<br>	&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">readFileIntoBytes</span><span class="hljs-params">(filename <span class="hljs-type">string</span>)</span></span> []<span class="hljs-type">byte</span> &#123;<br>	f, err := os.Open(filename)<br>	<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>		<span class="hljs-built_in">panic</span>(err)<br>	&#125;<br>	bs, _ := io.ReadAll(f)<br>	<span class="hljs-keyword">return</span> bs<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>输出：</p>
 <figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs tex">person1.json -&gt; &#123;hedon<span class="hljs-built_in">_</span>json 18 &#123; &#125;&#125;<br>person1.yaml -&gt; &#123;hedon<span class="hljs-built_in">_</span>yaml 18 &#123;nb<span class="hljs-built_in">_</span>yaml<span class="hljs-built_in">_</span>school a<span class="hljs-built_in">_</span>good<span class="hljs-built_in">_</span>price<span class="hljs-built_in">_</span>in<span class="hljs-built_in">_</span>yaml&#125;&#125;<br>person2.json -&gt; &#123;hedon<span class="hljs-built_in">_</span>json 18 &#123;nb<span class="hljs-built_in">_</span>json<span class="hljs-built_in">_</span>school a<span class="hljs-built_in">_</span>good<span class="hljs-built_in">_</span>place<span class="hljs-built_in">_</span>in<span class="hljs-built_in">_</span>json&#125;&#125;<br>person2.yaml -&gt; &#123;hedon<span class="hljs-built_in">_</span>yaml 18 &#123; &#125;&#125;<br></code></pre></td></tr></table></figure>
-<p>如果给 <code>School</code> 字段加上 <code>json tag</code> 的话，结果又是不同：</p>
+<p>如果给 <code>School</code> 字段加上 <code>json tag</code>
+的话，结果又是不同：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Person <span class="hljs-keyword">struct</span> &#123;<br>	Name   <span class="hljs-type">string</span> <span class="hljs-string">`json:&quot;name&quot; yaml:&quot;name&quot;`</span><br>	Age    <span class="hljs-type">int</span>    <span class="hljs-string">`json:&quot;age&quot; yaml:&quot;age&quot;`</span><br>	School <span class="hljs-string">`json:&quot;school&quot; yaml:&quot;school&quot;`</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>输出：</p>
 <figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs tex">person1.json -&gt; &#123;hedon<span class="hljs-built_in">_</span>json 18 &#123;nb<span class="hljs-built_in">_</span>json<span class="hljs-built_in">_</span>school a<span class="hljs-built_in">_</span>good<span class="hljs-built_in">_</span>place<span class="hljs-built_in">_</span>in<span class="hljs-built_in">_</span>json&#125;&#125;<br>person1.yaml -&gt; &#123;hedon<span class="hljs-built_in">_</span>yaml 18 &#123;nb<span class="hljs-built_in">_</span>yaml<span class="hljs-built_in">_</span>school a<span class="hljs-built_in">_</span>good<span class="hljs-built_in">_</span>price<span class="hljs-built_in">_</span>in<span class="hljs-built_in">_</span>yaml&#125;&#125;<br>person2.json -&gt; &#123;hedon<span class="hljs-built_in">_</span>json 18 &#123; &#125;&#125;<br>person2.yaml -&gt; &#123;hedon<span class="hljs-built_in">_</span>yaml 18 &#123; &#125;&#125;<br></code></pre></td></tr></table></figure>
 <p>可以看到受影响的只有 <code>json</code>。</p>
-<p>到这里我们可以总结：<strong>在组合场景下，如果不明确指定 <code>tag</code>，<code>yaml</code> 解析期望字段是嵌套的，而 <code>json</code> 解析期望字段是平铺的</strong>。</p>
-<h2 id="5-2-自定义-Tag">5.2 自定义 Tag</h2>
-<p>在 Go 中，你可以为结构体字段定义任意的标签。这些标签在编译时会被存储，并且可以在运行时通过反射（reflection）来访问。</p>
-<p>假设我们定义一个名为 <code>check</code> 的标签，它用于我们对结构体字段的检查，假设我们这个标签支持以下功能：</p>
+<p>到这里我们可以总结：<strong>在组合场景下，如果不明确指定
+<code>tag</code>，<code>yaml</code> 解析期望字段是嵌套的，而
+<code>json</code> 解析期望字段是平铺的</strong>。</p>
+<h2 id="自定义-tag">5.2 自定义 Tag</h2>
+<p>在 Go
+中，你可以为结构体字段定义任意的标签。这些标签在编译时会被存储，并且可以在运行时通过反射（reflection）来访问。</p>
+<p>假设我们定义一个名为 <code>check</code>
+的标签，它用于我们对结构体字段的检查，假设我们这个标签支持以下功能：</p>
 <ul>
-<li><code>check:&quot;strnoempty&quot;</code>: 字符串不可以为空。</li>
+<li><code>check:"strnoempty"</code>: 字符串不可以为空。</li>
 </ul>
-<p>假如加入 <code>check</code> 标签的 <code>Person</code> 结构体如下：</p>
+<p>假如加入 <code>check</code> 标签的 <code>Person</code>
+结构体如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Person <span class="hljs-keyword">struct</span> &#123;<br>	Name <span class="hljs-type">string</span> <span class="hljs-string">`check:&quot;strnoempty&quot;`</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>我们来为 <code>check</code> 实现解析函数：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">CheckPerson</span><span class="hljs-params">(p Person)</span></span> <span class="hljs-type">error</span> &#123;<br>	pt := reflect.TypeOf(p)<br>	pv := reflect.ValueOf(p)<br>	<span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; pt.NumField(); i++ &#123;<br>		field := pt.Field(i)<br>		tagValue := field.Tag.Get(<span class="hljs-string">&quot;check&quot;</span>)<br>		<span class="hljs-keyword">if</span> tagValue == <span class="hljs-string">&quot;&quot;</span> &#123;<br>			<span class="hljs-keyword">continue</span><br>		&#125;<br>		<span class="hljs-keyword">if</span> field.Type.Kind() == reflect.String &amp;&amp; tagValue == <span class="hljs-string">&quot;strnoempty&quot;</span> &#123;<br>			<span class="hljs-keyword">if</span> err := checkStrNoEmpty(field.Name, pv.Field(i).Interface()); err != <span class="hljs-literal">nil</span> &#123;<br>				<span class="hljs-keyword">return</span> err<br>			&#125;<br>		&#125;<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">checkStrNoEmpty</span><span class="hljs-params">(fieldName <span class="hljs-type">string</span>, v any)</span></span> <span class="hljs-type">error</span> &#123;<br>	s, ok := v.(<span class="hljs-type">string</span>)<br>	<span class="hljs-keyword">if</span> !ok &#123;<br>		<span class="hljs-keyword">return</span> fmt.Errorf(<span class="hljs-string">&quot;%v is not string&quot;</span>, v)<br>	&#125;<br>	<span class="hljs-keyword">if</span> s == <span class="hljs-string">&quot;&quot;</span> &#123;<br>		<span class="hljs-keyword">return</span> fmt.Errorf(<span class="hljs-string">&quot;[check] %s should not be empty&quot;</span>, fieldName)<br>	&#125;<br>	<span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>测试如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	p1 := Person&#123;&#125;<br>	p2 := Person&#123;Name: <span class="hljs-string">&quot;hedon&quot;</span>&#125;<br>	fmt.Println(CheckPerson(p1)) <span class="hljs-comment">// [check] Name should not be empty</span><br>	fmt.Println(CheckPerson(p2)) <span class="hljs-comment">// &lt;nil&gt;</span><br>&#125;<br></code></pre></td></tr></table></figure>
-<h1>6. 结构体内存对齐</h1>
+<h1 id="结构体内存对齐">6. 结构体内存对齐</h1>
 <p>在本小节中，我们将探讨 Go 语言结构体的内存结构和对齐策略。</p>
-<h2 id="6-1-问题引出">6.1 问题引出</h2>
+<h2 id="问题引出">6.1 问题引出</h2>
 <p>思考下面这段代码的输出：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> S1 <span class="hljs-keyword">struct</span> &#123;<br>	num2 <span class="hljs-type">int8</span><br>	num1 <span class="hljs-type">int16</span><br>	flag <span class="hljs-type">bool</span><br>&#125;<br><br><span class="hljs-keyword">type</span> S2 <span class="hljs-keyword">struct</span> &#123;<br>	num1 <span class="hljs-type">int8</span><br>	flag <span class="hljs-type">bool</span><br>	num2 <span class="hljs-type">int16</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	fmt.Println(unsafe.Sizeof(S1&#123;&#125;))<br>	fmt.Println(unsafe.Sizeof(S2&#123;&#125;))<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>为什么仅是字段顺序不同，<code>S1&#123;&#125;</code> 和 <code>S2&#123;&#125;</code> 的大小就不一样了？</p>
-<p>我们可以写个简单的程序来输出 <code>S1</code> 和 <code>S2</code> 的内存结构：</p>
+<p>为什么仅是字段顺序不同，<code>S1&#123;&#125;</code> 和 <code>S2&#123;&#125;</code>
+的大小就不一样了？</p>
+<p>我们可以写个简单的程序来输出 <code>S1</code> 和 <code>S2</code>
+的内存结构：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	s1 := S1&#123;&#125;<br>	s2 := S2&#123;&#125;<br>	fmt.Print(<span class="hljs-string">&quot;s1: &quot;</span>)<br>	printMemory(s1)<br>	fmt.Print(<span class="hljs-string">&quot;s2: &quot;</span>)<br>	printMemory(s2)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">printMemory</span><span class="hljs-params">(a any)</span></span> &#123;<br>	t := reflect.TypeOf(a)<br>	mem := <span class="hljs-built_in">make</span>([]<span class="hljs-type">int</span>, <span class="hljs-type">int</span>(t.Size()))<br>	<span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; t.NumField(); i++ &#123;<br>		field := t.Field(i)<br>		offset := <span class="hljs-type">int</span>(field.Offset)<br>		size := <span class="hljs-type">int</span>(field.Type.Size())<br>		<span class="hljs-keyword">for</span> j := <span class="hljs-number">0</span>; j &lt; size; j++ &#123;<br>			mem[j+offset] = i + <span class="hljs-number">1</span><br>		&#125;<br>	&#125;<br>	fmt.Println(mem)<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>输出：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs go">s1: [<span class="hljs-number">1</span> <span class="hljs-number">0</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">3</span> <span class="hljs-number">0</span>]<br>s2: [<span class="hljs-number">1</span> <span class="hljs-number">2</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span>]<br></code></pre></td></tr></table></figure>
-<p>其中 <code>1</code>、<code>2</code>、<code>3</code> 分别替代结构体中的第 1/2/3 个字段所占用的内存。这里可以看到 <code>s1</code> 的长度是 6 字节，而 <code>s2</code> 是 4 字节。这里 <code>s1</code> 比 <code>s2</code> 多出的 2 个字节就是这两个填充的 <code>0</code>。这而 2 个字节的填充，就是为了<strong>内存对齐</strong>。</p>
-<h2 id="6-2-内存对齐">6.2 内存对齐</h2>
+<p>其中 <code>1</code>、<code>2</code>、<code>3</code>
+分别替代结构体中的第 1/2/3 个字段所占用的内存。这里可以看到
+<code>s1</code> 的长度是 6 字节，而 <code>s2</code> 是 4 字节。这里
+<code>s1</code> 比 <code>s2</code> 多出的 2 个字节就是这两个填充的
+<code>0</code>。这而 2
+个字节的填充，就是为了<strong>内存对齐</strong>。</p>
+<h2 id="内存对齐">6.2 内存对齐</h2>
 <p>如上分析，<code>s1</code> 的内存结构如下：</p>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310154903219.png" srcset="/img/loading.gif" lazyload alt="s1 内存结构"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310154903219.png" srcset="/img/loading.gif" lazyload
+alt="s1 内存结构" />
+<figcaption aria-hidden="true">s1 内存结构</figcaption>
+</figure>
 <p>如果没有内存对齐呢？<code>s1</code> 的结构可能如下：</p>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310155353882.png" srcset="/img/loading.gif" lazyload alt="没有内存对齐的 s1 内存结构"></p>
-<p>如果是 16 位系统的话，那么没有内存对齐的情况下，要访问 <code>s1.num2</code> 字段，就需要跨过 2 个系统字长的内存，效率就低了。具体来说，内存对齐是计算机内存分配的一种优化方式，用于确保数据结构的存储按照特定的字节边界对齐。这种对齐是为了提高计算机处理数据的效率。</p>
-<h2 id="6-3-对齐系数">6.3 对齐系数</h2>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310155353882.png" srcset="/img/loading.gif" lazyload
+alt="没有内存对齐的 s1 内存结构" />
+<figcaption aria-hidden="true">没有内存对齐的 s1 内存结构</figcaption>
+</figure>
+<p>如果是 16 位系统的话，那么没有内存对齐的情况下，要访问
+<code>s1.num2</code> 字段，就需要跨过 2
+个系统字长的内存，效率就低了。具体来说，内存对齐是计算机内存分配的一种优化方式，用于确保数据结构的存储按照特定的字节边界对齐。这种对齐是为了提高计算机处理数据的效率。</p>
+<h2 id="对齐系数">6.3 对齐系数</h2>
 <ul>
 <li>对齐系数：变量的内存地址必须被对齐系数整除。</li>
 <li><code>unsafe.Alignof()</code>: 可以查看值在内存中的对齐系数。</li>
 </ul>
-<h2 id="6-4-基本类型对齐">6.4 基本类型对齐</h2>
+<h2 id="基本类型对齐">6.4 基本类型对齐</h2>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs go">fmt.Printf(<span class="hljs-string">&quot;bool size: %d, align: %d\n&quot;</span>, unsafe.Sizeof(<span class="hljs-type">bool</span>(<span class="hljs-literal">true</span>)), unsafe.Alignof(<span class="hljs-type">bool</span>(<span class="hljs-literal">true</span>)))<br>fmt.Printf(<span class="hljs-string">&quot;byte size: %d, align: %d\n&quot;</span>, unsafe.Sizeof(<span class="hljs-type">byte</span>(<span class="hljs-number">0</span>)), unsafe.Alignof(<span class="hljs-type">byte</span>(<span class="hljs-number">0</span>)))<br>fmt.Printf(<span class="hljs-string">&quot;int8 size: %d, align: %d\n&quot;</span>, unsafe.Sizeof(<span class="hljs-type">int8</span>(<span class="hljs-number">0</span>)), unsafe.Alignof(<span class="hljs-type">int8</span>(<span class="hljs-number">0</span>)))<br>fmt.Printf(<span class="hljs-string">&quot;int16 size: %d, align: %d\n&quot;</span>, unsafe.Sizeof(<span class="hljs-type">int16</span>(<span class="hljs-number">0</span>)), unsafe.Alignof(<span class="hljs-type">int16</span>(<span class="hljs-number">0</span>)))<br>fmt.Printf(<span class="hljs-string">&quot;int32 size: %d, align: %d\n&quot;</span>, unsafe.Sizeof(<span class="hljs-type">int32</span>(<span class="hljs-number">0</span>)), unsafe.Alignof(<span class="hljs-type">int32</span>(<span class="hljs-number">0</span>)))<br>fmt.Printf(<span class="hljs-string">&quot;int64 size: %d, align: %d\n&quot;</span>, unsafe.Sizeof(<span class="hljs-type">int64</span>(<span class="hljs-number">0</span>)), unsafe.Alignof(<span class="hljs-type">int64</span>(<span class="hljs-number">0</span>)))<br></code></pre></td></tr></table></figure>
 <p>输出：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-type">bool</span> size: <span class="hljs-number">1</span>, align: <span class="hljs-number">1</span><br><span class="hljs-type">byte</span> size: <span class="hljs-number">1</span>, align: <span class="hljs-number">1</span><br><span class="hljs-type">int8</span> size: <span class="hljs-number">1</span>, align: <span class="hljs-number">1</span><br><span class="hljs-type">int16</span> size: <span class="hljs-number">2</span>, align: <span class="hljs-number">2</span><br><span class="hljs-type">int32</span> size: <span class="hljs-number">4</span>, align: <span class="hljs-number">4</span><br><span class="hljs-type">int64</span> size: <span class="hljs-number">8</span>, align: <span class="hljs-number">8</span><br></code></pre></td></tr></table></figure>
 <p>结论：基本类型的对齐系数跟它的长度一致。</p>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310160412598.png" srcset="/img/loading.gif" lazyload alt="基本类型内存对齐"></p>
-<h2 id="6-5-结构体内部对齐">6.5 结构体内部对齐</h2>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310160412598.png" srcset="/img/loading.gif" lazyload
+alt="基本类型内存对齐" />
+<figcaption aria-hidden="true">基本类型内存对齐</figcaption>
+</figure>
+<h2 id="结构体内部对齐">6.5 结构体内部对齐</h2>
 <p>结构体内存对齐分为内部对齐和结构体之间对齐。</p>
 <p>我们先来看结构体内部对齐：</p>
 <ul>
 <li>指的是结构体内部成员的相对位置（偏移量）；</li>
-<li>每个成员的偏移量是 <strong>自身大小</strong> 和 <strong>对齐系数</strong> 的较小值的倍数</li>
+<li>每个成员的偏移量是 <strong>自身大小</strong> 和
+<strong>对齐系数</strong> 的较小值的倍数</li>
 </ul>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Demo <span class="hljs-keyword">struct</span> &#123;<br>  a <span class="hljs-type">bool</span><br>  b <span class="hljs-type">string</span><br>  c <span class="hljs-type">int16</span>	<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>假如我们定义了上面的结构体 <code>Demo</code>，如果在 64 位系统上（字长为 8 字节）通过上面的规则，可以判断出：（单位为字节）</p>
+<p>假如我们定义了上面的结构体 <code>Demo</code>，如果在 64
+位系统上（字长为 8 字节）通过上面的规则，可以判断出：（单位为字节）</p>
 <ul>
 <li>a: size=1, align=1</li>
 <li>b: size=16, align=8</li>
 <li>c: size=2, align=2</li>
 </ul>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310163126556.png" srcset="/img/loading.gif" lazyload alt="Demo 内存结构"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310163126556.png" srcset="/img/loading.gif" lazyload
+alt="Demo 内存结构" />
+<figcaption aria-hidden="true">Demo 内存结构</figcaption>
+</figure>
 <p>当然我们也可以通过程序输出来验证：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Demo <span class="hljs-keyword">struct</span> &#123;<br>	a <span class="hljs-type">bool</span>   <span class="hljs-comment">// size=1, align=1</span><br>	b <span class="hljs-type">string</span> <span class="hljs-comment">// size=16, align=8</span><br>	c <span class="hljs-type">int16</span>  <span class="hljs-comment">// size=2, align=2</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	d := Demo&#123;&#125;<br>	fmt.Printf(<span class="hljs-string">&quot;a: size=%d, align=%d\n&quot;</span>, unsafe.Sizeof(d.a), unsafe.Alignof(d.a))<br>	fmt.Printf(<span class="hljs-string">&quot;b: size=%d, align=%d\n&quot;</span>, unsafe.Sizeof(d.b), unsafe.Alignof(d.b))<br>	fmt.Printf(<span class="hljs-string">&quot;c: size=%d, align=%d\n&quot;</span>, unsafe.Sizeof(d.c), unsafe.Alignof(d.c))<br>	printMemory(d)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">printMemory</span><span class="hljs-params">(a any)</span></span> &#123;<br>	t := reflect.TypeOf(a)<br>	mem := <span class="hljs-built_in">make</span>([]<span class="hljs-type">int</span>, <span class="hljs-type">int</span>(t.Size()))<br>	<span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; t.NumField(); i++ &#123;<br>		field := t.Field(i)<br>		offset := <span class="hljs-type">int</span>(field.Offset)<br>		size := <span class="hljs-type">int</span>(field.Type.Size())<br>		<span class="hljs-keyword">for</span> j := <span class="hljs-number">0</span>; j &lt; size; j++ &#123;<br>			mem[j+offset] = i + <span class="hljs-number">1</span><br>		&#125;<br>	&#125;<br>	fmt.Println(mem)<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>输出：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs go">a: size=<span class="hljs-number">1</span>, align=<span class="hljs-number">1</span><br>b: size=<span class="hljs-number">16</span>, align=<span class="hljs-number">8</span><br>c: size=<span class="hljs-number">2</span>, align=<span class="hljs-number">2</span><br>[<span class="hljs-number">1</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span>]<br></code></pre></td></tr></table></figure>
-<h2 id="6-6-结构体长度填充">6.6 结构体长度填充</h2>
+<h2 id="结构体长度填充">6.6 结构体长度填充</h2>
 <p>上面 Demo 结构体最后还填了 6 个字节的 0，这就是结构体长度填充：</p>
 <ul>
 <li>结构体通过填充长度，来对齐系统字长。</li>
-<li>结构体长度是 <strong>最大成员长度</strong> 和 <strong>系统字长</strong> 较小值的整数倍。</li>
+<li>结构体长度是 <strong>最大成员长度</strong> 和
+<strong>系统字长</strong> 较小值的整数倍。</li>
 </ul>
-<p>我的系统环境是 m2max，系统字长是 8 字节，Demo 最大成员长度是 <code>b string</code>，即 16 个字节，所以 <code>Demo</code> 的长度应该是 <code>8</code> 的倍数，所以最后填充了 6 个字节的 0。</p>
-<h2 id="6-7-结构体之间对齐">6.7 结构体之间对齐</h2>
+<p>我的系统环境是 m2max，系统字长是 8 字节，Demo 最大成员长度是
+<code>b string</code>，即 16 个字节，所以 <code>Demo</code> 的长度应该是
+<code>8</code> 的倍数，所以最后填充了 6 个字节的 0。</p>
+<h2 id="结构体之间对齐">6.7 结构体之间对齐</h2>
 <ul>
 <li>结构体之间对齐，是为了确定结构体的第一个成员变量的内存地址，以让后面的成员地址都合法。</li>
 <li>结构体的对齐系数是 <strong>其成员的最大对齐系数</strong>；</li>
 </ul>
-<h2 id="6-8-空结构体对齐">6.8 空结构体对齐</h2>
-<p>前面我们专门讨论了空结构体 <code>struct&#123;&#125;</code>，它们的内存地址统一指向 <code>zerobase</code>，而且内存长度为 0。这也导致了它的内存对齐规则，有一些不同。具体可以分为以下 4 个情况。</p>
-<h3 id="6-8-1-空结构体单独存在">6.8.1 空结构体单独存在</h3>
-<p>空结构体单独存在时，其内存地址为 <code>zerobase</code>，不额外分配内存。</p>
-<h3 id="6-8-2-空结构体在结构体最前">6.8.2 空结构体在结构体最前</h3>
-<p>空结构体是结构体第一个字段时，它的地址跟结构体本身及结构体第 2 个字段一样，不占据内存空间。</p>
+<h2 id="空结构体对齐">6.8 空结构体对齐</h2>
+<p>前面我们专门讨论了空结构体
+<code>struct&#123;&#125;</code>，它们的内存地址统一指向
+<code>zerobase</code>，而且内存长度为
+0。这也导致了它的内存对齐规则，有一些不同。具体可以分为以下 4
+个情况。</p>
+<h3 id="空结构体单独存在">6.8.1 空结构体单独存在</h3>
+<p>空结构体单独存在时，其内存地址为
+<code>zerobase</code>，不额外分配内存。</p>
+<h3 id="空结构体在结构体最前">6.8.2 空结构体在结构体最前</h3>
+<p>空结构体是结构体第一个字段时，它的地址跟结构体本身及结构体第 2
+个字段一样，不占据内存空间。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> TestEmpty <span class="hljs-keyword">struct</span> &#123;<br>	empty <span class="hljs-keyword">struct</span>&#123;&#125;<br>	a     <span class="hljs-type">bool</span><br>	b     <span class="hljs-type">string</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	te := TestEmpty&#123;&#125;<br>	fmt.Printf(<span class="hljs-string">&quot;address of te: %p\n&quot;</span>, &amp;te)<br>	fmt.Printf(<span class="hljs-string">&quot;address of te.empty: %p\n&quot;</span>, &amp;(te.empty))<br>	fmt.Printf(<span class="hljs-string">&quot;address of te.a: %p\n&quot;</span>, &amp;(te.a))<br>	fmt.Printf(<span class="hljs-string">&quot;empty: size=%d, align=%d\n&quot;</span>, unsafe.Sizeof(te.empty), unsafe.Alignof(te.empty))<br>	fmt.Printf(<span class="hljs-string">&quot;a: size=%d, align=%d\n&quot;</span>, unsafe.Sizeof(te.a), unsafe.Alignof(te.a))<br>	fmt.Printf(<span class="hljs-string">&quot;b: size=%d, align=%d\n&quot;</span>, unsafe.Sizeof(te.b), unsafe.Alignof(te.b))<br>	printMemory(te)<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>输出：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go">address of te: <span class="hljs-number">0x140000ba000</span><br>address of te.empty: <span class="hljs-number">0x140000ba000</span><br>address of te.a: <span class="hljs-number">0x140000ba000</span><br>empty: size=<span class="hljs-number">0</span>, align=<span class="hljs-number">1</span><br>a: size=<span class="hljs-number">1</span>, align=<span class="hljs-number">1</span><br>b: size=<span class="hljs-number">16</span>, align=<span class="hljs-number">8</span><br>[<span class="hljs-number">2</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span>]<br></code></pre></td></tr></table></figure>
-<h3 id="6-8-3-空结构体在结构体中间">6.8.3 空结构体在结构体中间</h3>
+<h3 id="空结构体在结构体中间">6.8.3 空结构体在结构体中间</h3>
 <p>空结构体出现在结构体中时，地址跟随前一个变量。</p>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310165025700.png" srcset="/img/loading.gif" lazyload alt="空结构体在结构体中间内存对齐"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310165025700.png" srcset="/img/loading.gif" lazyload
+alt="空结构体在结构体中间内存对齐" />
+<figcaption aria-hidden="true">空结构体在结构体中间内存对齐</figcaption>
+</figure>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> TestEmpty <span class="hljs-keyword">struct</span> &#123;<br>	a     <span class="hljs-type">bool</span><br>	empty <span class="hljs-keyword">struct</span>&#123;&#125;<br>	b     <span class="hljs-type">string</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	te := TestEmpty&#123;&#125;<br>	fmt.Printf(<span class="hljs-string">&quot;address of te: %p\n&quot;</span>, &amp;te)<br>	fmt.Printf(<span class="hljs-string">&quot;address of te.a: %p\n&quot;</span>, &amp;(te.a))<br>	fmt.Printf(<span class="hljs-string">&quot;address of te.empty: %p\n&quot;</span>, &amp;(te.empty))<br>	fmt.Printf(<span class="hljs-string">&quot;a: size=%d, align=%d\n&quot;</span>, unsafe.Sizeof(te.a), unsafe.Alignof(te.a))<br>	fmt.Printf(<span class="hljs-string">&quot;empty: size=%d, align=%d\n&quot;</span>, unsafe.Sizeof(te.empty), unsafe.Alignof(te.empty))<br>	fmt.Printf(<span class="hljs-string">&quot;b: size=%d, align=%d\n&quot;</span>, unsafe.Sizeof(te.b), unsafe.Alignof(te.b))<br>	printMemory(te)<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>输出：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go">address of te: <span class="hljs-number">0x14000128000</span><br>address of te.a: <span class="hljs-number">0x14000128000</span><br>address of te.empty: <span class="hljs-number">0x14000128001</span><br>a: size=<span class="hljs-number">1</span>, align=<span class="hljs-number">1</span><br>empty: size=<span class="hljs-number">0</span>, align=<span class="hljs-number">1</span><br>b: size=<span class="hljs-number">16</span>, align=<span class="hljs-number">8</span><br>[<span class="hljs-number">1</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span> <span class="hljs-number">3</span>]<br></code></pre></td></tr></table></figure>
-<h3 id="6-8-4-空结构体在结构体最后">6.8.4 空结构体在结构体最后</h3>
+<h3 id="空结构体在结构体最后">6.8.4 空结构体在结构体最后</h3>
 <p>空结构体出现在结构体最后，如果开启了一个新的系统字长，则需要补零，防止与其他结构体混用地址。</p>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310164933867.png" srcset="/img/loading.gif" lazyload alt="空结构体在结构体最后内存对齐"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240310164933867.png" srcset="/img/loading.gif" lazyload
+alt="空结构体在结构体最后内存对齐" />
+<figcaption aria-hidden="true">空结构体在结构体最后内存对齐</figcaption>
+</figure>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> TestEmpty <span class="hljs-keyword">struct</span> &#123;<br>	a     <span class="hljs-type">bool</span><br>	b     <span class="hljs-type">string</span><br>	empty <span class="hljs-keyword">struct</span>&#123;&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	te := TestEmpty&#123;&#125;<br>	fmt.Printf(<span class="hljs-string">&quot;address of te: %p\n&quot;</span>, &amp;te)<br>	fmt.Printf(<span class="hljs-string">&quot;address of te.a: %p\n&quot;</span>, &amp;(te.a))<br>	fmt.Printf(<span class="hljs-string">&quot;address of te.empty: %p\n&quot;</span>, &amp;(te.empty))<br>	fmt.Printf(<span class="hljs-string">&quot;a: size=%d, align=%d\n&quot;</span>, unsafe.Sizeof(te.a), unsafe.Alignof(te.a))<br>	fmt.Printf(<span class="hljs-string">&quot;b: size=%d, align=%d\n&quot;</span>, unsafe.Sizeof(te.b), unsafe.Alignof(te.b))<br>	fmt.Printf(<span class="hljs-string">&quot;empty: size=%d, align=%d\n&quot;</span>, unsafe.Sizeof(te.empty), unsafe.Alignof(te.empty))<br>	printMemory(te)<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>输出：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go">address of te: <span class="hljs-number">0x1400006a020</span><br>address of te.a: <span class="hljs-number">0x1400006a020</span><br>address of te.empty: <span class="hljs-number">0x1400006a038</span><br>a: size=<span class="hljs-number">1</span>, align=<span class="hljs-number">1</span><br>b: size=<span class="hljs-number">16</span>, align=<span class="hljs-number">8</span><br>empty: size=<span class="hljs-number">0</span>, align=<span class="hljs-number">1</span><br>[<span class="hljs-number">1</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">2</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span>]<br></code></pre></td></tr></table></figure>
-<h2 id="6-9-使用-fieldalignment-fix-工具优化结构体内存对齐">6.9 使用 fieldalignment -fix 工具优化结构体内存对齐</h2>
+<h2 id="使用-fieldalignment--fix-工具优化结构体内存对齐">6.9 使用
+fieldalignment -fix 工具优化结构体内存对齐</h2>
 <p>还记得我们最开始提出的问题吗？</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> S1 <span class="hljs-keyword">struct</span> &#123;<br>	num2 <span class="hljs-type">int8</span><br>	num1 <span class="hljs-type">int16</span><br>	flag <span class="hljs-type">bool</span><br>&#125;<br><br><span class="hljs-keyword">type</span> S2 <span class="hljs-keyword">struct</span> &#123;<br>	num1 <span class="hljs-type">int8</span><br>	flag <span class="hljs-type">bool</span><br>	num2 <span class="hljs-type">int16</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	fmt.Println(unsafe.Sizeof(S1&#123;&#125;))<br>	fmt.Println(unsafe.Sizeof(S2&#123;&#125;))<br>&#125;<br></code></pre></td></tr></table></figure>
-<p><code>S1</code>  和 <code>S2</code> 提供的程序功能是一样的，但是 <code>S1</code> 却比 <code>S2</code> 花费了更多的内存空间。所以有时候我们可以通过仅仅调整结构体内部字段的顺序就减少不少的内存空间消耗。在这个时候 <code>fieldalignment</code> 可以帮助我们自动检测并优化。</p>
+<p><code>S1</code> 和 <code>S2</code> 提供的程序功能是一样的，但是
+<code>S1</code> 却比 <code>S2</code>
+花费了更多的内存空间。所以有时候我们可以通过仅仅调整结构体内部字段的顺序就减少不少的内存空间消耗。在这个时候
+<code>fieldalignment</code> 可以帮助我们自动检测并优化。</p>
 <p>你可以运行下面命令安装 <code>fieldalignment</code> 命令：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">go install golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest<br></code></pre></td></tr></table></figure>
 <p>然后在项目根目录下运行下面命令，对我们的代码进行检查：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">go vet -vettool=$(<span class="hljs-built_in">which</span> fieldalignment) ./...<br></code></pre></td></tr></table></figure>
 <p>这里会输出：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">./main.go:9:9: struct of size 6 could be 4<br></code></pre></td></tr></table></figure>
-<p>这个时候可以执行 <code>fieldalignment -fix 目录|文件</code> ，它会自动帮我们的代码进行修复，但是<strong>强烈建议你在运行之前，备份你的代码，因为注释会被删除！</strong></p>
+<p>这个时候可以执行 <code>fieldalignment -fix 目录|文件</code>
+，它会自动帮我们的代码进行修复，但是<strong>强烈建议你在运行之前，备份你的代码，因为注释会被删除！</strong></p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">fieldalignment -fix ./...<br></code></pre></td></tr></table></figure>
 <p>输出：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go">/Users/hedon/GolandProjects/learn-<span class="hljs-keyword">go</span>-<span class="hljs-keyword">struct</span>/main.<span class="hljs-keyword">go</span>:<span class="hljs-number">9</span>:<span class="hljs-number">9</span>: <span class="hljs-keyword">struct</span> of size <span class="hljs-number">6</span> could be <span class="hljs-number">4</span><br></code></pre></td></tr></table></figure>
-<p>这个时候 <code>S1</code>  已经被优化好了：</p>
+<p>这个时候 <code>S1</code> 已经被优化好了：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> S1 <span class="hljs-keyword">struct</span> &#123;<br>	num1 <span class="hljs-type">int16</span><br>	num2 <span class="hljs-type">int8</span><br>	flag <span class="hljs-type">bool</span><br>&#125;<br></code></pre></td></tr></table></figure>
 
                 

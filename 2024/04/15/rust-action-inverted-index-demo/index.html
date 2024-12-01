@@ -23,15 +23,12 @@
 <meta property="og:site_name" content="HedonSpace">
 <meta property="og:description" content="本文将使用 Rust 实现一个简单的倒排索引。">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240414112337590.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240414122848805.png">
 <meta property="article:published_time" content="2024-04-15T02:24:17.000Z">
 <meta property="article:modified_time" content="2024-04-21T15:53:41.028Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Rust">
 <meta property="article:tag" content="倒排索引">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240414112337590.png">
   
   
   
@@ -320,35 +317,53 @@
             
               <div class="markdown-body">
                 
-                <h1>引言</h1>
-<p>倒排索引（Inverted Index）是一种索引数据结构，用于存储某个单词（词项）在一组文档中的所有出现情况的映射。它是搜索引擎执行快速全文搜索的核心技术，也广泛用于数据库中进行文本搜索。我们熟知的 ElasticSearch 最核心底层原理便就是倒排索引。</p>
-<p>倒排索引的基本原理是<strong>将文档中的词汇进行反转，形成倒排列表</strong>。 在倒排列表中，每个词汇都对应一个文档标识符的列表，这些标识符指明了该词汇出现在哪些文档中。 通过查询倒排列表，可以快速地找到包含特定词汇的文档。</p>
-<p>本文将使用 Rust 语言来实现一个简单的倒排索引，包括倒排索引的构建和搜索过程。在下一篇文章中，笔者会基于《Rust 程序设计（第二版）》并发编程篇章，解读该书作者是如何基于 Rust 通道实现更优秀、更高性能的倒排索引。</p>
-<h1>可以学到</h1>
-<ol>
+                <h1 id="引言">引言</h1>
+<p>倒排索引（Inverted
+Index）是一种索引数据结构，用于存储某个单词（词项）在一组文档中的所有出现情况的映射。它是搜索引擎执行快速全文搜索的核心技术，也广泛用于数据库中进行文本搜索。我们熟知的
+ElasticSearch 最核心底层原理便就是倒排索引。</p>
+<p>倒排索引的基本原理是<strong>将文档中的词汇进行反转，形成倒排列表</strong>。
+在倒排列表中，每个词汇都对应一个文档标识符的列表，这些标识符指明了该词汇出现在哪些文档中。
+通过查询倒排列表，可以快速地找到包含特定词汇的文档。</p>
+<p>本文将使用 Rust
+语言来实现一个简单的倒排索引，包括倒排索引的构建和搜索过程。在下一篇文章中，笔者会基于《Rust
+程序设计（第二版）》并发编程篇章，解读该书作者是如何基于 Rust
+通道实现更优秀、更高性能的倒排索引。</p>
+<h1 id="可以学到">可以学到</h1>
+<ol type="1">
 <li>倒排索引的原理、优势和使用</li>
 <li>常用 crate：<code>colored</code>、<code>regex</code></li>
 <li>Rust HashMap</li>
 <li>Rust 迭代器</li>
 </ol>
-<h1>开发思路</h1>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240414112337590.png" srcset="/img/loading.gif" lazyload alt="倒排索引构建过程"></p>
+<h1 id="开发思路">开发思路</h1>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240414112337590.png" srcset="/img/loading.gif" lazyload
+alt="倒排索引构建过程" />
+<figcaption aria-hidden="true">倒排索引构建过程</figcaption>
+</figure>
 <p>一个简单的倒排索引开发思路大概如上图所示：</p>
-<ol>
+<ol type="1">
 <li>读取文档</li>
 <li>分词</li>
 <li>构建每个词到每个文档的映射</li>
 </ol>
-<h1>开发过程</h1>
+<h1 id="开发过程">开发过程</h1>
 <blockquote>
-<p>完整源码位于：<a target="_blank" rel="noopener" href="https://github.com/hedon-rust-road/inverted-index">inverted_index</a>。</p>
+<p>完整源码位于：<a
+target="_blank" rel="noopener" href="https://github.com/hedon-rust-road/inverted-index">inverted_index</a>。</p>
 </blockquote>
 <h2 id="最终效果">最终效果</h2>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">index</span> = InvertedIndex::<span class="hljs-title function_ invoke__">new</span>();<br>    index.<span class="hljs-title function_ invoke__">add</span>(<span class="hljs-number">1</span>, <span class="hljs-string">&quot;Rust is safe and fast.&quot;</span>);<br>    index.<span class="hljs-title function_ invoke__">add</span>(<span class="hljs-number">2</span>, <span class="hljs-string">&quot;Rust is a systems programming language.&quot;</span>);<br>    index.<span class="hljs-title function_ invoke__">add</span>(<span class="hljs-number">3</span>, <span class="hljs-string">&quot;Programming in Rust is fun.&quot;</span>);<br><br>    <span class="hljs-comment">// query &quot;Rust&quot;</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">results</span> = index.<span class="hljs-title function_ invoke__">query</span>(<span class="hljs-string">&quot;Rust&quot;</span>);<br>    <span class="hljs-keyword">for</span> <span class="hljs-variable">result</span> <span class="hljs-keyword">in</span> results &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, result);<br>    &#125;<br><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&quot;</span>);<br><br>    <span class="hljs-comment">// query &quot;Programming&quot;</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">results</span> = index.<span class="hljs-title function_ invoke__">query</span>(<span class="hljs-string">&quot;Programming&quot;</span>);<br>    <span class="hljs-keyword">for</span> <span class="hljs-variable">result</span> <span class="hljs-keyword">in</span> results &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, result);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>执行：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">cargo run<br></code></pre></td></tr></table></figure>
 <p>输出：</p>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240414122848805.png" srcset="/img/loading.gif" lazyload alt="inverted index 输出示例"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240414122848805.png" srcset="/img/loading.gif" lazyload
+alt="inverted index 输出示例" />
+<figcaption aria-hidden="true">inverted index 输出示例</figcaption>
+</figure>
 <h2 id="版本声明">版本声明</h2>
 <figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[package]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;inverted_index&quot;</span><br><span class="hljs-attr">version</span> = <span class="hljs-string">&quot;0.1.0&quot;</span><br><span class="hljs-attr">edition</span> = <span class="hljs-string">&quot;2021&quot;</span><br><br><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">colored</span> = <span class="hljs-string">&quot;2.1.0&quot;</span><br><span class="hljs-attr">regex</span> = <span class="hljs-string">&quot;1.10.4&quot;</span><br></code></pre></td></tr></table></figure>
 <h2 id="项目准备">项目准备</h2>
@@ -357,7 +372,8 @@
 <p>准备依赖：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">cargo add regex<br>cargo add colored<br></code></pre></td></tr></table></figure>
 <ul>
-<li>colored: 终端高亮，后面我们将实现搜索词的高亮显示，使结果更美观。</li>
+<li>colored:
+终端高亮，后面我们将实现搜索词的高亮显示，使结果更美观。</li>
 <li>regex: 正则库，用于实现不区分大小写替换匹配到的搜索词。</li>
 </ul>
 <h2 id="实现过程">实现过程</h2>
@@ -367,27 +383,37 @@
 <li>Document: 封装原始文档</li>
 <li>IndexedIndex: 我们将构建的倒排索引</li>
 </ul>
-<p>接下来我们要实现 2 个辅助函数，一个是 <code>tokenize</code>，用于将原始的文档信息拆分成独立的词（word/term），另一个是 <code>hightlight</code>，用于将匹配到的文本进行替换，使其在中断可以以<font color="purple">紫色</font>输出。</p>
+<p>接下来我们要实现 2 个辅助函数，一个是
+<code>tokenize</code>，用于将原始的文档信息拆分成独立的词（word/term），另一个是
+<code>hightlight</code>，用于将匹配到的文本进行替换，使其在中断可以以<font color="purple">紫色</font>输出。</p>
 <p><code>tokenize</code> 实现如下：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">tokenize</span>(text: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Vec</span>&lt;&amp;<span class="hljs-type">str</span>&gt; &#123;<br>    text.<span class="hljs-title function_ invoke__">split</span>(|ch: <span class="hljs-type">char</span>| !ch.<span class="hljs-title function_ invoke__">is_alphanumeric</span>())<br>        .<span class="hljs-title function_ invoke__">filter</span>(|c| !c.<span class="hljs-title function_ invoke__">is_empty</span>())<br>        .<span class="hljs-title function_ invoke__">collect</span>()<br>&#125;<br><br><span class="hljs-meta">#[test]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">tokenize_test</span>() &#123;<br>    <span class="hljs-built_in">assert_eq!</span>(<br>        <span class="hljs-title function_ invoke__">tokenize</span>(<span class="hljs-string">&quot;This is\nhedon&#x27;s tokenize function.&quot;</span>),<br>        <span class="hljs-built_in">vec!</span>[<span class="hljs-string">&quot;This&quot;</span>, <span class="hljs-string">&quot;is&quot;</span>, <span class="hljs-string">&quot;hedon&quot;</span>, <span class="hljs-string">&quot;s&quot;</span>, <span class="hljs-string">&quot;tokenize&quot;</span>, <span class="hljs-string">&quot;function&quot;</span>]<br>    )<br>&#125;<br></code></pre></td></tr></table></figure>
 <p><code>highlight</code> 实现如下：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">highlight</span>(term: &amp;<span class="hljs-type">str</span>, content: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">String</span> &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">regex</span> = Regex::<span class="hljs-title function_ invoke__">new</span>(&amp;<span class="hljs-built_in">format!</span>(<span class="hljs-string">r&quot;(?i)&#123;&#125;&quot;</span>, term)).<span class="hljs-title function_ invoke__">unwrap</span>();<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">highlighted_content</span> = regex<br>        .<span class="hljs-title function_ invoke__">replace_all</span>(content, |caps: &amp;regex::Captures| &#123;<br>            caps[<span class="hljs-number">0</span>].<span class="hljs-title function_ invoke__">to_string</span>().<span class="hljs-title function_ invoke__">purple</span>().<span class="hljs-title function_ invoke__">to_string</span>()<br>        &#125;)<br>        .<span class="hljs-title function_ invoke__">to_string</span>();<br>    highlighted_content<br>&#125;<br><br><span class="hljs-meta">#[test]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">highlight_test</span>() &#123;<br>    <span class="hljs-built_in">assert_eq!</span>(<br>        <span class="hljs-title function_ invoke__">highlight</span>(<span class="hljs-string">&quot;programming&quot;</span>, <span class="hljs-string">&quot;I like programming with Rust Programming&quot;</span>),<br>        <span class="hljs-string">&quot;I like \u&#123;1b&#125;[35mprogramming\u&#123;1b&#125;[0m with Rust \u&#123;1b&#125;[35mProgramming\u&#123;1b&#125;[0m&quot;</span><br>    );<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>现在我们可以为 <code>InvertedIndex</code> 实现构建索引的方法 <code>add</code> 了，它会接收原始文档，对其进行分词，并将记录每个分词和文档 id 的映射。</p>
+<p>现在我们可以为 <code>InvertedIndex</code> 实现构建索引的方法
+<code>add</code>
+了，它会接收原始文档，对其进行分词，并将记录每个分词和文档 id
+的映射。</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">impl</span> <span class="hljs-title class_">InvertedIndex</span> &#123;<br>  	<span class="hljs-keyword">fn</span> <span class="hljs-title function_">add</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>, doc_id: <span class="hljs-type">usize</span>, content: &amp;<span class="hljs-type">str</span>) &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">content_lowercase</span> = content.<span class="hljs-title function_ invoke__">to_lowercase</span>();<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">words</span> = <span class="hljs-title function_ invoke__">tokenize</span>(&amp;content_lowercase);<br>        <span class="hljs-keyword">for</span> <span class="hljs-variable">word</span> <span class="hljs-keyword">in</span> words &#123;<br>            <span class="hljs-keyword">self</span>.indexes<br>                .<span class="hljs-title function_ invoke__">entry</span>(word.<span class="hljs-title function_ invoke__">to_string</span>())<br>                .<span class="hljs-title function_ invoke__">or_insert</span>(<span class="hljs-built_in">vec!</span>[])<br>                .<span class="hljs-title function_ invoke__">push</span>(doc_id)<br>        &#125;<br><br>        <span class="hljs-keyword">self</span>.documents.<span class="hljs-title function_ invoke__">insert</span>(<br>            doc_id,<br>            Document &#123;<br>                id: doc_id,<br>                content: content.<span class="hljs-title function_ invoke__">to_string</span>(),<br>            &#125;,<br>        );<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>然后我们再实现对应的根据分词 <code>term</code> 搜索原始文档的方法：</p>
+<p>然后我们再实现对应的根据分词 <code>term</code>
+搜索原始文档的方法：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">impl</span> <span class="hljs-title class_">InvertedIndex</span> &#123;<br>  	<span class="hljs-keyword">fn</span> <span class="hljs-title function_">query</span>(&amp;<span class="hljs-keyword">self</span>, term: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Vec</span>&lt;<span class="hljs-type">String</span>&gt; &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">term_lowercase</span> = term.<span class="hljs-title function_ invoke__">to_lowercase</span>();<br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> <span class="hljs-variable">Some</span>(doc_ids) = <span class="hljs-keyword">self</span>.indexes.<span class="hljs-title function_ invoke__">get</span>(&amp;term_lowercase) &#123;<br>            doc_ids<br>                .<span class="hljs-title function_ invoke__">iter</span>()<br>                .<span class="hljs-title function_ invoke__">filter_map</span>(|doc_id| &#123;<br>                    <span class="hljs-keyword">self</span>.documents<br>                        .<span class="hljs-title function_ invoke__">get</span>(doc_id)<br>                        .<span class="hljs-title function_ invoke__">map</span>(|doc| <span class="hljs-title function_ invoke__">highlight</span>(&amp;term_lowercase, &amp;doc.content))<br>                &#125;)<br>                .<span class="hljs-title function_ invoke__">collect</span>()<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            <span class="hljs-type">Vec</span>::<span class="hljs-title function_ invoke__">new</span>()<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>这样一个简单的倒排索引构建和搜索功能就完成了，具体的执行效果你可以回到前面的「最终效果」进行查阅。</p>
-<h1>总结预告</h1>
-<p>本文实现的倒排索引虽然非常简单，但是也基本体现了倒排索引的最核心思想和应用方式了。在《Rust 程序设计（第二版）》的并发编程篇章中，该书提出了使用通道 channel 来并发构建倒排索引，同时给出了更加丰富和优雅的实现。在下篇文章中，笔者将阅读这部分的源码，解析并重现当中的实战过程，并进行适当扩展。</p>
+<h1 id="总结预告">总结预告</h1>
+<p>本文实现的倒排索引虽然非常简单，但是也基本体现了倒排索引的最核心思想和应用方式了。在《Rust
+程序设计（第二版）》的并发编程篇章中，该书提出了使用通道 channel
+来并发构建倒排索引，同时给出了更加丰富和优雅的实现。在下篇文章中，笔者将阅读这部分的源码，解析并重现当中的实战过程，并进行适当扩展。</p>
 <p>peace! enjoy coding~</p>
-<h1>绘图工具</h1>
+<h1 id="绘图工具">绘图工具</h1>
 <ul>
-<li><a target="_blank" rel="noopener" href="https://excalidraw.com/">https://excalidraw.com/</a></li>
+<li>https://excalidraw.com/</li>
 </ul>
-<h1>参考资料</h1>
+<h1 id="参考资料">参考资料</h1>
 <ul>
-<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Inverted_index">维基百科·倒排索引</a></li>
-<li><a target="_blank" rel="noopener" href="https://book.douban.com/subject/36547630/">Rust 程序设计（第二版）</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Inverted_index">维基百科·倒排索引</a></li>
+<li><a target="_blank" rel="noopener" href="https://book.douban.com/subject/36547630/">Rust
+程序设计（第二版）</a></li>
 </ul>
 
                 
