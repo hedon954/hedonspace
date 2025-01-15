@@ -6,7 +6,7 @@
   <link href="https://hedon.top/atom.xml" rel="self"/>
   
   <link href="https://hedon.top/"/>
-  <updated>2025-01-15T11:57:12.315Z</updated>
+  <updated>2025-01-15T12:08:35.763Z</updated>
   <id>https://hedon.top/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="https://hedon.top/2025/01/15/book-quic-http3/"/>
     <id>https://hedon.top/2025/01/15/book-quic-http3/</id>
     <published>2025-01-15T11:17:20.000Z</published>
-    <updated>2025-01-15T11:57:12.315Z</updated>
+    <updated>2025-01-15T12:08:35.763Z</updated>
     
     <content type="html"><![CDATA[<h1 id="quic-产生背景">1. QUIC 产生背景</h1><h2 id="常见网络协议">常见网络协议</h2><ul><li><code>UDP</code></li><li><code>TCP</code></li><li><code>SCTP</code>（Stream Control TransmissionProtocol）：用于电话网络。</li><li><code>KCP</code>：基于 UDP在应用层实现可靠性传输，牺牲带宽换取效率。</li><li><code>RTP</code>（Real-time Transport Protocol）：与 RTCP配合传输实时数据，如交互式音频和视频数据。<ul><li>RTCP：传输控制信息</li><li>RTP：传输实时数据</li></ul></li></ul><h2 id="tsl-版本演化">TSL 版本演化</h2><ul><li><p><code>SSLv2</code>：安全性低</p></li><li><p><code>SSLv3</code>：分为握手阶段和数据传输阶段。</p><ul><li>握手阶段完成对端点的认证和确定保护数据传输的密钥。</li><li>一旦确定了密钥，后面的数据传输和SSL协议过程都受到加密和完整性保护。</li></ul></li><li><p><code>TSL1.0</code>：基于 SSLv3，存在 CBC（Cipher BlockChaining，密文分组链接）加密和解密模式漏洞，使得主动攻击者可以观察到当前记录的IV（IntiallizationVector，初始化向量），猜测一个数据库，进行数据注入。</p></li><li><p><code>TSL1.1</code>：修复了 TSL1.0 的一些关键安全问题：</p><ul><li>BC 加密使用每条记录一个的显式IV；</li><li>为了防止 CBC 填充攻击，使用 bad_record_mac 错误码代替decryption_failed 回复填充错误；</li><li>支持传输参数的IANA（Internet Assigned NumbersAuthority，互联网数字分配机构）注册，增加了传输参数的灵活性；</li><li>改进了连接关闭过早情况下的连接恢复问题。</li></ul><p>有些加密算法还是存在安全漏洞，使用的 MD5 也不安全。</p></li><li><p><code>TSL1.2</code>：主要关注了架构灵活性和安全问题。</p><ul><li>架构：<ul><li>客户端可以指定自己支持的签名和 hash 算法列表；</li><li>支持非协议固定的算法；</li></ul></li><li>安全：<ul><li>增加了对 AEAD（Authenticated Encryption with Associated Data关联数据认证加密）的支持，可以在加密中认证没有加密部分的关键数据，甚至是不在报文中的关键数据，可以保护更大的范围。</li><li>规定必须实现密码套件 TLS_RSA_WITH_AES_128_CBC_SHA。</li><li>增加了 HMAC-SHA256 密码套件。</li><li>删除了包含已废弃算法的 IDEA 和 DES 密码套件。</li><li>对 EncryptedPreMasterSecret 版本号进行了更严格的检查。</li></ul></li></ul></li><li><p><code>TSL1.3</code>：除了增加安全性，重点改进了连接速度，首次连接发送数据最低可以1-RTT，恢复连接发送数据最低可以 0-RTT。</p><ul><li>安全：<ul><li>删除了所有被证明有问题的对称加密算法，只保留了 AEAD的加密套件。密码套件的概念也已经改变，将认证和密钥交换机制与加密算法和散列（用于密钥导出函数和握手消息认证码）分离。</li><li>删除 RSA 和静态 DH 密码套件，因为静态 RSA加密预主密钥的方式和使用静态 DH私钥都不能保证前向安全性，很容易泄露密钥。只保留能保证前向安全的密钥交换算法，如使用临时私钥的ECDHE（Elliptic Curve Diffie-Hellman Ephemeral，椭圆曲线 DH临时密钥交换算法）和 DHE（Diffie-Hellman Ephemeral, DH临时密钥交换算法）。</li><li>ServerHello 之后的消息都加密传输。</li><li>删除了压缩功能。之前版本的压缩功能由于存在被攻击的风险实际上很少使用，而且现代的压缩基本都在应用层实现，比如HTTP就自己实现的压缩。</li></ul></li></ul></li></ul><h2 id="http-版本演化">HTTP 版本演化</h2><ul><li><p><code>HTTP0.9</code>：仅支持简单的请求响应，只能访问<strong>简单的文本</strong>文档。</p></li><li><p><code>HTTP1.0</code>：HTTP1中引入了<strong>请求头和响应头</strong>，请求时可以指定 HTTP版本号、用户代理、接收类型等，响应可以指明响应状态、内容长度、内容类型等。</p></li><li><p><code>HTTP1.1</code>：增加了<strong>重用 TCP连接</strong>（keep-alive）的方法，默认保持连接，除非显式通知关闭连接[插图]。这样可以在一个TCP 连接上完成多个请求-响应，消除了 TCP 建立的延迟，也避免了新建立的 TCP连接的慢启动过程。</p><ul><li>HTTP1.1 在 HTTP 请求首部中增加了 Host 字段，用来支持共享 IP地址的虚拟主机服务器。</li><li>同时支持了更多的方法，如 PUT、PATCH、DELETE、OPTIONS。</li><li>引入分块传输支持动态内容。</li><li>引入了更多的缓存控制策略。</li><li>支持请求部分内容。</li></ul></li><li><p><code>HTTP2</code>：修改了 HTTP1.1的封装格式，增加了一个二进制分帧层。基于二进制分层，HTTP2 实现了 HTTP的<strong>多路复用</strong>。HTTP2为每个请求分配了一个流标识，服务器响应时带上相同的流标识，客户端就可以方便地将响应与请求关联起来，而不用依赖顺序，从而可以降低延迟和提高吞吐量。</p><ul><li>HTTP2 还增加了首部压缩 HPACK（Header Compression for HTTP2，HTTP2首部压缩算法）。</li><li>支持请求优先级。</li><li>支持服务器主动推送。</li><li>增加了 ALPN（Application-Layer ProtocolNegotiation，应用层协议协商）。</li><li>支持认证、加密和完整性保护，即 <code>HTTPS</code>。</li></ul><p>但多个请求或响应在同一个 TCP 上发送时，仍然受制于 TCP的队首阻塞问题。</p></li><li><p><code>HTTP3</code>：基于 <code>QUIC</code> 协议，底层使用 UDP实现，摆脱了 TCP 的队首阻塞问题。同时改进了 TCP中存在的一些其他问题，比如拥塞控制、协议僵化、启动慢、重连慢、安全弱等。</p><ul><li>实现了没有队首阻塞的并发。如果 QUIC丢了一个报文，仅仅影响对应流的交付，不会阻塞其他流。</li><li>与 TLS1.3 紧密合作，尽可能的加密。还增加了 QUIC报文的首部加密，除保证了报文安全性，提高了攻击门槛，还避免了协议僵化。</li><li>选择 UDP 作为底层实现。一方面避免了 TCP的首部阻塞，另一方面互联网中绝大部分的主机和中间件都是 TCP 和 UDP的天下，所以天然支持。</li><li>用户态实现。不依赖于内核，容易单独升级。</li><li>低延迟的建立。实现了首次最低 1-RTT发送应用数据，恢复连接时发送应用数据最低只需 0-RTT。</li><li>无缝的连接迁移。QUIC 的连接基于连接标识，改变 IP 或者 UDP端口号并不影响连接的识别，因此可以实现无缝的连接迁移。但是负载均衡就麻烦了。</li><li>改进的流量控制。</li><li>协议行为作为负载。</li></ul></li></ul><h1 id="quic-报文">2. QUIC 报文</h1>]]></content>
     
@@ -30,9 +30,9 @@
     
     
     
-    <category term="计算机网络" scheme="https://hedon.top/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
+    <category term="计算机基础" scheme="https://hedon.top/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/"/>
     
-    <category term="读书笔记" scheme="https://hedon.top/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/"/>
+    <category term="计算机网络" scheme="https://hedon.top/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
     
     
     <category term="QUIC" scheme="https://hedon.top/tags/QUIC/"/>
