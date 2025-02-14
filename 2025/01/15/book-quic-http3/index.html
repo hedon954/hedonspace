@@ -24,7 +24,7 @@
 <meta property="og:description" content="整理阅读《解密 QUIC&#x2F;HTTP3：未来互联网的基石》笔记。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-01-15T11:17:20.000Z">
-<meta property="article:modified_time" content="2025-01-15T12:08:35.763Z">
+<meta property="article:modified_time" content="2025-01-22T12:15:02.269Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="QUIC">
 <meta property="article:tag" content="HTTP3">
@@ -257,7 +257,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.4k words
+          3k words
         
       </span>
     
@@ -268,7 +268,7 @@
         
         
         
-          7 mins
+          8 mins
         
       </span>
     
@@ -446,6 +446,30 @@ Negotiation，应用层协议协商）。</li>
 </ul></li>
 </ul>
 <h1 id="quic-报文">2. QUIC 报文</h1>
+<ul>
+<li>长首部报文：用于建立 QUIC 连接和建立连接前发送应用数据。</li>
+<li>短首部报文：用于在 QUIC 连接建立后发送应用数据和 QUIC
+协议内容。</li>
+<li>无状态重置报文：当服务器丢失了连接状态但仍然收到该连接的数据包时，可以发送无状态重置报文通知客户端立即终止连接。</li>
+</ul>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250122195252117.png" srcset="/img/loading.gif" lazyload
+alt="QUIC 报文类型" />
+<figcaption aria-hidden="true">QUIC 报文类型</figcaption>
+</figure>
+<p>初始报文：客户端使用初始报文来发起连接，服务器使用初始报文和握手报文回应客户端的请求。</p>
+<p>0-RTT 报文：用于承载 QUIC
+连接之前想要发送的数据，一般用于恢复连接后立即发送数据。</p>
+<p>握手报文：用来携带服务器和客户端的 TLS 加密握手信息和确认，载荷一般是
+CRYPTO 帧和 ACK 帧。</p>
+<p>重试报文：是服务器用来验证客户端地址的报文，可以防止源地址欺骗。</p>
+<blockquote>
+<p>服务器使用重试报文通知客户端按照要求重新发送初始报文，在重试报文中携带重试令牌给客户端，并使用服务器选择的连接标识作为重试报文的源连接标识；客户端需要使用服务器指定的连接标识作为目的连接标识，携带服务器指定的重试令牌，构建新的初始报文，重新发送给服务器。</p>
+</blockquote>
+<p>版本协商报文：当服务器收到包含自己不支持的版本号的初始报文时，就会发送版本协商报文。客户端收到版本协商报文后需要在其中选择一个自己支持的版本号，重新以新版本号发送初始报文。</p>
+<p>短首部报文：一般也叫作 1-RTT 报文，连接在协商出 1-RTT
+密钥后就可以发送短首部报文，用于携带应用数据。</p>
 
                 
               </div>
@@ -546,6 +570,12 @@ Negotiation，应用层协议协商）。</li>
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2025/02/14/go-slice-vs-map/" title="Go 中的 Map 与 Slice：深入理解扩容机制与传参行为">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Go 中的 Map 与 Slice：深入理解扩容机制与传参行为</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
