@@ -1,0 +1,891 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/hedon.png">
+  <link rel="icon" href="/img/hedon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Hedon Wang">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="整理阅读《解密 QUIC&#x2F;HTTP3：未来互联网的基石》笔记。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="读书笔记丨解密 QUIC&#x2F;HTTP3：未来互联网的基石">
+<meta property="og:url" content="https://hedon.top/2025/01/15/book-quic-http3/index.html">
+<meta property="og:site_name" content="HedonSpace">
+<meta property="og:description" content="整理阅读《解密 QUIC&#x2F;HTTP3：未来互联网的基石》笔记。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250122195252117.png">
+<meta property="article:published_time" content="2025-01-15T11:17:20.000Z">
+<meta property="article:modified_time" content="2025-02-15T15:27:55.982Z">
+<meta property="article:author" content="Hedon Wang">
+<meta property="article:tag" content="QUIC">
+<meta property="article:tag" content="HTTP3">
+<meta property="article:tag" content="计算机网络">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250122195252117.png">
+  
+  
+  
+  <title>读书笔记丨解密 QUIC/HTTP3：未来互联网的基石 - HedonSpace</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"hedon.top","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":30,"cursorChar":"_","loop":false,"scope":["home"]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":4},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"Eig99zG5BYQGKXxcMOU7DH7e-gzGzoHsz","app_key":"dBP7lew0wt2GQdNdo6t2EE5m","server_url":"https://eig99zg5.lc-cn-n1-shared.com","path":"window.location.pathname","ignore_local":true}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+    <!-- Google tag (gtag.js) -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        Fluid.utils.createScript("https://www.googletagmanager.com/gtag/js?id=", function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+          gtag('js', new Date());
+          gtag('config', '');
+        });
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.0.0"><link rel="alternate" href="/atom.xml" title="HedonSpace" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>HedonSpace</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>Home</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>Archives</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>Categories</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>Tags</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>About</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/banner/book-quic-http3.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">读书笔记丨解密 QUIC/HTTP3：未来互联网的基石</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        Hedon Wang
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-01-15 19:17" pubdate>
+          2025-01-15 19:17
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          8 mins
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="leancloud-page-views"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">读书笔记丨解密 QUIC/HTTP3：未来互联网的基石</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1>1. QUIC 产生背景</h1>
+<h2 id="常见网络协议">常见网络协议</h2>
+<ul>
+<li><code>UDP</code></li>
+<li><code>TCP</code></li>
+<li><code>SCTP</code>（Stream Control Transmission Protocol）：用于电话网络。</li>
+<li><code>KCP</code>：基于 UDP 在应用层实现可靠性传输，牺牲带宽换取效率。</li>
+<li><code>RTP</code>（Real-time Transport Protocol）：与 RTCP 配合传输实时数据，如交互式音频和视频数据。
+<ul>
+<li>RTCP：传输控制信息</li>
+<li>RTP：传输实时数据</li>
+</ul>
+</li>
+</ul>
+<h2 id="TSL-版本演化">TSL 版本演化</h2>
+<ul>
+<li>
+<p><code>SSLv2</code>：安全性低</p>
+</li>
+<li>
+<p><code>SSLv3</code>：分为握手阶段和数据传输阶段。</p>
+<ul>
+<li>握手阶段完成对端点的认证和确定保护数据传输的密钥。</li>
+<li>一旦确定了密钥，后面的数据传输和SSL协议过程都受到加密和完整性保护。</li>
+</ul>
+</li>
+<li>
+<p><code>TSL1.0</code>：基于 SSLv3，存在 CBC（Cipher Block Chaining，密文分组链接）加密和解密模式漏洞，使得主动攻击者可以观察到当前记录的 IV（Intiallization Vector，初始化向量），猜测一个数据库，进行数据注入。</p>
+</li>
+<li>
+<p><code>TSL1.1</code>：修复了 TSL1.0 的一些关键安全问题：</p>
+<ul>
+<li>BC 加密使用每条记录一个的显式IV；</li>
+<li>为了防止 CBC 填充攻击，使用 bad_record_mac 错误码代替 decryption_failed 回复填充错误；</li>
+<li>支持传输参数的IANA（Internet Assigned Numbers Authority，互联网数字分配机构）注册，增加了传输参数的灵活性；</li>
+<li>改进了连接关闭过早情况下的连接恢复问题。</li>
+</ul>
+<p>有些加密算法还是存在安全漏洞，使用的 MD5 也不安全。</p>
+</li>
+<li>
+<p><code>TSL1.2</code>：主要关注了架构灵活性和安全问题。</p>
+<ul>
+<li>架构：
+<ul>
+<li>客户端可以指定自己支持的签名和 hash 算法列表；</li>
+<li>支持非协议固定的算法；</li>
+</ul>
+</li>
+<li>安全：
+<ul>
+<li>增加了对 AEAD（Authenticated Encryption with Associated Data 关联数据认证加密）的支持，可以在加密中认证没有加密部分的关键数据，甚至是不在报文中的关键数据，可以保护更大的范围。</li>
+<li>规定必须实现密码套件 TLS_RSA_WITH_AES_128_CBC_SHA。</li>
+<li>增加了 HMAC-SHA256 密码套件。</li>
+<li>删除了包含已废弃算法的 IDEA 和 DES 密码套件。</li>
+<li>对 EncryptedPreMasterSecret 版本号进行了更严格的检查。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><code>TSL1.3</code>：除了增加安全性，重点改进了连接速度，首次连接发送数据最低可以 1-RTT，恢复连接发送数据最低可以 0-RTT。</p>
+<ul>
+<li>安全：
+<ul>
+<li>删除了所有被证明有问题的对称加密算法，只保留了 AEAD 的加密套件。密码套件的概念也已经改变，将认证和密钥交换机制与加密算法和散列（用于密钥导出函数和握手消息认证码）分离。</li>
+<li>删除 RSA 和静态 DH 密码套件，因为静态 RSA 加密预主密钥的方式和使用静态 DH 私钥都不能保证前向安全性，很容易泄露密钥。只保留能保证前向安全的密钥交换算法，如使用临时私钥的 ECDHE（Elliptic Curve Diffie-Hellman Ephemeral，椭圆曲线 DH 临时密钥交换算法）和 DHE（Diffie-Hellman Ephemeral, DH 临时密钥交换算法）。</li>
+<li>ServerHello 之后的消息都加密传输。</li>
+<li>删除了压缩功能。之前版本的压缩功能由于存在被攻击的风险实际上很少使用，而且现代的压缩基本都在应用层实现，比如HTTP 就自己实现的压缩。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="HTTP-版本演化">HTTP 版本演化</h2>
+<ul>
+<li>
+<p><code>HTTP0.9</code>：仅支持简单的请求响应，只能访问<strong>简单的文本</strong>文档。</p>
+</li>
+<li>
+<p><code>HTTP1.0</code>：HTTP1 中引入了<strong>请求头和响应头</strong>，请求时可以指定 HTTP 版本号、用户代理、接收类型等，响应可以指明响应状态、内容长度、内容类型等。</p>
+</li>
+<li>
+<p><code>HTTP1.1</code>：增加了<strong>重用 TCP 连接</strong>（keep-alive）的方法，默认保持连接，除非显式通知关闭连接[插图]。这样可以在一个 TCP 连接上完成多个请求-响应，消除了 TCP 建立的延迟，也避免了新建立的 TCP 连接的慢启动过程。</p>
+<ul>
+<li>HTTP1.1 在 HTTP 请求首部中增加了 Host 字段，用来支持共享 IP 地址的虚拟主机服务器。</li>
+<li>同时支持了更多的方法，如 PUT、PATCH、DELETE、OPTIONS。</li>
+<li>引入分块传输支持动态内容。</li>
+<li>引入了更多的缓存控制策略。</li>
+<li>支持请求部分内容。</li>
+</ul>
+</li>
+<li>
+<p><code>HTTP2</code>：修改了 HTTP1.1 的封装格式，增加了一个二进制分帧层。基于二进制分层，HTTP2 实现了 HTTP 的<strong>多路复用</strong>。HTTP2 为每个请求分配了一个流标识，服务器响应时带上相同的流标识，客户端就可以方便地将响应与请求关联起来，而不用依赖顺序，从而可以降低延迟和提高吞吐量。</p>
+<ul>
+<li>HTTP2 还增加了首部压缩 HPACK（Header Compression for HTTP2，HTTP2 首部压缩算法）。</li>
+<li>支持请求优先级。</li>
+<li>支持服务器主动推送。</li>
+<li>增加了 ALPN（Application-Layer Protocol Negotiation，应用层协议协商）。</li>
+<li>支持认证、加密和完整性保护，即 <code>HTTPS</code>。</li>
+</ul>
+<p>但多个请求或响应在同一个 TCP 上发送时，仍然受制于 TCP 的队首阻塞问题。</p>
+</li>
+<li>
+<p><code>HTTP3</code>：基于 <code>QUIC</code> 协议，底层使用 UDP 实现，摆脱了 TCP 的队首阻塞问题。同时改进了 TCP 中存在的一些其他问题，比如拥塞控制、协议僵化、启动慢、重连慢、安全弱等。</p>
+<ul>
+<li>实现了没有队首阻塞的并发。如果 QUIC 丢了一个报文，仅仅影响对应流的交付，不会阻塞其他流。</li>
+<li>与 TLS1.3 紧密合作，尽可能的加密。还增加了 QUIC 报文的首部加密，除保证了报文安全性，提高了攻击门槛，还避免了协议僵化。</li>
+<li>选择 UDP 作为底层实现。一方面避免了 TCP 的首部阻塞，另一方面互联网中绝大部分的主机和中间件都是 TCP 和 UDP 的天下，所以天然支持。</li>
+<li>用户态实现。不依赖于内核，容易单独升级。</li>
+<li>低延迟的建立。实现了首次最低 1-RTT 发送应用数据，恢复连接时发送应用数据最低只需 0-RTT。</li>
+<li>无缝的连接迁移。QUIC 的连接基于连接标识，改变 IP 或者 UDP 端口号并不影响连接的识别，因此可以实现无缝的连接迁移。但是负载均衡就麻烦了。</li>
+<li>改进的流量控制。</li>
+<li>协议行为作为负载。</li>
+</ul>
+</li>
+</ul>
+<h1>2. QUIC 报文</h1>
+<ul>
+<li>长首部报文：用于建立 QUIC 连接和建立连接前发送应用数据。</li>
+<li>短首部报文：用于在 QUIC 连接建立后发送应用数据和 QUIC 协议内容。</li>
+<li>无状态重置报文：当服务器丢失了连接状态但仍然收到该连接的数据包时，可以发送无状态重置报文通知客户端立即终止连接。</li>
+</ul>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250122195252117.png" srcset="/img/loading.gif" lazyload alt="QUIC 报文类型"></p>
+<p>初始报文：客户端使用初始报文来发起连接，服务器使用初始报文和握手报文回应客户端的请求。</p>
+<p>0-RTT 报文：用于承载 QUIC 连接之前想要发送的数据，一般用于恢复连接后立即发送数据。</p>
+<p>握手报文：用来携带服务器和客户端的 TLS 加密握手信息和确认，载荷一般是 CRYPTO 帧和 ACK 帧。</p>
+<p>重试报文：是服务器用来验证客户端地址的报文，可以防止源地址欺骗。</p>
+<blockquote>
+<p>服务器使用重试报文通知客户端按照要求重新发送初始报文，在重试报文中携带重试令牌给客户端，并使用服务器选择的连接标识作为重试报文的源连接标识；客户端需要使用服务器指定的连接标识作为目的连接标识，携带服务器指定的重试令牌，构建新的初始报文，重新发送给服务器。</p>
+</blockquote>
+<p>版本协商报文：当服务器收到包含自己不支持的版本号的初始报文时，就会发送版本协商报文。客户端收到版本协商报文后需要在其中选择一个自己支持的版本号，重新以新版本号发送初始报文。</p>
+<p>短首部报文：一般也叫作 1-RTT 报文，连接在协商出 1-RTT 密钥后就可以发送短首部报文，用于携带应用数据。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" class="category-chain-item">计算机基础</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" class="category-chain-item">计算机网络</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/QUIC/" class="print-no-link">#QUIC</a>
+      
+        <a href="/tags/HTTP3/" class="print-no-link">#HTTP3</a>
+      
+        <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" class="print-no-link">#计算机网络</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>读书笔记丨解密 QUIC/HTTP3：未来互联网的基石</div>
+      <div>https://hedon.top/2025/01/15/book-quic-http3/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Hedon Wang</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>2025-01-15</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>Licensed under</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/02/14/go-slice-vs-map/" title="Go 中的 Map 与 Slice：深入理解扩容机制与传参行为">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Go 中的 Map 与 Slice：深入理解扩容机制与传参行为</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/12/12/clean-code-10-rules/" title="匠心码道丨01 编写优质代码的十大黄金法则">
+                        <span class="hidden-mobile">匠心码道丨01 编写优质代码的十大黄金法则</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"hedon954/hedonspace","repo-id":"R_kgDOKt17sQ","category":"Q&A","category-id":"DIC_kwDOKt17sc4CbAt-","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":0,"input-position":"top","lang":"en"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>Table of Contents</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="leancloud-site-pv-container" style="display: none">
+        总访问量 
+        <span id="leancloud-site-pv"></span>
+         次
+      </span>
+    
+    
+      <span id="leancloud-site-uv-container" style="display: none">
+        总访客数 
+        <span id="leancloud-site-uv"></span>
+         人
+      </span>
+    
+    
+
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/leancloud.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>

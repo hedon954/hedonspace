@@ -23,14 +23,24 @@
 <meta property="og:site_name" content="HedonSpace">
 <meta property="og:description" content="本文基于 Go1.21.0 版本详细介绍了 Go 程序的编译过程。">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img5eRkfKJ8cMojTjPoZzjr1i-20231129143006857.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231202200135678.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231202195439495.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203003155036.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203003058976.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203193913047.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203194101882.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203194432349.png">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/ssa.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203211001137.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img6sR2uDuHwbkSNk3FuUxHmY-20231129143014805.png">
 <meta property="article:published_time" content="2023-11-29T02:49:51.000Z">
 <meta property="article:modified_time" content="2024-01-17T14:28:37.948Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Go">
 <meta property="article:tag" content="编译原理">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/ssa.png">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img5eRkfKJ8cMojTjPoZzjr1i-20231129143006857.png">
   
   
   
@@ -269,7 +279,7 @@
         
         
         
-          112 mins
+          111 mins
         
       </span>
     
@@ -324,92 +334,70 @@
 <li>Go 1.21</li>
 </ul>
 <h2 id="官方文档">官方文档</h2>
-<p>Go 语言官方文档详细阐述了 Go 语言编译器的具体执行过程，Go1.21
-版本可以看这个：https://github.com/golang/go/tree/release-branch.go1.21/src/cmd/compile</p>
+<p>Go 语言官方文档详细阐述了 Go 语言编译器的具体执行过程，Go1.21 版本可以看这个：<a target="_blank" rel="noopener" href="https://github.com/golang/go/tree/release-branch.go1.21/src/cmd/compile">https://github.com/golang/go/tree/release-branch.go1.21/src/cmd/compile</a></p>
 <p>大致过程如下：</p>
-<ol type="1">
-<li><strong>解析</strong> (<code>cmd/compile/internal/syntax</code>):
+<ol>
+<li>
+<p><strong>解析</strong> (<code>cmd/compile/internal/syntax</code>):</p>
 <ul>
 <li><strong>词法分析器和语法分析器</strong>：源代码被分词（词法分析）并解析（语法分析）。</li>
 <li><strong>语法树构建</strong>：为每个源文件构建一个语法树。</li>
-</ul></li>
-<li><strong>类型检查</strong>
-(<code>cmd/compile/internal/types2</code>):
-<ul>
-<li><strong>类型检查</strong>：<code>types2</code> 包是
-<code>go/types</code> 的一个移植版本，它使用 <code>syntax</code> 包的
-AST（抽象语法树）而不是 <code>go/ast</code>。</li>
-</ul></li>
-<li><strong>IR 构建（"noding"）</strong>:
-<ul>
-<li><strong>编译器类型</strong>
-(<code>cmd/compile/internal/types</code>)</li>
-<li><strong>编译器 AST</strong>
-(<code>cmd/compile/internal/ir</code>)</li>
-<li><strong>AST 转换</strong>
-(<code>cmd/compile/internal/typecheck</code>)</li>
-<li><strong>创建编译器 AST</strong>
-(<code>cmd/compile/internal/noder</code>)</li>
-<li>这个阶段使用自己的 AST 定义和 Go 类型的表示，这些定义和表示形式是用
-C
-编写时遗留下来的。它的所有代码都是根据这些编写的，因此类型检查后的下一步是转换语法和
-<code>types2</code> 表示形式到 <code>ir</code> 和
-<code>types</code>。这个过程被称为“noding”。</li>
-</ul></li>
-<li><strong>中间阶段</strong>:
-<ul>
-<li><strong>死代码消除</strong>
-(<code>cmd/compile/internal/deadcode</code>)</li>
-<li><strong>函数调用内联</strong>
-(<code>cmd/compile/internal/inline</code>)</li>
-<li><strong>已知接口方法调用的去虚拟化</strong>
-(<code>cmd/compile/internal/devirtualize</code>)</li>
-<li><strong>逃逸分析</strong>
-(<code>cmd/compile/internal/escape</code>)</li>
-<li>在 IR
-表示上执行几个优化过程：死代码消除、（早期的）去虚拟化、函数调用内联和逃逸分析。</li>
-</ul></li>
-<li><strong>Walk</strong> (<code>cmd/compile/internal/walk</code>):
-<ul>
-<li><strong>求值顺序和语法糖</strong>：这是对 IR
-表示的最后一次遍历，它有两个目的：将复杂的语句分解为简单的单个语句，引入临时变量并遵守求值顺序；将高级
-Go 构造转换为更原始的构造。</li>
-</ul></li>
-<li><strong>通用 SSA</strong> (<code>cmd/compile/internal/ssa</code> 和
-<code>cmd/compile/internal/ssagen</code>):
-<ul>
-<li>在这个阶段，IR
-被转换为静态单赋值（SSA）形式，这是一种具有特定属性的低级中间表示，使得从中实现优化并最终生成机器代码变得更容易。</li>
-</ul></li>
-<li><strong>生成机器代码</strong> (<code>cmd/compile/internal/ssa</code>
-和 <code>cmd/internal/obj</code>):
-<ul>
-<li>这是编译器的机器依赖阶段，以“lower”过程开始，将通用值重写为它们的机器特定变体。然后进行最终的代码优化过程。最后，Go
-函数被转换为一系列 <code>obj.Prog</code>
-指令，这些指令被汇编器（<code>cmd/internal/obj</code>）转换为机器代码，并写出最终的目标文件。</li>
-</ul></li>
-</ol>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img5eRkfKJ8cMojTjPoZzjr1i-20231129143006857.png" srcset="/img/loading.gif" lazyload
-alt="Go编译器概览" />
-<figcaption aria-hidden="true">Go编译器概览</figcaption>
-</figure>
-<h2 id="编译过程">编译过程</h2>
-<p>Go
-程序的编译过程符合经典编译原理的过程拆解，即三阶段编译器，分别为编译器前端、中端和后端：</p>
-<ul>
-<li><strong>前端（Front End）：</strong>
-前端的任务是进行语法分析和语义分析。这一阶段会将源代码转换为一个中间表示。在这个过程中，编译器会检查代码的语法和语义，比如语法错误、类型错误等。前端通常是依赖于具体语言的，比如
-Go 的前端和 C++ 的前端就会有很大的不同。</li>
-<li><strong>中间端（Middle End）：</strong>
-中间端的任务是对中间表示进行优化。这一阶段的优化是语言无关的，比如常量折叠、死代码消除、循环优化等。这些优化可以提高生成的代码的性能，但是不会改变程序的语义。</li>
-<li><strong>后端（Back End）：</strong>
-后端的任务是将优化后的中间表示转换为目标机器代码。这一阶段会进行更多的优化，比如寄存器分配、指令选择、指令调度等。后端通常是依赖于具体机器的，比如
-x86 的后端和 ARM 的后端就会有很大的不同。</li>
 </ul>
-<p>参考《Go 语言底层原理剖析（郑建勋）》一书，本文将 Go
-语言编译器执行流程拆分为以下几个阶段：</p>
+</li>
+<li>
+<p><strong>类型检查</strong> (<code>cmd/compile/internal/types2</code>):</p>
+<ul>
+<li><strong>类型检查</strong>：<code>types2</code> 包是 <code>go/types</code> 的一个移植版本，它使用 <code>syntax</code> 包的 AST（抽象语法树）而不是 <code>go/ast</code>。</li>
+</ul>
+</li>
+<li>
+<p><strong>IR 构建（“noding”）</strong>:</p>
+<ul>
+<li><strong>编译器类型</strong> (<code>cmd/compile/internal/types</code>)</li>
+<li><strong>编译器 AST</strong> (<code>cmd/compile/internal/ir</code>)</li>
+<li><strong>AST 转换</strong> (<code>cmd/compile/internal/typecheck</code>)</li>
+<li><strong>创建编译器 AST</strong> (<code>cmd/compile/internal/noder</code>)</li>
+<li>这个阶段使用自己的 AST 定义和 Go 类型的表示，这些定义和表示形式是用 C 编写时遗留下来的。它的所有代码都是根据这些编写的，因此类型检查后的下一步是转换语法和 <code>types2</code> 表示形式到 <code>ir</code> 和 <code>types</code>。这个过程被称为“noding”。</li>
+</ul>
+</li>
+<li>
+<p><strong>中间阶段</strong>:</p>
+<ul>
+<li><strong>死代码消除</strong> (<code>cmd/compile/internal/deadcode</code>)</li>
+<li><strong>函数调用内联</strong> (<code>cmd/compile/internal/inline</code>)</li>
+<li><strong>已知接口方法调用的去虚拟化</strong> (<code>cmd/compile/internal/devirtualize</code>)</li>
+<li><strong>逃逸分析</strong> (<code>cmd/compile/internal/escape</code>)</li>
+<li>在 IR 表示上执行几个优化过程：死代码消除、（早期的）去虚拟化、函数调用内联和逃逸分析。</li>
+</ul>
+</li>
+<li>
+<p><strong>Walk</strong> (<code>cmd/compile/internal/walk</code>):</p>
+<ul>
+<li><strong>求值顺序和语法糖</strong>：这是对 IR 表示的最后一次遍历，它有两个目的：将复杂的语句分解为简单的单个语句，引入临时变量并遵守求值顺序；将高级 Go 构造转换为更原始的构造。</li>
+</ul>
+</li>
+<li>
+<p><strong>通用 SSA</strong> (<code>cmd/compile/internal/ssa</code> 和 <code>cmd/compile/internal/ssagen</code>):</p>
+<ul>
+<li>在这个阶段，IR 被转换为静态单赋值（SSA）形式，这是一种具有特定属性的低级中间表示，使得从中实现优化并最终生成机器代码变得更容易。</li>
+</ul>
+</li>
+<li>
+<p><strong>生成机器代码</strong> (<code>cmd/compile/internal/ssa</code> 和 <code>cmd/internal/obj</code>):</p>
+<ul>
+<li>这是编译器的机器依赖阶段，以“lower”过程开始，将通用值重写为它们的机器特定变体。然后进行最终的代码优化过程。最后，Go 函数被转换为一系列 <code>obj.Prog</code> 指令，这些指令被汇编器（<code>cmd/internal/obj</code>）转换为机器代码，并写出最终的目标文件。</li>
+</ul>
+</li>
+</ol>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img5eRkfKJ8cMojTjPoZzjr1i-20231129143006857.png" srcset="/img/loading.gif" lazyload alt="Go编译器概览"></p>
+<h2 id="编译过程">编译过程</h2>
+<p>Go 程序的编译过程符合经典编译原理的过程拆解，即三阶段编译器，分别为编译器前端、中端和后端：</p>
+<ul>
+<li><strong>前端（Front End）：</strong> 前端的任务是进行语法分析和语义分析。这一阶段会将源代码转换为一个中间表示。在这个过程中，编译器会检查代码的语法和语义，比如语法错误、类型错误等。前端通常是依赖于具体语言的，比如 Go 的前端和 C++ 的前端就会有很大的不同。</li>
+<li><strong>中间端（Middle End）：</strong> 中间端的任务是对中间表示进行优化。这一阶段的优化是语言无关的，比如常量折叠、死代码消除、循环优化等。这些优化可以提高生成的代码的性能，但是不会改变程序的语义。</li>
+<li><strong>后端（Back End）：</strong> 后端的任务是将优化后的中间表示转换为目标机器代码。这一阶段会进行更多的优化，比如寄存器分配、指令选择、指令调度等。后端通常是依赖于具体机器的，比如 x86 的后端和 ARM 的后端就会有很大的不同。</li>
+</ul>
+<p>参考《Go 语言底层原理剖析（郑建勋）》一书，本文将 Go 语言编译器执行流程拆分为以下几个阶段：</p>
 <ul>
 <li>词法解析</li>
 <li>语法解析</li>
@@ -427,86 +415,50 @@ x86 的后端和 ARM 的后端就会有很大的不同。</li>
 </ul>
 <p>下面本文将以此书为参考并结合 Go1.21.0 版本，对每个过程进行阐述。</p>
 <blockquote>
-<p>如果只想对 Go
-程序的编译过程做一个简单的了解，那阅读到这里就已经足够了。</p>
+<p>如果只想对 Go 程序的编译过程做一个简单的了解，那阅读到这里就已经足够了。</p>
 </blockquote>
 <h2 id="词法解析">词法解析</h2>
-<p>词法解析过程主要负责将源代码中的字符序列转换成一系列的标记（tokens），这些标记是编译器更进一步处理的基本单位。在
-Go 语言的编译器中，<code>tokens.go</code>
-文件包含了与词法分析有关的标记定义。</p>
+<p>词法解析过程主要负责将源代码中的字符序列转换成一系列的标记（tokens），这些标记是编译器更进一步处理的基本单位。在 Go 语言的编译器中，<code>tokens.go</code> 文件包含了与词法分析有关的标记定义。</p>
 <p>词法解析的过程可以分为几个关键步骤：</p>
-<ol type="1">
+<ol>
 <li><strong>扫描（Scanning）</strong>：编译器的扫描器会逐字符读取源代码，识别出基本的语法单位，如标识符、关键字、字面量、运算符等。</li>
-<li><strong>标记生成（Token
-Generation）</strong>：每当扫描器识别出一个有效的语法单位时，它会生成一个相应的标记。例如，对于一个变量名，扫描器会生成一个标识符标记。</li>
+<li><strong>标记生成（Token Generation）</strong>：每当扫描器识别出一个有效的语法单位时，它会生成一个相应的标记。例如，对于一个变量名，扫描器会生成一个标识符标记。</li>
 <li><strong>去除空白字符和注释</strong>：在生成标记的过程中，扫描器还会忽略空白字符（如空格、换行符）和注释，因为它们对程序的逻辑没有影响。</li>
 <li><strong>错误处理</strong>：如果扫描器在源代码中遇到无法识别的字符或序列，它会生成一个错误消息。</li>
 </ol>
-<p>我们来看以下 <a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/syntax/tokens.go">tokens.go</a>
-文件中的 <code>token</code> 定义，它们实质上是用 <code>iota</code>
-声明的一系列整数：</p>
+<p>我们来看以下 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/syntax/tokens.go">tokens.go</a> 文件中的 <code>token</code> 定义，它们实质上是用 <code>iota</code> 声明的一系列整数：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">const</span> (<br>	_    token = <span class="hljs-literal">iota</span><br>	_EOF       <span class="hljs-comment">// EOF</span><br><br>	<span class="hljs-comment">// names and literals</span><br>	_Name    <span class="hljs-comment">// name</span><br>	_Literal <span class="hljs-comment">// literal</span><br><br>	<span class="hljs-comment">// operators and operations</span><br>	<span class="hljs-comment">// _Operator is excluding &#x27;*&#x27; (_Star)</span><br>	_IncOp    <span class="hljs-comment">// opop</span><br>    _Define   <span class="hljs-comment">// :=</span><br>    ...<br><br>	<span class="hljs-comment">// delimiters</span><br>	_Lparen    <span class="hljs-comment">// (</span><br>	_Rparen    <span class="hljs-comment">// )</span><br>	...<br><br>	<span class="hljs-comment">// keywords</span><br>	_Break       <span class="hljs-comment">// break</span><br>	...<br><br>	<span class="hljs-comment">// empty line comment to exclude it from .String</span><br>	tokenCount <span class="hljs-comment">//</span><br>)<br></code></pre></td></tr></table></figure>
-<p>举个例子，<code>a := b + c(12)</code>
-这个表达式，被解析后，如下图所示：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231202200135678.png" srcset="/img/loading.gif" lazyload
-alt="Go 语言编译器词法解析示例图" />
-<figcaption aria-hidden="true">Go 语言编译器词法解析示例图</figcaption>
-</figure>
+<p>举个例子，<code>a := b + c(12)</code> 这个表达式，被解析后，如下图所示：</p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231202200135678.png" srcset="/img/loading.gif" lazyload alt="Go 语言编译器词法解析示例图"></p>
 <h2 id="语法解析">语法解析</h2>
 <p>语法解析发生在词法解析之后，其主要目的是分析源代码中标记（tokens）的排列和结构，以确定它们是否形成了有效的语句。核心算法位于两个文件中：</p>
 <ul>
-<li><a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/syntax/nodes.go">syntax/nodes.go</a>：定义了语法节点（Syntax
-Nodes），这些节点是构成抽象语法树（AST）的基本元素。每个节点代表了 Go
-语法中的一个构造，比如变量声明、函数调用、表达式等。通过这些节点，编译器能够理解和表示程序代码的结构。</li>
-<li><a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/syntax/parser.go">syntax/parser.go</a>：包含了解析器的实现。解析器负责读取词法分析阶段生成的标记流，并根据这些标记构建
-AST。它遵循 Go
-语言的语法规则，确保代码符合语法结构，并在遇到语法错误时提供相应的反馈。</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/syntax/nodes.go">syntax/nodes.go</a>：定义了语法节点（Syntax Nodes），这些节点是构成抽象语法树（AST）的基本元素。每个节点代表了 Go 语法中的一个构造，比如变量声明、函数调用、表达式等。通过这些节点，编译器能够理解和表示程序代码的结构。</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/syntax/parser.go">syntax/parser.go</a>：包含了解析器的实现。解析器负责读取词法分析阶段生成的标记流，并根据这些标记构建 AST。它遵循 Go 语言的语法规则，确保代码符合语法结构，并在遇到语法错误时提供相应的反馈。</li>
 </ul>
-<p>Go 语言采用了标准的自上而下的递归下降（Top-Down
-Recursive-Descent）算法，以简单高效的方式完成无须回溯的语法扫描。</p>
-<p>下面我们来看下 <code>nodes.go</code>
-文件中对各个节点的声明（以下都省略了 struct 中的具体属性）：</p>
-<h3 id="声明-declarations">声明 Declarations</h3>
+<p>Go 语言采用了标准的自上而下的递归下降（Top-Down Recursive-Descent）算法，以简单高效的方式完成无须回溯的语法扫描。</p>
+<p>下面我们来看下 <code>nodes.go</code> 文件中对各个节点的声明（以下都省略了 struct 中的具体属性）：</p>
+<h3 id="声明-Declarations">声明 Declarations</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> (<br>	Decl <span class="hljs-keyword">interface</span> &#123;<br>		Node<br>		aDecl()<br>	&#125;<br>	ImportDecl <span class="hljs-keyword">struct</span> &#123;&#125;   	<span class="hljs-comment">// 导入声明</span><br>	ConstDecl <span class="hljs-keyword">struct</span> &#123;&#125;	   	<span class="hljs-comment">// 常量声明</span><br>	TypeDecl <span class="hljs-keyword">struct</span> &#123;&#125;	   	<span class="hljs-comment">// 类型声明</span><br>	VarDecl <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// 变量声明</span><br>	FuncDecl <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// 函数声明</span><br>)<br></code></pre></td></tr></table></figure>
-<h3 id="表达式-expressions">表达式 Expressions</h3>
+<h3 id="表达式-Expressions">表达式 Expressions</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> (<br>	Expr <span class="hljs-keyword">interface</span> &#123;<br>		Node<br>		typeInfo<br>		aExpr()<br>	&#125;<br>	<span class="hljs-comment">// 省略了结构体属性</span><br>	BadExpr <span class="hljs-keyword">struct</span> &#123;&#125;			<span class="hljs-comment">// 无效表达式</span><br>	Name <span class="hljs-keyword">struct</span> &#123;&#125;				<span class="hljs-comment">// Value</span><br>	BasicLit <span class="hljs-keyword">struct</span> &#123;&#125;			<span class="hljs-comment">// Value</span><br>	CompositeLit <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// Type &#123; ElemList[0], ElemList[1], ... &#125;</span><br>    KeyValueExpr <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// Key: Value</span><br>	FuncLit <span class="hljs-keyword">struct</span> &#123;&#125;			<span class="hljs-comment">// func Type &#123; Body &#125;</span><br>	ParenExpr <span class="hljs-keyword">struct</span> &#123;&#125;			<span class="hljs-comment">// (X)</span><br>	SelectorExpr <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// X.Sel</span><br>	IndexExpr <span class="hljs-keyword">struct</span> &#123;&#125;			<span class="hljs-comment">// X[Index]</span><br>	SliceExpr <span class="hljs-keyword">struct</span> &#123;&#125;			<span class="hljs-comment">// X[Index[0] : Index[1] : Index[2]]</span><br>	AssertExpr <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// X.(Type)</span><br>	TypeSwitchGuard <span class="hljs-keyword">struct</span> &#123;&#125;	<span class="hljs-comment">// Lhs := X.(type)</span><br>	Operation <span class="hljs-keyword">struct</span> &#123;&#125;			<span class="hljs-comment">// 操作 +-*\</span><br>	CallExpr <span class="hljs-keyword">struct</span> &#123;&#125;			<span class="hljs-comment">// Fun(ArgList[0], ArgList[1], ...)</span><br>	ListExpr <span class="hljs-keyword">struct</span> &#123;&#125;			<span class="hljs-comment">// ElemList[0], ElemList[1], ...</span><br>	ArrayType <span class="hljs-keyword">struct</span> &#123;&#125;			<span class="hljs-comment">// [Len]Elem</span><br>	SliceType <span class="hljs-keyword">struct</span> &#123;&#125;			<span class="hljs-comment">// []Elem</span><br>	DotsType <span class="hljs-keyword">struct</span> &#123;&#125;			<span class="hljs-comment">// ...Elem</span><br>	StructType <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// struct &#123; FieldList[0] TagList[0]; FieldList[1] TagList[1]; ... &#125;</span><br>	Field <span class="hljs-keyword">struct</span> &#123;&#125;				<span class="hljs-comment">// Name Type</span><br>	InterfaceType <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// interface &#123; MethodList[0]; MethodList[1]; ... &#125;</span><br>    FuncType <span class="hljs-keyword">struct</span> &#123;&#125;			<span class="hljs-comment">// type FuncName func (param1, param2) return1, return2</span><br>	MapType <span class="hljs-keyword">struct</span> &#123;&#125;			<span class="hljs-comment">// map[Key]Value</span><br>	ChanType <span class="hljs-keyword">struct</span> &#123;&#125;			<span class="hljs-comment">// chan Elem, &lt;-chan Elem, chan&lt;- Elem</span><br>)<br></code></pre></td></tr></table></figure>
-<h3 id="语句-statements">语句 Statements</h3>
+<h3 id="语句-Statements">语句 Statements</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> (<br>    <span class="hljs-comment">// 所有语句的通用接口</span><br>    Stmt <span class="hljs-keyword">interface</span> &#123;<br>       Node<br>       aStmt()<br>    &#125;<br>	<span class="hljs-comment">// 更加简单语句的通用接口</span><br>    SimpleStmt <span class="hljs-keyword">interface</span> &#123;&#125;<br><br>    EmptyStmt <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// 空语句</span><br>    LabeledStmt <span class="hljs-keyword">struct</span> &#123;&#125;	<span class="hljs-comment">// 标签语句</span><br>    BlockStmt <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// 代码块语句</span><br>    ExprStmt <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// 表达式语句</span><br>    SendStmt <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// 发送语句，用于 channel</span><br>    DeclStmt <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// 声明语句</span><br>    AssignStmt <span class="hljs-keyword">struct</span> &#123;&#125;	<span class="hljs-comment">// 赋值语句</span><br>    BranchStmt <span class="hljs-keyword">struct</span> &#123;&#125;	<span class="hljs-comment">// 分支语句，break, continue</span><br>    CallStmt <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// 调用语句</span><br>    ReturnStmt <span class="hljs-keyword">struct</span> &#123;&#125;	<span class="hljs-comment">// 返回语句</span><br>    IfStmt <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// if 条件语句</span><br>    ForStmt <span class="hljs-keyword">struct</span> &#123;&#125;		<span class="hljs-comment">// for 循环语句</span><br>    SwitchStmt <span class="hljs-keyword">struct</span> &#123;&#125;	<span class="hljs-comment">// switch 语句</span><br>    SelectStmt <span class="hljs-keyword">struct</span> &#123;&#125;	<span class="hljs-comment">// select 语句</span><br>)<br></code></pre></td></tr></table></figure>
 <p>我们可以重点来看一下最常用的赋值语句：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> AssignStmt <span class="hljs-keyword">struct</span> &#123;<br>    Op       Operator <span class="hljs-comment">// 操作符 0 means no operation</span><br>    Lhs, Rhs Expr     <span class="hljs-comment">// 左右两个表达式 Rhs == nil means Lhs++ (Op == Add) or Lhs-- (Op == Sub)</span><br>    simpleStmt<br>&#125;<br></code></pre></td></tr></table></figure>
 <h3 id="举例">举例</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;fmt&quot;</span><br><span class="hljs-keyword">const</span> name = <span class="hljs-string">&quot;hedon&quot;</span><br><span class="hljs-keyword">type</span> String <span class="hljs-type">string</span><br><span class="hljs-keyword">var</span> s String = <span class="hljs-string">&quot;hello &quot;</span> + word<br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	fmt.Println(s)<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>上面的源代码会被解析成如下图所示：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231202195439495.png" srcset="/img/loading.gif" lazyload
-alt="Go 编译器语法解析示例图" />
-<figcaption aria-hidden="true">Go 编译器语法解析示例图</figcaption>
-</figure>
-<p>再来看一个赋值语句是如何解析的，就以之前的
-<code>a := b + c(12)</code> 为例：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203003155036.png" srcset="/img/loading.gif" lazyload
-alt="特定赋值语句的语法解析示例" />
-<figcaption aria-hidden="true">特定赋值语句的语法解析示例</figcaption>
-</figure>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231202195439495.png" srcset="/img/loading.gif" lazyload alt="Go 编译器语法解析示例图"></p>
+<p>再来看一个赋值语句是如何解析的，就以之前的 <code>a := b + c(12)</code> 为例：</p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203003155036.png" srcset="/img/loading.gif" lazyload alt="特定赋值语句的语法解析示例"></p>
 <h2 id="抽象语法树构建">抽象语法树构建</h2>
-<p>编译器前端必须构建程序的中间表示形式，以便在编译器中端及后端使用，抽象语法树（Abstract
-Syntax Tree，AST）是一种常见的树状结构的中间态。</p>
+<p>编译器前端必须构建程序的中间表示形式，以便在编译器中端及后端使用，抽象语法树（Abstract Syntax Tree，AST）是一种常见的树状结构的中间态。</p>
 <h3 id="抽象语法树">抽象语法树</h3>
-<p>抽象语法树（AST，Abstract Syntax
-Tree）是源代码的树状结构表示，它用于表示编程语言的语法结构，但不包括所有语法细节。AST
-是编译器设计中的关键概念，广泛应用于编译器的各个阶段。</p>
+<p>抽象语法树（AST，Abstract Syntax Tree）是源代码的树状结构表示，它用于表示编程语言的语法结构，但不包括所有语法细节。AST 是编译器设计中的关键概念，广泛应用于编译器的各个阶段。</p>
 <p>基本概念：</p>
 <ul>
-<li>结构：AST
-是一种树形结构，其中每个节点代表程序中的一种构造（如表达式、语句等）。</li>
+<li>结构：AST 是一种树形结构，其中每个节点代表程序中的一种构造（如表达式、语句等）。</li>
 <li>抽象性：它抽象出了代码的语法结构，省略了某些语法细节（如括号、特定的语法格式等）。</li>
 </ul>
 <p>节点类型：</p>
@@ -518,34 +470,24 @@ Tree）是源代码的树状结构表示，它用于表示编程语言的语法�
 <p>构建过程：</p>
 <ul>
 <li>词法分析：源代码首先经过词法分析，分解为一系列标记（tokens）。</li>
-<li>语法分析：然后，基于这些标记，语法分析器根据编程语言的语法规则构建
-AST。</li>
+<li>语法分析：然后，基于这些标记，语法分析器根据编程语言的语法规则构建 AST。</li>
 <li>树的构建：在这个过程中，分析器会根据语言的语法创建不同类型的节点，并按照程序的结构将它们组织成树。</li>
 </ul>
 <p>使用场景：</p>
 <ul>
 <li>语义分析：编译器使用 AST 来进行类型检查和其他语义分析。</li>
-<li>代码优化：在优化阶段，编译器会对 AST
-进行变换，以提高代码的执行效率。</li>
+<li>代码优化：在优化阶段，编译器会对 AST 进行变换，以提高代码的执行效率。</li>
 <li>代码生成：编译器根据 AST 生成中间代码或目标代码。</li>
 </ul>
 <p>优点：</p>
 <ul>
-<li>简化处理：由于省略了不必要的语法细节，AST
-使得编译器的设计更为简洁和高效。</li>
+<li>简化处理：由于省略了不必要的语法细节，AST 使得编译器的设计更为简洁和高效。</li>
 <li>灵活性：AST 可以轻松地进行修改和扩展，便于实现各种编译器功能。</li>
-<li>可视化：AST
-的树形结构使得代码的逻辑结构一目了然，有助于理解和调试。</li>
+<li>可视化：AST 的树形结构使得代码的逻辑结构一目了然，有助于理解和调试。</li>
 </ul>
-<h3 id="go-构建抽象语法树">Go 构建抽象语法树</h3>
-<p>在 Go 语言源文件中的任何一种 Declarations 都是一个根节点，如下
-<code>pkgInit(decls)</code>
-函数将源文件中的所有声明语句都转换为节点（Node），代码位于：<a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/syntax/syntax.go">syntax/syntax.go</a>
-和 <a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/syntax/parser.go">syntax/parser.go</a>
-中。</p>
-<h4 id="parse">Parse()</h4>
+<h3 id="Go-构建抽象语法树">Go 构建抽象语法树</h3>
+<p>在 Go 语言源文件中的任何一种 Declarations 都是一个根节点，如下 <code>pkgInit(decls)</code> 函数将源文件中的所有声明语句都转换为节点（Node），代码位于：<a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/syntax/syntax.go">syntax/syntax.go</a> 和 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/syntax/parser.go">syntax/parser.go</a> 中。</p>
+<h4 id="Parse">Parse()</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Parse</span><span class="hljs-params">(base *PosBase, src io.Reader, errh ErrorHandler, pragh PragmaHandler, mode Mode)</span></span> (_ *File, first <span class="hljs-type">error</span>) &#123;<br>	<span class="hljs-keyword">defer</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>		<span class="hljs-keyword">if</span> p := <span class="hljs-built_in">recover</span>(); p != <span class="hljs-literal">nil</span> &#123;<br>			<span class="hljs-keyword">if</span> err, ok := p.(Error); ok &#123;<br>				first = err<br>				<span class="hljs-keyword">return</span><br>			&#125;<br>			<span class="hljs-built_in">panic</span>(p)<br>		&#125;<br>	&#125;()<br><br>	<span class="hljs-keyword">var</span> p parser<br>	p.init(base, src, errh, pragh, mode)<br>	p.next()<br>	<span class="hljs-keyword">return</span> p.fileOrNil(), p.first<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>下面是对 <code>Parse()</code> 函数的一个简单解释：</p>
 <ul>
@@ -557,100 +499,81 @@ target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-b
 <li><code>errh</code>: 错误处理函数。</li>
 <li><code>pragh</code>: 用于处理每个遇到的编译指令（pragma）。</li>
 <li><code>mode</code>: 解析模式。</li>
-</ul></li>
-<li>返回值：返回一个 <code>File</code> 类型的指针，表示解析后的
-AST，以及可能的错误。</li>
+</ul>
+</li>
+<li>返回值：返回一个 <code>File</code>  类型的指针，表示解析后的 AST，以及可能的错误。</li>
 <li>错误处理
 <ul>
-<li>如果 <code>errh</code>
-不为空：将会调用它处理每个遇到的错误，解析器尽可能多地处理源文件。此时，只有在没有找到正确的包声明时，返回的语法树才为
-<code>nil</code>。</li>
-<li>如果 <code>errh</code>
-为空：解析器在遇到第一个错误时立即终止，返回的语法树为
-<code>nil</code>。</li>
-</ul></li>
+<li>如果  <code>errh</code> 不为空：将会调用它处理每个遇到的错误，解析器尽可能多地处理源文件。此时，只有在没有找到正确的包声明时，返回的语法树才为 <code>nil</code>。</li>
+<li>如果 <code>errh</code> 为空：解析器在遇到第一个错误时立即终止，返回的语法树为 <code>nil</code>。</li>
+</ul>
+</li>
 </ul>
 <p>其中 <code>File</code> 类型结构如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> File <span class="hljs-keyword">struct</span> &#123;<br>	Pragma    Pragma <span class="hljs-comment">// 编译指令</span><br>	PkgName   *Name  <span class="hljs-comment">// 包名</span><br>	DeclList  []Decl <span class="hljs-comment">// 源文件中的各种声明</span><br>	EOF       Pos	 <span class="hljs-comment">// 解析位置</span><br>	GoVersion <span class="hljs-type">string</span> <span class="hljs-comment">// go 版本	</span><br>	node			<span class="hljs-comment">// 该源文件的 AST 根节点</span><br>&#125;<br></code></pre></td></tr></table></figure>
-<h4 id="parser.fileornil">parser.fileOrNil()</h4>
+<h4 id="parser-fileOrNil">parser.fileOrNil()</h4>
 <p>具体的解析过程在 <code>parser.fileOrNil()</code> 方法中：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(p *parser)</span></span> fileOrNil() *File &#123;<br>	<span class="hljs-keyword">if</span> trace &#123;<br>		<span class="hljs-keyword">defer</span> p.trace(<span class="hljs-string">&quot;file&quot;</span>)()<br>	&#125;<br><br>    <span class="hljs-comment">// 1. 初始化文件节点</span><br>	f := <span class="hljs-built_in">new</span>(File)<br>	f.pos = p.pos()<br><br>	<span class="hljs-comment">// 2. 解析包声明</span><br>	f.GoVersion = p.goVersion<br>	p.top = <span class="hljs-literal">false</span><br>	<span class="hljs-keyword">if</span> !p.got(_Package) &#123;	<span class="hljs-comment">// 包声明必须放在第一位，这跟我们学 Go 语法对应上了</span><br>		p.syntaxError(<span class="hljs-string">&quot;package statement must be first&quot;</span>)<br>		<span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span><br>	&#125;<br>	f.Pragma = p.takePragma() <span class="hljs-comment">// 获取编译指令</span><br>	f.PkgName = p.name()	<span class="hljs-comment">// 获取包名</span><br>    p.want(_Semi) <span class="hljs-comment">// _Semi 在之前的 tokens.go 中可以发现是分号（;)，是的，包声明后面就是得带分号</span><br><br>	<span class="hljs-comment">// 3. 处理包声明错误</span><br>	<span class="hljs-keyword">if</span> p.first != <span class="hljs-literal">nil</span> &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span><br>	&#125;<br><br>	<span class="hljs-comment">// 4. 循环解析顶层声明</span><br>    <span class="hljs-comment">// 循环处理文件中的所有声明，包括 import、const、type、var 和 func</span><br>    <span class="hljs-comment">// 对每种类型的声明，调用其解析函数，如 importDecl、constDecl 进行解析</span><br>	prev := _Import<br>	<span class="hljs-keyword">for</span> p.tok != _EOF &#123;<br>		<span class="hljs-keyword">if</span> p.tok == _Import &amp;&amp; prev != _Import &#123;<br>			p.syntaxError(<span class="hljs-string">&quot;imports must appear before other declarations&quot;</span>)<br>		&#125;<br>		prev = p.tok<br><br>		<span class="hljs-keyword">switch</span> p.tok &#123;<br>		<span class="hljs-keyword">case</span> _Import:<br>			p.next()<br>			f.DeclList = p.appendGroup(f.DeclList, p.importDecl)<br><br>		<span class="hljs-keyword">case</span> _Const:<br>			p.next()<br>			f.DeclList = p.appendGroup(f.DeclList, p.constDecl)<br><br>		<span class="hljs-keyword">case</span> _Type:<br>			p.next()<br>			f.DeclList = p.appendGroup(f.DeclList, p.typeDecl)<br><br>		<span class="hljs-keyword">case</span> _Var:<br>			p.next()<br>			f.DeclList = p.appendGroup(f.DeclList, p.varDecl)<br><br>		<span class="hljs-keyword">case</span> _Func:<br>			p.next()<br>			<span class="hljs-keyword">if</span> d := p.funcDeclOrNil(); d != <span class="hljs-literal">nil</span> &#123;<br>				f.DeclList = <span class="hljs-built_in">append</span>(f.DeclList, d)<br>			&#125;<br><br>		<span class="hljs-keyword">default</span>:<br>             <span class="hljs-comment">// 5. 处理异常和错误</span><br>			<span class="hljs-keyword">if</span> p.tok == _Lbrace &amp;&amp; <span class="hljs-built_in">len</span>(f.DeclList) &gt; <span class="hljs-number">0</span> &amp;&amp; isEmptyFuncDecl(f.DeclList[<span class="hljs-built_in">len</span>(f.DeclList)<span class="hljs-number">-1</span>]) &#123;<br>				p.syntaxError(<span class="hljs-string">&quot;unexpected semicolon or newline before &#123;&quot;</span>)<br>			&#125; <span class="hljs-keyword">else</span> &#123;<br>				p.syntaxError(<span class="hljs-string">&quot;non-declaration statement outside function body&quot;</span>)<br>			&#125;<br>			p.advance(_Import, _Const, _Type, _Var, _Func)<br>			<span class="hljs-keyword">continue</span><br>		&#125;<br><br>		<span class="hljs-comment">// Reset p.pragma BEFORE advancing to the next token (consuming &#x27;;&#x27;)</span><br>		<span class="hljs-comment">// since comments before may set pragmas for the next function decl.</span><br>		p.clearPragma()<br><br>		<span class="hljs-keyword">if</span> p.tok != _EOF &amp;&amp; !p.got(_Semi) &#123;<br>			p.syntaxError(<span class="hljs-string">&quot;after top level declaration&quot;</span>)<br>			p.advance(_Import, _Const, _Type, _Var, _Func)<br>		&#125;<br>	&#125;<br><br>    <span class="hljs-comment">// 6. 完成解析，记录文件结束的位置</span><br>	p.clearPragma()<br>	f.EOF = p.pos()<br><br>	<span class="hljs-keyword">return</span> f<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>总结 <code>parser.fileOrNil()</code> 方法的处理过程大致如下：</p>
-<ol type="1">
+<ol>
 <li><strong>初始化文件节点</strong>：
 <ul>
-<li><code>f := new(File)</code>: 创建一个新的 <code>File</code>
-节点。</li>
+<li><code>f := new(File)</code>: 创建一个新的 <code>File</code> 节点。</li>
 <li><code>f.pos = p.pos()</code>: 设置节点的位置信息。</li>
-</ul></li>
+</ul>
+</li>
 <li><strong>解析包声明（Package Clause）</strong>：
 <ul>
 <li><code>f.GoVersion = p.goVersion</code>: 记录 Go 版本。</li>
 <li><code>p.top = false</code>: 设置状态，表示不再处于文件顶层。</li>
-<li><code>if !p.got(_Package) &#123;...&#125;</code>:
-检查是否存在包声明，如果没有，则报错并返回 <code>nil</code>。</li>
-<li><code>f.Pragma = p.takePragma()</code>:
-获取与包声明相关的编译指令。</li>
+<li><code>if !p.got(_Package) &#123;...&#125;</code>: 检查是否存在包声明，如果没有，则报错并返回 <code>nil</code>。</li>
+<li><code>f.Pragma = p.takePragma()</code>: 获取与包声明相关的编译指令。</li>
 <li><code>f.PkgName = p.name()</code>: 获取包名。</li>
 <li><code>p.want(_Semi)</code>: 确认包声明后有分号。</li>
-</ul></li>
+</ul>
+</li>
 <li><strong>处理包声明错误</strong>：
 <ul>
-<li><code>if p.first != nil &#123;...&#125;</code>: 如果已有错误，停止解析并返回
-<code>nil</code>。</li>
-</ul></li>
+<li><code>if p.first != nil &#123;...&#125;</code>: 如果已有错误，停止解析并返回 <code>nil</code>。</li>
+</ul>
+</li>
 <li><strong>解析顶层声明</strong>：
 <ul>
 <li>通过一个循环处理文件中的所有声明，包括导入（import）、常量（const）、类型（type）、变量（var）和函数（func）。</li>
-<li>对每种类型的声明，调用相应的解析函数（如
-<code>p.importDecl</code>、<code>p.constDecl</code> 等）。</li>
+<li>对每种类型的声明，调用相应的解析函数（如 <code>p.importDecl</code>、<code>p.constDecl</code> 等）。</li>
 <li>将解析得到的声明添加到 <code>f.DeclList</code> 中。</li>
-</ul></li>
+</ul>
+</li>
 <li><strong>处理异常和错误</strong>：
 <ul>
 <li>在解析过程中遇到的任何不符合语法的情况都会触发错误处理。</li>
 <li>使用 <code>p.syntaxError</code> 报告语法错误。</li>
-<li>使用 <code>p.advance</code>
-在遇到错误时跳过一些标记，以尝试恢复到一个已知的稳定状态。</li>
-</ul></li>
+<li>使用 <code>p.advance</code> 在遇到错误时跳过一些标记，以尝试恢复到一个已知的稳定状态。</li>
+</ul>
+</li>
 <li><strong>完成解析</strong>：
 <ul>
 <li>当遇到文件结束标记（EOF）时，完成解析。</li>
 <li><code>f.EOF = p.pos()</code>: 记录文件结束的位置。</li>
 <li>返回构建的 <code>File</code> 节点。</li>
-</ul></li>
+</ul>
+</li>
 </ol>
-<h3 id="op-字段">Op 字段</h3>
-<p>AST 每个节点都包含了当前节点属性的 Op 字段，定义在
-<code>ir/node.go</code> 中，以 O 开头。与词法解析阶段中的 token
-相同的是，Op 字段也是一个整数。不同的是，每个 Op
-字段都包含了语义信息。例如，当一个节点的 Op 操作为 OAS
-时，该节点代表的语义为 Left := Right，而当节点的操作为 OAS2
-时，代码的语义为 x,y,z = a,b,c。</p>
+<h3 id="Op-字段">Op 字段</h3>
+<p>AST 每个节点都包含了当前节点属性的 Op 字段，定义在 <code>ir/node.go</code> 中，以 O 开头。与词法解析阶段中的 token 相同的是，Op 字段也是一个整数。不同的是，每个 Op 字段都包含了语义信息。例如，当一个节点的 Op 操作为 OAS 时，该节点代表的语义为 Left := Right，而当节点的操作为 OAS2 时，代码的语义为 x,y,z = a,b,c。</p>
 <p>这里仅展示部分 Op 字段的定义：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Op <span class="hljs-type">uint8</span><br><br><span class="hljs-comment">// Node ops.</span><br><span class="hljs-keyword">const</span> (<br>	OXXX Op = <span class="hljs-literal">iota</span><br><br>	<span class="hljs-comment">// names</span><br>	ONAME <span class="hljs-comment">// var or func name</span><br>	<span class="hljs-comment">// Unnamed arg or return value: f(int, string) (int, error) &#123; etc &#125;</span><br>	<span class="hljs-comment">// Also used for a qualified package identifier that hasn&#x27;t been resolved yet.</span><br>	ONONAME<br>	OTYPE    <span class="hljs-comment">// type name</span><br>	OLITERAL <span class="hljs-comment">// literal</span><br>	ONIL     <span class="hljs-comment">// nil</span><br><br>	<span class="hljs-comment">// expressions</span><br>	OADD          <span class="hljs-comment">// X + Y</span><br>	...<br>	<span class="hljs-comment">// X = Y or (if Def=true) X := Y</span><br>	<span class="hljs-comment">// If Def, then Init includes a DCL node for X.</span><br>	OAS<br>	<span class="hljs-comment">// Lhs = Rhs (x, y, z = a, b, c) or (if Def=true) Lhs := Rhs</span><br>	<span class="hljs-comment">// If Def, then Init includes DCL nodes for Lhs</span><br>	OAS2<br>	...<br>    <br>    <span class="hljs-comment">// statements</span><br>    OLABEL    <span class="hljs-comment">// Label:</span><br>    ...<br>	OEND<br>)<br></code></pre></td></tr></table></figure>
-<p>以前面举例的赋值语句 <code>a := b + c(12)</code>
-为例，该赋值语句最终会编程如下图所示的抽象语法树，节点之间具有从上到下的层次结构和依赖关系。</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203003058976.png" srcset="/img/loading.gif" lazyload
-alt="抽象语法树示例图" />
-<figcaption aria-hidden="true">抽象语法树示例图</figcaption>
-</figure>
+<p>以前面举例的赋值语句 <code>a := b + c(12)</code> 为例，该赋值语句最终会编程如下图所示的抽象语法树，节点之间具有从上到下的层次结构和依赖关系。</p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203003058976.png" srcset="/img/loading.gif" lazyload alt="抽象语法树示例图"></p>
 <h2 id="类型检查">类型检查</h2>
-<p>完成 AST
-的初步构建后，就进入类型检查阶段遍历节点树并决定节点的类型。具体的代码在
-<a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/types2/check.go">types2/check,go</a>。</p>
-<h3 id="checker.checkfiles">checker.CheckFiles()</h3>
+<p>完成 AST 的初步构建后，就进入类型检查阶段遍历节点树并决定节点的类型。具体的代码在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/types2/check.go">types2/check,go</a>。</p>
+<h3 id="checker-CheckFiles">checker.CheckFiles()</h3>
 <p>其中最核心的方法就是 <code>checker.CheckFiles()</code>：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(check *Checker)</span></span> checkFiles(files []*syntax.File) (err <span class="hljs-type">error</span>) &#123;<br>    <span class="hljs-comment">// 1. 不检查 unsafe 包</span><br>	<span class="hljs-keyword">if</span> check.pkg == Unsafe &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span><br>	&#125;<br>	<br>    <span class="hljs-comment">// 2. 检查 go 版本</span><br>	check.version, err = parseGoVersion(check.conf.GoVersion)<br>	<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>		<span class="hljs-keyword">return</span> err<br>	&#125;<br>	<span class="hljs-keyword">if</span> check.version.after(version&#123;<span class="hljs-number">1</span>, goversion.Version&#125;) &#123;<br>		<span class="hljs-keyword">return</span> fmt.Errorf(<span class="hljs-string">&quot;package requires newer Go version %v&quot;</span>, check.version)<br>	&#125;<br>	<span class="hljs-keyword">if</span> check.conf.FakeImportC &amp;&amp; check.conf.go115UsesCgo &#123;<br>		<span class="hljs-keyword">return</span> errBadCgo<br>	&#125;<br><br>    <span class="hljs-comment">// 3. 错误处理</span><br>	<span class="hljs-keyword">defer</span> check.handleBailout(&amp;err)<br><br>    <span class="hljs-comment">// 4. 详细检查每个地方</span><br>	<span class="hljs-built_in">print</span> := <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(msg <span class="hljs-type">string</span>)</span></span> &#123;<br>		<span class="hljs-keyword">if</span> check.conf.Trace &#123;<br>			fmt.Println()<br>			fmt.Println(msg)<br>		&#125;<br>	&#125;<br>	<span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;== initFiles ==&quot;</span>)<br>	check.initFiles(files)<br>	<span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;== collectObjects ==&quot;</span>)<br>	check.collectObjects()<br>	<span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;== packageObjects ==&quot;</span>)<br>	check.packageObjects()<br>	<span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;== processDelayed ==&quot;</span>)<br>	check.processDelayed(<span class="hljs-number">0</span>) <span class="hljs-comment">// incl. all functions</span><br>	<span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;== cleanup ==&quot;</span>)<br>	check.cleanup()<br>	<span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;== initOrder ==&quot;</span>)<br>	check.initOrder()<br>	<span class="hljs-keyword">if</span> !check.conf.DisableUnusedImportCheck &#123;<br>		<span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;== unusedImports ==&quot;</span>)<br>		check.unusedImports()<br>	&#125;<br>	<span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;== recordUntyped ==&quot;</span>)<br>	check.recordUntyped()<br>	<span class="hljs-keyword">if</span> check.firstErr == <span class="hljs-literal">nil</span> &#123;<br>		check.monomorph()<br>	&#125;<br>	check.pkg.goVersion = check.conf.GoVersion<br>	check.pkg.complete = <span class="hljs-literal">true</span><br><br>	<span class="hljs-comment">// 5. 更新和清理</span><br>	check.imports = <span class="hljs-literal">nil</span><br>	check.dotImportMap = <span class="hljs-literal">nil</span><br>	check.pkgPathMap = <span class="hljs-literal">nil</span><br>	check.seenPkgMap = <span class="hljs-literal">nil</span><br>	check.recvTParamMap = <span class="hljs-literal">nil</span><br>	check.brokenAliases = <span class="hljs-literal">nil</span><br>	check.unionTypeSets = <span class="hljs-literal">nil</span><br>	check.ctxt = <span class="hljs-literal">nil</span><br>	<span class="hljs-keyword">return</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>总结 <code>checker.checkFiles()</code> 的过程大致如下：</p>
-<ol type="1">
-<li><strong>检查特殊包</strong>：如果是 <code>Unsafe</code>
-包，则直接返回，因为它不能进行类型检查且不应被修改。</li>
-<li><strong>解析Go版本</strong>：根据配置解析 Go
-版本，并进行兼容性检查。</li>
+<ol>
+<li><strong>检查特殊包</strong>：如果是 <code>Unsafe</code> 包，则直接返回，因为它不能进行类型检查且不应被修改。</li>
+<li><strong>解析Go版本</strong>：根据配置解析 Go 版本，并进行兼容性检查。</li>
 <li><strong>错误处理</strong>：设置一个延迟函数来处理任何可能出现的错误。</li>
 <li><strong>类型检查的步骤</strong>：
 <ul>
@@ -663,70 +586,48 @@ target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-b
 <li><code>unusedImports</code>: 检查未使用的导入。</li>
 <li><code>recordUntyped</code>: 记录未定类型。</li>
 <li><code>monomorph</code>: 如果没有错误，进行单态化处理。</li>
-</ul></li>
+</ul>
+</li>
 <li><strong>更新和清理</strong>：
 <ul>
 <li>更新包的 Go 版本和完成状态。</li>
 <li>清理不再需要的内部数据结构，释放内存。</li>
-</ul></li>
+</ul>
+</li>
 <li><strong>返回</strong>：函数完成类型检查并返回。</li>
 </ol>
-<p>可以看出具体的检查步骤都封装在第 4
-点的各个函数中，其实检查的东西我们学习 Go
-语言时所需要掌握的那些语法，我们以 <code>initFiles</code>
-为例子来分析一下，对于其他检查函数，你有兴趣的话也可以了解一下，这里推荐将函数源代码拷贝发给
-<strong>ChatGPT-4</strong>，相信对你会有很大的帮助。</p>
-<h3 id="checker.initfiles">checker.initFiles()</h3>
+<p>可以看出具体的检查步骤都封装在第 4 点的各个函数中，其实检查的东西我们学习 Go 语言时所需要掌握的那些语法，我们以 <code>initFiles</code> 为例子来分析一下，对于其他检查函数，你有兴趣的话也可以了解一下，这里推荐将函数源代码拷贝发给 <strong>ChatGPT-4</strong>，相信对你会有很大的帮助。</p>
+<h3 id="checker-initFiles">checker.initFiles()</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// initFiles 初始化与文件相关的类型检查器</span><br><span class="hljs-comment">// 参数中的 files 必须都属于同一个 package</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(check *Checker)</span></span> initFiles(files []*syntax.File) &#123;<br>	<span class="hljs-comment">// 1. 初始化</span><br>	check.files = <span class="hljs-literal">nil</span><br>	check.imports = <span class="hljs-literal">nil</span><br>	check.dotImportMap = <span class="hljs-literal">nil</span><br>	check.firstErr = <span class="hljs-literal">nil</span><br>	check.methods = <span class="hljs-literal">nil</span><br>	check.untyped = <span class="hljs-literal">nil</span><br>	check.delayed = <span class="hljs-literal">nil</span><br>	check.objPath = <span class="hljs-literal">nil</span><br>	check.cleaners = <span class="hljs-literal">nil</span><br><br>	<span class="hljs-comment">// 2. 确定包名和有效文件</span><br>	pkg := check.pkg<br>	<span class="hljs-keyword">for</span> _, file := <span class="hljs-keyword">range</span> files &#123;<br>		<span class="hljs-keyword">switch</span> name := file.PkgName.Value; pkg.name &#123;<br>		<span class="hljs-keyword">case</span> <span class="hljs-string">&quot;&quot;</span>:<br>			<span class="hljs-keyword">if</span> name != <span class="hljs-string">&quot;_&quot;</span> &#123;<br>				pkg.name = name<br>			&#125; <span class="hljs-keyword">else</span> &#123;<br>				check.<span class="hljs-type">error</span>(file.PkgName, BlankPkgName, <span class="hljs-string">&quot;invalid package name _&quot;</span>)<br>			&#125;<br>			<span class="hljs-keyword">fallthrough</span><br><br>		<span class="hljs-keyword">case</span> name:<br>			check.files = <span class="hljs-built_in">append</span>(check.files, file)<br><br>		<span class="hljs-keyword">default</span>:<br>			check.errorf(file, MismatchedPkgName, <span class="hljs-string">&quot;package %s; expected %s&quot;</span>, name, pkg.name)<br>			<span class="hljs-comment">// ignore this file</span><br>		&#125;<br>	&#125;<br><br>    <span class="hljs-comment">// 3. 对每个文件，解析其中指定的 Go 版本</span><br>	<span class="hljs-keyword">for</span> _, file := <span class="hljs-keyword">range</span> check.files &#123;<br>		v, _ := parseGoVersion(file.GoVersion)<br>		<span class="hljs-keyword">if</span> v.major &gt; <span class="hljs-number">0</span> &#123;<br>			<span class="hljs-keyword">if</span> v.equal(check.version) &#123;<br>				<span class="hljs-keyword">continue</span><br>			&#125;<br>			<span class="hljs-comment">// Go 1.21 introduced the feature of setting the go.mod</span><br>			<span class="hljs-comment">// go line to an early version of Go and allowing //go:build lines</span><br>			<span class="hljs-comment">// to “upgrade” the Go version in a given file.</span><br>			<span class="hljs-comment">// We can do that backwards compatibly.</span><br>			<span class="hljs-comment">// Go 1.21 also introduced the feature of allowing //go:build lines</span><br>			<span class="hljs-comment">// to “downgrade” the Go version in a given file.</span><br>			<span class="hljs-comment">// That can&#x27;t be done compatibly in general, since before the</span><br>			<span class="hljs-comment">// build lines were ignored and code got the module&#x27;s Go version.</span><br>			<span class="hljs-comment">// To work around this, downgrades are only allowed when the</span><br>			<span class="hljs-comment">// module&#x27;s Go version is Go 1.21 or later.</span><br>			<span class="hljs-comment">// If there is no check.version, then we don&#x27;t really know what Go version to apply.</span><br>			<span class="hljs-comment">// Legacy tools may do this, and they historically have accepted everything.</span><br>			<span class="hljs-comment">// Preserve that behavior by ignoring //go:build constraints entirely in that case.</span><br>			<span class="hljs-keyword">if</span> (v.before(check.version) &amp;&amp; check.version.before(version&#123;<span class="hljs-number">1</span>, <span class="hljs-number">21</span>&#125;)) || check.version.equal(version&#123;<span class="hljs-number">0</span>, <span class="hljs-number">0</span>&#125;) &#123;<br>				<span class="hljs-keyword">continue</span><br>			&#125;<br>			<span class="hljs-keyword">if</span> check.posVers == <span class="hljs-literal">nil</span> &#123;<br>				check.posVers = <span class="hljs-built_in">make</span>(<span class="hljs-keyword">map</span>[*syntax.PosBase]version)<br>			&#125;<br>			check.posVers[base(file.Pos())] = v<br>		&#125;<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>总结 <code>checker.initFiles()</code> 方法的大致流程如下：</p>
-<ol type="1">
-<li><strong>初始化状态</strong>：清空 <code>Checker</code>
-结构体中与文件相关的多个字段，如 <code>files</code>,
-<code>imports</code>, <code>dotImportMap</code>
-等，为新的检查过程做准备。</li>
+<ol>
+<li><strong>初始化状态</strong>：清空 <code>Checker</code> 结构体中与文件相关的多个字段，如 <code>files</code>, <code>imports</code>, <code>dotImportMap</code> 等，为新的检查过程做准备。</li>
 <li><strong>确定包名和有效文件</strong>：
 <ul>
 <li>遍历提供的文件，确定包名，并收集有效的文件。</li>
-<li>如果文件的包名与 <code>Checker</code>
-中的包名不匹配，则报错并忽略该文件。</li>
-</ul></li>
+<li>如果文件的包名与 <code>Checker</code> 中的包名不匹配，则报错并忽略该文件。</li>
+</ul>
+</li>
 <li><strong>处理Go版本</strong>：
 <ul>
 <li>对每个文件，解析其中指定的 Go 版本。</li>
-<li>处理 Go 版本的兼容性和升级逻辑，尤其是在 Go 1.21 引入的一些特性，如
-<code>//go:build</code> 行的处理。</li>
-</ul></li>
+<li>处理 Go 版本的兼容性和升级逻辑，尤其是在 Go 1.21 引入的一些特性，如 <code>//go:build</code> 行的处理。</li>
+</ul>
+</li>
 </ol>
-<p>可以看到 Go 语言开发团队在这里写了一大段关于 Go1.21
-的注释，这段注释描述了 Go 1.21 版本引入的关于 Go
-版本设置的两个新特性,这里简单解释一下：</p>
-<ol type="1">
-<li><strong>升级 Go 版本的特性</strong>：在 Go 1.21 版本中，可以在
-<code>go.mod</code> 文件里设置一个较旧的Go版本，同时允许在源文件中通过
-<code>//go:build</code> 行来指定一个更高的 Go
-版本。这样做可以向后兼容，即允许旧版本代码在新版本的 Go
-环境中运行。</li>
-<li><strong>降级 Go 版本的限制</strong>：Go 1.21 也允许通过
-<code>//go:build</code> 行来降低源文件中的 Go
-版本。但这通常不是向后兼容的，因为在以前，<code>//go:build</code>
-行被忽略，代码总是使用模块定义的 Go 版本。为了避免兼容性问题，仅当模块的
-Go 版本为 1.21 或更高时，才允许这种降级。</li>
+<p>可以看到 Go 语言开发团队在这里写了一大段关于 Go1.21 的注释，这段注释描述了 Go 1.21 版本引入的关于 Go 版本设置的两个新特性,这里简单解释一下：</p>
+<ol>
+<li><strong>升级 Go 版本的特性</strong>：在 Go 1.21 版本中，可以在 <code>go.mod</code> 文件里设置一个较旧的Go版本，同时允许在源文件中通过 <code>//go:build</code> 行来指定一个更高的 Go 版本。这样做可以向后兼容，即允许旧版本代码在新版本的 Go 环境中运行。</li>
+<li><strong>降级 Go 版本的限制</strong>：Go 1.21 也允许通过 <code>//go:build</code> 行来降低源文件中的 Go 版本。但这通常不是向后兼容的，因为在以前，<code>//go:build</code> 行被忽略，代码总是使用模块定义的 Go 版本。为了避免兼容性问题，仅当模块的 Go 版本为 1.21 或更高时，才允许这种降级。</li>
 </ol>
-<p><strong>未指定版本的情况</strong>：如果没有明确指定
-<code>check.version</code>，编译器就不确定应该使用哪个 Go
-版本。为了保持与旧工具的兼容，如果没有明确的版本约束，编译器将忽略
-<code>//go:build</code> 行的限制。</p>
+<p><strong>未指定版本的情况</strong>：如果没有明确指定 <code>check.version</code>，编译器就不确定应该使用哪个 Go 版本。为了保持与旧工具的兼容，如果没有明确的版本约束，编译器将忽略 <code>//go:build</code> 行的限制。</p>
 <h2 id="死代码消除">死代码消除</h2>
-<p>类型检查阶段完成后，编译器前端工作基本完成，后面就进入中端了。这个阶段
-Go 语言编译器将对 AST 进行分析和重构，从而完成一系列优化。</p>
-<p>第一部分是死代码消除（dead code
-elimination），过程识别并移除不会在运行时执行的代码。这包括未使用的变量、函数、常量等。通过删除这些无用代码片段，可以减小最终程序的大小并提高运行效率。</p>
-<p>这部分的代码在：<a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/deadcode/deadcode.go">deadcode/deadcode.go</a>。打开代码文件，可以看到核心就是
-<code>Func()</code> 和 <code>stmt()</code> 这 2 个函数。</p>
-<h3 id="func">Func()</h3>
+<p>类型检查阶段完成后，编译器前端工作基本完成，后面就进入中端了。这个阶段 Go 语言编译器将对 AST 进行分析和重构，从而完成一系列优化。</p>
+<p>第一部分是死代码消除（dead code elimination），过程识别并移除不会在运行时执行的代码。这包括未使用的变量、函数、常量等。通过删除这些无用代码片段，可以减小最终程序的大小并提高运行效率。</p>
+<p>这部分的代码在：<a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/deadcode/deadcode.go">deadcode/deadcode.go</a>。打开代码文件，可以看到核心就是 <code>Func()</code> 和 <code>stmt()</code> 这 2 个函数。</p>
+<h3 id="Func">Func()</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Func</span><span class="hljs-params">(fn *ir.Func)</span></span> &#123;<br>    <br>    <span class="hljs-comment">// 1. 对函数体进行预处理</span><br>	stmts(&amp;fn.Body)<br>	<br>    <span class="hljs-comment">// 2. 空函数体直接返回</span><br>	<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(fn.Body) == <span class="hljs-number">0</span> &#123;<br>		<span class="hljs-keyword">return</span><br>	&#125;<br><br>    <span class="hljs-comment">// 3. 遍历函数体，对其中每个节点进行处理</span><br>	<span class="hljs-keyword">for</span> _, n := <span class="hljs-keyword">range</span> fn.Body &#123;<br>        <span class="hljs-comment">// 节点有任何初始化操作，则不可消除，提前返回。</span><br>		<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(n.Init()) &gt; <span class="hljs-number">0</span> &#123;<br>			<span class="hljs-keyword">return</span><br>		&#125;<br>		<span class="hljs-keyword">switch</span> n.Op() &#123;<br>		<span class="hljs-keyword">case</span> ir.OIF:<br>			n := n.(*ir.IfStmt)<br>            <span class="hljs-comment">// 如果 if 语句判断条件不是常量，或者 if else 中的 body 不为空，则不可消除，提前返回</span><br>			<span class="hljs-keyword">if</span> !ir.IsConst(n.Cond, constant.Bool) || <span class="hljs-built_in">len</span>(n.Body) &gt; <span class="hljs-number">0</span> || <span class="hljs-built_in">len</span>(n.Else) &gt; <span class="hljs-number">0</span> &#123;<br>				<span class="hljs-keyword">return</span><br>			&#125;<br>		<span class="hljs-keyword">case</span> ir.OFOR:<br>			n := n.(*ir.ForStmt)<br>            <span class="hljs-comment">// 如果 for 循环条件不是常量或一直为真，则不可消除，提前返回</span><br>			<span class="hljs-keyword">if</span> !ir.IsConst(n.Cond, constant.Bool) || ir.BoolVal(n.Cond) &#123;<br>				<span class="hljs-keyword">return</span><br>			&#125;<br>		<span class="hljs-keyword">default</span>:<br>			<span class="hljs-keyword">return</span><br>		&#125;<br>	&#125;<br><br>    <span class="hljs-comment">// 4. 标记隐藏闭包为死代码</span><br>	ir.VisitList(fn.Body, markHiddenClosureDead)<br>    <span class="hljs-comment">// 5. 重置函数体，替换为一个空语句，进行清理和优化</span><br>	fn.Body = []ir.Node&#123;ir.NewBlockStmt(base.Pos, <span class="hljs-literal">nil</span>)&#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
-<ol type="1">
+<ol>
 <li><strong>语句处理（<code>stmts(&amp;fn.Body)</code>）</strong>：对函数体中的语句进行预处理或转换，以便于后续的分析和优化。</li>
 <li><strong>空函数体直接返回</strong>：如果函数体为空，没有任何代码需要执行，因此函数直接返回。这是一种优化，避免对空函数体进行不必要的分析。</li>
 <li><strong>遍历函数体</strong>:
@@ -734,61 +635,49 @@ target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-b
 <li><strong>节点初始化检查</strong>：如果任何节点有初始化操作，意味着可能存在副作用或必要的代码执行，因此函数提前返回。</li>
 <li><code>If</code> 和 <code>For</code> 语句特殊处理
 <ul>
-<li><code>ir.OIF</code>：如果 <code>If</code>
-语句的条件不是常量布尔值，或者 <code>If</code> 语句有非空的 body 或 else
-分支，则提前返回，因为这些分支可能包含重要的代码。</li>
-<li><code>ir.OFOR</code>：对于 <code>For</code>
-循环，如果条件不是常量布尔值或者布尔值为真，意味着循环可能执行，因此提前返回。</li>
-</ul></li>
-</ul></li>
+<li><code>ir.OIF</code>：如果 <code>If</code> 语句的条件不是常量布尔值，或者 <code>If</code> 语句有非空的 body 或 else 分支，则提前返回，因为这些分支可能包含重要的代码。</li>
+<li><code>ir.OFOR</code>：对于 <code>For</code> 循环，如果条件不是常量布尔值或者布尔值为真，意味着循环可能执行，因此提前返回。</li>
+</ul>
+</li>
+</ul>
+</li>
 <li><strong>标记隐藏闭包为死代码（<code>markHiddenClosureDead</code>）</strong>：如果所有节点都不触发提前返回，意味着整个函数体可能没有有效的代码执行。此时，将隐藏的闭包标记为死代码，可能是为了进一步的优化处理，如移除这些代码。</li>
 <li><strong>重置函数体</strong>：最后，将函数体替换为一个空的新块语句，这表明原始的函数体被认为是无效的或不会被执行，从而进行了代码的清理和优化。</li>
 </ol>
 <h3 id="stmt">stmt()</h3>
 <p>这个函数的目的是通过分析和简化控制流结构，来识别和移除那些在程序执行中永远不会到达的代码部分。这样的优化可以减少编译后的代码量，并提高程序运行时的效率。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">stmts</span><span class="hljs-params">(nn *ir.Nodes)</span></span> &#123;<br>    <br>    <span class="hljs-comment">// 1. 标记最后一个标签，其对应的 Op 字段就是 OLABEL</span><br>	<span class="hljs-keyword">var</span> lastLabel = <span class="hljs-number">-1</span><br>	<span class="hljs-keyword">for</span> i, n := <span class="hljs-keyword">range</span> *nn &#123;<br>		<span class="hljs-keyword">if</span> n != <span class="hljs-literal">nil</span> &amp;&amp; n.Op() == ir.OLABEL &#123;<br>			lastLabel = i<br>		&#125;<br>	&#125;<br>    <br>    <span class="hljs-comment">// 2. 处理 if 和 switch 语句</span><br>	<span class="hljs-keyword">for</span> i, n := <span class="hljs-keyword">range</span> *nn &#123;<br>		cut := <span class="hljs-literal">false</span><br>		<span class="hljs-keyword">if</span> n == <span class="hljs-literal">nil</span> &#123;<br>			<span class="hljs-keyword">continue</span><br>		&#125;<br>		<span class="hljs-keyword">if</span> n.Op() == ir.OIF &#123;<br>			n := n.(*ir.IfStmt)<br>			n.Cond = expr(n.Cond)<br>             <span class="hljs-comment">// if 语句根据条件是否为常量来保留和移除分支</span><br>			<span class="hljs-keyword">if</span> ir.IsConst(n.Cond, constant.Bool) &#123;<br>				<span class="hljs-keyword">var</span> body ir.Nodes<br>				<span class="hljs-keyword">if</span> ir.BoolVal(n.Cond) &#123;<br>					ir.VisitList(n.Else, markHiddenClosureDead)<br>					n.Else = ir.Nodes&#123;&#125;<br>					body = n.Body<br>				&#125; <span class="hljs-keyword">else</span> &#123;<br>					ir.VisitList(n.Body, markHiddenClosureDead)<br>					n.Body = ir.Nodes&#123;&#125;<br>					body = n.Else<br>				&#125;<br>                 <span class="hljs-comment">// 如果 then 或 else 分支以 panic 或 return 语句结束，那么可以安全地移除该节点之后的所有语句。</span><br>                 <span class="hljs-comment">// 这是因为 panic 或 return 会导致函数终止，后续的代码永远不会被执行。</span><br>                 <span class="hljs-comment">// 同时，注释提到要避免移除标签（labels），因为它们可能是 goto 语句的目标，</span><br>                 <span class="hljs-comment">// 而且为了避免 goto 相关的复杂性，没有使用 isterminating 标记。</span><br>                 <span class="hljs-comment">// might be the target of a goto. See issue 28616.</span><br>				<span class="hljs-keyword">if</span> body := body; <span class="hljs-built_in">len</span>(body) != <span class="hljs-number">0</span> &#123;<br>					<span class="hljs-keyword">switch</span> body[(<span class="hljs-built_in">len</span>(body) - <span class="hljs-number">1</span>)].Op() &#123;<br>					<span class="hljs-keyword">case</span> ir.ORETURN, ir.OTAILCALL, ir.OPANIC:<br>						<span class="hljs-keyword">if</span> i &gt; lastLabel &#123;<br>							cut = <span class="hljs-literal">true</span><br>						&#125;<br>					&#125;<br>				&#125;<br>			&#125;<br>		&#125;<br>        <span class="hljs-comment">// 尝试简化 switch 语句，根据条件值决定哪个分支始终被执行</span><br>		<span class="hljs-keyword">if</span> n.Op() == ir.OSWITCH &#123;<br>			n := n.(*ir.SwitchStmt)<br>			<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>				<span class="hljs-keyword">if</span> n.Tag != <span class="hljs-literal">nil</span> &amp;&amp; n.Tag.Op() == ir.OTYPESW &#123;<br>					<span class="hljs-keyword">return</span> <span class="hljs-comment">// no special type-switch case yet.</span><br>				&#125;<br>				<span class="hljs-keyword">var</span> x constant.Value <span class="hljs-comment">// value we&#x27;re switching on</span><br>				<span class="hljs-keyword">if</span> n.Tag != <span class="hljs-literal">nil</span> &#123;<br>					<span class="hljs-keyword">if</span> ir.ConstType(n.Tag) == constant.Unknown &#123;<br>						<span class="hljs-keyword">return</span><br>					&#125;<br>					x = n.Tag.Val()<br>				&#125; <span class="hljs-keyword">else</span> &#123;<br>					x = constant.MakeBool(<span class="hljs-literal">true</span>) <span class="hljs-comment">// switch &#123; ... &#125;  =&gt;  switch true &#123; ... &#125;</span><br>				&#125;<br>				<span class="hljs-keyword">var</span> def *ir.CaseClause<br>				<span class="hljs-keyword">for</span> _, cas := <span class="hljs-keyword">range</span> n.Cases &#123;<br>					<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(cas.List) == <span class="hljs-number">0</span> &#123; <span class="hljs-comment">// default case</span><br>						def = cas<br>						<span class="hljs-keyword">continue</span><br>					&#125;<br>					<span class="hljs-keyword">for</span> _, c := <span class="hljs-keyword">range</span> cas.List &#123;<br>						<span class="hljs-keyword">if</span> ir.ConstType(c) == constant.Unknown &#123;<br>							<span class="hljs-keyword">return</span> <span class="hljs-comment">// can&#x27;t statically tell if it matches or not - give up.</span><br>						&#125;<br>						<span class="hljs-keyword">if</span> constant.Compare(x, token.EQL, c.Val()) &#123;<br>							<span class="hljs-keyword">for</span> _, n := <span class="hljs-keyword">range</span> cas.Body &#123;<br>								<span class="hljs-keyword">if</span> n.Op() == ir.OFALL &#123;<br>									<span class="hljs-keyword">return</span> <span class="hljs-comment">// fallthrough makes it complicated - abort.</span><br>								&#125;<br>							&#125;<br>							<span class="hljs-comment">// This switch entry is the one that always triggers.</span><br>							<span class="hljs-keyword">for</span> _, cas2 := <span class="hljs-keyword">range</span> n.Cases &#123;<br>								<span class="hljs-keyword">for</span> _, c2 := <span class="hljs-keyword">range</span> cas2.List &#123;<br>									ir.Visit(c2, markHiddenClosureDead)<br>								&#125;<br>								<span class="hljs-keyword">if</span> cas2 != cas &#123;<br>									ir.VisitList(cas2.Body, markHiddenClosureDead)<br>								&#125;<br>							&#125;<br><br>							<span class="hljs-comment">// Rewrite to switch &#123; case true: ... &#125;</span><br>							n.Tag = <span class="hljs-literal">nil</span><br>							cas.List[<span class="hljs-number">0</span>] = ir.NewBool(c.Pos(), <span class="hljs-literal">true</span>)<br>							cas.List = cas.List[:<span class="hljs-number">1</span>]<br>							n.Cases[<span class="hljs-number">0</span>] = cas<br>							n.Cases = n.Cases[:<span class="hljs-number">1</span>]<br>							<span class="hljs-keyword">return</span><br>						&#125;<br>					&#125;<br>				&#125;<br>				<span class="hljs-keyword">if</span> def != <span class="hljs-literal">nil</span> &#123;<br>					<span class="hljs-keyword">for</span> _, n := <span class="hljs-keyword">range</span> def.Body &#123;<br>						<span class="hljs-keyword">if</span> n.Op() == ir.OFALL &#123;<br>							<span class="hljs-keyword">return</span> <span class="hljs-comment">// fallthrough makes it complicated - abort.</span><br>						&#125;<br>					&#125;<br>					<span class="hljs-keyword">for</span> _, cas := <span class="hljs-keyword">range</span> n.Cases &#123;<br>						<span class="hljs-keyword">if</span> cas != def &#123;<br>							ir.VisitList(cas.List, markHiddenClosureDead)<br>							ir.VisitList(cas.Body, markHiddenClosureDead)<br>						&#125;<br>					&#125;<br>					n.Cases[<span class="hljs-number">0</span>] = def<br>					n.Cases = n.Cases[:<span class="hljs-number">1</span>]<br>					<span class="hljs-keyword">return</span><br>				&#125;<br><br>				<span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> handle case bodies ending with panic/return as we do in the IF case above.</span><br><br>				<span class="hljs-comment">// entire switch is a nop - no case ever triggers</span><br>				<span class="hljs-keyword">for</span> _, cas := <span class="hljs-keyword">range</span> n.Cases &#123;<br>					ir.VisitList(cas.List, markHiddenClosureDead)<br>					ir.VisitList(cas.Body, markHiddenClosureDead)<br>				&#125;<br>				n.Cases = n.Cases[:<span class="hljs-number">0</span>]<br>			&#125;()<br>		&#125;<br><br>        <span class="hljs-comment">// 3. 对节点的初始化语句递归调用 stmt 函数进行处理</span><br>		<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(n.Init()) != <span class="hljs-number">0</span> &#123;<br>			stmts(n.(ir.InitNode).PtrInit())<br>		&#125;<br>        <span class="hljs-comment">// 4. 遍历其他控制结构，递归处理它们的内部语句</span><br>		<span class="hljs-keyword">switch</span> n.Op() &#123;<br>		<span class="hljs-keyword">case</span> ir.OBLOCK:<br>			n := n.(*ir.BlockStmt)<br>			stmts(&amp;n.List)<br>		<span class="hljs-keyword">case</span> ir.OFOR:<br>			n := n.(*ir.ForStmt)<br>			stmts(&amp;n.Body)<br>		<span class="hljs-keyword">case</span> ir.OIF:<br>			n := n.(*ir.IfStmt)<br>			stmts(&amp;n.Body)<br>			stmts(&amp;n.Else)<br>		<span class="hljs-keyword">case</span> ir.ORANGE:<br>			n := n.(*ir.RangeStmt)<br>			stmts(&amp;n.Body)<br>		<span class="hljs-keyword">case</span> ir.OSELECT:<br>			n := n.(*ir.SelectStmt)<br>			<span class="hljs-keyword">for</span> _, cas := <span class="hljs-keyword">range</span> n.Cases &#123;<br>				stmts(&amp;cas.Body)<br>			&#125;<br>		<span class="hljs-keyword">case</span> ir.OSWITCH:<br>			n := n.(*ir.SwitchStmt)<br>			<span class="hljs-keyword">for</span> _, cas := <span class="hljs-keyword">range</span> n.Cases &#123;<br>				stmts(&amp;cas.Body)<br>			&#125;<br>		&#125;<br><br>        <span class="hljs-comment">// 5. 如果确定了是可以消除的代码，则对函数体进行阶段，且标记其中的闭包为死代码</span><br>		<span class="hljs-keyword">if</span> cut &#123;<br>			ir.VisitList((*nn)[i+<span class="hljs-number">1</span>:<span class="hljs-built_in">len</span>(*nn)], markHiddenClosureDead)<br>			*nn = (*nn)[:i+<span class="hljs-number">1</span>]<br>			<span class="hljs-keyword">break</span><br>		&#125;<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
-<ol type="1">
+<ol>
 <li><strong>标记最后一个标签</strong>：遍历所有节点，记录最后一个标签（<code>OLABEL</code>）的位置。这对于后面判断是否可以安全地移除代码非常重要。</li>
 <li><strong>处理 <code>if</code> 和 <code>switch</code> 语句</strong>：
 <ul>
-<li>对于 <code>if</code>
-语句，它根据条件是否为常量来决定保留哪个分支，移除另一个分支。</li>
-<li>对于 <code>switch</code> 语句，它尝试简化
-<code>switch</code>，根据条件值决定哪个分支将始终被执行。</li>
-</ul></li>
-<li><strong>节点初始化</strong>：如果节点有初始化语句，对这些初始化语句递归调用
-<code>stmts</code> 函数。</li>
-<li><strong>遍历其他控制结构</strong>：对于
-<code>for</code>、<code>if</code>、<code>range</code>、<code>select</code>
-和 <code>switch</code> 等控制结构，递归地处理它们的内部语句。</li>
+<li>对于 <code>if</code> 语句，它根据条件是否为常量来决定保留哪个分支，移除另一个分支。</li>
+<li>对于 <code>switch</code> 语句，它尝试简化 <code>switch</code>，根据条件值决定哪个分支将始终被执行。</li>
+</ul>
+</li>
+<li><strong>节点初始化</strong>：如果节点有初始化语句，对这些初始化语句递归调用 <code>stmts</code> 函数。</li>
+<li><strong>遍历其他控制结构</strong>：对于 <code>for</code>、<code>if</code>、<code>range</code>、<code>select</code> 和 <code>switch</code> 等控制结构，递归地处理它们的内部语句。</li>
 <li><strong>消除死代码</strong>：如果判断一个节点之后的所有代码都是无效的，它会标记这些代码为死代码并截断函数体。</li>
 </ol>
 <h2 id="去虚拟化">去虚拟化</h2>
 <p>去虚拟化（Devirtualization）是编译器优化的一种技术，用于提高面向对象程序的性能。在面向对象编程中，方法调用通常是通过虚拟函数表（vtable）动态解析的，这被称为虚拟调用。虚拟调用允许对象在运行时表现出多态行为，但这也带来了一定的性能开销。</p>
 <p>去虚拟化的目的是在编译时静态确定方法调用的目标，从而避免运行时的动态查找。如果编译器能够确定一个特定的接口调用总是调用同一个方法，它可以将这个虚拟调用替换为直接调用，减少运行时开销。这种优化特别适用于那些调用目标不会因为程序执行的不同路径而改变的情况。</p>
-<p>这部分的代码在 <a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/devirtualize/devirtualize.go">devirtuailze/devirtualize.go</a>。</p>
+<p>这部分的代码在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/devirtualize/devirtualize.go">devirtuailze/devirtualize.go</a>。</p>
 <p>核心就 2 个函数：</p>
 <ul>
-<li><code>Static()</code> ：遍历函数中的所有节点，尤其注意跳过在
-<code>go</code> 或 <code>defer</code>
-语句中的调用，并对其他接口方法调用尝试进行静态去虚拟化优化。</li>
-<li><code>staticCall()</code>
-：针对一个具体的接口方法调用，如果可能，将其替换为直接的具体类型方法调用，以优化性能。</li>
+<li><code>Static()</code> ：遍历函数中的所有节点，尤其注意跳过在 <code>go</code> 或 <code>defer</code> 语句中的调用，并对其他接口方法调用尝试进行静态去虚拟化优化。</li>
+<li><code>staticCall()</code> ：针对一个具体的接口方法调用，如果可能，将其替换为直接的具体类型方法调用，以优化性能。</li>
 </ul>
-<h3 id="static">Static()</h3>
+<h3 id="Static">Static()</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Static</span><span class="hljs-params">(fn *ir.Func)</span></span> &#123;<br>	ir.CurFunc = fn<br>	goDeferCall := <span class="hljs-built_in">make</span>(<span class="hljs-keyword">map</span>[*ir.CallExpr]<span class="hljs-type">bool</span>)<br>    <span class="hljs-comment">// 1. VisitList 对 fn.Body 中所有节点调用后面的 func</span><br>	ir.VisitList(fn.Body, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(n ir.Node)</span></span> &#123;<br>		<span class="hljs-keyword">switch</span> n := n.(<span class="hljs-keyword">type</span>) &#123;<br>        <span class="hljs-comment">// 2. 跳过 go 和 defer 语句</span><br>		<span class="hljs-keyword">case</span> *ir.GoDeferStmt:<br>			<span class="hljs-keyword">if</span> call, ok := n.Call.(*ir.CallExpr); ok &#123;<br>				goDeferCall[call] = <span class="hljs-literal">true</span><br>			&#125;<br>			<span class="hljs-keyword">return</span><br>        <span class="hljs-comment">// 3. 调用 staticCall 尝试进行去虚拟化</span><br>		<span class="hljs-keyword">case</span> *ir.CallExpr:<br>			<span class="hljs-keyword">if</span> !goDeferCall[n] &#123;<br>				staticCall(n)<br>			&#125;<br>		&#125;<br>	&#125;)<br>&#125;<br></code></pre></td></tr></table></figure>
-<ol type="1">
+<ol>
 <li>设定当前函数为 <code>fn</code>。</li>
-<li>遍历函数体内的节点，特别注意 <code>go</code> 和 <code>defer</code>
-语句。如果调用发生在这些语句中，它会被跳过，因为去虚拟化可能改变程序的语义。</li>
-<li>对于不在 <code>go</code> 或 <code>defer</code>
-语句中的接口方法调用，调用 <code>staticCall</code>
-函数尝试进行去虚拟化。</li>
+<li>遍历函数体内的节点，特别注意 <code>go</code> 和 <code>defer</code> 语句。如果调用发生在这些语句中，它会被跳过，因为去虚拟化可能改变程序的语义。</li>
+<li>对于不在 <code>go</code> 或 <code>defer</code> 语句中的接口方法调用，调用 <code>staticCall</code> 函数尝试进行去虚拟化。</li>
 </ol>
-<h3 id="staticcall">staticCall()</h3>
+<h3 id="staticCall">staticCall()</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">staticCall</span><span class="hljs-params">(call *ir.CallExpr)</span></span> &#123;<br>    <span class="hljs-comment">// 1. 检查调用是否为接口方法调用，如果不是，直接返回</span><br>	<span class="hljs-keyword">if</span> call.Op() != ir.OCALLINTER &#123;<br>		<span class="hljs-keyword">return</span><br>	&#125;<br>    <br>    <span class="hljs-comment">// 2. 获取接收器和相关类型</span><br>	sel := call.X.(*ir.SelectorExpr)<br>	r := ir.StaticValue(sel.X)<br>    <br>     <span class="hljs-comment">// 3. 检查接收器是否是接口转换，如果不是，直接返回</span><br>	<span class="hljs-keyword">if</span> r.Op() != ir.OCONVIFACE &#123;<br>		<span class="hljs-keyword">return</span><br>	&#125;<br>	recv := r.(*ir.ConvExpr)<br><br>   	<span class="hljs-comment">// 4. 提取接收器类型</span><br>	typ := recv.X.Type()<br>	<span class="hljs-keyword">if</span> typ.IsInterface() &#123;<br>		<span class="hljs-keyword">return</span><br>	&#125;<br><br>	<span class="hljs-comment">// 5. shape 类型直接返回，因为这一般涉及到泛型，需要通过字典进行间接调用</span><br>	<span class="hljs-keyword">if</span> typ.IsShape() &#123;<br>		<span class="hljs-keyword">return</span><br>	&#125;<br>	<span class="hljs-keyword">if</span> typ.HasShape() &#123;<br>		<span class="hljs-keyword">if</span> base.Flag.LowerM != <span class="hljs-number">0</span> &#123;<br>			base.WarnfAt(call.Pos(), <span class="hljs-string">&quot;cannot devirtualize %v: shaped receiver %v&quot;</span>, call, typ)<br>		&#125;<br>		<span class="hljs-keyword">return</span><br>	&#125;<br>	<span class="hljs-keyword">if</span> sel.X.Type().HasShape() &#123;<br>		<span class="hljs-keyword">if</span> base.Flag.LowerM != <span class="hljs-number">0</span> &#123;<br>			base.WarnfAt(call.Pos(), <span class="hljs-string">&quot;cannot devirtualize %v: shaped interface %v&quot;</span>, call, sel.X.Type())<br>		&#125;<br>		<span class="hljs-keyword">return</span><br>	&#125;<br><br>    <span class="hljs-comment">// 6. 类型断言和方法选择，尝试确定调用的具体方法</span><br>	dt := ir.NewTypeAssertExpr(sel.Pos(), sel.X, <span class="hljs-literal">nil</span>)<br>	dt.SetType(typ)<br>	x := typecheck.Callee(ir.NewSelectorExpr(sel.Pos(), ir.OXDOT, dt, sel.Sel))<br>	<span class="hljs-keyword">switch</span> x.Op() &#123;<br>	<span class="hljs-keyword">case</span> ir.ODOTMETH:<br>		x := x.(*ir.SelectorExpr)<br>		<span class="hljs-keyword">if</span> base.Flag.LowerM != <span class="hljs-number">0</span> &#123;<br>			base.WarnfAt(call.Pos(), <span class="hljs-string">&quot;devirtualizing %v to %v&quot;</span>, sel, typ)<br>		&#125;<br>		call.SetOp(ir.OCALLMETH)<br>		call.X = x<br>	<span class="hljs-keyword">case</span> ir.ODOTINTER:<br>		x := x.(*ir.SelectorExpr)<br>		<span class="hljs-keyword">if</span> base.Flag.LowerM != <span class="hljs-number">0</span> &#123;<br>			base.WarnfAt(call.Pos(), <span class="hljs-string">&quot;partially devirtualizing %v to %v&quot;</span>, sel, typ)<br>		&#125;<br>		call.SetOp(ir.OCALLINTER)<br>		call.X = x<br>	<span class="hljs-keyword">default</span>:<br>		<span class="hljs-keyword">if</span> base.Flag.LowerM != <span class="hljs-number">0</span> &#123;<br>			base.WarnfAt(call.Pos(), <span class="hljs-string">&quot;failed to devirtualize %v (%v)&quot;</span>, x, x.Op())<br>		&#125;<br>		<span class="hljs-keyword">return</span><br>    <br>    <span class="hljs-comment">// 7. 根据类型断言的结果，尝试将接口方法调用转换为直接方法调用或保留为接口方法调用。</span><br>	types.CheckSize(x.Type())<br>	<span class="hljs-keyword">switch</span> ft := x.Type(); ft.NumResults() &#123;<br>	<span class="hljs-keyword">case</span> <span class="hljs-number">0</span>:<br>	<span class="hljs-keyword">case</span> <span class="hljs-number">1</span>:<br>		call.SetType(ft.Results().Field(<span class="hljs-number">0</span>).Type)<br>	<span class="hljs-keyword">default</span>:<br>		call.SetType(ft.Results())<br>	&#125;<br><br>	<span class="hljs-comment">// 8. 对可能修改后的方法调用进行进一步的类型检查和调整。</span><br>	typecheck.FixMethodCall(call)<br>&#125;<br></code></pre></td></tr></table></figure>
-<ol type="1">
+<ol>
 <li><strong>检查是否为接口方法调用</strong>：函数首先判断传入的调用是否是接口方法调用（<code>ir.OCALLINTER</code>），这是去虚拟化的前提条件。</li>
 <li><strong>处理形状类型</strong>：代码中提到，如果接收器的类型是形状类型（用于泛型），则无法去虚拟化，因为这需要通过字典进行间接调用。</li>
 <li><strong>处理形状类型的接收器</strong>：如果接收器的类型具有形状类型，则当前无法进行去虚拟化。注释中还提到了一些待实现（TODO）的优化点，例如处理非泛型的提升方法。</li>
@@ -809,137 +698,77 @@ target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-b
 <li><strong>小函数</strong>：通常是小函数，因为它们的内联带来的性能提升相对于代码膨胀的代价来说是值得的。</li>
 <li><strong>调用频率高的函数</strong>：这些函数如果内联，可以显著减少运行时的调用开销。</li>
 </ul>
-<p>在 Go 语言中，可以通过 <code>//go:noinline</code>
-来禁止函数内联。</p>
-<p>这部分的主要实现在 <a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal~/inl.go">inline.inl.go</a>，核心函数是：<code>CanInline()</code>
-和 <code>InlineImpossible()</code>。</p>
-<h3 id="caninline">CanInline()</h3>
+<p>在 Go 语言中，可以通过 <code>//go:noinline</code> 来禁止函数内联。</p>
+<p>这部分的主要实现在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal~/inl.go">inline.inl.go</a>，核心函数是：<code>CanInline()</code> 和 <code>InlineImpossible()</code>。</p>
+<h3 id="CanInline">CanInline()</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// Inlining budget parameters, gathered in one place</span><br><span class="hljs-keyword">const</span> (<br>    <span class="hljs-comment">// budget 是内联复杂度的衡量，</span><br>    <span class="hljs-comment">// 超过 80 表示编译器认为这个函数太复杂了，就不进行函数内联了</span><br>	inlineMaxBudget       = <span class="hljs-number">80</span>		<br>)<br><br><span class="hljs-comment">// CanInline 用于判断 fn 是否可内联。</span><br><span class="hljs-comment">// 如果可以，会将 fn.Body 和 fn.Dcl 拷贝一份放到 fn.Inl，</span><br><span class="hljs-comment">// 其中 fn 和 fn.Body 需要确保已经经过类型检查了。</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">CanInline</span><span class="hljs-params">(fn *ir.Func, profile *pgo.Profile)</span></span> &#123;<br>    <br>    <span class="hljs-comment">// 函数名必须有效</span><br>	<span class="hljs-keyword">if</span> fn.Nname == <span class="hljs-literal">nil</span> &#123;<br>		base.Fatalf(<span class="hljs-string">&quot;CanInline no nname %+v&quot;</span>, fn)<br>	&#125;<br><br>    <span class="hljs-comment">// 如果不能内联，输出原因</span><br>	<span class="hljs-keyword">var</span> reason <span class="hljs-type">string</span><br>	<span class="hljs-keyword">if</span> base.Flag.LowerM &gt; <span class="hljs-number">1</span> || logopt.Enabled() &#123;<br>		<span class="hljs-keyword">defer</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>			<span class="hljs-keyword">if</span> reason != <span class="hljs-string">&quot;&quot;</span> &#123;<br>				<span class="hljs-keyword">if</span> base.Flag.LowerM &gt; <span class="hljs-number">1</span> &#123;<br>					fmt.Printf(<span class="hljs-string">&quot;%v: cannot inline %v: %s\n&quot;</span>, ir.Line(fn), fn.Nname, reason)<br>				&#125;<br>				<span class="hljs-keyword">if</span> logopt.Enabled() &#123;<br>					logopt.LogOpt(fn.Pos(), <span class="hljs-string">&quot;cannotInlineFunction&quot;</span>, <span class="hljs-string">&quot;inline&quot;</span>, ir.FuncName(fn), reason)<br>				&#125;<br>			&#125;<br>		&#125;()<br>	&#125;<br>	<br>    <span class="hljs-comment">// 检查是否符合不可能内联的情况，如果返回的 reason 不为空，则表示有不可以内联的原因</span><br>	reason = InlineImpossible(fn)<br>	<span class="hljs-keyword">if</span> reason != <span class="hljs-string">&quot;&quot;</span> &#123;<br>		<span class="hljs-keyword">return</span><br>	&#125;<br>	<span class="hljs-keyword">if</span> fn.Typecheck() == <span class="hljs-number">0</span> &#123;<br>		base.Fatalf(<span class="hljs-string">&quot;CanInline on non-typechecked function %v&quot;</span>, fn)<br>	&#125;<br><br>	n := fn.Nname<br>	<span class="hljs-keyword">if</span> n.Func.InlinabilityChecked() &#123;<br>		<span class="hljs-keyword">return</span><br>	&#125;<br>	<span class="hljs-keyword">defer</span> n.Func.SetInlinabilityChecked(<span class="hljs-literal">true</span>)<br><br>	cc := <span class="hljs-type">int32</span>(inlineExtraCallCost)<br>	<span class="hljs-keyword">if</span> base.Flag.LowerL == <span class="hljs-number">4</span> &#123;<br>		cc = <span class="hljs-number">1</span> <span class="hljs-comment">// this appears to yield better performance than 0.</span><br>	&#125;<br><br>	<span class="hljs-comment">// 设置内联预算，后面如果检查函数的复杂度超过预算了，就不内联了</span><br>	budget := <span class="hljs-type">int32</span>(inlineMaxBudget)<br>	<span class="hljs-keyword">if</span> profile != <span class="hljs-literal">nil</span> &#123;<br>		<span class="hljs-keyword">if</span> n, ok := profile.WeightedCG.IRNodes[ir.LinkFuncName(fn)]; ok &#123;<br>			<span class="hljs-keyword">if</span> _, ok := candHotCalleeMap[n]; ok &#123;<br>				budget = <span class="hljs-type">int32</span>(inlineHotMaxBudget)<br>				<span class="hljs-keyword">if</span> base.Debug.PGODebug &gt; <span class="hljs-number">0</span> &#123;<br>					fmt.Printf(<span class="hljs-string">&quot;hot-node enabled increased budget=%v for func=%v\n&quot;</span>, budget, ir.PkgFuncName(fn))<br>				&#125;<br>			&#125;<br>		&#125;<br>	&#125;<br><br>    <span class="hljs-comment">// 遍历函数体，计算复杂度，判断是否超过内联预算</span><br>	visitor := hairyVisitor&#123;<br>		curFunc:       fn,<br>		budget:        budget,<br>		maxBudget:     budget,<br>		extraCallCost: cc,<br>		profile:       profile,<br>	&#125;<br>	<span class="hljs-keyword">if</span> visitor.tooHairy(fn) &#123;<br>		reason = visitor.reason<br>		<span class="hljs-keyword">return</span><br>	&#125;<br><br>    <span class="hljs-comment">// 前面检查都没问题，则标记为可以内联，并复制其函数体和声明到内联结构体中</span><br>	n.Func.Inl = &amp;ir.Inline&#123;<br>		Cost: budget - visitor.budget,<br>		Dcl:  pruneUnusedAutos(n.Defn.(*ir.Func).Dcl, &amp;visitor),<br>		Body: inlcopylist(fn.Body),<br><br>		CanDelayResults: canDelayResults(fn),<br>	&#125;<br><br>    <span class="hljs-comment">// 日志和调试</span><br>	<span class="hljs-keyword">if</span> base.Flag.LowerM &gt; <span class="hljs-number">1</span> &#123;<br>		fmt.Printf(<span class="hljs-string">&quot;%v: can inline %v with cost %d as: %v &#123; %v &#125;\n&quot;</span>, ir.Line(fn), n, budget-visitor.budget, fn.Type(), ir.Nodes(n.Func.Inl.Body))<br>	&#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> base.Flag.LowerM != <span class="hljs-number">0</span> &#123;<br>		fmt.Printf(<span class="hljs-string">&quot;%v: can inline %v\n&quot;</span>, ir.Line(fn), n)<br>	&#125;<br>	<span class="hljs-keyword">if</span> logopt.Enabled() &#123;<br>		logopt.LogOpt(fn.Pos(), <span class="hljs-string">&quot;canInlineFunction&quot;</span>, <span class="hljs-string">&quot;inline&quot;</span>, ir.FuncName(fn), fmt.Sprintf(<span class="hljs-string">&quot;cost: %d&quot;</span>, budget-visitor.budget))<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
-<ol type="1">
+<ol>
 <li><strong>基本检查</strong>：验证函数是否已经进行了类型检查，以及函数名是否有效。</li>
-<li><strong>判断是否可以内联</strong>：调用
-<code>InlineImpossible</code>
-函数来检查是否有任何基本的限制条件阻止内联（例如函数太大、递归等）。</li>
+<li><strong>判断是否可以内联</strong>：调用 <code>InlineImpossible</code> 函数来检查是否有任何基本的限制条件阻止内联（例如函数太大、递归等）。</li>
 <li><strong>内联预算设置</strong>：根据函数的特征和可能的性能剖析信息来设定内联预算。这个预算是内联决策的关键参数之一。</li>
-<li><strong>详细分析</strong>：<code>hairyVisitor</code>
-结构用于遍历函数体，判断是否超出了内联预算。这涉及对函数体的复杂度和大小的评估。</li>
+<li><strong>详细分析</strong>：<code>hairyVisitor</code> 结构用于遍历函数体，判断是否超出了内联预算。这涉及对函数体的复杂度和大小的评估。</li>
 <li><strong>内联决策</strong>：如果函数通过了所有检查并且未超出预算，则标记为可以内联，并复制其函数体和声明（Dcl）到内联结构体中。</li>
 <li><strong>日志和调试</strong>：根据编译器的日志级别，输出关于内联决策的详细信息，例如为什么一个函数不能被内联或者它的内联成本是多少。</li>
 </ol>
-<h3 id="inlineimpossible">InlineImpossible()</h3>
+<h3 id="InlineImpossible">InlineImpossible()</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">InlineImpossible</span><span class="hljs-params">(fn *ir.Func)</span></span> <span class="hljs-type">string</span> &#123;<br>	<span class="hljs-keyword">var</span> reason <span class="hljs-type">string</span> <span class="hljs-comment">// reason, if any, that the function can not be inlined.</span><br>	<span class="hljs-keyword">if</span> fn.Nname == <span class="hljs-literal">nil</span> &#123;<br>		reason = <span class="hljs-string">&quot;no name&quot;</span><br>		<span class="hljs-keyword">return</span> reason<br>	&#125;<br><br>	<span class="hljs-comment">// If marked &quot;go:noinline&quot;, don&#x27;t inline.</span><br>	<span class="hljs-keyword">if</span> fn.Pragma&amp;ir.Noinline != <span class="hljs-number">0</span> &#123;<br>		reason = <span class="hljs-string">&quot;marked go:noinline&quot;</span><br>		<span class="hljs-keyword">return</span> reason<br>	&#125;<br><br>	<span class="hljs-comment">// If marked &quot;go:norace&quot; and -race compilation, don&#x27;t inline.</span><br>	<span class="hljs-keyword">if</span> base.Flag.Race &amp;&amp; fn.Pragma&amp;ir.Norace != <span class="hljs-number">0</span> &#123;<br>		reason = <span class="hljs-string">&quot;marked go:norace with -race compilation&quot;</span><br>		<span class="hljs-keyword">return</span> reason<br>	&#125;<br><br>	<span class="hljs-comment">// If marked &quot;go:nocheckptr&quot; and -d checkptr compilation, don&#x27;t inline.</span><br>	<span class="hljs-keyword">if</span> base.Debug.Checkptr != <span class="hljs-number">0</span> &amp;&amp; fn.Pragma&amp;ir.NoCheckPtr != <span class="hljs-number">0</span> &#123;<br>		reason = <span class="hljs-string">&quot;marked go:nocheckptr&quot;</span><br>		<span class="hljs-keyword">return</span> reason<br>	&#125;<br><br>	<span class="hljs-comment">// If marked &quot;go:cgo_unsafe_args&quot;, don&#x27;t inline, since the function</span><br>	<span class="hljs-comment">// makes assumptions about its argument frame layout.</span><br>	<span class="hljs-keyword">if</span> fn.Pragma&amp;ir.CgoUnsafeArgs != <span class="hljs-number">0</span> &#123;<br>		reason = <span class="hljs-string">&quot;marked go:cgo_unsafe_args&quot;</span><br>		<span class="hljs-keyword">return</span> reason<br>	&#125;<br><br>	<span class="hljs-comment">// If marked as &quot;go:uintptrkeepalive&quot;, don&#x27;t inline, since the keep</span><br>	<span class="hljs-comment">// alive information is lost during inlining.</span><br>	<span class="hljs-comment">//</span><br>	<span class="hljs-comment">// TODO(prattmic): This is handled on calls during escape analysis,</span><br>	<span class="hljs-comment">// which is after inlining. Move prior to inlining so the keep-alive is</span><br>	<span class="hljs-comment">// maintained after inlining.</span><br>	<span class="hljs-keyword">if</span> fn.Pragma&amp;ir.UintptrKeepAlive != <span class="hljs-number">0</span> &#123;<br>		reason = <span class="hljs-string">&quot;marked as having a keep-alive uintptr argument&quot;</span><br>		<span class="hljs-keyword">return</span> reason<br>	&#125;<br><br>	<span class="hljs-comment">// If marked as &quot;go:uintptrescapes&quot;, don&#x27;t inline, since the escape</span><br>	<span class="hljs-comment">// information is lost during inlining.</span><br>	<span class="hljs-keyword">if</span> fn.Pragma&amp;ir.UintptrEscapes != <span class="hljs-number">0</span> &#123;<br>		reason = <span class="hljs-string">&quot;marked as having an escaping uintptr argument&quot;</span><br>		<span class="hljs-keyword">return</span> reason<br>	&#125;<br><br>	<span class="hljs-comment">// The nowritebarrierrec checker currently works at function</span><br>	<span class="hljs-comment">// granularity, so inlining yeswritebarrierrec functions can confuse it</span><br>	<span class="hljs-comment">// (#22342). As a workaround, disallow inlining them for now.</span><br>	<span class="hljs-keyword">if</span> fn.Pragma&amp;ir.Yeswritebarrierrec != <span class="hljs-number">0</span> &#123;<br>		reason = <span class="hljs-string">&quot;marked go:yeswritebarrierrec&quot;</span><br>		<span class="hljs-keyword">return</span> reason<br>	&#125;<br><br>	<span class="hljs-comment">// If a local function has no fn.Body (is defined outside of Go), cannot inline it.</span><br>	<span class="hljs-comment">// Imported functions don&#x27;t have fn.Body but might have inline body in fn.Inl.</span><br>	<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(fn.Body) == <span class="hljs-number">0</span> &amp;&amp; !typecheck.HaveInlineBody(fn) &#123;<br>		reason = <span class="hljs-string">&quot;no function body&quot;</span><br>		<span class="hljs-keyword">return</span> reason<br>	&#125;<br><br>	<span class="hljs-comment">// If fn is synthetic hash or eq function, cannot inline it.</span><br>	<span class="hljs-comment">// The function is not generated in Unified IR frontend at this moment.</span><br>	<span class="hljs-keyword">if</span> ir.IsEqOrHashFunc(fn) &#123;<br>		reason = <span class="hljs-string">&quot;type eq/hash function&quot;</span><br>		<span class="hljs-keyword">return</span> reason<br>	&#125;<br><br>	<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;&quot;</span><br>&#125;<br></code></pre></td></tr></table></figure>
-<ol type="1">
+<ol>
 <li><strong>无函数名</strong>：如果函数没有名字，不能内联。</li>
-<li><strong>有 <code>go:noinline</code>
-指令</strong>：显式标记为不内联。</li>
-<li><strong>有 <code>go:norace</code> 指令并在 <code>-race</code>
-编译模式下</strong>：在竞态检测编译模式下不内联标记为
-<code>norace</code> 的函数。</li>
-<li><strong>有 <code>go:nocheckptr</code> 指令并在
-<code>-d checkptr</code>
-编译模式下</strong>：在指针检查编译模式下不内联标记为
-<code>nocheckptr</code> 的函数。</li>
-<li><strong>有 <code>go:cgo_unsafe_args</code> 指令</strong>：对于标记为
-<code>cgo_unsafe_args</code> 的函数，由于参数布局的假设，不内联。</li>
-<li><strong>有 <code>go:uintptrkeepalive</code>
-指令</strong>：不内联标记为 <code>uintptrkeepalive</code> 的函数。</li>
-<li><strong>有 <code>go:uintptrescapes</code>
-指令</strong>：不内联标记为 <code>uintptrescapes</code> 的函数。</li>
-<li><strong>有 <code>go:yeswritebarrierrec</code>
-指令</strong>：为了防止写屏障记录检查器的混淆，不内联标记为
-<code>yeswritebarrierrec</code> 的函数。</li>
-<li><strong>无函数体</strong>：本地定义但没有函数体的函数（外部定义的 Go
-函数）不可内联。</li>
-<li><strong>是合成的 hash 或 eq
-函数</strong>：不能内联这些类型的函数。</li>
+<li><strong>有 <code>go:noinline</code> 指令</strong>：显式标记为不内联。</li>
+<li><strong>有 <code>go:norace</code> 指令并在 <code>-race</code> 编译模式下</strong>：在竞态检测编译模式下不内联标记为 <code>norace</code> 的函数。</li>
+<li><strong>有 <code>go:nocheckptr</code> 指令并在 <code>-d checkptr</code> 编译模式下</strong>：在指针检查编译模式下不内联标记为 <code>nocheckptr</code> 的函数。</li>
+<li><strong>有 <code>go:cgo_unsafe_args</code> 指令</strong>：对于标记为 <code>cgo_unsafe_args</code> 的函数，由于参数布局的假设，不内联。</li>
+<li><strong>有 <code>go:uintptrkeepalive</code> 指令</strong>：不内联标记为 <code>uintptrkeepalive</code> 的函数。</li>
+<li><strong>有 <code>go:uintptrescapes</code> 指令</strong>：不内联标记为 <code>uintptrescapes</code> 的函数。</li>
+<li><strong>有 <code>go:yeswritebarrierrec</code> 指令</strong>：为了防止写屏障记录检查器的混淆，不内联标记为 <code>yeswritebarrierrec</code> 的函数。</li>
+<li><strong>无函数体</strong>：本地定义但没有函数体的函数（外部定义的 Go 函数）不可内联。</li>
+<li><strong>是合成的 hash 或 eq 函数</strong>：不能内联这些类型的函数。</li>
 </ol>
-<h3 id="举例-1">举例</h3>
+<h3 id="举例-2">举例</h3>
 <p>我们通过一段代码来看看编译器的函数内联情况。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">SayHello</span><span class="hljs-params">()</span></span> <span class="hljs-type">string</span> &#123;<br>	s := <span class="hljs-string">&quot;hello, &quot;</span> + <span class="hljs-string">&quot;world&quot;</span><br>	<span class="hljs-keyword">return</span> s<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Fib</span><span class="hljs-params">(index <span class="hljs-type">int</span>)</span></span> <span class="hljs-type">int</span> &#123;<br>	<span class="hljs-keyword">if</span> index &lt; <span class="hljs-number">2</span> &#123;<br>		<span class="hljs-keyword">return</span> index<br>	&#125;<br>	<span class="hljs-keyword">return</span> Fib(index<span class="hljs-number">-1</span>) + Fib(index<span class="hljs-number">-2</span>)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">ForSearch</span><span class="hljs-params">()</span></span> <span class="hljs-type">int</span> &#123;<br>	<span class="hljs-keyword">var</span> s = []<span class="hljs-type">int</span>&#123;<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>, <span class="hljs-number">7</span>, <span class="hljs-number">8</span>, <span class="hljs-number">9</span>, <span class="hljs-number">0</span>&#125;<br>	res := <span class="hljs-number">0</span><br>	<span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; <span class="hljs-built_in">len</span>(s); i++ &#123;<br>		<span class="hljs-keyword">if</span> s[i] == i &#123;<br>			res = i<br>		&#125;<br>	&#125;<br>	<span class="hljs-keyword">return</span> res<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	SayHello()<br>	Fib(<span class="hljs-number">65</span>)<br>	ForSearch()<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>在编译时我们可以加入 <code>-m=2</code>
-标签，来打印函数的内联调试信息。在 <code>main.go</code> 目录下执行：</p>
+<p>在编译时我们可以加入 <code>-m=2</code> 标签，来打印函数的内联调试信息。在 <code>main.go</code> 目录下执行：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">go tool compile -m=2 main.go<br></code></pre></td></tr></table></figure>
 <p>输出：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs bash">main.go:3:6: can inline SayHello with cost 7 as: func() string &#123; s := <span class="hljs-string">&quot;hello, &quot;</span> + <span class="hljs-string">&quot;world&quot;</span>; <span class="hljs-built_in">return</span> s &#125;<br>main.go:8:6: cannot inline Fib: recursive<br>main.go:15:6: can inline ForSearch with cost 45 as: func() int &#123; s := []int&#123;...&#125;; res := 0; <span class="hljs-keyword">for</span> loop; <span class="hljs-built_in">return</span> res &#125;<br>main.go:26:6: cannot inline main: <span class="hljs-keyword">function</span> too complex: cost 116 exceeds budget 80<br>main.go:27:10: inlining call to SayHello<br>main.go:29:11: inlining call to ForSearch<br>main.go:16:15: []int&#123;...&#125; does not escape<br>main.go:29:11: []int&#123;...&#125; does not escape<br></code></pre></td></tr></table></figure>
-<p>可以看到 <code>SayHello()</code> 和 <code>ForSearch</code>
-都被内联了，而 <code>Fib()</code> 因为有递归，所以不会被内联。</p>
+<p>可以看到 <code>SayHello()</code> 和 <code>ForSearch</code> 都被内联了，而 <code>Fib()</code> 因为有递归，所以不会被内联。</p>
 <h2 id="逃逸分析">逃逸分析</h2>
-<p>逃逸分析是 Go
-语言中非常重要的优化阶段，<strong>用于标识变量内存应该被分配在栈上还是堆上</strong>。</p>
-<p>在传统的 C 或 C++
-开发中，开发者经常会犯的错误就是函数返回了一个栈上的对象指针，在函数执行完毕后，函数栈会被销毁，如果继续访问被销毁栈上的对象指针，那么就会出现问题。</p>
-<p>Go
-语言能够通过编译时的逃逸分析识别这种问题，自动将这类变量放置到堆区，并借助
-Go
-运行时的垃圾回收机制自动释放内存。编译器会尽可能地将变量放置在栈上，因为栈中的对象会随着函数调用结束被自动销毁，这可以减轻运行时分配和垃圾回收的负担。</p>
-<p>在 Go
-语言中，开发者模糊了栈区和堆区的区别，不管是字符串、数组字面量，还是通过
-new、make
-标识符创建的对象，都既可能被分配到栈上，也可能被分配到堆上。但是，整体上会遵循
-2 个原则：</p>
-<ol type="1">
+<p>逃逸分析是 Go 语言中非常重要的优化阶段，<strong>用于标识变量内存应该被分配在栈上还是堆上</strong>。</p>
+<p>在传统的 C 或 C++ 开发中，开发者经常会犯的错误就是函数返回了一个栈上的对象指针，在函数执行完毕后，函数栈会被销毁，如果继续访问被销毁栈上的对象指针，那么就会出现问题。</p>
+<p>Go 语言能够通过编译时的逃逸分析识别这种问题，自动将这类变量放置到堆区，并借助 Go 运行时的垃圾回收机制自动释放内存。编译器会尽可能地将变量放置在栈上，因为栈中的对象会随着函数调用结束被自动销毁，这可以减轻运行时分配和垃圾回收的负担。</p>
+<p>在 Go 语言中，开发者模糊了栈区和堆区的区别，不管是字符串、数组字面量，还是通过 new、make 标识符创建的对象，都既可能被分配到栈上，也可能被分配到堆上。但是，整体上会遵循 2 个原则：</p>
+<ol>
 <li>指向栈上对象的指针不能被存储到堆上；</li>
 <li>指向栈上对象的指针不能超过该栈对象的生命周期。</li>
 </ol>
-<p>这部分的代码主要在 <a
-target="_blank" rel="noopener" href="https://github.com/golang/go/tree/release-branch.go1.21/src/cmd/compile/internal/escape">escape</a>。</p>
+<p>这部分的代码主要在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/tree/release-branch.go1.21/src/cmd/compile/internal/escape">escape</a>。</p>
 <h3 id="分析过程">分析过程</h3>
-<p>Go 语言通过对 AST 的静态数据流分析来实现逃逸分析（<a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/escape/graph.go">escape/graph.go</a>），在这个过程，它会构建带权重的有向图，其中权重可以表面当前变量引用和解引用的数量。</p>
+<p>Go 语言通过对 AST 的静态数据流分析来实现逃逸分析（<a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/escape/graph.go">escape/graph.go</a>），在这个过程，它会构建带权重的有向图，其中权重可以表面当前变量引用和解引用的数量。</p>
 <ul>
 <li>引用（&amp;a） 减 1</li>
 <li>解引用（*a）加 1</li>
 </ul>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(k hole)</span></span> deref(where ir.Node, why <span class="hljs-type">string</span>) hole &#123; <span class="hljs-keyword">return</span> k.shift(<span class="hljs-number">1</span>).note(where, why) &#125; <span class="hljs-comment">// 解引用</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(k hole)</span></span> addr(where ir.Node, why <span class="hljs-type">string</span>) hole  &#123; <span class="hljs-keyword">return</span> k.shift(<span class="hljs-number">-1</span>).note(where, why) &#125; <span class="hljs-comment">// 引用</span><br></code></pre></td></tr></table></figure>
-<p>具体来说，Go
-逃逸分析会按照如下规则生成数据流图（带权重的有向图）：</p>
-<ol type="1">
+<p>具体来说，Go 逃逸分析会按照如下规则生成数据流图（带权重的有向图）：</p>
+<ol>
 <li>每个变量作为一个节点（location）；</li>
 <li>每个赋值动作是一个有向边（edge），赋值给谁则指向谁；</li>
 <li>解引用（deref），即 <code>*</code>操作会给边的权重 +1；</li>
 <li>引用（addr），即 <code>&amp;</code> 操作会给边权重 -1。</li>
 </ol>
 <p>其中：<strong>节点权重 = 指向的节点权重 + 边权重</strong></p>
-<p>逃逸分析的目标就是<strong>找到其中节点权重为 -1
-的变量</strong>，并结合上述提到的 2
-个原则，来判断要不要将变量分配到堆上。</p>
+<p>逃逸分析的目标就是<strong>找到其中节点权重为 -1 的变量</strong>，并结合上述提到的 2 个原则，来判断要不要将变量分配到堆上。</p>
 <h3 id="分析实例">分析实例</h3>
 <p>我们举一个例子来进行分析：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><span class="hljs-keyword">var</span> o *<span class="hljs-type">int</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	l := <span class="hljs-built_in">new</span>(<span class="hljs-type">int</span>) <br>	*l = <span class="hljs-number">42</span><br>	m := &amp;l<br>	n := &amp;m<br>	o = **n<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>再次回顾一下，<code>*</code> 是加 1，<code>&amp;</code>
-是减一。按照常规思路，我们从上往下分析：</p>
+<p>再次回顾一下，<code>*</code> 是加 1，<code>&amp;</code> 是减一。按照常规思路，我们从上往下分析：</p>
 <p>先画出节点的赋值顺序，赋值给谁，边就指向谁：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203193913047.png" srcset="/img/loading.gif" lazyload
-alt="第1步：梳理节点顺序" />
-<figcaption aria-hidden="true">第1步：梳理节点顺序</figcaption>
-</figure>
-<p>然后根据引用和解引用给边赋权重，因为 <code>new(int)</code>
-其实就是分配一个 <code>int(0)</code> 并取地址，相当于
-<code>&amp;</code>，所以指向 <code>l</code> 的边权重是
-<code>-1</code>：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203194101882.png" srcset="/img/loading.gif" lazyload
-alt="第2步：给边赋值" />
-<figcaption aria-hidden="true">第2步：给边赋值</figcaption>
-</figure>
-<p>节点权重 = 边权重 + 指向节点权重，因为没有对 <code>o</code>
-变量进行任何的操作，所以 <code>o</code> 权重为
-0，从右往左推可以得到：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203194432349.png" srcset="/img/loading.gif" lazyload
-alt="第3步：计算节点权重" />
-<figcaption aria-hidden="true">第3步：计算节点权重</figcaption>
-</figure>
-<p>经过分析，我们就找到了节点权重为 <code>-1</code> 的节点
-<code>new(int)</code>，又由于它的节点变量地址最终会被传递到变量
-<code>o</code> 上，结合之前的 2 个原则，<code>o</code>
-是一个全局变量，声明周期是超过函数栈的，所以 <code>new(int)</code>
-会被分配到堆上。</p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203193913047.png" srcset="/img/loading.gif" lazyload alt="第1步：梳理节点顺序"></p>
+<p>然后根据引用和解引用给边赋权重，因为 <code>new(int)</code> 其实就是分配一个 <code>int(0)</code> 并取地址，相当于 <code>&amp;</code>，所以指向 <code>l</code> 的边权重是 <code>-1</code>：</p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203194101882.png" srcset="/img/loading.gif" lazyload alt="第2步：给边赋值"></p>
+<p>节点权重 = 边权重 + 指向节点权重，因为没有对 <code>o</code> 变量进行任何的操作，所以 <code>o</code> 权重为 0，从右往左推可以得到：</p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203194432349.png" srcset="/img/loading.gif" lazyload alt="第3步：计算节点权重"></p>
+<p>经过分析，我们就找到了节点权重为 <code>-1</code> 的节点 <code>new(int)</code>，又由于它的节点变量地址最终会被传递到变量 <code>o</code> 上，结合之前的 2 个原则，<code>o</code> 是一个全局变量，声明周期是超过函数栈的，所以 <code>new(int)</code> 会被分配到堆上。</p>
 <p>可以执行下面语句输出逃逸结果：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">go tool compile -m main.go<br></code></pre></td></tr></table></figure>
 <p>如：</p>
@@ -948,21 +777,16 @@ alt="第3步：计算节点权重" />
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">go build -gcflags=<span class="hljs-string">&quot;-m -m -l&quot;</span> main.go<br></code></pre></td></tr></table></figure>
 <p>如：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># command-line-arguments</span><br>./main.go:6:10: new(int) escapes to heap:<br>./main.go:6:10:   flow: l = &amp;&#123;storage <span class="hljs-keyword">for</span> new(int)&#125;:<br>./main.go:6:10:     from new(int) (spill) at ./main.go:6:10<br>./main.go:6:10:     from l := new(int) (assign) at ./main.go:6:4<br>./main.go:6:10:   flow: m = &amp;l:<br>./main.go:6:10:     from &amp;l (address-of) at ./main.go:8:7<br>./main.go:6:10:     from m := &amp;l (assign) at ./main.go:8:4<br>./main.go:6:10:   flow: n = &amp;m:<br>./main.go:6:10:     from &amp;m (address-of) at ./main.go:9:7<br>./main.go:6:10:     from n := &amp;m (assign) at ./main.go:9:4<br>./main.go:6:10:   flow: &#123;heap&#125; = **n:<br>./main.go:6:10:     from *n (indirection) at ./main.go:10:7<br>./main.go:6:10:     from *(*n) (indirection) at ./main.go:10:6<br>./main.go:6:10:     from o = *(*n) (assign) at ./main.go:10:4<br>./main.go:6:10: new(int) escapes to heap<br></code></pre></td></tr></table></figure>
-<p>如果我们试一下，把 <code>o</code> 放在 <code>main()</code>
-里面呢？</p>
+<p>如果我们试一下，把 <code>o</code> 放在 <code>main()</code> 里面呢？</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	<span class="hljs-keyword">var</span> o *<span class="hljs-type">int</span><br>	l := <span class="hljs-built_in">new</span>(<span class="hljs-type">int</span>)<br>	*l = <span class="hljs-number">42</span><br>	m := &amp;l <br>	n := &amp;m <br>	o = **n <br>	o = o   <span class="hljs-comment">// 让编译通过</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <p>执行下面语句：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">go tool compile -m main.go<br></code></pre></td></tr></table></figure>
 <p>输出：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">/escape/main.go:3:6: can inline main<br>/escape/main.go:5:10: new(int) does not escape<br></code></pre></td></tr></table></figure>
-<p>如我们所想，虽然 <code>new(int)</code> 的权重为
-<code>-1</code>，但是它的声明周期始终没有超过
-<code>main()</code>，所以没必要逃逸到堆上。</p>
+<p>如我们所想，虽然 <code>new(int)</code> 的权重为 <code>-1</code>，但是它的声明周期始终没有超过 <code>main()</code>，所以没必要逃逸到堆上。</p>
 <h2 id="变量捕获">变量捕获</h2>
 <p>变量捕获主要是针对闭包（closure）场景而言的，由于闭包函数中可能引用闭包外的变量，因此变量捕获需要明确在闭包中通过值引用或者地址引用的方式来捕获变量。</p>
-<p>这一过程在前面提到的逃逸分析过程中进行，具体实现在 <a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/escape/escape.go">escape/escape.go</a>
-的 <code>flowClosure()</code> 函数中：</p>
+<p>这一过程在前面提到的逃逸分析过程中进行，具体实现在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/escape/escape.go">escape/escape.go</a> 的 <code>flowClosure()</code> 函数中：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(b *batch)</span></span> flowClosure(k hole, clo *ir.ClosureExpr) &#123;<br>    <span class="hljs-comment">// 遍历闭包中的所有变量</span><br>    <span class="hljs-keyword">for</span> _, cv := <span class="hljs-keyword">range</span> clo.Func.ClosureVars &#123;<br>        n := cv.Canonical()<br>        loc := b.oldLoc(cv)<br>        <span class="hljs-comment">// 如果变量未被捕获，则触发错误</span><br>        <span class="hljs-keyword">if</span> !loc.captured &#123;<br>            base.FatalfAt(cv.Pos(), <span class="hljs-string">&quot;closure variable never captured: %v&quot;</span>, cv)<br>        &#125;<br><br>        <span class="hljs-comment">// 根据变量的特性决定是通过值还是引用捕获</span><br>        <span class="hljs-comment">// 如果变量未被重新赋值或取址，并且小于等于 128 字节，则通过值捕获</span><br>        n.SetByval(!loc.addrtaken &amp;&amp; !loc.reassigned &amp;&amp; n.Type().Size() &lt;= <span class="hljs-number">128</span>)<br>        <span class="hljs-keyword">if</span> !n.Byval() &#123;<br>            n.SetAddrtaken(<span class="hljs-literal">true</span>)<br>            <span class="hljs-comment">// 特殊情况处理：字典变量不通过值捕获</span><br>            <span class="hljs-keyword">if</span> n.Sym().Name == typecheck.LocalDictName &#123;<br>                base.FatalfAt(n.Pos(), <span class="hljs-string">&quot;dictionary variable not captured by value&quot;</span>)<br>            &#125;<br>        &#125;<br><br>        <span class="hljs-comment">// 记录闭包捕获变量的方式（值或引用）</span><br>        <span class="hljs-keyword">if</span> base.Flag.LowerM &gt; <span class="hljs-number">1</span> &#123;<br>            how := <span class="hljs-string">&quot;ref&quot;</span><br>            <span class="hljs-keyword">if</span> n.Byval() &#123;<br>                how = <span class="hljs-string">&quot;value&quot;</span><br>            &#125;<br>            base.WarnfAt(n.Pos(), <span class="hljs-string">&quot;%v capturing by %s: %v (addr=%v assign=%v width=%d)&quot;</span>, n.Curfn, how, n, loc.addrtaken, loc.reassigned, n.Type().Size())<br>        &#125;<br><br>        <span class="hljs-comment">// 建立闭包变量的数据流</span><br>        k := k<br>        <span class="hljs-keyword">if</span> !cv.Byval() &#123;<br>            k = k.addr(cv, <span class="hljs-string">&quot;reference&quot;</span>)<br>        &#125;<br>        b.flow(k.note(cv, <span class="hljs-string">&quot;captured by a closure&quot;</span>), loc)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>举个例子：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	a := <span class="hljs-number">1</span><br>	b := <span class="hljs-number">2</span><br>	<span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>		add(a, b)<br>	&#125;()<br>	a = <span class="hljs-number">99</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">add</span><span class="hljs-params">(a, b <span class="hljs-type">int</span>)</span></span> &#123;<br>	a = a + b<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -970,21 +794,10 @@ target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-b
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">go tool compile -m=2 main.go  | grep <span class="hljs-string">&quot;capturing&quot;</span><br></code></pre></td></tr></table></figure>
 <p>输出：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">main.go:4:2: main capturing by ref: a (addr=<span class="hljs-literal">false</span> assign=<span class="hljs-literal">true</span> width=8)<br>main.go:5:2: main capturing by value: b (addr=<span class="hljs-literal">false</span> assign=<span class="hljs-literal">false</span> width=8)<br></code></pre></td></tr></table></figure>
-<p>可以看到 <code>a</code> 是通过 <code>ref 地址引用</code>
-的方式进行引用的，而 <code>b</code> 是通过 <code>value 值传递</code>
-的方式进行引用的。</p>
-<p>简单分析一下：上述例子中，闭包引用了 <code>a</code> 和 <code>b</code>
-这 2 个闭包外声明的变量，而变量 <code>a</code>
-在闭包之前又做了一些其他的操作，而 b 没有，所以对于
-<code>a</code>，因为闭包外有操作，所以闭包内的操作可能是有特殊意义的，需要反馈到闭包外，就需要用
-<code>ref 地址引用</code>了，而 <code>b</code>
-在闭包外并不关心，所以闭包内的操作不会影响到闭包外，故直接使用
-<code>value 值传递</code> 即可。</p>
+<p>可以看到 <code>a</code> 是通过 <code>ref 地址引用</code> 的方式进行引用的，而 <code>b</code> 是通过 <code>value 值传递</code> 的方式进行引用的。</p>
+<p>简单分析一下：上述例子中，闭包引用了 <code>a</code> 和 <code>b</code> 这 2 个闭包外声明的变量，而变量 <code>a</code> 在闭包之前又做了一些其他的操作，而 b 没有，所以对于 <code>a</code>，因为闭包外有操作，所以闭包内的操作可能是有特殊意义的，需要反馈到闭包外，就需要用 <code>ref 地址引用</code>了，而 <code>b</code> 在闭包外并不关心，所以闭包内的操作不会影响到闭包外，故直接使用 <code>value 值传递</code> 即可。</p>
 <h2 id="闭包重写">闭包重写</h2>
-<p>逃逸分析后，现在我们进入 <code>walk</code>
-阶段了。这里首先会进行闭包重写。其核心逻辑在 <a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/walk/closure.go">walk/closure.go</a>
-中。</p>
+<p>逃逸分析后，现在我们进入 <code>walk</code> 阶段了。这里首先会进行闭包重写。其核心逻辑在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/walk/closure.go">walk/closure.go</a> 中。</p>
 <p>闭包重写分为 2 种情况：</p>
 <ul>
 <li>闭包定义后被立即调用</li>
@@ -998,12 +811,10 @@ target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-b
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	a := <span class="hljs-number">1</span><br>	b := <span class="hljs-number">2</span><br>	<span class="hljs-keyword">go</span> func1(&amp;a, b)<br>	a = <span class="hljs-number">99</span><br>&#125;<br><br><span class="hljs-comment">// 注意这里 a 的类型的 *int，因为在变量捕获阶段，判断了 a 应该用地址引用</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">func1</span><span class="hljs-params">(a *<span class="hljs-type">int</span>, b <span class="hljs-type">int</span>)</span></span> &#123;<br>	add(*a, b)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">add</span><span class="hljs-params">(a, b <span class="hljs-type">int</span>)</span></span> &#123;<br>	a = a + b<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>编译器具体的处理逻辑在 <code>directClosureCall()</code> 中：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// directClosureCall rewrites a direct call of a function literal into</span><br><span class="hljs-comment">// a normal function call with closure variables passed as arguments.</span><br><span class="hljs-comment">// This avoids allocation of a closure object.</span><br><span class="hljs-comment">//</span><br><span class="hljs-comment">// For illustration, the following call:</span><br><span class="hljs-comment">//</span><br><span class="hljs-comment">//	func(a int) &#123;</span><br><span class="hljs-comment">//		println(byval)</span><br><span class="hljs-comment">//		byref++</span><br><span class="hljs-comment">//	&#125;(42)</span><br><span class="hljs-comment">//</span><br><span class="hljs-comment">// becomes:</span><br><span class="hljs-comment">//</span><br><span class="hljs-comment">//	func(byval int, &amp;byref *int, a int) &#123;</span><br><span class="hljs-comment">//		println(byval)</span><br><span class="hljs-comment">//		(*&amp;byref)++</span><br><span class="hljs-comment">//	&#125;(byval, &amp;byref, 42)</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">directClosureCall</span><span class="hljs-params">(n *ir.CallExpr)</span></span> &#123;<br>	clo := n.X.(*ir.ClosureExpr)<br>	clofn := clo.Func<br><br>    <span class="hljs-comment">// 如果闭包足够简单，不进行处理，留给 walkClosure 处理。</span><br>	<span class="hljs-keyword">if</span> ir.IsTrivialClosure(clo) &#123;<br>		<span class="hljs-keyword">return</span> <span class="hljs-comment">// leave for walkClosure to handle</span><br>	&#125;<br><br>	<span class="hljs-comment">// 将闭包中的每个变量转换为函数的参数。对于引用捕获的变量，创建相应的指针参数。</span><br>	<span class="hljs-keyword">var</span> params []*types.Field<br>	<span class="hljs-keyword">var</span> decls []*ir.Name<br>	<span class="hljs-keyword">for</span> _, v := <span class="hljs-keyword">range</span> clofn.ClosureVars &#123;<br>		<span class="hljs-keyword">if</span> !v.Byval() &#123;<br>			<span class="hljs-comment">// 对于引用捕获的变量，创建相应的指针参数。</span><br>			addr := ir.NewNameAt(clofn.Pos(), typecheck.Lookup(<span class="hljs-string">&quot;&amp;&quot;</span>+v.Sym().Name))<br>			addr.Curfn = clofn<br>			addr.SetType(types.NewPtr(v.Type()))<br>			v.Heapaddr = addr<br>			v = addr<br>		&#125;<br><br>		v.Class = ir.PPARAM<br>		decls = <span class="hljs-built_in">append</span>(decls, v)<br><br>		fld := types.NewField(src.NoXPos, v.Sym(), v.Type())<br>		fld.Nname = v<br>		params = <span class="hljs-built_in">append</span>(params, fld)<br>	&#125;<br><br>	<span class="hljs-comment">// 创建一个新的函数类型，将捕获的变量作为前置参数，并更新函数的声明。</span><br>	f := clofn.Nname<br>	typ := f.Type()<br>	typ = types.NewSignature(<span class="hljs-literal">nil</span>, <span class="hljs-built_in">append</span>(params, typ.Params().FieldSlice()...), typ.Results().FieldSlice())<br>	f.SetType(typ)<br>	clofn.Dcl = <span class="hljs-built_in">append</span>(decls, clofn.Dcl...)<br><br>	<span class="hljs-comment">// 将原始的闭包调用重写为对新函数的调用，并将捕获的变量作为实际参数传递。</span><br>	n.X = f<br>	n.Args.Prepend(closureArgs(clo)...)<br><br>	<span class="hljs-comment">// 调整调用表达式的类型，以反映参数和返回值类型的变化。</span><br>	<span class="hljs-keyword">if</span> typ.NumResults() == <span class="hljs-number">1</span> &#123;<br>		n.SetType(typ.Results().Field(<span class="hljs-number">0</span>).Type)<br>	&#125; <span class="hljs-keyword">else</span> &#123;<br>		n.SetType(typ.Results())<br>	&#125;<br><br>	<span class="hljs-comment">// 虽然不再是传统意义上的闭包，但为了确保函数被编译，将其添加到待编译列表中。</span><br>	ir.CurFunc.Closures = <span class="hljs-built_in">append</span>(ir.CurFunc.Closures, clofn)<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>这段代码是 Go 编译器中的 <code>directClosureCall</code>
-函数，用于将直接调用的函数字面量重写为正常的函数调用，同时将闭包变量作为参数传递。这避免了闭包对象的分配。</p>
+<p>这段代码是 Go 编译器中的 <code>directClosureCall</code> 函数，用于将直接调用的函数字面量重写为正常的函数调用，同时将闭包变量作为参数传递。这避免了闭包对象的分配。</p>
 <p>主要步骤如下：</p>
-<ol type="1">
-<li><strong>检查闭包是否简单</strong>：如果闭包足够简单，不进行处理，留给
-<code>walkClosure</code> 处理。</li>
+<ol>
+<li><strong>检查闭包是否简单</strong>：如果闭包足够简单，不进行处理，留给 <code>walkClosure</code> 处理。</li>
 <li><strong>处理闭包变量</strong>：将闭包中的每个变量转换为函数的参数。对于引用捕获的变量，创建相应的指针参数。</li>
 <li><strong>更新函数类型和声明</strong>：创建一个新的函数类型，将捕获的变量作为前置参数，并更新函数的声明。</li>
 <li><strong>重写调用</strong>：将原始的闭包调用重写为对新函数的调用，并将捕获的变量作为实际参数传递。</li>
@@ -1015,7 +826,7 @@ target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-b
 <p>如果闭包定义后不被立即调用，而是后续调用，那么同一个闭包可能会被调用多次，这个时候就必须创建闭包对象了。</p>
 <p>编译器具体的处理逻辑在 <code>walkClosure()</code> 中：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">walkClosure</span><span class="hljs-params">(clo *ir.ClosureExpr, init *ir.Nodes)</span></span> ir.Node &#123;<br>	clofn := clo.Func<br><br>	<span class="hljs-comment">// 如果没有闭包变量，闭包被视为全局函数，直接返回函数名。</span><br>	<span class="hljs-keyword">if</span> ir.IsTrivialClosure(clo) &#123;<br>		<span class="hljs-keyword">if</span> base.Debug.Closure &gt; <span class="hljs-number">0</span> &#123;<br>			base.WarnfAt(clo.Pos(), <span class="hljs-string">&quot;closure converted to global&quot;</span>)<br>		&#125;<br>		<span class="hljs-keyword">return</span> clofn.Nname<br>	&#125;<br><br>	<span class="hljs-comment">// 对于复杂闭包，设置需要上下文标记，并进行运行时检查。</span><br>	ir.ClosureDebugRuntimeCheck(clo)<br>	clofn.SetNeedctxt(<span class="hljs-literal">true</span>)<br><br>	<span class="hljs-comment">// 确保闭包函数不会被重复添加到编译队列。</span><br>	<span class="hljs-keyword">if</span> !clofn.Walked() &#123;<br>		clofn.SetWalked(<span class="hljs-literal">true</span>)<br>		ir.CurFunc.Closures = <span class="hljs-built_in">append</span>(ir.CurFunc.Closures, clofn)<br>	&#125;<br><br>	<span class="hljs-comment">// 构造一个复合字面量表达式来表示闭包实例。</span><br>	typ := typecheck.ClosureType(clo)<br><br>    <span class="hljs-comment">// 将闭包函数和捕获的变量作为字段添加到闭包结构中。</span><br>	clos := ir.NewCompLitExpr(base.Pos, ir.OCOMPLIT, typ, <span class="hljs-literal">nil</span>)<br>	clos.SetEsc(clo.Esc())<br>	clos.List = <span class="hljs-built_in">append</span>([]ir.Node&#123;ir.NewUnaryExpr(base.Pos, ir.OCFUNC, clofn.Nname)&#125;, closureArgs(clo)...)<br>	<span class="hljs-keyword">for</span> i, value := <span class="hljs-keyword">range</span> clos.List &#123;<br>		clos.List[i] = ir.NewStructKeyExpr(base.Pos, typ.Field(i), value)<br>	&#125;<br><br>    <span class="hljs-comment">// 创建闭包结构的地址，并进行类型转换以符合闭包类型。</span><br>	addr := typecheck.NodAddr(clos)<br>	addr.SetEsc(clo.Esc())<br>	cfn := typecheck.ConvNop(addr, clo.Type())<br><br>	<span class="hljs-comment">// 如果存在预分配的闭包对象，进行相关处理。</span><br>	<span class="hljs-keyword">if</span> x := clo.Prealloc; x != <span class="hljs-literal">nil</span> &#123;<br>		<span class="hljs-keyword">if</span> !types.Identical(typ, x.Type()) &#123;<br>			<span class="hljs-built_in">panic</span>(<span class="hljs-string">&quot;closure type does not match order&#x27;s assigned type&quot;</span>)<br>		&#125;<br>		addr.Prealloc = x<br>		clo.Prealloc = <span class="hljs-literal">nil</span><br>	&#125;<br><br>    <span class="hljs-comment">// 对最终构建的闭包表达式进行进一步处理。</span><br>	<span class="hljs-keyword">return</span> walkExpr(cfn, init)<br>&#125;<br></code></pre></td></tr></table></figure>
-<ol type="1">
+<ol>
 <li><strong>检查是否为简单闭包</strong>：如果没有闭包变量，闭包被视为全局函数，直接返回函数名。</li>
 <li><strong>处理非简单闭包</strong>：对于复杂闭包，设置需要上下文标记，并进行运行时检查。</li>
 <li><strong>防止重复处理</strong>：确保闭包函数不会被重复添加到编译队列。</li>
@@ -1026,158 +837,85 @@ target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-b
 <li><strong>表达式处理</strong>：对最终构建的闭包表达式进行进一步处理。</li>
 </ol>
 <h2 id="遍历函数">遍历函数</h2>
-<p>闭包重写后，会进入 walk 阶段，如官方 文档所说：这是对 IR
-表示的最后一次遍历，它有两个目的：</p>
-<ol type="1">
+<p>闭包重写后，会进入 walk 阶段，如官方 文档所说：这是对 IR 表示的最后一次遍历，它有两个目的：</p>
+<ol>
 <li>将复杂的语句分解为简单的单个语句，引入临时变量并遵守求值顺序；</li>
 <li>将高级 Go 构造转换为更原始的构造。</li>
 </ol>
-<p>举个例子，<code>walkRange()</code> 函数针对不同类型的
-<code>range</code>
-语句（数组、切片、映射、通道和字符串）进行处理，将其转换为更基本的循环结构，并应用必要的变换。</p>
+<p>举个例子，<code>walkRange()</code> 函数针对不同类型的 <code>range</code> 语句（数组、切片、映射、通道和字符串）进行处理，将其转换为更基本的循环结构，并应用必要的变换。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">walkRange</span><span class="hljs-params">(nrange *ir.RangeStmt)</span></span> ir.Node &#123;<br>    <span class="hljs-comment">// ... 省略代码 ...</span><br><br>    <span class="hljs-comment">// 遍历 range 语句的不同情况</span><br>    <span class="hljs-keyword">switch</span> t.Kind() &#123;<br>    <span class="hljs-keyword">default</span>:<br>        base.Fatalf(<span class="hljs-string">&quot;walkRange&quot;</span>)<br><br>    <span class="hljs-comment">// 处理数组、切片、指针（指向数组）的情况</span><br>    <span class="hljs-keyword">case</span> types.TARRAY, types.TSLICE, types.TPTR:<br>        <span class="hljs-comment">// ... 省略代码 ...</span><br><br>    <span class="hljs-comment">// 处理映射的情况</span><br>    <span class="hljs-keyword">case</span> types.TMAP:<br>        <span class="hljs-comment">// ... 省略代码 ...</span><br><br>    <span class="hljs-comment">// 处理通道的情况</span><br>    <span class="hljs-keyword">case</span> types.TCHAN:<br>        <span class="hljs-comment">// ... 省略代码 ...</span><br><br>    <span class="hljs-comment">// 处理字符串的情况</span><br>    <span class="hljs-keyword">case</span> types.TSTRING:<br>        <span class="hljs-comment">// ... 省略代码 ...</span><br>    &#125;<br><br>    <span class="hljs-comment">// ... 省略代码 ...</span><br><br>    <span class="hljs-comment">// 构建并返回新的 for 语句</span><br>    nfor.PtrInit().Append(init...)<br>    typecheck.Stmts(nfor.Cond.Init())<br>    nfor.Cond = typecheck.Expr(nfor.Cond)<br>    nfor.Cond = typecheck.DefaultLit(nfor.Cond, <span class="hljs-literal">nil</span>)<br>    nfor.Post = typecheck.Stmt(nfor.Post)<br>    typecheck.Stmts(body)<br>    nfor.Body.Append(body...)<br>    nfor.Body.Append(nrange.Body...)<br><br>    <span class="hljs-keyword">var</span> n ir.Node = nfor<br>    n = walkStmt(n)<br><br>    base.Pos = lno<br>    <span class="hljs-keyword">return</span> n<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>这部分代码在 <a
-target="_blank" rel="noopener" href="https://github.com/golang/go/tree/release-branch.go1.21/src/cmd/compile/internal/walk">walk</a>，对其他优化感兴趣的读者可以阅读这部分的代码。</p>
-<h2 id="ssa-生成">SSA 生成</h2>
-<p>遍历函数（Walk）阶段后，编译器会将 AST
-转换为下一个重要的中间表示形态，称为 SSA，其全称为 Static Single
-Assignment，静态单赋值。SSA 被大多数现代的编译器（包括 GCC 和
-LLVM）使用，用于编译过程中的优化和代码生成。其核心特点和用途如下：</p>
-<ol type="1">
-<li><strong>变量唯一赋值</strong>：在 SSA
-形式中，每个变量只被赋值一次，使得变量的使用和修改更加清晰。</li>
-<li><strong>方便的数据流分析</strong>：SSA
-使得数据流分析更加直接和高效，因为每个变量的赋值点只有一个。</li>
-<li><strong>优化算法的基础</strong>：许多编译器优化技术，如死代码消除、常量传播、强度削减等，在
-SSA 形式下更易实现。</li>
-<li><strong>Phi 函数</strong>：SSA 引入了 Phi
-函数来处理变量在不同控制流路径上的不同赋值。</li>
-<li><strong>代码生成</strong>：SSA
-形式简化了目标代码生成的过程，因为它提供了更清晰的操作和变量使用视图。</li>
+<p>这部分代码在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/tree/release-branch.go1.21/src/cmd/compile/internal/walk">walk</a>，对其他优化感兴趣的读者可以阅读这部分的代码。</p>
+<h2 id="SSA-生成">SSA 生成</h2>
+<p>遍历函数（Walk）阶段后，编译器会将 AST 转换为下一个重要的中间表示形态，称为 SSA，其全称为 Static Single Assignment，静态单赋值。SSA 被大多数现代的编译器（包括 GCC 和 LLVM）使用，用于编译过程中的优化和代码生成。其核心特点和用途如下：</p>
+<ol>
+<li><strong>变量唯一赋值</strong>：在 SSA 形式中，每个变量只被赋值一次，使得变量的使用和修改更加清晰。</li>
+<li><strong>方便的数据流分析</strong>：SSA 使得数据流分析更加直接和高效，因为每个变量的赋值点只有一个。</li>
+<li><strong>优化算法的基础</strong>：许多编译器优化技术，如死代码消除、常量传播、强度削减等，在 SSA 形式下更易实现。</li>
+<li><strong>Phi 函数</strong>：SSA 引入了 Phi 函数来处理变量在不同控制流路径上的不同赋值。</li>
+<li><strong>代码生成</strong>：SSA 形式简化了目标代码生成的过程，因为它提供了更清晰的操作和变量使用视图。</li>
 </ol>
-<p>官方对 SSA 生成阶段进行了详细的描述：<a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/ssa/README.md">Introduction
-to the Go compiler's SSA backend</a></p>
-<p>Go 提供了强有力的工具查看 SSA
-初始及其后续优化阶段生成的代码片段，可以通过编译时指定
-<code>GOSSAFUNC=&#123;pkg.func&#125;</code> 实现。</p>
+<p>官方对 SSA 生成阶段进行了详细的描述：<a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/ssa/README.md">Introduction to the Go compiler’s SSA backend</a></p>
+<p>Go 提供了强有力的工具查看 SSA 初始及其后续优化阶段生成的代码片段，可以通过编译时指定 <code>GOSSAFUNC=&#123;pkg.func&#125;</code> 实现。</p>
 <p>以下面代码为例：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">var</span> d <span class="hljs-type">uint8</span><br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	<span class="hljs-keyword">var</span> a <span class="hljs-type">uint8</span> = <span class="hljs-number">1</span><br>	a = <span class="hljs-number">2</span><br>	<span class="hljs-keyword">if</span> <span class="hljs-literal">true</span> &#123;<br>		a = <span class="hljs-number">3</span><br>	&#125;<br>	d = a<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>我们可以自行简单分析一下，这段代码前面 <code>a</code>
-的所有操作其实都是无意义的，整段代码其实就在说 <code>d = 3</code>
-这件事。</p>
+<p>我们可以自行简单分析一下，这段代码前面 <code>a</code> 的所有操作其实都是无意义的，整段代码其实就在说 <code>d = 3</code> 这件事。</p>
 <p>在 linux 或者 mac 上执行：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go">GOSSAFUNC=main.main <span class="hljs-keyword">go</span> build main.<span class="hljs-keyword">go</span><br></code></pre></td></tr></table></figure>
 <p>在 Windows 上执行：</p>
 <figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs powershell"><span class="hljs-variable">$env:GOSSAFUNC</span>=<span class="hljs-string">&quot;main&quot;</span><br>go build .\main.go<br></code></pre></td></tr></table></figure>
 <p>可以看到输出：</p>
 <figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs powershell">dumped SSA to .\ssa.html<br></code></pre></td></tr></table></figure>
-<p>通过浏览器打开生成的 <code>ssa.html</code> 文件，我们可以看到 SSA
-的初始阶段、优化阶段和最终阶段的代码片段。</p>
-<figure>
-<img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/ssa.png" srcset="/img/loading.gif" lazyload
-alt="ssa.html 文件示例" />
-<figcaption aria-hidden="true">ssa.html 文件示例</figcaption>
-</figure>
+<p>通过浏览器打开生成的 <code>ssa.html</code> 文件，我们可以看到 SSA 的初始阶段、优化阶段和最终阶段的代码片段。</p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/ssa.png" srcset="/img/loading.gif" lazyload alt="ssa.html 文件示例"></p>
 <p>我们直接看最终的结果，来看看我们前面的分析正确与否：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203211001137.png" srcset="/img/loading.gif" lazyload
-alt="ssa 最终结果" />
-<figcaption aria-hidden="true">ssa 最终结果</figcaption>
-</figure>
-<p>可以看到这一行：<code>00003 (**+11**) MOVB $3, main.d(SB)</code>，那其实就是直接
-<code>d = 3</code>。</p>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231203211001137.png" srcset="/img/loading.gif" lazyload alt="ssa 最终结果"></p>
+<p>可以看到这一行：<code>00003 (**+11**) MOVB $3, main.d(SB)</code>，那其实就是直接 <code>d = 3</code>。</p>
 <h2 id="机器码生成">机器码生成</h2>
-<p>在 SSA
-阶段，编译器先执行与特定指令集无关的优化，再执行与特定指令集有关的优化，并最终生成与特定指令集有关的指令和寄存器分配方式。如
-<a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/ssa/_gen/genericOps.go">ssa/_gen/genericOps.go</a>
-中包含了与特定指令集无关的 Op 操作，在 <a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/ssa/_gen/S390XOps.go">ssa/_gen/AMD64Ops.go</a>
-中包含了和 AMD64 指令集相关的 Op 操作。</p>
+<p>在 SSA 阶段，编译器先执行与特定指令集无关的优化，再执行与特定指令集有关的优化，并最终生成与特定指令集有关的指令和寄存器分配方式。如  <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/ssa/_gen/genericOps.go">ssa/_gen/genericOps.go</a> 中包含了与特定指令集无关的 Op 操作，在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.21/src/cmd/compile/internal/ssa/_gen/S390XOps.go">ssa/_gen/AMD64Ops.go</a> 中包含了和 AMD64 指令集相关的 Op 操作。</p>
 <p>机器码生成阶段是编译器的机器依赖阶段，主要过程如下：</p>
-<ol type="1">
-<li><strong>Lowering 过程</strong>：这个过程将通用的 SSA
-形式转换为特定于目标机器的变体。这包括将通用操作符替换为针对特定硬件优化的操作。</li>
+<ol>
+<li><strong>Lowering 过程</strong>：这个过程将通用的 SSA 形式转换为特定于目标机器的变体。这包括将通用操作符替换为针对特定硬件优化的操作。</li>
 <li><strong>代码优化</strong>：在机器特定的形式上执行最终优化，进一步提高代码效率。</li>
-<li><strong>生成机器指令</strong>：将 Go 函数转换为
-<code>obj.Prog</code> 指令序列。</li>
-<li><strong>汇编和输出</strong>：这些指令由
-<code>cmd/internal/obj</code>
-模块的汇编器处理，转换为机器代码，并输出最终的目标文件。</li>
+<li><strong>生成机器指令</strong>：将 Go 函数转换为 <code>obj.Prog</code> 指令序列。</li>
+<li><strong>汇编和输出</strong>：这些指令由 <code>cmd/internal/obj</code> 模块的汇编器处理，转换为机器代码，并输出最终的目标文件。</li>
 </ol>
-<p>Go 为我们了解 Go
-语言程序的编译和链接过程提供了一个非常好用的命令：</p>
+<p>Go 为我们了解 Go 语言程序的编译和链接过程提供了一个非常好用的命令：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">go build -n<br></code></pre></td></tr></table></figure>
-<p>其中 <code>-n</code> 表示<strong>只输出编译过程中将要执行的 shell
-命令，但不执行</strong>。</p>
+<p>其中 <code>-n</code> 表示<strong>只输出编译过程中将要执行的 shell 命令，但不执行</strong>。</p>
 <p>以下面程序为例：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;fmt&quot;</span><br><br>	<span class="hljs-string">&quot;github.com/spf13/cast&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	i := cast.ToInt(<span class="hljs-string">&quot;1&quot;</span>)<br>	fmt.Println(i)<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>这个程序引入了标准库 <code>fmt</code> 以及第三方库
-<code>github.com/spf13/cast</code>。</p>
+<p>这个程序引入了标准库 <code>fmt</code> 以及第三方库 <code>github.com/spf13/cast</code>。</p>
 <p>在工程目录下执行：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">go build -n -o main<br></code></pre></td></tr></table></figure>
 <p>可以看到输出：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">mkdir</span> -p <span class="hljs-variable">$WORK</span>/b001/<br><span class="hljs-built_in">cat</span> &gt;<span class="hljs-variable">$WORK</span>/b001/importcfg.link &lt;&lt; <span class="hljs-string">&#x27;EOF&#x27;</span> <span class="hljs-comment"># internal</span><br>packagefile go-compilation=/Users/wangjiahan/Library/Caches/go-build/48/48745ff5ef7f8945297b5894ec377f47e246d94739e0b8f00e86b6d58879e71d-d<br>packagefile <span class="hljs-built_in">fmt</span>=/Users/wangjiahan/Library/Caches/go-build/10/10ab74ff0df27a2f4bdbe7651290f13ad466f3df63e11241e07ccd21c169b206-d<br>packagefile github.com/spf13/cast=/Users/wangjiahan/Library/Caches/go-build/77/77eed0b7028cfc4c90d78d6670325d982325399573dff9d7f82ffbf76e4559e8-d<br>...<br>packagefile net/url=/Users/wangjiahan/Library/Caches/go-build/72/72d0ef9b8f99a52bf1de760bb2f630998d6bb66a3d2a3fa66bd66f4efddfbc71-d<br>modinfo <span class="hljs-string">&quot;0w\xaf\f\x92t\b\x02A\xe1\xc1\a\xe6\xd6\x18\xe6path\tgo-compilation\nmod\tgo-compilation\t(devel)\t\ndep\tgithub.com/spf13/cast\tv1.6.0\th1:GEiTHELF+vaR5dhz3VqZfFSzZjYbgeKDpBxQVS4GYJ0=\nbuild\t-buildmode=exe\nbuild\t-compiler=gc\nbuild\tCGO_ENABLED=1\nbuild\tCGO_CFLAGS=\nbuild\tCGO_CPPFLAGS=\nbuild\tCGO_CXXFLAGS=\nbuild\tCGO_LDFLAGS=\nbuild\tGOARCH=arm64\nbuild\tGOOS=darwin\n\xf92C1\x86\x18 r\x00\x82B\x10A\x16\xd8\xf2&quot;</span><br>EOF<br><span class="hljs-built_in">mkdir</span> -p <span class="hljs-variable">$WORK</span>/b001/exe/<br><span class="hljs-built_in">cd</span> .<br>/opt/homebrew/opt/go/libexec/pkg/tool/darwin_arm64/link -o <span class="hljs-variable">$WORK</span>/b001/exe/a.out -importcfg <span class="hljs-variable">$WORK</span>/b001/importcfg.link -buildmode=pie -buildid=FDJiS-4glijTlqBbjVbe/UWsngURatTblImv3DE6-/OjO-hZGekrr-XpHFs_zA/FDJiS-4glijTlqBbjVbe -extld=cc /Users/wangjiahan/Library/Caches/go-build/48/48745ff5ef7f8945297b5894ec377f47e246d94739e0b8f00e86b6d58879e71d-d<br>/opt/homebrew/opt/go/libexec/pkg/tool/darwin_arm64/buildid -w <span class="hljs-variable">$WORK</span>/b001/exe/a.out <span class="hljs-comment"># internal</span><br><span class="hljs-built_in">mv</span> <span class="hljs-variable">$WORK</span>/b001/exe/a.out main<br></code></pre></td></tr></table></figure>
 <p>这里建议你先尝试自行分析一下这个编译过程，再继续往下阅读。</p>
 <p>经过分析，上述过程可以分为以下 8 个步骤：</p>
-<ol type="1">
-<li><strong>创建工作目录</strong>：<code>mkdir -p $WORK/b001/</code>
-创建一个临时工作目录，用于存放编译过程中的临时文件。</li>
-<li><strong>生成导入配置文件</strong>：<code>cat &gt;$WORK/b001/importcfg.link &lt;&lt; 'EOF'</code>
-命令开始创建一个名为 <code>importcfg.link</code>
-的文件，这个文件包含了编译过程中需要的包文件路径。</li>
-<li><strong>写入包文件路径</strong>：接下来的多行内容是对
-<code>importcfg.link</code>
-文件的填充，指定了各个依赖包的存储位置。</li>
-<li><strong>结束文件写入</strong>：<code>EOF</code> 标志着
-<code>importcfg.link</code> 文件内容的结束。</li>
-<li><strong>创建可执行文件目录</strong>：<code>mkdir -p $WORK/b001/exe/</code>
-创建一个目录，用于存放最终的可执行文件。</li>
-<li><strong>编译链接</strong>：<code>/opt/homebrew/opt/go/libexec/pkg/tool/darwin_arm64/link -o $WORK/b001/exe/a.out ...</code>
-这一步是编译链接的核心，它使用Go的链接工具，根据之前生成的
-<code>importcfg.link</code> 文件，将代码编译成可执行文件。</li>
-<li><strong>更新构建ID</strong>：<code>/opt/homebrew/opt/go/libexec/pkg/tool/darwin_arm64/buildid -w $WORK/b001/exe/a.out</code>
-这一步更新了可执行文件的构建ID。</li>
-<li><strong>移动可执行文件</strong>：<code>mv $WORK/b001/exe/a.out main</code>
-将编译好的可执行文件移动到当前目录，并重命名为 <code>main</code>。</li>
+<ol>
+<li><strong>创建工作目录</strong>：<code>mkdir -p $WORK/b001/</code> 创建一个临时工作目录，用于存放编译过程中的临时文件。</li>
+<li><strong>生成导入配置文件</strong>：<code>cat &gt;$WORK/b001/importcfg.link &lt;&lt; 'EOF'</code> 命令开始创建一个名为 <code>importcfg.link</code> 的文件，这个文件包含了编译过程中需要的包文件路径。</li>
+<li><strong>写入包文件路径</strong>：接下来的多行内容是对 <code>importcfg.link</code> 文件的填充，指定了各个依赖包的存储位置。</li>
+<li><strong>结束文件写入</strong>：<code>EOF</code> 标志着 <code>importcfg.link</code> 文件内容的结束。</li>
+<li><strong>创建可执行文件目录</strong>：<code>mkdir -p $WORK/b001/exe/</code> 创建一个目录，用于存放最终的可执行文件。</li>
+<li><strong>编译链接</strong>：<code>/opt/homebrew/opt/go/libexec/pkg/tool/darwin_arm64/link -o $WORK/b001/exe/a.out ...</code> 这一步是编译链接的核心，它使用Go的链接工具，根据之前生成的 <code>importcfg.link</code> 文件，将代码编译成可执行文件。</li>
+<li><strong>更新构建ID</strong>：<code>/opt/homebrew/opt/go/libexec/pkg/tool/darwin_arm64/buildid -w $WORK/b001/exe/a.out</code> 这一步更新了可执行文件的构建ID。</li>
+<li><strong>移动可执行文件</strong>：<code>mv $WORK/b001/exe/a.out main</code> 将编译好的可执行文件移动到当前目录，并重命名为 <code>main</code>。</li>
 </ol>
 <p>如下图所示：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img6sR2uDuHwbkSNk3FuUxHmY-20231129143014805.png" srcset="/img/loading.gif" lazyload
-alt="Go语言编译和链接过程" />
-<figcaption aria-hidden="true">Go语言编译和链接过程</figcaption>
-</figure>
+<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img6sR2uDuHwbkSNk3FuUxHmY-20231129143014805.png" srcset="/img/loading.gif" lazyload alt="Go语言编译和链接过程"></p>
 <h2 id="参考资料">参考资料</h2>
 <ul>
-<li><a
-target="_blank" rel="noopener" href="https://github.com/golang/go/tree/release-branch.go1.21/src/cmd/compile">Go1.21
-官方文档</a></li>
-<li><a target="_blank" rel="noopener" href="https://book.douban.com/subject/35556889/">《Go
-语言底层原理剖析》</a></li>
-<li><a
-target="_blank" rel="noopener" href="https://draveness.me/golang/docs/part1-prerequisite/ch02-compile/golang-compile-intro/">《Go
-语言设计与实现》</a></li>
-<li><a
-target="_blank" rel="noopener" href="https://medium.com/a-journey-with-go/go-overview-of-the-compiler-4e5a153ca889">Go:
-Overview of the Compiler</a></li>
-<li><a
-target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Abstract_syntax_tree">维基百科 -
-AST</a></li>
-<li><a
-target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Static_single-assignment_form">维基百科
-- SSA</a></li>
-<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/592602585">Go
-机制：逃逸分析学习笔记</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/golang/go/tree/release-branch.go1.21/src/cmd/compile">Go1.21 官方文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://book.douban.com/subject/35556889/">《Go 语言底层原理剖析》</a></li>
+<li><a target="_blank" rel="noopener" href="https://draveness.me/golang/docs/part1-prerequisite/ch02-compile/golang-compile-intro/">《Go 语言设计与实现》</a></li>
+<li><a target="_blank" rel="noopener" href="https://medium.com/a-journey-with-go/go-overview-of-the-compiler-4e5a153ca889">Go: Overview of the Compiler</a></li>
+<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Abstract_syntax_tree">维基百科 - AST</a></li>
+<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Static_single-assignment_form">维基百科 - SSA</a></li>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/592602585">Go 机制：逃逸分析学习笔记</a></li>
 <li>ChatGPT-4</li>
 </ul>
-<hr />
-<p>以上便是 Go 语言在 1.21.0
-这个版本下编译过程的整个过程，笔者会在阅读完《用 Go
-语言自制解释器》和《用 Go
-语言自制编译器》这两本书后，若有对编译原理有更深入的体会和感悟，再回过来对本文的内容进行勘误和进一步提炼。</p>
+<hr>
+<p>以上便是 Go 语言在 1.21.0 这个版本下编译过程的整个过程，笔者会在阅读完《用 Go 语言自制解释器》和《用 Go 语言自制编译器》这两本书后，若有对编译原理有更深入的体会和感悟，再回过来对本文的内容进行勘误和进一步提炼。</p>
 
                 
               </div>

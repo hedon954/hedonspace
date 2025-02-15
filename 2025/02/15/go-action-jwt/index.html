@@ -1,0 +1,834 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/hedon.png">
+  <link rel="icon" href="/img/hedon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Hedon Wang">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本文将结合实际代码，详细讲解如何在 Go 项目中实现 JWT 认证机制，并探讨两种常见的 Token 续期策略：自动续期和 Refresh Token。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在 Go 项目中实现 JWT 用户认证与续期机制">
+<meta property="og:url" content="https://hedon.top/2025/02/15/go-action-jwt/index.html">
+<meta property="og:site_name" content="HedonSpace">
+<meta property="og:description" content="本文将结合实际代码，详细讲解如何在 Go 项目中实现 JWT 认证机制，并探讨两种常见的 Token 续期策略：自动续期和 Refresh Token。">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-02-15T15:28:10.000Z">
+<meta property="article:modified_time" content="2025-02-15T15:58:56.181Z">
+<meta property="article:author" content="Hedon Wang">
+<meta property="article:tag" content="Go">
+<meta property="article:tag" content="JWT">
+<meta property="article:tag" content="Go 实战">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>在 Go 项目中实现 JWT 用户认证与续期机制 - HedonSpace</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"hedon.top","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":30,"cursorChar":"_","loop":false,"scope":["home"]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":4},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"Eig99zG5BYQGKXxcMOU7DH7e-gzGzoHsz","app_key":"dBP7lew0wt2GQdNdo6t2EE5m","server_url":"https://eig99zg5.lc-cn-n1-shared.com","path":"window.location.pathname","ignore_local":true}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+    <!-- Google tag (gtag.js) -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        Fluid.utils.createScript("https://www.googletagmanager.com/gtag/js?id=", function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+          gtag('js', new Date());
+          gtag('config', '');
+        });
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.0.0"><link rel="alternate" href="/atom.xml" title="HedonSpace" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>HedonSpace</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>Home</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>Archives</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>Categories</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>Tags</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>About</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/banner/go-action-jwt.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">在 Go 项目中实现 JWT 用户认证与续期机制</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        Hedon Wang
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-02-15 23:28" pubdate>
+          2025-02-15 23:28
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          9.6k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          25 mins
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="leancloud-page-views"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">在 Go 项目中实现 JWT 用户认证与续期机制</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>JWT (JSON Web Token) 是一种广泛使用的用户认证方案，因其无状态、跨域支持和灵活性而受到欢迎。本文将结合实际代码，详细讲解如何在 Go 项目中实现 JWT 认证机制，并探讨两种常见的 Token 续期策略：自动续期和 Refresh Token。</p>
+<h2 id="1-JWT-基础概念">1. JWT 基础概念</h2>
+<p>JWT 由三部分组成：Header、Payload 和 Signature。使用 JWT 进行登录认证的基本工作流程是：</p>
+<ol>
+<li>用户登录成功后，服务器生成 JWT。</li>
+<li>服务器将 token 返回给客户端。</li>
+<li>客户端后续请求携带 token。</li>
+<li>服务器验证 token 的有效性。</li>
+</ol>
+<p>我们可以在 <a target="_blank" rel="noopener" href="https://jwt.io/">https://jwt.io/</a> 网站对 JWT 进行分析，查看其具体的组成成分。</p>
+<h2 id="2-基本准备">2. 基本准备</h2>
+<p>在本篇，我们将使用 Go 语言，通过一个完整的案例实现在 HTTP 接口中，使用 JWT 进行用户登录和认证流程。本文假设读者已掌握基本的 Go 语言语法和网络编程经验，并对 <a target="_blank" rel="noopener" href="https://github.com/gin-gonic/gin">Gin</a> 框架有基本的了解。</p>
+<p>为了快速响应失败，本文案例中使用了封装好的异常处理机制：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> utils<br><br><span class="hljs-keyword">var</span> (<br>	ErrUser = errors.New(<span class="hljs-string">&quot;&quot;</span>)<br>	ErrSys  = errors.New(<span class="hljs-string">&quot;&quot;</span>)<br>)<br><br><span class="hljs-comment">// 定义用户侧错误，会直接将错误内容返回给用户，不打印日志。</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">UserErr</span><span class="hljs-params">(msg <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">error</span> &#123;<br>	<span class="hljs-keyword">return</span> fmt.Errorf(<span class="hljs-string">&quot;%w%v&quot;</span>, ErrUser, msg)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">UserErrf</span><span class="hljs-params">(format <span class="hljs-type">string</span>, a ...any)</span></span> <span class="hljs-type">error</span> &#123;<br>	<span class="hljs-keyword">return</span> fmt.Errorf(<span class="hljs-string">&quot;%w%v&quot;</span>, ErrUser, fmt.Sprintf(format, a...))<br>&#125;<br><br><span class="hljs-comment">// 定义系统内部错误，会固定返回 internal server error 给用户，但是会将原始错误信息输出到日志中，便于内部排查。</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">SystemErr</span><span class="hljs-params">(err <span class="hljs-type">error</span>)</span></span> <span class="hljs-type">error</span> &#123;<br>	<span class="hljs-keyword">return</span> fmt.Errorf(<span class="hljs-string">&quot;%w%v&quot;</span>, ErrSys, err)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">SystemErrf</span><span class="hljs-params">(format <span class="hljs-type">string</span>, a ...any)</span></span> <span class="hljs-type">error</span> &#123;<br>	<span class="hljs-keyword">return</span> fmt.Errorf(<span class="hljs-string">&quot;%w%v&quot;</span>, ErrSys, fmt.Sprintf(format, a...))<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">GinErr</span><span class="hljs-params">(c *gin.Context, req any, err <span class="hljs-type">error</span>, msgs ...<span class="hljs-type">string</span>)</span></span> &#123;<br>	<span class="hljs-keyword">if</span> errors.Is(err, ErrUser) &#123;<br>		c.JSON(http.StatusOK, err.Error())<br>		<span class="hljs-keyword">return</span><br>	&#125;<br><br>	msg := <span class="hljs-string">&quot;internal server error&quot;</span><br>	<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(msgs) &gt; <span class="hljs-number">0</span> &#123;<br>		msg = msgs[<span class="hljs-number">0</span>]<br>	&#125;<br>	slog.Error(msg,<br>		slog.Any(<span class="hljs-string">&quot;req&quot;</span>, req),<br>		slog.String(<span class="hljs-string">&quot;err&quot;</span>, err.Error()),<br>	)<br>	c.JSON(http.StatusOK, <span class="hljs-string">&quot;internal server error&quot;</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="3-实现用户认证">3. 实现用户认证</h2>
+<p>在进行实际代码编写之前，你需要先初始化好项目并引入 <code>jwt</code> 依赖：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">go get -u github.com/golang-jwt/jwt/v5<br></code></pre></td></tr></table></figure>
+<p>在代码中使用的时候，可以：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;github.com/golang-jwt/jwt/v5&quot;</span><br></code></pre></td></tr></table></figure>
+<p>那接下来我们就正式开始我们的功能实现。</p>
+<h3 id="3-1-定义-Claims-结构">3.1 定义 Claims 结构</h3>
+<p>首先，我们需要定义 JWT 的载荷结构：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> UserClaims <span class="hljs-keyword">struct</span> &#123;<br>    jwt.RegisteredClaims<br>    UserID    <span class="hljs-type">uint64</span> <span class="hljs-string">`json:&quot;user_id&quot;`</span>    <span class="hljs-comment">// 用户ID</span><br>    UserAgent <span class="hljs-type">string</span> <span class="hljs-string">`json:&quot;user_agent&quot;`</span>  <span class="hljs-comment">// 用户设备信息</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里我们：</p>
+<ul>
+<li>
+<p>组合了 <code>jwt.RegisteredClaims</code>，它包含了标准的 JWT 字段（如过期时间），帮助我们实现了 <code>jwt.Clamis</code> 接口：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> Claims <span class="hljs-keyword">interface</span> &#123;<br>	GetExpirationTime() (*NumericDate, <span class="hljs-type">error</span>)<br>	GetIssuedAt() (*NumericDate, <span class="hljs-type">error</span>)<br>	GetNotBefore() (*NumericDate, <span class="hljs-type">error</span>)<br>	GetIssuer() (<span class="hljs-type">string</span>, <span class="hljs-type">error</span>)<br>	GetSubject() (<span class="hljs-type">string</span>, <span class="hljs-type">error</span>)<br>	GetAudience() (ClaimStrings, <span class="hljs-type">error</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><code>jwt.RegisteredClaims</code> 的实现如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> RegisteredClaims <span class="hljs-keyword">struct</span> &#123;<br>	Issuer <span class="hljs-type">string</span> <span class="hljs-string">`json:&quot;iss,omitempty&quot;`</span><br>	Subject <span class="hljs-type">string</span> <span class="hljs-string">`json:&quot;sub,omitempty&quot;`</span><br>	Audience ClaimStrings <span class="hljs-string">`json:&quot;aud,omitempty&quot;`</span><br>	ExpiresAt *NumericDate <span class="hljs-string">`json:&quot;exp,omitempty&quot;`</span><br>	NotBefore *NumericDate <span class="hljs-string">`json:&quot;nbf,omitempty&quot;`</span><br>	IssuedAt *NumericDate <span class="hljs-string">`json:&quot;iat,omitempty&quot;`</span><br>	ID <span class="hljs-type">string</span> <span class="hljs-string">`json:&quot;jti,omitempty&quot;`</span><br>&#125;<br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(c RegisteredClaims)</span></span> GetExpirationTime() (*NumericDate, <span class="hljs-type">error</span>) &#123;<br>	<span class="hljs-keyword">return</span> c.ExpiresAt, <span class="hljs-literal">nil</span><br>&#125;<br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(c RegisteredClaims)</span></span> GetNotBefore() (*NumericDate, <span class="hljs-type">error</span>) &#123;<br>	<span class="hljs-keyword">return</span> c.NotBefore, <span class="hljs-literal">nil</span><br>&#125;<br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(c RegisteredClaims)</span></span> GetIssuedAt() (*NumericDate, <span class="hljs-type">error</span>) &#123;<br>	<span class="hljs-keyword">return</span> c.IssuedAt, <span class="hljs-literal">nil</span><br>&#125;<br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(c RegisteredClaims)</span></span> GetAudience() (ClaimStrings, <span class="hljs-type">error</span>) &#123;<br>	<span class="hljs-keyword">return</span> c.Audience, <span class="hljs-literal">nil</span><br>&#125;<br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(c RegisteredClaims)</span></span> GetIssuer() (<span class="hljs-type">string</span>, <span class="hljs-type">error</span>) &#123;<br>	<span class="hljs-keyword">return</span> c.Issuer, <span class="hljs-literal">nil</span><br>&#125;<br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(c RegisteredClaims)</span></span> GetSubject() (<span class="hljs-type">string</span>, <span class="hljs-type">error</span>) &#123;<br>	<span class="hljs-keyword">return</span> c.Subject, <span class="hljs-literal">nil</span><br>&#125;<br></code></pre></td></tr></table></figure>
+</li>
+<li>
+<p>添加了自定义字段 <code>UserID</code> 和 <code>UserAgent</code> 用于安全控制。你可以根据自己的业务需求，添加任意非敏感信息到这个结构中。</p>
+</li>
+</ul>
+<h3 id="3-2-登录接口实现">3.2 登录接口实现</h3>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">const</span> (<br>   AccessTokenDuration = time.Minute * <span class="hljs-number">15</span><br>   RefreshTokenDuration = time.Hour * <span class="hljs-number">24</span> * <span class="hljs-number">7</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(u *UserHandler)</span></span> LoginJWT(ctx *gin.Context) &#123;<br>    <span class="hljs-comment">// 1. 校验用户信息，在本案例中，使用邮箱加密码进行登录</span><br>    user, err := u.svc.Login(ctx.Request.Context(), req.Email, req.Password)<br>    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>        utils.GinErr(ctx, req, utils.UserErr(err), <span class="hljs-string">&quot;login failed&quot;</span>)<br>        <span class="hljs-keyword">return</span><br>    &#125;<br><br>    <span class="hljs-comment">// 2. 创建 JWT Claims</span><br>    accessClaims := UserClaims&#123;<br>        UserID:    user.ID,<br>        UserAgent: ctx.Request.UserAgent(),<br>        RegisteredClaims: jwt.RegisteredClaims&#123;<br>            ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenDuration)), <span class="hljs-comment">// 15分钟过期</span><br>        &#125;,<br>    &#125;<br><br>    <span class="hljs-comment">// 3. 生成 Access Token</span><br>    accessToken := jwt.NewWithClaims(jwt.SigningMethodHS512, accessClaims)<br>    accessTokenStr, err := accessToken.SignedString(AccessTokenKey)<br>    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>        utils.GinErr(ctx, req, utils.SystemErr(err), <span class="hljs-string">&quot;generate access token failed&quot;</span>)<br>        <span class="hljs-keyword">return</span><br>    &#125;<br><br>    <span class="hljs-comment">// 4. 生成 Refresh Token，用于 Token 续期</span><br>    refreshClaims := RefreshClaims&#123;<br>        UserID:    user.ID,<br>        UserAgent: ctx.Request.UserAgent(),<br>        RegisteredClaims: jwt.RegisteredClaims&#123;<br>            ExpiresAt: jwt.NewNumericDate(time.Now().Add(RefreshTokenDuration)), <span class="hljs-comment">// 7天过期</span><br>        &#125;,<br>    &#125;<br>    refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS512, refreshClaims)<br>    refreshTokenStr, err := refreshToken.SignedString(RefreshTokenKey)<br>    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>        utils.GinErr(ctx, req, utils.SystemErr(err), <span class="hljs-string">&quot;generate refresh token failed&quot;</span>)<br>        <span class="hljs-keyword">return</span><br>    &#125;<br><br>    <span class="hljs-comment">// 5. 返回两个 token</span><br>    ctx.Header(<span class="hljs-string">&quot;x-jwt-token&quot;</span>, accessTokenStr)<br>    ctx.Header(<span class="hljs-string">&quot;x-refresh-token&quot;</span>, refreshTokenStr)<br>    ctx.JSON(http.StatusOK, <span class="hljs-string">&quot;login success&quot;</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="3-3-JWT-中间件实现">3.3 JWT 中间件实现</h3>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> LoginJWTMiddlewareBuilder <span class="hljs-keyword">struct</span> &#123;<br>	whiteList []<span class="hljs-type">string</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">NewLoginJWTMiddlewareBuilder</span><span class="hljs-params">()</span></span> *LoginJWTMiddlewareBuilder &#123;<br>	<span class="hljs-keyword">return</span> &amp;LoginJWTMiddlewareBuilder&#123;<br>		whiteList: []<span class="hljs-type">string</span>&#123;&#125;,<br>	&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(b *LoginJWTMiddlewareBuilder)</span></span> IgnorePaths(paths ...<span class="hljs-type">string</span>) *LoginJWTMiddlewareBuilder &#123;<br>	b.whiteList = <span class="hljs-built_in">append</span>(b.whiteList, paths...)<br>	<span class="hljs-keyword">return</span> b<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(b *LoginJWTMiddlewareBuilder)</span></span> Build() gin.HandlerFunc &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(ctx *gin.Context)</span></span> &#123;<br>        <span class="hljs-comment">// 1. 提取 token</span><br>        authCode := ctx.GetHeader(<span class="hljs-string">&quot;Authorization&quot;</span>)<br>        tokenStr := strings.TrimPrefix(authCode, <span class="hljs-string">&quot;Bearer &quot;</span>)<br><br>        <span class="hljs-comment">// 2. 解析和验证 token</span><br>        uc := web.UserClaims&#123;&#125;<br>        token, err := jwt.ParseWithClaims(tokenStr, &amp;uc, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(token *jwt.Token)</span></span> (<span class="hljs-keyword">interface</span>&#123;&#125;, <span class="hljs-type">error</span>) &#123;<br>            <span class="hljs-keyword">return</span> web.AccessTokenKey, <span class="hljs-literal">nil</span><br>        &#125;)<br><br>        <span class="hljs-comment">// 3. 验证 token 有效性</span><br>        <span class="hljs-keyword">if</span> token == <span class="hljs-literal">nil</span> || !token.Valid &#123;<br>            ctx.AbortWithStatus(http.StatusUnauthorized)<br>            <span class="hljs-keyword">return</span><br>        &#125;<br><br>        <span class="hljs-comment">// 4. 验证 UserAgent</span><br>        <span class="hljs-keyword">if</span> uc.UserAgent != ctx.Request.UserAgent() &#123;<br>            ctx.AbortWithStatus(http.StatusUnauthorized)<br>            <span class="hljs-keyword">return</span><br>        &#125;<br><br>        <span class="hljs-comment">// 5. 设置用户信息到上下文</span><br>        ctx.Set(<span class="hljs-string">&quot;user_id&quot;</span>, uc.UserID)<br>      	ctx.Set(<span class="hljs-string">&quot;claims&quot;</span>, uc)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="4-在其他接口中使用-Token-的相关信息">4. 在其他接口中使用 Token 的相关信息</h2>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(u *UserHandler)</span></span> Profile(ctx *gin.Context) &#123;<br>  <span class="hljs-comment">// 可以获取 user_id</span><br>	userID := ctx.GetUint64(<span class="hljs-string">&quot;user_id&quot;</span>)<br>  <span class="hljs-comment">// 也可以直接获取整个 claims。</span><br>  <span class="hljs-comment">// 这里我们可以选择不进行断言，因为理论上我们的可以保证这里通过断言。</span><br>  <span class="hljs-comment">// 如果这里发生 panic 了，则说明我们的内部逻辑没有形成闭环，存在问题。</span><br>  <span class="hljs-comment">// panic 可以第一时间暴露问题，然后被解决掉。</span><br>  <span class="hljs-comment">// 不过这个时候建议你使用 gin 的 recover 中间件进行全局保护，避免整个服务因为 panic 而宕机。</span><br>  uc, _ := ctx.Get(<span class="hljs-string">&quot;claims&quot;</span>)<br>	userClaims := uc.(*UserClaims)<br>  <span class="hljs-comment">// ...</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="5-Refresh-Token-机制">5. Refresh Token 机制</h2>
+<h3 id="5-1-添加刷新-Token-接口">5.1 添加刷新 Token 接口</h3>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(u *UserHandler)</span></span> RefreshToken(ctx *gin.Context) &#123;<br>    <span class="hljs-comment">// 从请求头获取 Refresh Token</span><br>    refreshTokenStr := ctx.GetHeader(<span class="hljs-string">&quot;x-refresh-token&quot;</span>)<br>    <span class="hljs-keyword">if</span> refreshTokenStr == <span class="hljs-string">&quot;&quot;</span> &#123;<br>        ctx.AbortWithStatus(http.StatusUnauthorized)<br>        <span class="hljs-keyword">return</span><br>    &#125;<br><br>    <span class="hljs-comment">// 解析和验证 Refresh Token</span><br>    <span class="hljs-keyword">var</span> refreshClaims RefreshClaims<br>    refreshToken, err := jwt.ParseWithClaims(refreshTokenStr, &amp;refreshClaims, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(token *jwt.Token)</span></span> (<span class="hljs-keyword">interface</span>&#123;&#125;, <span class="hljs-type">error</span>) &#123;<br>        <span class="hljs-keyword">return</span> RefreshTokenKey, <span class="hljs-literal">nil</span><br>    &#125;)<br>    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> || !refreshToken.Valid &#123;<br>        ctx.AbortWithStatus(http.StatusUnauthorized)<br>        <span class="hljs-keyword">return</span><br>    &#125;<br><br>    <span class="hljs-comment">// 验证 User Agent</span><br>    <span class="hljs-keyword">if</span> refreshClaims.UserAgent != ctx.Request.UserAgent() &#123;<br>        ctx.AbortWithStatus(http.StatusUnauthorized)<br>        <span class="hljs-keyword">return</span><br>    &#125;<br><br>    <span class="hljs-comment">// 生成新的 Access Token</span><br>    accessClaims := UserClaims&#123;<br>        UserID:    refreshClaims.UserID,<br>        UserAgent: ctx.Request.UserAgent(),<br>        RegisteredClaims: jwt.RegisteredClaims&#123;<br>            ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenDuration)),<br>        &#125;,<br>    &#125;<br>    newAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS512, accessClaims)<br>    newAccessTokenStr, err := newAccessToken.SignedString(AccessTokenKey)<br>    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>        utils.GinErr(ctx, <span class="hljs-literal">nil</span>, utils.SystemErr(err), <span class="hljs-string">&quot;generate new access token failed&quot;</span>)<br>        <span class="hljs-keyword">return</span><br>    &#125;<br><br>  	<span class="hljs-comment">// 对 Refresh Token 进行续期</span><br>  	refreshClaims := RefreshClaims&#123;<br>        UserID:    user.ID,<br>        UserAgent: ctx.Request.UserAgent(),<br>        RegisteredClaims: jwt.RegisteredClaims&#123;<br>            ExpiresAt: jwt.NewNumericDate(time.Now().Add(RefreshTokenDuration)), <span class="hljs-comment">// 7天过期</span><br>        &#125;,<br>    &#125;<br>    newRefreshToken := jwt.NewWithClaims(jwt.SigningMethodHS512, refreshClaims)<br>    newRefreshTokenStr, err := newRefreshToken.SignedString(RefreshTokenKey)<br>    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>        utils.GinErr(ctx, req, utils.SystemErr(err), <span class="hljs-string">&quot;generate new refresh token failed&quot;</span>)<br>        <span class="hljs-keyword">return</span><br>    &#125;<br><br><br>    <span class="hljs-comment">// 返回新的 Access Token 和续期后的 Refresh Token</span><br>    ctx.Header(<span class="hljs-string">&quot;x-jwt-token&quot;</span>, newAccessTokenStr)<br>   	ctx.Header(<span class="hljs-string">&quot;x-refresh-token&quot;</span>, newRefreshTokenStr)<br>    ctx.JSON(http.StatusOK, <span class="hljs-string">&quot;token refreshed&quot;</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="5-2-注册路由">5.2 注册路由</h3>
+<p>在 <code>RegisterRoutes</code> 方法中添加新路由：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(u *UserHandler)</span></span> RegisterRoutes(server *gin.Engine) &#123;<br>    <span class="hljs-comment">// existed code..</span><br>    ur.POST(<span class="hljs-string">&quot;/refresh&quot;</span>, u.RefreshToken)<br>    <span class="hljs-comment">// existed code..</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="6-客户端使用流程">6. 客户端使用流程</h2>
+<ol>
+<li>登录后获取 Access Token 和 Refresh Token</li>
+<li>使用 Access Token 访问受保护资源</li>
+<li>当 Access Token 过期时调用 /refresh 接口获取新的 Access Token</li>
+<li>使用新的 Access Token 继续访问</li>
+</ol>
+<p>刷新 token 的客户端示例代码（笔者并不擅长写前端代码 hhh，所以这是让 ChatGPT 帮忙写的 😄）：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs go">async function refreshAccessToken() &#123;<br>    <span class="hljs-keyword">const</span> response = await fetch(<span class="hljs-string">&#x27;/users/refresh&#x27;</span>, &#123;<br>        method: <span class="hljs-string">&#x27;POST&#x27;</span>,<br>        headers: &#123;<br>            <span class="hljs-string">&#x27;x-refresh-token&#x27;</span>: localStorage.getItem(<span class="hljs-string">&#x27;refreshToken&#x27;</span>)<br>        &#125;<br>    &#125;);<br><br>    <span class="hljs-keyword">if</span> (response.ok) &#123;<br>        <span class="hljs-keyword">const</span> newAccessToken = response.headers.get(<span class="hljs-string">&#x27;x-jwt-token&#x27;</span>);<br>        localStorage.setItem(<span class="hljs-string">&#x27;accessToken&#x27;</span>, newAccessToken);<br>        <span class="hljs-keyword">const</span> newRefreshToken = response.headers.get(<span class="hljs-string">&#x27;x-refresh-token&#x27;</span>);<br>        localStorage.setItem(<span class="hljs-string">&#x27;refreshToken&#x27;</span>, newRefreshToken);<br>        <span class="hljs-keyword">return</span> newAccessToken;<br>    &#125;<br><br>    <span class="hljs-comment">// 如果刷新失败，重定向到登录页</span><br>    window.location.href = <span class="hljs-string">&#x27;/login&#x27;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="7-Token-续期策略对比">7. Token 续期策略对比</h2>
+<p>在前面案例中，细心的读者可以观察到我们对 <code>AccessToken</code> 和 <code>RefreshToken</code> 分别采用了 2 种不同的续期策略。</p>
+<h3 id="自动续期">自动续期</h3>
+<p><strong>优点：</strong></p>
+<ul>
+<li>简单易用：在每次请求时自动检查并续期 Token，用户体验流畅。</li>
+<li>无额外存储需求：不需要存储 Refresh Token，减少了存储和管理的复杂性</li>
+</ul>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>安全性较低：如果 Token 被盗用，攻击者可以通过自动续期保持长时间的访问。</li>
+<li>Token 过期时间不固定：Token 的有效期会不断延长，难以控制。</li>
+</ul>
+<h3 id="Refresh-Token">Refresh Token</h3>
+<p><strong>优点：</strong></p>
+<ul>
+<li>更高的安全性：即使 Access Token 被盗用，攻击者也无法续期，除非同时获取 Refresh Token。</li>
+<li>可控的 Token 生命周期：Access Token 有固定的短期有效期，Refresh Token 有较长的有效期。</li>
+<li>支持 Token 撤销：可以实现 Refresh Token 的黑名单机制，支持手动撤销。</li>
+</ul>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>实现复杂度较高：需要额外的接口和逻辑来处理 Refresh Token。</li>
+<li>存储需求：需要安全存储 Refresh Token，可能需要数据库支持。</li>
+</ul>
+<h2 id="8-总结">8. 总结</h2>
+<p>JWT 实现用户认证的优势在于无状态、跨域支持和灵活性。通过合理使用 JWT 和选择合适的 Token 续期策略，我们可以构建安全、可靠的用户认证系统。希望本文能帮助您在 Go 项目中更好地实现 JWT 认证。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Go/" class="category-chain-item">Go</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/Go/Go-%E5%AE%9E%E6%88%98/" class="category-chain-item">Go 实战</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Go/" class="print-no-link">#Go</a>
+      
+        <a href="/tags/JWT/" class="print-no-link">#JWT</a>
+      
+        <a href="/tags/Go-%E5%AE%9E%E6%88%98/" class="print-no-link">#Go 实战</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>在 Go 项目中实现 JWT 用户认证与续期机制</div>
+      <div>https://hedon.top/2025/02/15/go-action-jwt/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Hedon Wang</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>2025-02-15</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>Licensed under</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/02/14/go-slice-vs-map/" title="Go 中的 Map 与 Slice：深入理解扩容机制与传参行为">
+                        <span class="hidden-mobile">Go 中的 Map 与 Slice：深入理解扩容机制与传参行为</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"hedon954/hedonspace","repo-id":"R_kgDOKt17sQ","category":"Q&A","category-id":"DIC_kwDOKt17sc4CbAt-","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":0,"input-position":"top","lang":"en"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>Table of Contents</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="leancloud-site-pv-container" style="display: none">
+        总访问量 
+        <span id="leancloud-site-pv"></span>
+         次
+      </span>
+    
+    
+      <span id="leancloud-site-uv-container" style="display: none">
+        总访客数 
+        <span id="leancloud-site-uv"></span>
+         人
+      </span>
+    
+    
+
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/leancloud.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>
