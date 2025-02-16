@@ -316,37 +316,72 @@
             
               <div class="markdown-body">
                 
-                <p><a target="_blank" rel="noopener" href="https://docs.rs/anyhow/latest/anyhow/index.html">anyhow</a> 是 Rust 中的一个库，旨在提供灵活的、具体的错误处理能力，建立在 <code>std::error::Error</code> 基础上。它主要用于那些需要简单错误处理的应用程序和原型开发中，尤其是在错误类型不需要被严格区分的场景下。</p>
+                <p><a target="_blank" rel="noopener" href="https://docs.rs/anyhow/latest/anyhow/index.html">anyhow</a>
+是 Rust 中的一个库，旨在提供灵活的、具体的错误处理能力，建立在
+<code>std::error::Error</code>
+基础上。它主要用于那些需要简单错误处理的应用程序和原型开发中，尤其是在错误类型不需要被严格区分的场景下。</p>
 <p>以下是 <code>anyhow</code> 的几个关键特性：</p>
 <ul>
-<li><strong>易用性</strong>: <code>anyhow</code> 提供了一个 <code>Error</code> 类型，这个类型可以包含任何实现了 <code>std::error::Error</code> 的错误。这意味着你可以使用 <code>anyhow::Error</code> 来包装几乎所有类型的错误，无需担心具体的错误类型。</li>
-<li><strong>简洁的错误链</strong>: <code>anyhow</code> 支持通过 <code>?</code> 操作符来传播错误，同时保留错误发生的上下文。这让错误处理更加直观，同时还能保留错误链，便于调试。</li>
-<li><strong>便于调试</strong>: <code>anyhow</code> 支持通过 <code>&#123;:#&#125;</code> 格式化指示符来打印错误及其所有相关的上下文和原因，这使得调试复杂的错误链变得更加简单。</li>
-<li><strong>无需关心错误类型</strong>: 在很多情况下，特别是在应用程序的顶层，你可能不需要关心错误的具体类型，只需要知道出错了并且能够将错误信息传递给用户或日志。<code>anyhow</code> 让这一过程变得简单，因为它可以包装任何错误，而不需要显式地指定错误类型。</li>
+<li><strong>易用性</strong>: <code>anyhow</code> 提供了一个
+<code>Error</code> 类型，这个类型可以包含任何实现了
+<code>std::error::Error</code> 的错误。这意味着你可以使用
+<code>anyhow::Error</code>
+来包装几乎所有类型的错误，无需担心具体的错误类型。</li>
+<li><strong>简洁的错误链</strong>: <code>anyhow</code> 支持通过
+<code>?</code>
+操作符来传播错误，同时保留错误发生的上下文。这让错误处理更加直观，同时还能保留错误链，便于调试。</li>
+<li><strong>便于调试</strong>: <code>anyhow</code> 支持通过
+<code>&#123;:#&#125;</code>
+格式化指示符来打印错误及其所有相关的上下文和原因，这使得调试复杂的错误链变得更加简单。</li>
+<li><strong>无需关心错误类型</strong>:
+在很多情况下，特别是在应用程序的顶层，你可能不需要关心错误的具体类型，只需要知道出错了并且能够将错误信息传递给用户或日志。<code>anyhow</code>
+让这一过程变得简单，因为它可以包装任何错误，而不需要显式地指定错误类型。</li>
 </ul>
-<p>使用 <code>anyhow</code> 的典型场景包括快速原型开发、应用程序顶层的错误处理，或者在库中作为返回错误类型的一个简便选择，尤其是在库的使用者不需要关心具体错误类型的时候。</p>
-<h2 id="anyhow-Error">anyhow::Error</h2>
-<p><code>anyhow::Error</code> 是 <code>anyhow</code> 库定义的一个错误类型。它是一个包装器（wrapper）类型，可以包含任何实现了 <code>std::error::Error</code> trait 的错误类型。这意味着你可以将几乎所有的错误转换为 <code>anyhow::Error</code> 类型，从而在函数之间传递，而不需要在意具体的错误类型。这在快速原型开发或应用程序顶层错误处理中特别有用，因为它简化了错误处理的逻辑。</p>
+<p>使用 <code>anyhow</code>
+的典型场景包括快速原型开发、应用程序顶层的错误处理，或者在库中作为返回错误类型的一个简便选择，尤其是在库的使用者不需要关心具体错误类型的时候。</p>
+<h2 id="anyhowerror">anyhow::Error</h2>
+<p><code>anyhow::Error</code> 是 <code>anyhow</code>
+库定义的一个错误类型。它是一个包装器（wrapper）类型，可以包含任何实现了
+<code>std::error::Error</code> trait
+的错误类型。这意味着你可以将几乎所有的错误转换为
+<code>anyhow::Error</code>
+类型，从而在函数之间传递，而不需要在意具体的错误类型。这在快速原型开发或应用程序顶层错误处理中特别有用，因为它简化了错误处理的逻辑。</p>
 <p>它的定义如下：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[cfg_attr(not(doc), repr(transparent))]</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">struct</span> <span class="hljs-title class_">Error</span> &#123;<br>    inner: Own&lt;ErrorImpl&gt;,<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>其中核心是 <code>ErrorImpl</code>：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[repr(C)]</span><br><span class="hljs-title function_ invoke__">pub</span>(<span class="hljs-keyword">crate</span>) <span class="hljs-keyword">struct</span> <span class="hljs-title class_">ErrorImpl</span>&lt;E = ()&gt; &#123;<br>    vtable: &amp;<span class="hljs-symbol">&#x27;static</span> ErrorVTable,<br>    backtrace: <span class="hljs-type">Option</span>&lt;Backtrace&gt;,<br>    <span class="hljs-comment">// <span class="hljs-doctag">NOTE:</span> Don&#x27;t use directly. Use only through vtable. Erased type may have</span><br>    <span class="hljs-comment">// different alignment.</span><br>    _object: E,<br>&#125;<br></code></pre></td></tr></table></figure>
-<p><code>ErrorImpl</code> 是一个内部结构体，用于实现 <code>anyhow::Error</code> 类型的具体功能。它包含了三个主要字段：</p>
+<p><code>ErrorImpl</code> 是一个内部结构体，用于实现
+<code>anyhow::Error</code> 类型的具体功能。它包含了三个主要字段：</p>
 <ul>
-<li><code>vtable</code> 是一个指向静态虚拟表的指针，用于动态派发错误相关的方法。</li>
-<li><code>backtrace</code> 是一个可选的回溯（Backtrace）类型，用于存储错误发生时的调用栈信息。</li>
-<li><code>_object</code> 字段用于存储具体的错误对象，其类型在编译时被擦除以提供类型安全的动态错误处理。</li>
+<li><code>vtable</code>
+是一个指向静态虚拟表的指针，用于动态派发错误相关的方法。</li>
+<li><code>backtrace</code>
+是一个可选的回溯（Backtrace）类型，用于存储错误发生时的调用栈信息。</li>
+<li><code>_object</code>
+字段用于存储具体的错误对象，其类型在编译时被擦除以提供类型安全的动态错误处理。</li>
 </ul>
-<p>这种设计允许 <code>anyhow</code> 错误封装并表示各种不同的错误类型，同时提供了方法动态派发和回溯功能，以便于错误调试。</p>
-<p><code>anyhow::Error</code> 可以包含任何实现了 <code>std::error::Error</code> trait 的错误类型，这里因为下面的 <code>impl</code>：</p>
+<p>这种设计允许 <code>anyhow</code>
+错误封装并表示各种不同的错误类型，同时提供了方法动态派发和回溯功能，以便于错误调试。</p>
+<p><code>anyhow::Error</code> 可以包含任何实现了
+<code>std::error::Error</code> trait 的错误类型，这里因为下面的
+<code>impl</code>：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs go">impl&lt;E&gt; StdError <span class="hljs-keyword">for</span> ErrorImpl&lt;E&gt;<br>where<br>    E: StdError,<br>&#123;<br>    fn source(&amp;self) -&gt; Option&lt;&amp;(dyn StdError + <span class="hljs-string">&#x27;static)&gt; &#123;</span><br><span class="hljs-string">        unsafe &#123; ErrorImpl::error(self.erase()).source() &#125;</span><br><span class="hljs-string">    &#125;</span><br><span class="hljs-string"></span><br><span class="hljs-string">    #[cfg(error_generic_member_access)]</span><br><span class="hljs-string">    fn provide&lt;&#x27;</span>a&gt;(&amp;<span class="hljs-string">&#x27;a self, request: &amp;mut Request&lt;&#x27;</span>a&gt;) &#123;<br>        unsafe &#123; ErrorImpl::provide(self.erase(), request) &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
-<h2 id="anyhow-Result">anyhow::Result</h2>
-<p><code>anyhow::Result</code> 是一个别名（type alias），它是 <code>std::result::Result&lt;T, anyhow::Error&gt;</code> 的简写。在使用 <code>anyhow</code> 库进行错误处理时，你会频繁地看到这个类型。它基本上是标准的 <code>Result</code> 类型，但错误类型被固定为 <code>anyhow::Error</code>。这使得你可以很容易地在函数之间传递错误，而不需要声明具体的错误类型。</p>
+<h2 id="anyhowresult">anyhow::Result</h2>
+<p><code>anyhow::Result</code> 是一个别名（type alias），它是
+<code>std::result::Result&lt;T, anyhow::Error&gt;</code> 的简写。在使用
+<code>anyhow</code>
+库进行错误处理时，你会频繁地看到这个类型。它基本上是标准的
+<code>Result</code> 类型，但错误类型被固定为
+<code>anyhow::Error</code>。这使得你可以很容易地在函数之间传递错误，而不需要声明具体的错误类型。</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">type</span> <span class="hljs-title class_">Result</span>&lt;T, E = Error&gt; = core::result::<span class="hljs-type">Result</span>&lt;T, E&gt;;<br></code></pre></td></tr></table></figure>
-<p>使用 <code>anyhow::Result</code> 的好处在于它提供了一种统一的方式来处理错误。你可以使用 <code>?</code> 操作符来传播错误，同时保留错误的上下文信息和回溯。这极大地简化了错误处理代码，尤其是在多个可能产生不同错误类型的操作链中。</p>
-<h2 id="3-个核心使用技巧">3 个核心使用技巧</h2>
+<p>使用 <code>anyhow::Result</code>
+的好处在于它提供了一种统一的方式来处理错误。你可以使用 <code>?</code>
+操作符来传播错误，同时保留错误的上下文信息和回溯。这极大地简化了错误处理代码，尤其是在多个可能产生不同错误类型的操作链中。</p>
+<h2 id="个核心使用技巧">3 个核心使用技巧</h2>
 <ul>
-<li>使用 <code>Result&lt;T, anyhow::Error&gt;</code> 或者 <code>anyhow::Result&lt;T&gt;</code> 作为返回值，然后利用 <code>?</code> 语法糖无脑传播报错。</li>
+<li>使用 <code>Result&lt;T, anyhow::Error&gt;</code> 或者
+<code>anyhow::Result&lt;T&gt;</code> 作为返回值，然后利用 <code>?</code>
+语法糖无脑传播报错。</li>
 <li>使用 with_context(f) 来附加错误信息。</li>
 <li>使用 downcast 反解具体的错误类型。</li>
 </ul>

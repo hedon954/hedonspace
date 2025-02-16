@@ -23,9 +23,6 @@
 <meta property="og:site_name" content="HedonSpace">
 <meta property="og:description" content="本文分步展示了实现 json! 宏的过程，包括定义 Json 枚举和不同类型的匹配规则。通过这个过程，读者可以掌握声明宏的基本概念和实现方法。">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240528114725679.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240528134133088.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240528133040062.png">
 <meta property="article:published_time" content="2024-05-28T07:37:23.000Z">
 <meta property="article:modified_time" content="2024-05-28T15:13:08.694Z">
 <meta property="article:author" content="Hedon Wang">
@@ -33,7 +30,6 @@
 <meta property="article:tag" content="宏">
 <meta property="article:tag" content="元编程">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240528114725679.png">
   
   
   
@@ -322,135 +318,195 @@
             
               <div class="markdown-body">
                 
-                <p>在 Rust 编程语言中，宏是一种强大的工具，可以用于在编译时生成代码。<code>json!</code> 是一个在 Rust 中广泛使用的宏，它允许我们在 Rust 代码中方便地创建 JSON 数据。</p>
-<p>声明宏（declarative macros）是 Rust 中的一种宏，它们使用 <code>macro_rules!</code> 关键字定义。</p>
-<p>本文将参考《Rust 程序设计（第二版）》，通过实现 <code>json!</code> 宏，深入理解声明宏的工作原理。</p>
-<h1>结论先行</h1>
-<p>本文我们将构建一个 <code>json!</code> 宏，它支持我们以字符串 JSON 风格的语法来编写 Json 值。如下面这个例子：</p>
+                <p>在 Rust
+编程语言中，宏是一种强大的工具，可以用于在编译时生成代码。<code>json!</code>
+是一个在 Rust 中广泛使用的宏，它允许我们在 Rust 代码中方便地创建 JSON
+数据。</p>
+<p>声明宏（declarative macros）是 Rust 中的一种宏，它们使用
+<code>macro_rules!</code> 关键字定义。</p>
+<p>本文将参考《Rust 程序设计（第二版）》，通过实现 <code>json!</code>
+宏，深入理解声明宏的工作原理。</p>
+<h1 id="结论先行">结论先行</h1>
+<p>本文我们将构建一个 <code>json!</code> 宏，它支持我们以字符串 JSON
+风格的语法来编写 Json 值。如下面这个例子：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">students</span> = json![<br>	&#123;<br>		<span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;Hedon Wang&quot;</span>,<br>		<span class="hljs-string">&quot;class_of&quot;</span>: <span class="hljs-number">2022</span>,<br>		<span class="hljs-string">&quot;major&quot;</span>: <span class="hljs-string">&quot;Software engineering&quot;</span><br>	&#125;,<br>	&#123;<br>		<span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;Jun Lei&quot;</span>,<br>		<span class="hljs-string">&quot;class_of&quot;</span>: <span class="hljs-number">1991</span>,<br>		<span class="hljs-string">&quot;major&quot;</span>: <span class="hljs-string">&quot;Computor science&quot;</span><br>	&#125;<br>]<br></code></pre></td></tr></table></figure>
 <blockquote>
-<p><a href="#%E5%AE%8C%E6%95%B4%E4%BB%A3%E7%A0%81">完整代码</a></p>
+<p><a href="#完整代码">完整代码</a></p>
 </blockquote>
-<h1>实现 <code>json!</code></h1>
-<h2 id="定义-Json-enum">定义 Json enum</h2>
+<h1 id="实现-json">实现 <code>json!</code></h1>
+<h2 id="定义-json-enum">定义 Json enum</h2>
 <p>首先我们需要思考一下 Json 结构是什么样子的？主要是以下 3 种模式：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs json"><span class="hljs-punctuation">&#123;</span><br>  <span class="hljs-attr">&quot;name&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;hedon&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;age&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">18</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;school&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">&#123;</span><br>    <span class="hljs-attr">&quot;name&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Wuhan University&quot;</span><span class="hljs-punctuation">,</span><br>    <span class="hljs-attr">&quot;address&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Hubwi Wuhan&quot;</span><br>  <span class="hljs-punctuation">&#125;</span><br><span class="hljs-punctuation">&#125;</span><br></code></pre></td></tr></table></figure>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs json"><span class="hljs-punctuation">[</span><br>	<span class="hljs-punctuation">&#123;</span><br>	  <span class="hljs-attr">&quot;name&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;hedon&quot;</span><br>	<span class="hljs-punctuation">&#125;</span><span class="hljs-punctuation">,</span><br>	<span class="hljs-punctuation">&#123;</span><br>	  <span class="hljs-attr">&quot;name&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;john&quot;</span><br>	<span class="hljs-punctuation">&#125;</span><br><span class="hljs-punctuation">]</span><br></code></pre></td></tr></table></figure>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs json"><span class="hljs-literal"><span class="hljs-keyword">null</span></span><br></code></pre></td></tr></table></figure>
 <p>为此我们定义一个 Json 结构的枚举：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[derive(Clone, PartialEq, Debug)]</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">enum</span> <span class="hljs-title class_">Json</span> &#123;<br>    Null,<br>    <span class="hljs-title function_ invoke__">Boolean</span>(<span class="hljs-type">bool</span>),<br>    <span class="hljs-title function_ invoke__">Number</span>(<span class="hljs-type">f64</span>),<br>    <span class="hljs-title function_ invoke__">String</span>(<span class="hljs-type">String</span>),<br>    <span class="hljs-title function_ invoke__">Array</span>(<span class="hljs-type">Vec</span>&lt;Json&gt;),<br>    <span class="hljs-title function_ invoke__">Object</span>(HashMap&lt;<span class="hljs-type">String</span>, Json&gt;),<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>你应该可以感到非常奇妙，使用一个这么简单的枚举，居然就可以表示所有的 Json 结构了。遗憾的是，现在这个结构编写 Json 值的语法相当冗长。</p>
+<p>你应该可以感到非常奇妙，使用一个这么简单的枚举，居然就可以表示所有的
+Json 结构了。遗憾的是，现在这个结构编写 Json 值的语法相当冗长。</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">people</span> = Json::<span class="hljs-title function_ invoke__">Object</span>(HashMap::<span class="hljs-title function_ invoke__">from</span>([<br>    (<span class="hljs-string">&quot;name&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::<span class="hljs-title function_ invoke__">String</span>(<span class="hljs-string">&quot;hedon&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>())),<br>    (<span class="hljs-string">&quot;age&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::<span class="hljs-title function_ invoke__">Number</span>(<span class="hljs-number">10.0</span>)),<br>    (<span class="hljs-string">&quot;is_student&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::<span class="hljs-title function_ invoke__">Boolean</span>(<span class="hljs-literal">true</span>)),<br>    (<br>        <span class="hljs-string">&quot;detail&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(),<br>        Json::<span class="hljs-title function_ invoke__">Object</span>(HashMap::<span class="hljs-title function_ invoke__">from</span>([<br>            (<span class="hljs-string">&quot;address&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::<span class="hljs-title function_ invoke__">String</span>(<span class="hljs-string">&quot;beijing&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>())),<br>            (<span class="hljs-string">&quot;phone&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::<span class="hljs-title function_ invoke__">String</span>(<span class="hljs-string">&quot;1234567890&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>()))<br>        ]))<br>    )<br>]))<br></code></pre></td></tr></table></figure>
-<p>我们期望可以以下面这种方式来声明 Json 变量，这看起来就清爽许多了。</p>
+<p>我们期望可以以下面这种方式来声明 Json
+变量，这看起来就清爽许多了。</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">students</span> = json!([<br>    &#123;<br>        <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;Jim Blandy&quot;</span>,<br>        <span class="hljs-string">&quot;class_of&quot;</span>: <span class="hljs-number">1926</span>,<br>        <span class="hljs-string">&quot;major&quot;</span>: <span class="hljs-string">&quot;Tibetan throat singing&quot;</span><br>    &#125;,<br>    &#123;<br>        <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;Jason Orendorff&quot;</span>,<br>        <span class="hljs-string">&quot;class_of&quot;</span>: <span class="hljs-number">1702</span>,<br>        <span class="hljs-string">&quot;major&quot;</span>: <span class="hljs-string">&quot;Knots&quot;</span><br>    &#125;<br>]);<br></code></pre></td></tr></table></figure>
 <h2 id="猜想-json">猜想 <code>json!</code></h2>
-<p>我们可以预见 Json 宏内部将会有多条规则，因为 JSON 数据有多种类型：对象、数组、数值等。事实上，我们可以合理地猜测每种 JSON 类型都将有一条规则：</p>
+<p>我们可以预见 Json 宏内部将会有多条规则，因为 JSON
+数据有多种类型：对象、数组、数值等。事实上，我们可以合理地猜测每种 JSON
+类型都将有一条规则：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">macro_rules!</span> json &#123;<br>    (null)    =&gt; &#123; Json::Null &#125;;<br>    ([ ... ]) =&gt; &#123; Json::<span class="hljs-title function_ invoke__">Array</span>(...) &#125;;<br>    (&#123; ... &#125;) =&gt; &#123; Json::<span class="hljs-title function_ invoke__">Object</span>(...) &#125;;<br>    (???)     =&gt; &#123; Json::<span class="hljs-title function_ invoke__">Boolean</span>(...) &#125;;<br>    (???)     =&gt; &#123; Json::<span class="hljs-title function_ invoke__">Number</span>(...) &#125;;<br>    (???)     =&gt; &#123; Json::<span class="hljs-title function_ invoke__">String</span>(...) &#125;;<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>然而这不太正确，因为宏模式无法区分最后 3 种情况，稍后我们会讨论如何处理。至于前 3 种情况，显然它们是以不同的语法标记开始的，所以这几种情况比较好处理。</p>
-<h2 id="实现-Null">实现 Null</h2>
+<p>然而这不太正确，因为宏模式无法区分最后 3
+种情况，稍后我们会讨论如何处理。至于前 3
+种情况，显然它们是以不同的语法标记开始的，所以这几种情况比较好处理。</p>
+<h2 id="实现-null">实现 Null</h2>
 <p>我们先从最简单的 <code>Null</code> 分支开始，先编写如下测试用例：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[cfg(test)]</span><br><span class="hljs-keyword">mod</span> tests &#123;<br>    <span class="hljs-keyword">use</span> super::*;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_null_json</span>() &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">json</span> = json!(null);<br>        <span class="hljs-built_in">assert_eq!</span>(json, Json::Null);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>想要通过上述测试用例非常简单，我们只需要在 <code>macro_rules!</code> 支持中匹配这种情况即可：</p>
+<p>想要通过上述测试用例非常简单，我们只需要在 <code>macro_rules!</code>
+支持中匹配这种情况即可：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[macro_export]</span><br><span class="hljs-built_in">macro_rules!</span> json &#123;<br>    (null) =&gt; &#123;<br>        Json::Null<br>    &#125;;<br>&#125;<br></code></pre></td></tr></table></figure>
 <ul>
-<li><code>#[macro_export]</code> 注解是 Rust 中的一个属性，用于指示这个宏应该被导出到调用者的作用域中，这样其他模块也可以使用它。</li>
-<li><code>macro_rules!</code> 宏定义了一个自定义的宏。在这里，它创建了一个名为 <code>json</code> 的宏，用于生成 JSON 数据。</li>
-<li>宏定义中 <code>(null)</code> 是匹配模式。这意味着当你调用 <code>json!</code> 宏并传递 <code>null</code> 作为参数时，将会触发这个规则。</li>
-<li><code>=&gt;</code> 符号用于指示匹配模式后的代码块。在这里，它指定了当匹配 <code>(null)</code> 时应该生成的代码块。</li>
-<li><code>Json::Null</code> 是一个 JSON 类型的枚举值，表示 JSON 中的 null 值。这个宏的目的是将传入的 <code>null</code> 转换为 <code>Json::Null</code>。</li>
+<li><code>#[macro_export]</code> 注解是 Rust
+中的一个属性，用于指示这个宏应该被导出到调用者的作用域中，这样其他模块也可以使用它。</li>
+<li><code>macro_rules!</code>
+宏定义了一个自定义的宏。在这里，它创建了一个名为 <code>json</code>
+的宏，用于生成 JSON 数据。</li>
+<li>宏定义中 <code>(null)</code> 是匹配模式。这意味着当你调用
+<code>json!</code> 宏并传递 <code>null</code>
+作为参数时，将会触发这个规则。</li>
+<li><code>=&gt;</code>
+符号用于指示匹配模式后的代码块。在这里，它指定了当匹配
+<code>(null)</code> 时应该生成的代码块。</li>
+<li><code>Json::Null</code> 是一个 JSON 类型的枚举值，表示 JSON 中的
+null 值。这个宏的目的是将传入的 <code>null</code> 转换为
+<code>Json::Null</code>。</li>
 </ul>
-<h2 id="实现-Boolean-Number-String">实现 Boolean/Number/String</h2>
+<h2 id="实现-booleannumberstring">实现 Boolean/Number/String</h2>
 <p>我们先准备如下测试用例：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[test]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_boolean_number_string_json</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">json</span> = json!(<span class="hljs-literal">true</span>);<br>    <span class="hljs-built_in">assert_eq!</span>(json, Json::<span class="hljs-title function_ invoke__">Boolean</span>(<span class="hljs-literal">true</span>));<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">json</span> = json!(<span class="hljs-number">1.0</span>);<br>    <span class="hljs-built_in">assert_eq!</span>(json, Json::<span class="hljs-title function_ invoke__">Number</span>(<span class="hljs-number">1.0</span>));<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">json</span> = json!(<span class="hljs-string">&quot;hello&quot;</span>);<br>    <span class="hljs-built_in">assert_eq!</span>(json, Json::<span class="hljs-title function_ invoke__">String</span>(<span class="hljs-string">&quot;hello&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>()));<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>通过观察分析，它们其实都是同一种模式：</p>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240528114725679.png" srcset="/img/loading.gif" lazyload alt="Boolean/Number/String 分析"></p>
-<p>现在需要解决的问题就是，如何将这 3 种模式进行统一，这样在 <code>macro_rules!</code> 中才可以统一匹配模式并进行代码生成。</p>
-<p>这里我们其实需要做的就是将 <code>bool</code>、<code>f64</code> 和 <code>&amp;str</code> 转为对应的 <code>Json</code> 类型。那就需要用到标准库中的 <code>From</code> trait 了。</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240528114725679.png" srcset="/img/loading.gif" lazyload
+alt="Boolean/Number/String 分析" />
+<figcaption aria-hidden="true">Boolean/Number/String 分析</figcaption>
+</figure>
+<p>现在需要解决的问题就是，如何将这 3 种模式进行统一，这样在
+<code>macro_rules!</code> 中才可以统一匹配模式并进行代码生成。</p>
+<p>这里我们其实需要做的就是将 <code>bool</code>、<code>f64</code> 和
+<code>&amp;str</code> 转为对应的 <code>Json</code>
+类型。那就需要用到标准库中的 <code>From</code> trait 了。</p>
 <p>做法很简单，我们实现如下代码：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">impl</span> <span class="hljs-title class_">From</span>&lt;<span class="hljs-type">bool</span>&gt; <span class="hljs-keyword">for</span> <span class="hljs-title class_">Json</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">from</span>(value: <span class="hljs-type">bool</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span> &#123;<br>        Json::<span class="hljs-title function_ invoke__">Boolean</span>(value)<br>    &#125;<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">From</span>&lt;&amp;<span class="hljs-type">str</span>&gt; <span class="hljs-keyword">for</span> <span class="hljs-title class_">Json</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">from</span>(value: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span> &#123;<br>        Json::<span class="hljs-title function_ invoke__">String</span>(value.<span class="hljs-title function_ invoke__">to_string</span>())<br>    &#125;<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">From</span>&lt;<span class="hljs-type">f64</span>&gt; <span class="hljs-keyword">for</span> <span class="hljs-title class_">Json</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">from</span>(value: <span class="hljs-type">f64</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span> &#123;<br>        Json::<span class="hljs-title function_ invoke__">Number</span>(value)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>然后完善我们的 <code>json!</code>，目前的实现如下：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[macro_export]</span><br><span class="hljs-built_in">macro_rules!</span> json &#123;<br>    (null) =&gt; &#123;<br>        Json::Null<br>    &#125;;<br>    ($value: tt) =&gt; &#123;<br>        Json::<span class="hljs-title function_ invoke__">from</span>($value)<br>    &#125;;<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>这里我们使用 <code>$value</code>作 为变量来承接匹配到的元素，其类型为 <code>tt</code> ，表示任意的语法标记树。具体可以参考：<a href="#%E7%89%87%E6%AE%B5%E7%B1%BB%E5%9E%8B">片段类型</a>。</p>
+<p>这里我们使用 <code>$value</code>作 为变量来承接匹配到的元素，其类型为
+<code>tt</code> ，表示任意的语法标记树。具体可以参考：<a
+href="#片段类型">片段类型</a>。</p>
 <p>这时运行上述测试用例，是没有问题的：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">PASS [   0.004s] json-macro tests::test_boolean_number_string_json<br>PASS [   0.004s] json-macro tests::test_null_json<br></code></pre></td></tr></table></figure>
-<p>美中不足的是，JSON 结构中的数字类型，其实不一定是 f64，也可以是 i32、u32、f32 或其他的数字类型，如果我们要为这全部的数字类型都实现到 Json 的 <code>From</code> trait，那就多冗余。</p>
-<p>这个时候我们又可以实现一个宏，用于快速生成 <code>impl From&lt;T&gt; for Json</code> 。这个实现比较简单，本文就不赘述了，代码如下：</p>
+<p>美中不足的是，JSON 结构中的数字类型，其实不一定是 f64，也可以是
+i32、u32、f32 或其他的数字类型，如果我们要为这全部的数字类型都实现到
+Json 的 <code>From</code> trait，那就多冗余。</p>
+<p>这个时候我们又可以实现一个宏，用于快速生成
+<code>impl From&lt;T&gt; for Json</code>
+。这个实现比较简单，本文就不赘述了，代码如下：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[macro_export]</span><br><span class="hljs-built_in">macro_rules!</span> impl_from_for_primitives &#123;<br>    (  $( $<span class="hljs-keyword">type</span>: ty ) * ) =&gt; &#123;<br>        $(<br>            <span class="hljs-keyword">impl</span> <span class="hljs-title class_">From</span>&lt;$<span class="hljs-keyword">type</span>&gt; <span class="hljs-keyword">for</span> <span class="hljs-title class_">Json</span> &#123;<br>                <span class="hljs-keyword">fn</span> <span class="hljs-title function_">from</span>(value: $<span class="hljs-keyword">type</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span> &#123;<br>                    Json::<span class="hljs-title function_ invoke__">Number</span>(value <span class="hljs-keyword">as</span> <span class="hljs-type">f64</span>)<br>                &#125;<br>            &#125;<br>        )*<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>然后我们只需要用下面这一行代码，就可以为所有的数字类型实现 <code>From</code> trait 了：</p>
+<p>然后我们只需要用下面这一行代码，就可以为所有的数字类型实现
+<code>From</code> trait 了：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust">impl_from_for_primitives!(<span class="hljs-type">u8</span> <span class="hljs-type">u16</span> <span class="hljs-type">u32</span> <span class="hljs-type">u64</span> <span class="hljs-type">i8</span> <span class="hljs-type">i16</span> <span class="hljs-type">i32</span> <span class="hljs-type">i64</span> <span class="hljs-type">f32</span> <span class="hljs-type">f64</span> <span class="hljs-type">isize</span> <span class="hljs-type">usize</span>);<br></code></pre></td></tr></table></figure>
-<p>记得这个时候你要删除上面手动实现的 <code>impl From&lt;f64&gt; for Json</code>，不然会有 impl 冲突错误。</p>
+<p>记得这个时候你要删除上面手动实现的
+<code>impl From&lt;f64&gt; for Json</code>，不然会有 impl 冲突错误。</p>
 <p>再次运行测试，也是可以通过的。</p>
-<h2 id="实现-Array">实现 Array</h2>
+<h2 id="实现-array">实现 Array</h2>
 <p>准备如下测试用例：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[test]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_array_json</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">json</span> = json!([<span class="hljs-number">1</span>, null, <span class="hljs-string">&quot;string&quot;</span>, <span class="hljs-literal">true</span>]);<br>    <span class="hljs-built_in">assert_eq!</span>(<br>        json,<br>        Json::<span class="hljs-title function_ invoke__">Array</span>(<span class="hljs-built_in">vec!</span>[<br>            Json::<span class="hljs-title function_ invoke__">Number</span>(<span class="hljs-number">1.0</span>),<br>            Json::Null,<br>            Json::<span class="hljs-title function_ invoke__">String</span>(<span class="hljs-string">&quot;string&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>()),<br>            Json::<span class="hljs-title function_ invoke__">Boolean</span>(<span class="hljs-literal">true</span>)<br>        ])<br>    )<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>要匹配 <code>[1, null, &quot;string&quot;, true]</code>这个模式，笔者的分析过程如下：</p>
-<ol>
+<p>要匹配
+<code>[1, null, "string", true]</code>这个模式，笔者的分析过程如下：</p>
+<ol type="1">
 <li>首先是外面的两个中括号 <code>[</code> 和 <code>]</code> ；</li>
-<li>再往里，是一个重复匹配的模式，以 <code>,</code> 分割，可以匹配 0 到任意多个元素，所以是 <code>$(  ,*)</code> ，具体可以参考：<a href="#%E9%87%8D%E5%A4%8D%E6%A8%A1%E5%BC%8F">重复模式</a>；</li>
-<li>最里面就是第 2 步要匹配的元素了，我们先用 <code>$element</code> 作为变量来承接每一个元素，其类型为 <code>tt</code> ，表示任意的语法标记树。</li>
+<li>再往里，是一个重复匹配的模式，以 <code>,</code> 分割，可以匹配 0
+到任意多个元素，所以是 <code>$(  ,*)</code> ，具体可以参考：<a
+href="#重复模式">重复模式</a>；</li>
+<li>最里面就是第 2 步要匹配的元素了，我们先用 <code>$element</code>
+作为变量来承接每一个元素，其类型为 <code>tt</code>
+，表示任意的语法标记树。</li>
 </ol>
 <p>分析完匹配的表达式后，我们就可以得到：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust">([ $( $element:tt ), * ]) =&gt; &#123; <span class="hljs-comment">/* TODO */</span> &#125;<br></code></pre></td></tr></table></figure>
 <p>我们要生成的代码长这个样子：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust">Json::<span class="hljs-title function_ invoke__">Array</span>(<span class="hljs-built_in">vec!</span>[<br>    Json::<span class="hljs-title function_ invoke__">Number</span>(<span class="hljs-number">1.0</span>),<br>    Json::Null,<br>    Json::<span class="hljs-title function_ invoke__">String</span>(<span class="hljs-string">&quot;string&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>()),<br>    Json::<span class="hljs-title function_ invoke__">Boolean</span>(<span class="hljs-literal">true</span>)<br>])<br></code></pre></td></tr></table></figure>
-<p>其实就是一个 <code>vec!</code>，然后里面每个元素都是一个 <code>Json</code>，如此递归下去。</p>
+<p>其实就是一个 <code>vec!</code>，然后里面每个元素都是一个
+<code>Json</code>，如此递归下去。</p>
 <p>即可以得到代码生成部分的逻辑为：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust">Json::<span class="hljs-title function_ invoke__">Array</span>(<span class="hljs-built_in">vec!</span>[$(json!($element)),* ])<br></code></pre></td></tr></table></figure>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240528134133088.png" srcset="/img/loading.gif" lazyload alt="Json::Array 宏分析"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240528134133088.png" srcset="/img/loading.gif" lazyload
+alt="Json::Array 宏分析" />
+<figcaption aria-hidden="true">Json::Array 宏分析</figcaption>
+</figure>
 <p>综上，我们实现的代码如下：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[macro_export]</span><br><span class="hljs-built_in">macro_rules!</span> json &#123;<br>    (null) =&gt; &#123;<br>        Json::Null<br>    &#125;;<br>    ([ $( $element: tt),* ]) =&gt; &#123;<br>        Json::<span class="hljs-title function_ invoke__">Array</span>(<span class="hljs-built_in">vec!</span>[ $( json!($element)), * ])<br>    &#125;;<br>    ($value: tt) =&gt; &#123;<br>        Json::<span class="hljs-title function_ invoke__">from</span>($value)<br>    &#125;;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>运行测试用例：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash">PASS [   0.003s] json-macro tests::test_null_json<br>PASS [   0.003s] json-macro tests::test_boolean_number_string_json<br>PASS [   0.004s] json-macro tests::test_array_json<br></code></pre></td></tr></table></figure>
-<h2 id="实现-Object">实现 Object</h2>
-<p>写好如下测试用例，这次我们顺带把 Null、Boolean、Number 和 String 带上了：</p>
+<h2 id="实现-object">实现 Object</h2>
+<p>写好如下测试用例，这次我们顺带把 Null、Boolean、Number 和 String
+带上了：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[test]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_object_json</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">json</span> = json!(&#123;<br>        <span class="hljs-string">&quot;null&quot;</span>: null,<br>        <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;hedon&quot;</span>,<br>        <span class="hljs-string">&quot;age&quot;</span>: <span class="hljs-number">10</span>,<br>        <span class="hljs-string">&quot;is_student&quot;</span>: <span class="hljs-literal">true</span>,<br>        <span class="hljs-string">&quot;detail&quot;</span>: &#123;<br>            <span class="hljs-string">&quot;address&quot;</span>: <span class="hljs-string">&quot;beijing&quot;</span>,<br>            <span class="hljs-string">&quot;phone&quot;</span>: <span class="hljs-string">&quot;1234567890&quot;</span><br>        &#125;<br>    &#125;);<br>    <span class="hljs-built_in">assert_eq!</span>(<br>        json,<br>        Json::<span class="hljs-title function_ invoke__">Object</span>(HashMap::<span class="hljs-title function_ invoke__">from</span>([<br>            (<span class="hljs-string">&quot;name&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::<span class="hljs-title function_ invoke__">String</span>(<span class="hljs-string">&quot;hedon&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>())),<br>            (<span class="hljs-string">&quot;age&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::<span class="hljs-title function_ invoke__">Number</span>(<span class="hljs-number">10.0</span>)),<br>            (<span class="hljs-string">&quot;is_student&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::<span class="hljs-title function_ invoke__">Boolean</span>(<span class="hljs-literal">true</span>)),<br>            (<br>                <span class="hljs-string">&quot;detail&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(),<br>                Json::<span class="hljs-title function_ invoke__">Object</span>(HashMap::<span class="hljs-title function_ invoke__">from</span>([<br>                    (<span class="hljs-string">&quot;address&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::<span class="hljs-title function_ invoke__">String</span>(<span class="hljs-string">&quot;beijing&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>())),<br>                    (<span class="hljs-string">&quot;phone&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::<span class="hljs-title function_ invoke__">String</span>(<span class="hljs-string">&quot;1234567890&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>()))<br>                ]))<br>            )<br>        ]))<br>    )<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>对比预期的 <code>json!</code> 宏内容和展开后的代码：</p>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240528133040062.png" srcset="/img/loading.gif" lazyload alt="Json::Object 宏分析"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240528133040062.png" srcset="/img/loading.gif" lazyload
+alt="Json::Object 宏分析" />
+<figcaption aria-hidden="true">Json::Object 宏分析</figcaption>
+</figure>
 <p>完善我们的 <code>macro_rules! json</code> ：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[macro_export]</span><br><span class="hljs-built_in">macro_rules!</span> json &#123;<br>    (null) =&gt; &#123;<br>        Json::Null<br>    &#125;;<br>    ([ $( $element: tt),* ]) =&gt; &#123;<br>        Json::<span class="hljs-title function_ invoke__">Array</span>(<span class="hljs-built_in">vec!</span>[ $( json!($element)), * ])<br>    &#125;;<br>    (&#123; $( $key:tt : $value:tt ),* &#125;) =&gt; &#123;<br>        Json::<span class="hljs-title function_ invoke__">Object</span>(HashMap::<span class="hljs-title function_ invoke__">from</span>([<br>            $(<br>                ( $key.<span class="hljs-title function_ invoke__">to_string</span>(), json!($value) )<br>            ), *<br>        ]))<br>    &#125;;<br>    ($value: tt) =&gt; &#123;<br>        Json::<span class="hljs-title function_ invoke__">from</span>($value)<br>    &#125;;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>运行测试用例：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs bash">PASS [   0.004s] json-macro tests::test_object_json<br>PASS [   0.005s] json-macro tests::test_array_json<br>PASS [   0.004s] json-macro tests::test_null_json<br>PASS [   0.005s] json-macro tests::test_boolean_number_string_json<br></code></pre></td></tr></table></figure>
-<p>至此，我们就完成了 <code>json!</code> 宏的构建了！完整源码可见：<a target="_blank" rel="noopener" href="https://www.notion.so/e90c161d8e3743b2a4f788e3d7b75181?pvs=21">完整代码</a></p>
+<p>至此，我们就完成了 <code>json!</code> 宏的构建了！完整源码可见：<a
+target="_blank" rel="noopener" href="https://www.notion.so/e90c161d8e3743b2a4f788e3d7b75181?pvs=21">完整代码</a></p>
 <p>Peace! Enjoy coding~</p>
-<h1>附录</h1>
+<h1 id="附录">附录</h1>
 <h2 id="重复模式">重复模式</h2>
-<p>在 <a target="_blank" rel="noopener" href="https://www.notion.so/Array-c914526ab9474ccd9cb92c7eb17225b6?pvs=21">实现 Array</a> 中，我们匹配了这样一个模式：</p>
+<p>在 <a
+target="_blank" rel="noopener" href="https://www.notion.so/Array-c914526ab9474ccd9cb92c7eb17225b6?pvs=21">实现
+Array</a> 中，我们匹配了这样一个模式：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust">([ $( $element:tt ), * ]) =&gt; &#123; <span class="hljs-comment">/* TODO */</span> &#125;<br></code></pre></td></tr></table></figure>
-<p>其中 <code>$($element:tt), *)</code> 就是一个重复模式，其可以进一步抽象为 <code>$( ... ),*</code> ，表示匹配 0 次或多次，以 <code>,</code> 分隔。</p>
+<p>其中 <code>$($element:tt), *)</code>
+就是一个重复模式，其可以进一步抽象为 <code>$( ... ),*</code> ，表示匹配
+0 次或多次，以 <code>,</code> 分隔。</p>
 <p>Rust 支持以下全部重复模式：</p>
 <table>
 <thead>
-<tr>
+<tr class="header">
 <th>模式</th>
 <th>含义</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td>$( … ) *</td>
 <td>匹配 0 次或多次，没有分隔符</td>
 </tr>
-<tr>
+<tr class="even">
 <td>$( … ), *</td>
 <td>匹配 0 次或多次，以逗号分隔</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>$( … ); *</td>
 <td>匹配 0 次或多次，以分号分隔</td>
 </tr>
-<tr>
+<tr class="even">
 <td>$( … ) +</td>
 <td>匹配 1 次或多次，没有分隔符</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>$( … ), +</td>
 <td>匹配 1 次或多次，以逗号分隔</td>
 </tr>
-<tr>
+<tr class="even">
 <td>$( … ); +</td>
 <td>匹配 1 次或多次，以分号分隔</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>$( … ) ?</td>
 <td>匹配 0 次或 1 次，没有分隔符</td>
 </tr>
@@ -464,86 +520,93 @@
 <li>可在上述 3 者之前加入分隔符</li>
 </ul>
 <h2 id="片段类型">片段类型</h2>
-<p>在 <a href="#%E5%AE%9E%E7%8E%B0-array">实现 Array</a> 中，我们匹配了这样一个模式：</p>
+<p>在 <a href="#实现-array">实现 Array</a>
+中，我们匹配了这样一个模式：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust">([ $( $element:tt ), * ]) =&gt; &#123; <span class="hljs-comment">/* TODO */</span> &#125;<br></code></pre></td></tr></table></figure>
-<p>这里我们将 <code>$element</code> 指定为 <code>tt</code>，这个 <code>tt</code> 就是宏中的一种片段类型。</p>
+<p>这里我们将 <code>$element</code> 指定为 <code>tt</code>，这个
+<code>tt</code> 就是宏中的一种片段类型。</p>
 <p><code>tt</code> 能匹配单个语法标记树，包含：</p>
 <ul>
-<li>一对括号，如 <code>(..)</code>、<code>[..]</code>、或 <code>&#123;..&#125;</code> ，以及位于其中的所有内容，包括嵌套的语法标记树。</li>
-<li>单独的非括号语法标记，比如 <code>1926</code> 或 <code>Knots</code> 。</li>
+<li>一对括号，如 <code>(..)</code>、<code>[..]</code>、或
+<code>&#123;..&#125;</code> ，以及位于其中的所有内容，包括嵌套的语法标记树。</li>
+<li>单独的非括号语法标记，比如 <code>1926</code> 或 <code>Knots</code>
+。</li>
 </ul>
-<p>所以为了匹配任意类型的 <code>Json</code> ，我们选择了 <code>tt</code>  作为 <code>$element</code>  的片段类型。</p>
-<p><code>macro_rules!</code>  支持的片段类型如下所示：</p>
+<p>所以为了匹配任意类型的 <code>Json</code> ，我们选择了 <code>tt</code>
+作为 <code>$element</code> 的片段类型。</p>
+<p><code>macro_rules!</code> 支持的片段类型如下所示：</p>
 <table>
+
 <thead>
-<tr>
+<tr class="header">
 <th>片段类型</th>
 <th>匹配（带例子）</th>
 <th>后面可以跟 ······</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td>expr</td>
-<td>表达式：2 + 2, “udon”, x.len()</td>
+<td>表达式：2 + 2, "udon", x.len()</td>
 <td>=&gt;,;</td>
 </tr>
-<tr>
+<tr class="even">
 <td>stmt</td>
-<td>表达式或声明，不包括任何尾随分号（很难用，请尝试使用 expr 或 block）</td>
+<td>表达式或声明，不包括任何尾随分号（很难用，请尝试使用 expr 或
+block）</td>
 <td>=&gt;,;</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>ty</td>
 <td>类型：String, Vec<u8>, (&amp;str, bool), dyn Read + Send</td>
 <td>=&gt;,; =</td>
 </tr>
-<tr>
+<tr class="even">
 <td>path</td>
 <td>路径：ferns, ::std::sync::mpsc</td>
 <td>=&gt;,; =</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>pat</td>
 <td>模式：_, Some(ref x)</td>
 <td>=&gt;,=</td>
 </tr>
-<tr>
+<tr class="even">
 <td>item</td>
 <td>语法项：struct Point { x: f64, y: f64 }, mod ferns;</td>
 <td>任意</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>block</td>
-<td>块：{ s += “ok\n”; true }</td>
+<td>块：{ s += "ok"; true }</td>
 <td>任意</td>
 </tr>
-<tr>
+<tr class="even">
 <td>meta</td>
-<td>属性的主体：inline, derive(Copy, Clone), doc=“3D models.”</td>
+<td>属性的主体：inline, derive(Copy, Clone), doc="3D models."</td>
 <td>任意</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>literal</td>
-<td>字面量值：1024, “Hello, world!”, 1_000_000f64</td>
+<td>字面量值：1024, "Hello, world!", 1_000_000f64</td>
 <td>任意</td>
 </tr>
-<tr>
+<tr class="even">
 <td>lifetime</td>
 <td>生命周期：'a, 'item, 'static</td>
 <td>任意</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>vis</td>
 <td>可见性说明符：pub, pub(crate), pub(in module::submodule)</td>
 <td>任意</td>
 </tr>
-<tr>
+<tr class="even">
 <td>ident</td>
 <td>标识符：std, Json, longish_variable_name</td>
 <td>任意</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>tt</td>
 <td>语法标记树：;, &gt;=, {}, [0 1 (+ 0 1)]</td>
 <td>任意</td>
@@ -552,6 +615,7 @@
 </table>
 <h2 id="完整代码">完整代码</h2>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::collections::HashMap;<br><br><span class="hljs-meta">#[derive(Debug, Clone, PartialEq)]</span><br><span class="hljs-meta">#[allow(unused)]</span><br><span class="hljs-keyword">enum</span> <span class="hljs-title class_">Json</span> &#123;<br>    Null,<br>    <span class="hljs-title function_ invoke__">Boolean</span>(<span class="hljs-type">bool</span>),<br>    <span class="hljs-title function_ invoke__">String</span>(<span class="hljs-type">String</span>),<br>    <span class="hljs-title function_ invoke__">Number</span>(<span class="hljs-type">f64</span>),<br>    <span class="hljs-title function_ invoke__">Array</span>(<span class="hljs-type">Vec</span>&lt;Json&gt;),<br>    <span class="hljs-title function_ invoke__">Object</span>(HashMap&lt;<span class="hljs-type">String</span>, Json&gt;),<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">From</span>&lt;<span class="hljs-type">bool</span>&gt; <span class="hljs-keyword">for</span> <span class="hljs-title class_">Json</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">from</span>(value: <span class="hljs-type">bool</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span> &#123;<br>        Json::<span class="hljs-title function_ invoke__">Boolean</span>(value)<br>    &#125;<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">From</span>&lt;&amp;<span class="hljs-type">str</span>&gt; <span class="hljs-keyword">for</span> <span class="hljs-title class_">Json</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">from</span>(value: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span> &#123;<br>        Json::<span class="hljs-title function_ invoke__">String</span>(value.<span class="hljs-title function_ invoke__">to_string</span>())<br>    &#125;<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">From</span>&lt;<span class="hljs-type">String</span>&gt; <span class="hljs-keyword">for</span> <span class="hljs-title class_">Json</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">from</span>(value: <span class="hljs-type">String</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span> &#123;<br>        Json::<span class="hljs-title function_ invoke__">String</span>(value)<br>    &#125;<br>&#125;<br><br><span class="hljs-meta">#[macro_export]</span><br><span class="hljs-built_in">macro_rules!</span> impl_from_for_primitives &#123;<br>    (  $( $<span class="hljs-keyword">type</span>: ty ) * ) =&gt; &#123;<br>        $(<br>            <span class="hljs-keyword">impl</span> <span class="hljs-title class_">From</span>&lt;$<span class="hljs-keyword">type</span>&gt; <span class="hljs-keyword">for</span> <span class="hljs-title class_">Json</span> &#123;<br>                <span class="hljs-keyword">fn</span> <span class="hljs-title function_">from</span>(value: $<span class="hljs-keyword">type</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span> &#123;<br>                    Json::<span class="hljs-title function_ invoke__">Number</span>(value <span class="hljs-keyword">as</span> <span class="hljs-type">f64</span>)<br>                &#125;<br>            &#125;<br>        )*<br>    &#125;<br>&#125;<br><br>impl_from_for_primitives!(<span class="hljs-type">u8</span> <span class="hljs-type">u16</span> <span class="hljs-type">u32</span> <span class="hljs-type">u64</span> <span class="hljs-type">i8</span> <span class="hljs-type">i16</span> <span class="hljs-type">i32</span> <span class="hljs-type">i64</span> <span class="hljs-type">f32</span> <span class="hljs-type">f64</span> <span class="hljs-type">isize</span> <span class="hljs-type">usize</span>);<br><br><span class="hljs-meta">#[macro_export]</span><br><span class="hljs-built_in">macro_rules!</span> json &#123;<br>    (null) =&gt; &#123;<br>        Json::Null<br>    &#125;;<br>    ([ $( $element: tt),* ]) =&gt; &#123;<br>        Json::<span class="hljs-title function_ invoke__">Array</span>(<span class="hljs-built_in">vec!</span>[ $( json!($element)), * ])<br>    &#125;;<br>    (&#123; $( $key:tt : $value:tt ),* &#125;) =&gt; &#123;<br>        Json::<span class="hljs-title function_ invoke__">Object</span>(HashMap::<span class="hljs-title function_ invoke__">from</span>([<br>            $(<br>                ( $key.<span class="hljs-title function_ invoke__">to_string</span>(), json!($value) )<br>            ), *<br>        ]))<br>    &#125;;<br>    ($value: tt) =&gt; &#123;<br>        Json::<span class="hljs-title function_ invoke__">from</span>($value)<br>    &#125;;<br>&#125;<br><br><span class="hljs-meta">#[cfg(test)]</span><br><span class="hljs-keyword">mod</span> tests &#123;<br>    <span class="hljs-keyword">use</span> super::*;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_null_json</span>() &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">json</span> = json!(null);<br>        <span class="hljs-built_in">assert_eq!</span>(json, Json::Null);<br>    &#125;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_boolean_number_string_json</span>() &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">json</span> = json!(<span class="hljs-literal">true</span>);<br>        <span class="hljs-built_in">assert_eq!</span>(json, Json::<span class="hljs-title function_ invoke__">Boolean</span>(<span class="hljs-literal">true</span>));<br><br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">json</span> = json!(<span class="hljs-number">1.0</span>);<br>        <span class="hljs-built_in">assert_eq!</span>(json, Json::<span class="hljs-title function_ invoke__">Number</span>(<span class="hljs-number">1.0</span>));<br><br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">json</span> = json!(<span class="hljs-string">&quot;hello&quot;</span>);<br>        <span class="hljs-built_in">assert_eq!</span>(json, Json::<span class="hljs-title function_ invoke__">String</span>(<span class="hljs-string">&quot;hello&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>()));<br>    &#125;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_object_json</span>() &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">json</span> = json!(&#123;<br>            <span class="hljs-string">&quot;null&quot;</span>: null,<br>            <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;hedon&quot;</span>,<br>            <span class="hljs-string">&quot;age&quot;</span>: <span class="hljs-number">10</span>,<br>            <span class="hljs-string">&quot;is_student&quot;</span>: <span class="hljs-literal">true</span>,<br>            <span class="hljs-string">&quot;detail&quot;</span>: &#123;<br>                <span class="hljs-string">&quot;address&quot;</span>: <span class="hljs-string">&quot;beijing&quot;</span>,<br>                <span class="hljs-string">&quot;phone&quot;</span>: <span class="hljs-string">&quot;1234567890&quot;</span><br>            &#125;<br>        &#125;);<br>        <span class="hljs-built_in">assert_eq!</span>(<br>            json,<br>            Json::<span class="hljs-title function_ invoke__">Object</span>(HashMap::<span class="hljs-title function_ invoke__">from</span>([<br>                (<span class="hljs-string">&quot;null&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::Null),<br>                (<span class="hljs-string">&quot;name&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::<span class="hljs-title function_ invoke__">String</span>(<span class="hljs-string">&quot;hedon&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>())),<br>                (<span class="hljs-string">&quot;age&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::<span class="hljs-title function_ invoke__">Number</span>(<span class="hljs-number">10.0</span>)),<br>                (<span class="hljs-string">&quot;is_student&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::<span class="hljs-title function_ invoke__">Boolean</span>(<span class="hljs-literal">true</span>)),<br>                (<br>                    <span class="hljs-string">&quot;detail&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(),<br>                    Json::<span class="hljs-title function_ invoke__">Object</span>(HashMap::<span class="hljs-title function_ invoke__">from</span>([<br>                        (<span class="hljs-string">&quot;address&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::<span class="hljs-title function_ invoke__">String</span>(<span class="hljs-string">&quot;beijing&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>())),<br>                        (<span class="hljs-string">&quot;phone&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>(), Json::<span class="hljs-title function_ invoke__">String</span>(<span class="hljs-string">&quot;1234567890&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>()))<br>                    ]))<br>                )<br>            ]))<br>        )<br>    &#125;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_array_json</span>() &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">json</span> = json!([<span class="hljs-number">1</span>, null, <span class="hljs-string">&quot;string&quot;</span>, <span class="hljs-literal">true</span>]);<br>        <span class="hljs-built_in">assert_eq!</span>(<br>            json,<br>            Json::<span class="hljs-title function_ invoke__">Array</span>(<span class="hljs-built_in">vec!</span>[<br>                Json::<span class="hljs-title function_ invoke__">Number</span>(<span class="hljs-number">1.0</span>),<br>                Json::Null,<br>                Json::<span class="hljs-title function_ invoke__">String</span>(<span class="hljs-string">&quot;string&quot;</span>.<span class="hljs-title function_ invoke__">to_string</span>()),<br>                Json::<span class="hljs-title function_ invoke__">Boolean</span>(<span class="hljs-literal">true</span>)<br>            ])<br>        )<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
                 
               </div>
             

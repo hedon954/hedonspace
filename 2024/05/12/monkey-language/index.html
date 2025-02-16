@@ -23,16 +23,12 @@
 <meta property="og:site_name" content="HedonSpace">
 <meta property="og:description" content="本文主要是记录笔者在学习《用 Go 自制解释器 Monkey》过程中涉及的重要设计理念和思考。">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512042659060.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512035446100.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512045650041.png">
 <meta property="article:published_time" content="2024-05-11T19:44:15.000Z">
 <meta property="article:modified_time" content="2024-05-12T11:59:36.393Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Go">
 <meta property="article:tag" content="编译原理">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512042659060.png">
   
   
   
@@ -321,17 +317,32 @@
             
               <div class="markdown-body">
                 
-                <h1>词法分析</h1>
+                <h1 id="词法分析">词法分析</h1>
 <p>TDD：测试驱动开发</p>
 <p>先写测试用例，再进行词法分析逻辑的完善。</p>
-<h1>语法分析</h1>
+<h1 id="语法分析">语法分析</h1>
 <p>递归下降语法分析伪代码</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><code class="hljs go">function parseProgram() &#123;<br>    program = newProgramASTNode()<br>    advanceTokens()<br>    <span class="hljs-keyword">for</span> (currentToken() != EOF_TOKEN) &#123;<br>        statement = null<br>        <span class="hljs-keyword">if</span> (currentToken() == LET_TOKEN) &#123;<br>            statement = parseLetStatement()<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (currentToken() == RETURN_TOKEN) &#123;<br>            statement = parseReturnStatement()<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (currentToken() == IF_TOKEN) &#123;<br>            statement = parseIfStatement()<br>        &#125;<br>        <span class="hljs-keyword">if</span> (statement != null) &#123;<br>            program.Statements.push(statement)<br>        &#125;<br>        advanceTokens()<br>    &#125;<br>    <span class="hljs-keyword">return</span> program<br>&#125;<br>function parseLetStatement() &#123;<br>    advanceTokens()<br>    identifier = parseIdentifier()<br>    advanceTokens()<br>    <span class="hljs-keyword">if</span> currentToken() != EQUAL_TOKEN &#123;<br>        parseError(<span class="hljs-string">&quot;no equal sign!&quot;</span>)<br>        <span class="hljs-keyword">return</span> null<br>    &#125;<br>    advanceTokens()<br>    value = parseExpression()<br>    variableStatement = newVariableStatementASTNode()<br>    variableStatement.identifier = identifier<br>    variableStatement.value = value<br>    <span class="hljs-keyword">return</span> variableStatement<br>&#125;<br>function parseIdentifier() &#123;<br>    identifier = newIdentifierASTNode()<br>    identifier.token = currentToken()<br>    <span class="hljs-keyword">return</span> identifier<br>&#125;<br>function parseExpression() &#123;<br>    <span class="hljs-keyword">if</span> (currentToken() == INTEGER_TOKEN) &#123;<br>        <span class="hljs-keyword">if</span> (nextToken() == PLUS_TOKEN) &#123;<br>            <span class="hljs-keyword">return</span> parseOperatorExpression()<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (nextToken() == SEMICOLON_TOKEN) &#123;<br>            <span class="hljs-keyword">return</span> parseIntegerLiteral()<br>        &#125;<br>    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (currentToken() == LEFT_PAREN) &#123;<br>        <span class="hljs-keyword">return</span> parseGroupedExpression()<br>    &#125;<br><span class="hljs-comment">// [...]</span><br>&#125;<br>function parseOperatorExpression() &#123;<br>    operatorExpression = newOperatorExpression()<br>    operatorExpression.left = parseIntegerLiteral()<br>    operatorExpression.operator = currentToken()<br>    operatorExpression.right = parseExpression()<br>    <span class="hljs-keyword">return</span> operatorExpression()<br>&#125;<br></code></pre></td></tr></table></figure>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512042659060.png" srcset="/img/loading.gif" lazyload alt="递归下降分析法"></p>
-<h2 id="let-x-5">let x=5</h2>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512035446100.png" srcset="/img/loading.gif" lazyload alt="let stmt AST structure"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512042659060.png" srcset="/img/loading.gif" lazyload
+alt="递归下降分析法" />
+<figcaption aria-hidden="true">递归下降分析法</figcaption>
+</figure>
+<h2 id="let-x5">let x=5</h2>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512035446100.png" srcset="/img/loading.gif" lazyload
+alt="let stmt AST structure" />
+<figcaption aria-hidden="true">let stmt AST structure</figcaption>
+</figure>
 <h2 id="return-5">return 5</h2>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512045650041.png" srcset="/img/loading.gif" lazyload alt="return stmt AST structue"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512045650041.png" srcset="/img/loading.gif" lazyload
+alt="return stmt AST structue" />
+<figcaption aria-hidden="true">return stmt AST structue</figcaption>
+</figure>
 <h2 id="普拉特解析">普拉特解析</h2>
 
                 

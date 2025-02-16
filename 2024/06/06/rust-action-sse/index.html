@@ -23,8 +23,6 @@
 <meta property="og:site_name" content="HedonSpace">
 <meta property="og:description" content="本文详细介绍了 SSE 的工作原理，并通过示例代码展示了如何使用 Go 和 Rust 实现一个简单的 SSE 服务端，展示了在实际项目中应用 SSE 的方法。">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/20240606213652.gif">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/20240606195749.gif">
 <meta property="article:published_time" content="2024-06-06T13:30:51.000Z">
 <meta property="article:modified_time" content="2024-06-06T13:40:05.329Z">
 <meta property="article:author" content="Hedon Wang">
@@ -32,7 +30,6 @@
 <meta property="article:tag" content="Rust">
 <meta property="article:tag" content="SSE">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/20240606213652.gif">
   
   
   
@@ -321,41 +318,68 @@
             
               <div class="markdown-body">
                 
-                <p>📌 SSE（Server-Sent Events）是一种允许服务器向客户端浏览器推送信息的技术。它是 HTML5 的一部分，专门用于建立一个单向的从服务器到客户端的通信连接。SSE的使用场景非常广泛，包括实时消息推送、实时通知更新等。</p>
-<h1>SSE 的本质</h1>
-<p>严格地说，<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/HTTP">HTTP </a>无法做到服务器主动推送信息。但是，有一种变通方法，就是服务器向客户端声明，接下来要发送的是流信息（streaming）。</p>
+                <p>📌 SSE（Server-Sent
+Events）是一种允许服务器向客户端浏览器推送信息的技术。它是 HTML5
+的一部分，专门用于建立一个单向的从服务器到客户端的通信连接。SSE的使用场景非常广泛，包括实时消息推送、实时通知更新等。</p>
+<h1 id="sse-的本质">SSE 的本质</h1>
+<p>严格地说，<a
+target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/HTTP">HTTP</a>无法做到服务器主动推送信息。但是，有一种变通方法，就是服务器向客户端声明，接下来要发送的是流信息（streaming）。</p>
 <p>也就是说，发送的不是一次性的数据包，而是一个数据流，会连续不断地发送过来。这时，客户端不会关闭连接，会一直等着服务器发过来的新的数据流，视频播放就是这样的例子。本质上，这种通信就是以流信息的方式，完成一次用时很长的下载。</p>
-<p>SSE 就是利用这种机制，使用流信息向浏览器推送信息。它基于 HTTP 协议，目前除了 IE/Edge，其他浏览器都支持。</p>
-<h1>特点</h1>
-<ol>
-<li><strong>持续连接</strong>：与传统的 HTTP 请求不同，SSE 保持连接开放，服务器可以随时发送消息。</li>
-<li><strong>文本数据流</strong>：SSE 主要传输文本数据，这些数据以特定的格式流式传输，使得每条消息都是简单的文本格式。</li>
-<li><strong>内置重连机制</strong>：浏览器会自动处理连接中断和重连，包括在重连请求中发送最后接收的事件 ID，以便服务器从正确的位置恢复发送事件。</li>
-<li><strong>简单的客户端处理</strong>：在浏览器中，使用 JavaScript 的 <code>EventSource</code> 接口处理 SSE 非常简单，只需几行代码即可监听服务器发来的事件。</li>
+<p>SSE 就是利用这种机制，使用流信息向浏览器推送信息。它基于 HTTP
+协议，目前除了 IE/Edge，其他浏览器都支持。</p>
+<h1 id="特点">特点</h1>
+<ol type="1">
+<li><strong>持续连接</strong>：与传统的 HTTP 请求不同，SSE
+保持连接开放，服务器可以随时发送消息。</li>
+<li><strong>文本数据流</strong>：SSE
+主要传输文本数据，这些数据以特定的格式流式传输，使得每条消息都是简单的文本格式。</li>
+<li><strong>内置重连机制</strong>：浏览器会自动处理连接中断和重连，包括在重连请求中发送最后接收的事件
+ID，以便服务器从正确的位置恢复发送事件。</li>
+<li><strong>简单的客户端处理</strong>：在浏览器中，使用 JavaScript 的
+<code>EventSource</code> 接口处理 SSE
+非常简单，只需几行代码即可监听服务器发来的事件。</li>
 </ol>
-<h1>工作原理</h1>
-<ol>
-<li><strong>建立连接</strong>：客户端通过创建一个 <code>EventSource</code> 对象请求特定的 URL 来启动 SSE 连接。这个请求是一个标准的 HTTP 请求，但会要求服务器以特定方式响应。</li>
-<li><strong>服务器响应</strong>：服务器响应必须设置 <code>Content-Type</code> 为 <code>text/event-stream</code>，然后保持连接打开。</li>
-<li><strong>发送消息</strong>：服务器可以通过持续发送数据格式为特定事件流的消息来推送更新。每个消息包括一个可选的事件类型、数据和一个可选的 ID。
+<h1 id="工作原理">工作原理</h1>
+<ol type="1">
+<li><strong>建立连接</strong>：客户端通过创建一个
+<code>EventSource</code> 对象请求特定的 URL 来启动 SSE
+连接。这个请求是一个标准的 HTTP
+请求，但会要求服务器以特定方式响应。</li>
+<li><strong>服务器响应</strong>：服务器响应必须设置
+<code>Content-Type</code> 为
+<code>text/event-stream</code>，然后保持连接打开。</li>
+<li><strong>发送消息</strong>：服务器可以通过持续发送数据格式为特定事件流的消息来推送更新。每个消息包括一个可选的事件类型、数据和一个可选的
+ID。
 <ul>
-<li><strong>数据</strong>：实际的消息内容，以 <code>data:</code> 开头，多行数据以双换行符 <code>\n\n</code> 结束。</li>
-<li><strong>事件类型</strong>：允许客户端根据事件类型来监听，以 <code>event:</code> 开头。</li>
-<li><strong>ID</strong>：如果连接中断，客户端将发送包含上次接收的最后一个ID的 <code>Last-Event-ID</code> 头，以便服务器从断点继续发送数据。</li>
-</ul>
-</li>
+<li><strong>数据</strong>：实际的消息内容，以 <code>data:</code>
+开头，多行数据以双换行符 <code>\n\n</code> 结束。</li>
+<li><strong>事件类型</strong>：允许客户端根据事件类型来监听，以
+<code>event:</code> 开头。</li>
+<li><strong>ID</strong>：如果连接中断，客户端将发送包含上次接收的最后一个ID的
+<code>Last-Event-ID</code> 头，以便服务器从断点继续发送数据。</li>
+</ul></li>
 </ol>
-<h1>实战</h1>
+<h1 id="实战">实战</h1>
 <h2 id="客户端">客户端</h2>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs html"><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-keyword">html</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">html</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>SSE Test<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>Server-Sent Events Test<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;events&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="language-javascript"></span><br><span class="language-javascript">    <span class="hljs-comment">// 确保这里的URL匹配你的服务器地址和端口</span></span><br><span class="language-javascript">    <span class="hljs-keyword">var</span> eventSource = <span class="hljs-keyword">new</span> <span class="hljs-title class_">EventSource</span>(<span class="hljs-string">&#x27;http://localhost:8000/events&#x27;</span>);</span><br><span class="language-javascript">    eventSource.<span class="hljs-property">onmessage</span> = <span class="hljs-keyword">function</span>(<span class="hljs-params">event</span>) &#123;</span><br><span class="language-javascript">        <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;New event:&#x27;</span>, event.<span class="hljs-property">data</span>);</span><br><span class="language-javascript">        <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">getElementById</span>(<span class="hljs-string">&#x27;events&#x27;</span>).<span class="hljs-property">innerHTML</span> += event.<span class="hljs-property">data</span> + <span class="hljs-string">&#x27;&lt;br&gt;&#x27;</span>;</span><br><span class="language-javascript">    &#125;;</span><br><span class="language-javascript"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span><br></code></pre></td></tr></table></figure>
-<h2 id="Rust-服务端">Rust 服务端</h2>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/20240606213652.gif" srcset="/img/loading.gif" lazyload alt="Rust 实现演示"></p>
+<h2 id="rust-服务端">Rust 服务端</h2>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/20240606213652.gif" srcset="/img/loading.gif" lazyload
+alt="Rust 实现演示" />
+<figcaption aria-hidden="true">Rust 实现演示</figcaption>
+</figure>
 <p>依赖：</p>
 <figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-attr">anyhow</span> = <span class="hljs-string">&quot;1.0.86&quot;</span><br><span class="hljs-attr">axum</span> = &#123; version = <span class="hljs-string">&quot;0.7.5&quot;</span> &#125;<br><span class="hljs-attr">chrono</span> = <span class="hljs-string">&quot;0.4.38&quot;</span><br><span class="hljs-attr">futures-core</span> = <span class="hljs-string">&quot;0.3.30&quot;</span><br><span class="hljs-attr">tokio</span> = &#123; version = <span class="hljs-string">&quot;1.38.0&quot;</span>, features = [<span class="hljs-string">&quot;macros&quot;</span>, <span class="hljs-string">&quot;rt-multi-thread&quot;</span>, ] &#125;<br><span class="hljs-attr">tokio-stream</span> = <span class="hljs-string">&quot;0.1.15&quot;</span><br><span class="hljs-attr">tower-http</span> = &#123; version = <span class="hljs-string">&quot;0.5.2&quot;</span>, features = [<span class="hljs-string">&quot;cors&quot;</span>] &#125;<br></code></pre></td></tr></table></figure>
 <p>代码：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::time::Duration;<br><br><span class="hljs-keyword">use</span> axum::&#123;<br>    response::&#123;sse::Event, Sse&#125;,<br>    routing::get,<br>    Router,<br>&#125;;<br><span class="hljs-keyword">use</span> tokio::&#123;net::TcpListener, time::interval&#125;;<br><span class="hljs-keyword">use</span> tokio_stream::&#123;wrappers::IntervalStream, StreamExt&#125;;<br><span class="hljs-keyword">use</span> tower_http::cors::&#123;Any, CorsLayer&#125;;<br><br><span class="hljs-meta">#[tokio::main]</span><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() <span class="hljs-punctuation">-&gt;</span> anyhow::<span class="hljs-type">Result</span>&lt;()&gt; &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">cors</span> = CorsLayer::<span class="hljs-title function_ invoke__">new</span>()<br>        .<span class="hljs-title function_ invoke__">allow_headers</span>(Any)<br>        .<span class="hljs-title function_ invoke__">allow_origin</span>(Any)<br>        .<span class="hljs-title function_ invoke__">allow_headers</span>(Any)<br>        .<span class="hljs-title function_ invoke__">allow_credentials</span>(<span class="hljs-literal">false</span>);<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">listener</span> = TcpListener::<span class="hljs-title function_ invoke__">bind</span>(<span class="hljs-string">&quot;0.0.0.0:8000&quot;</span>).<span class="hljs-keyword">await</span>?;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">app</span> = Router::<span class="hljs-title function_ invoke__">new</span>().<span class="hljs-title function_ invoke__">route</span>(<span class="hljs-string">&quot;/events&quot;</span>, <span class="hljs-title function_ invoke__">get</span>(sse_handler)).<span class="hljs-title function_ invoke__">layer</span>(cors);<br>    axum::<span class="hljs-title function_ invoke__">serve</span>(listener, app).<span class="hljs-keyword">await</span>?;<br>    <span class="hljs-title function_ invoke__">Ok</span>(())<br>&#125;<br><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">sse_handler</span>() <span class="hljs-punctuation">-&gt;</span> Sse&lt;<span class="hljs-keyword">impl</span> <span class="hljs-title class_">futures_core</span>::Stream&lt;Item = <span class="hljs-type">Result</span>&lt;Event, axum::Error&gt;&gt;&gt; &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">interval</span> = <span class="hljs-title function_ invoke__">interval</span>(Duration::<span class="hljs-title function_ invoke__">from_secs</span>(<span class="hljs-number">1</span>));<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">stream</span> = IntervalStream::<span class="hljs-title function_ invoke__">new</span>(interval).<span class="hljs-title function_ invoke__">map</span>(|_| &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">data</span> = <span class="hljs-built_in">format!</span>(<span class="hljs-string">&quot;&#123;&#125;\n\n&quot;</span>, chrono::Local::<span class="hljs-title function_ invoke__">now</span>().<span class="hljs-title function_ invoke__">to_rfc2822</span>());<br>        <span class="hljs-title function_ invoke__">Ok</span>(Event::<span class="hljs-title function_ invoke__">default</span>().<span class="hljs-title function_ invoke__">data</span>(data))<br>    &#125;);<br><br>    Sse::<span class="hljs-title function_ invoke__">new</span>(stream)<br>&#125;<br></code></pre></td></tr></table></figure>
-<h2 id="Go-服务端">Go 服务端</h2>
-<p><img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/20240606195749.gif" srcset="/img/loading.gif" lazyload alt="Go 实现演示"></p>
+<h2 id="go-服务端">Go 服务端</h2>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/20240606195749.gif" srcset="/img/loading.gif" lazyload
+alt="Go 实现演示" />
+<figcaption aria-hidden="true">Go 实现演示</figcaption>
+</figure>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;fmt&quot;</span><br>	<span class="hljs-string">&quot;log&quot;</span><br>	<span class="hljs-string">&quot;net/http&quot;</span><br>	<span class="hljs-string">&quot;time&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">sseHandler</span><span class="hljs-params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;<br>	<span class="hljs-comment">// 设置头部信息，确保允许跨域，并且告诉浏览器这是一个事件流</span><br>	w.Header().Set(<span class="hljs-string">&quot;Content-Type&quot;</span>, <span class="hljs-string">&quot;text/event-stream&quot;</span>)<br>	w.Header().Set(<span class="hljs-string">&quot;Cache-Control&quot;</span>, <span class="hljs-string">&quot;no-cache&quot;</span>)<br>	w.Header().Set(<span class="hljs-string">&quot;Connection&quot;</span>, <span class="hljs-string">&quot;keep-alive&quot;</span>)<br>	w.Header().Set(<span class="hljs-string">&quot;Access-Control-Allow-Origin&quot;</span>, <span class="hljs-string">&quot;*&quot;</span>)<br><br>	<span class="hljs-comment">// 不断发送消息</span><br>	<span class="hljs-keyword">for</span> &#123;<br>		<span class="hljs-comment">// 生成服务器时间，并发送给客户端</span><br>		now := time.Now()<br>		<span class="hljs-comment">// 生成消息，格式为 data: &#123;content&#125; \n\n</span><br>		msg := fmt.Sprintf(<span class="hljs-string">&quot;data: %s\n\n&quot;</span>, now.Format(time.DateTime))<br>		<span class="hljs-comment">// 发送消息</span><br>		<span class="hljs-keyword">if</span> _, err := fmt.Fprintf(w, msg); err != <span class="hljs-literal">nil</span> &#123;<br>			log.Println(<span class="hljs-string">&quot;write error:&quot;</span>, err)<br>			<span class="hljs-keyword">break</span><br>		&#125;<br><br>		<span class="hljs-comment">// 刷新响应缓冲，确保即时发送</span><br>		flusher, ok := w.(http.Flusher)<br>		<span class="hljs-keyword">if</span> !ok &#123;<br>			log.Println(<span class="hljs-string">&quot;Streaming unsupported!&quot;</span>)<br>			<span class="hljs-keyword">break</span><br>		&#125;<br>		flusher.Flush()<br><br>		<span class="hljs-comment">// 每秒发送一次</span><br>		time.Sleep(<span class="hljs-number">1</span> * time.Second)<br>	&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	http.HandleFunc(<span class="hljs-string">&quot;/events&quot;</span>, sseHandler)<br>	log.Println(<span class="hljs-string">&quot;Server started on port 8000...&quot;</span>)<br>	log.Fatal(http.ListenAndServe(<span class="hljs-string">&quot;:8000&quot;</span>, <span class="hljs-literal">nil</span>))<br>&#125;<br></code></pre></td></tr></table></figure>
 
                 
