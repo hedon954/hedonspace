@@ -35,7 +35,7 @@
   
   
   <entry>
-    <title>Go 中的 Map 与 Slice：深入理解扩容机制与传参行为</title>
+    <title>深入 Go 语言核心：map 和 slice 的传参有什么不同</title>
     <link href="/2025/02/14/go-slice-vs-map/"/>
     <url>/2025/02/14/go-slice-vs-map/</url>
     
@@ -938,11 +938,11 @@
       
       <tag>Kafka</tag>
       
+      <tag>部署</tag>
+      
       <tag>中间件</tag>
       
       <tag>消息队列</tag>
-      
-      <tag>部署</tag>
       
     </tags>
     
@@ -969,11 +969,11 @@
       
       <tag>Kafka</tag>
       
+      <tag>部署</tag>
+      
       <tag>中间件</tag>
       
       <tag>消息队列</tag>
-      
-      <tag>部署</tag>
       
     </tags>
     
