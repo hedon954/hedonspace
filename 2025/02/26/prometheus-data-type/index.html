@@ -1,0 +1,1005 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/hedon.png">
+  <link rel="icon" href="/img/hedon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Hedon Wang">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本文介绍了 Prometheus 的四大数据类型及其 PromQL 查询语言，帮助开发团队构建强大的可观测性系统。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="服务监控丨Prometheus 四大数据类型详解">
+<meta property="og:url" content="https://hedon.top/2025/02/26/prometheus-data-type/index.html">
+<meta property="og:site_name" content="HedonSpace">
+<meta property="og:description" content="本文介绍了 Prometheus 的四大数据类型及其 PromQL 查询语言，帮助开发团队构建强大的可观测性系统。">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-02-26T07:52:10.000Z">
+<meta property="article:modified_time" content="2025-02-26T08:00:16.300Z">
+<meta property="article:author" content="Hedon Wang">
+<meta property="article:tag" content="prometheus">
+<meta property="article:tag" content="服务监控">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>服务监控丨Prometheus 四大数据类型详解 - HedonSpace</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"hedon.top","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":30,"cursorChar":"_","loop":false,"scope":["home"]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":4},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"Eig99zG5BYQGKXxcMOU7DH7e-gzGzoHsz","app_key":"dBP7lew0wt2GQdNdo6t2EE5m","server_url":"https://eig99zg5.lc-cn-n1-shared.com","path":"window.location.pathname","ignore_local":true}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+    <!-- Google tag (gtag.js) -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        Fluid.utils.createScript("https://www.googletagmanager.com/gtag/js?id=", function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+          gtag('js', new Date());
+          gtag('config', '');
+        });
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.0.0"><link rel="alternate" href="/atom.xml" title="HedonSpace" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>HedonSpace</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>Home</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>Archives</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>Categories</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>Tags</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>About</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/banner/prometheus-data-type.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">服务监控丨Prometheus 四大数据类型详解</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        Hedon Wang
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-02-26 15:52" pubdate>
+          2025-02-26 15:52
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          10k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          26 mins
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="leancloud-page-views"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">服务监控丨Prometheus 四大数据类型详解</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="前言">前言</h2>
+<p>在微服务和云原生架构的世界中，一套强大的监控系统是保障服务稳定性的基石。Prometheus
+作为 CNCF
+的明星项目，凭借其简单高效的特性，已成为事实上的云原生监控标准。本文将深入剖析
+Prometheus 的四大数据类型及其 PromQL
+查询语言，帮助开发团队构建强大的可观测性系统。</p>
+<h2 id="结论先行prometheus-四大数据类型速览">结论先行：Prometheus
+四大数据类型速览</h2>
+<table style="width:100%;">
+
+<thead>
+<tr class="header">
+<th>特性</th>
+<th>Counter</th>
+<th>Gauge</th>
+<th>Histogram</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>定义</strong></td>
+<td>只增不减的累积计数器</td>
+<td>可增可减的瞬时值</td>
+<td>观测值分布的分桶统计</td>
+<td>客户端计算的分位数统计</td>
+</tr>
+<tr class="even">
+<td><strong>重置行为</strong></td>
+<td>服务重启时归零</td>
+<td>保持当前值</td>
+<td>桶计数归零</td>
+<td>计数归零</td>
+</tr>
+<tr class="odd">
+<td><strong>典型应用</strong></td>
+<td>请求计数、错误数、流量统计</td>
+<td>温度、内存使用、连接数</td>
+<td>请求延迟、响应大小</td>
+<td>请求延迟、队列等待时间</td>
+</tr>
+<tr class="even">
+<td><strong>数据点</strong></td>
+<td>单一值</td>
+<td>单一值</td>
+<td>_bucket、_sum、count</td>
+<td>{quantile="x"}、_sum、_count</td>
+</tr>
+<tr class="odd">
+<td><strong>查询重点</strong></td>
+<td>rate()、increase()</td>
+<td>直接使用、预测函数</td>
+<td>histogram_quantile()</td>
+<td>直接读取分位数</td>
+</tr>
+<tr class="even">
+<td><strong>分布式聚合</strong></td>
+<td>可以（sum、rate）</td>
+<td>可以（avg、max、min）</td>
+<td>可以（百分位也可聚合）</td>
+<td>有限（分位数不可聚合）</td>
+</tr>
+<tr class="odd">
+<td><strong>资源消耗</strong></td>
+<td>低</td>
+<td>低</td>
+<td>中（依赖桶数量）</td>
+<td>中（客户端计算）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="一prometheus-核心数据类型详解">一、Prometheus
+核心数据类型详解</h2>
+<h3 id="counter计数器持续增长的累积值">1.
+Counter（计数器）：持续增长的累积值</h3>
+<p>Counter
+是最简单但也最常用的指标类型，代表一个只增不减的累积数值。每当事件发生，计数器增加；当监控目标重启时，计数器归零。</p>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>API 请求总数</li>
+<li>错误发生次数</li>
+<li>处理任务的数量</li>
+<li>网络流量字节数</li>
+</ul>
+<p><strong>正确的代码实现</strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// 声明带标签的计数器</span><br>requestCounter := prometheus.NewCounterVec(<br>    prometheus.CounterOpts&#123;<br>        Name: <span class="hljs-string">&quot;http_requests_total&quot;</span>,<br>        Help: <span class="hljs-string">&quot;Total number of HTTP requests&quot;</span>,<br>    &#125;,<br>    []<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;method&quot;</span>, <span class="hljs-string">&quot;path&quot;</span>, <span class="hljs-string">&quot;status&quot;</span>&#125;, <span class="hljs-comment">// 定义标签维度</span><br>)<br>prometheus.MustRegister(requestCounter)<br><br><span class="hljs-comment">// 使用标签记录请求</span><br>requestCounter.WithLabelValues(<span class="hljs-string">&quot;GET&quot;</span>, <span class="hljs-string">&quot;/api/users&quot;</span>, <span class="hljs-string">&quot;200&quot;</span>).Inc()<br></code></pre></td></tr></table></figure>
+<p><strong>PromQL 查询技巧</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 每秒请求率（5分钟窗口）<br>rate(http_requests_total&#123;status=&quot;200&quot;&#125;[5m])<br><br># 错误率计算<br>sum(rate(http_requests_total&#123;status=~&quot;5..&quot;&#125;[5m])) / sum(rate(http_requests_total[5m]))<br><br># 1小时内的请求增量<br>increase(http_requests_total[1h])<br></code></pre></td></tr></table></figure>
+<p><strong>最佳实践</strong>：</p>
+<ul>
+<li>永远不要直接使用 Counter 的原始值，总是使用 <code>rate()</code> 或
+<code>increase()</code></li>
+<li>使用有意义的标签进行多维度分析，但避免高基数标签</li>
+<li>Counter 重置（如服务重启）会被 <code>rate()</code> 函数自动处理</li>
+</ul>
+<h3 id="gauge仪表盘可变的瞬时值">2. Gauge（仪表盘）：可变的瞬时值</h3>
+<p>Gauge 表示一个可增可减的瞬时测量值，反映系统的当前状态。</p>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>内存使用量</li>
+<li>CPU 使用率</li>
+<li>当前活跃连接数</li>
+<li>队列深度</li>
+<li>温度等物理量</li>
+</ul>
+<p><strong>正确的代码实现</strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// 声明带标签的仪表盘</span><br>memoryGauge := prometheus.NewGaugeVec(<br>    prometheus.GaugeOpts&#123;<br>        Name: <span class="hljs-string">&quot;app_memory_usage_bytes&quot;</span>,<br>        Help: <span class="hljs-string">&quot;Current memory usage in bytes&quot;</span>,<br>    &#125;,<br>    []<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;component&quot;</span>, <span class="hljs-string">&quot;instance&quot;</span>&#125;,<br>)<br>prometheus.MustRegister(memoryGauge)<br><br><span class="hljs-comment">// 设置当前值</span><br>memoryGauge.WithLabelValues(<span class="hljs-string">&quot;api-server&quot;</span>, <span class="hljs-string">&quot;instance-1&quot;</span>).Set(<span class="hljs-type">float64</span>(getCurrentMemoryUsage()))<br></code></pre></td></tr></table></figure>
+<p><strong>PromQL 查询技巧</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 直接使用当前值<br>app_memory_usage_bytes&#123;component=&quot;api-server&quot;&#125;<br><br># 统计聚合<br>avg_over_time(app_memory_usage_bytes[1h])<br>max_over_time(app_memory_usage_bytes[24h])<br><br># 趋势预测（线性回归）<br>predict_linear(app_memory_usage_bytes[6h], 4 * 3600)<br><br># 计算变化率<br>(app_memory_usage_bytes - app_memory_usage_bytes offset 1h) / app_memory_usage_bytes offset 1h<br></code></pre></td></tr></table></figure>
+<p><strong>最佳实践</strong>：</p>
+<ul>
+<li>Gauge 可以直接使用其瞬时值，不需要像 Counter 那样使用 rate</li>
+<li>对于容易波动的指标，考虑使用 <code>avg_over_time</code>
+平滑数据</li>
+<li>利用 <code>predict_linear</code> 进行容量规划和趋势预测</li>
+</ul>
+<h3 id="histogram直方图观测值分布的分桶统计">3.
+Histogram（直方图）：观测值分布的分桶统计</h3>
+<p>Histogram
+允许对观测值（如请求延迟）进行分布式统计，将数据分散到预定义的桶中，是分析性能分布的理想工具。</p>
+<p><strong>自动生成的指标</strong>：</p>
+<ul>
+<li><code>&lt;metric&gt;_bucket&#123;le="&lt;upper bound&gt;"&#125;</code>:
+小于等于特定阈值的观测值计数</li>
+<li><code>&lt;metric&gt;_sum</code>: 所有观测值的总和</li>
+<li><code>&lt;metric&gt;_count</code>: 观测值总数</li>
+</ul>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>请求延迟分布</li>
+<li>响应大小分布</li>
+<li>批处理任务执行时间</li>
+<li>任何需要百分位数分析的场景</li>
+</ul>
+<p><strong>正确的代码实现</strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// 声明带标签的直方图</span><br>durationHistogram := prometheus.NewHistogramVec(<br>    prometheus.HistogramOpts&#123;<br>        Name:    <span class="hljs-string">&quot;http_request_duration_seconds&quot;</span>,<br>        Help:    <span class="hljs-string">&quot;HTTP request duration in seconds&quot;</span>,<br>        Buckets: prometheus.ExponentialBuckets(<span class="hljs-number">0.001</span>, <span class="hljs-number">2</span>, <span class="hljs-number">10</span>), <span class="hljs-comment">// 从1ms开始指数增长</span><br>    &#125;,<br>    []<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;method&quot;</span>, <span class="hljs-string">&quot;path&quot;</span>&#125;,<br>)<br>prometheus.MustRegister(durationHistogram)<br><br><span class="hljs-comment">// 记录请求延迟</span><br>durationHistogram.WithLabelValues(<span class="hljs-string">&quot;GET&quot;</span>, <span class="hljs-string">&quot;/api/users&quot;</span>).Observe(responseTime)<br></code></pre></td></tr></table></figure>
+<p><strong>PromQL 查询技巧</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 计算平均响应时间<br>rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m])<br><br># 计算P90延迟<br>histogram_quantile(0.9, rate(http_request_duration_seconds_bucket[5m]))<br><br># 按API路径分析P95延迟<br>histogram_quantile(0.95, sum by(path, le) (rate(http_request_duration_seconds_bucket[5m])))<br><br># 计算SLO：延迟小于100ms的请求比例<br>sum(rate(http_request_duration_seconds_bucket&#123;le=&quot;0.1&quot;&#125;[5m])) / sum(rate(http_request_duration_seconds_count[5m]))<br></code></pre></td></tr></table></figure>
+<p><strong>最佳实践</strong>：</p>
+<ul>
+<li>仔细设计桶边界，覆盖关键分位数区域</li>
+<li>对于延迟指标，通常使用指数桶比线性桶更合理</li>
+<li>利用 <code>histogram_quantile</code> 计算任意分位数</li>
+<li>桶的数量会影响存储和性能，权衡精度和开销</li>
+</ul>
+<h3 id="summary摘要客户端计算的分位数统计">4.
+Summary（摘要）：客户端计算的分位数统计</h3>
+<p>Summary 与 Histogram
+类似，但在客户端直接计算并存储分位数，无需服务器端计算。</p>
+<p><strong>自动生成的指标</strong>：</p>
+<ul>
+<li><code>&lt;metric&gt;&#123;quantile="&lt;φ&gt;"&#125;</code>: φ 分位数的值</li>
+<li><code>&lt;metric&gt;_sum</code>: 所有观测值的总和</li>
+<li><code>&lt;metric&gt;_count</code>: 观测值总数</li>
+</ul>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>需要高精度分位数的场景</li>
+<li>客户端计算分位数更高效的情况</li>
+<li>对服务器端聚合要求不高的场景</li>
+</ul>
+<p><strong>正确的代码实现</strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// 声明带标签的摘要</span><br>durationSummary := prometheus.NewSummaryVec(<br>    prometheus.SummaryOpts&#123;<br>        Name:       <span class="hljs-string">&quot;http_request_duration_seconds_summary&quot;</span>,<br>        Help:       <span class="hljs-string">&quot;HTTP request duration in seconds&quot;</span>,<br>        Objectives: <span class="hljs-keyword">map</span>[<span class="hljs-type">float64</span>]<span class="hljs-type">float64</span>&#123;<span class="hljs-number">0.5</span>: <span class="hljs-number">0.05</span>, <span class="hljs-number">0.9</span>: <span class="hljs-number">0.01</span>, <span class="hljs-number">0.99</span>: <span class="hljs-number">0.001</span>&#125;,<br>    &#125;,<br>    []<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;method&quot;</span>, <span class="hljs-string">&quot;path&quot;</span>&#125;,<br>)<br>prometheus.MustRegister(durationSummary)<br><br><span class="hljs-comment">// 记录请求延迟</span><br>durationSummary.WithLabelValues(<span class="hljs-string">&quot;POST&quot;</span>, <span class="hljs-string">&quot;/api/login&quot;</span>).Observe(responseTime)<br></code></pre></td></tr></table></figure>
+<p><strong>PromQL 查询技巧</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 直接读取P99延迟<br>http_request_duration_seconds_summary&#123;quantile=&quot;0.99&quot;, method=&quot;GET&quot;, path=&quot;/api/users&quot;&#125;<br><br># 计算平均响应时间<br>rate(http_request_duration_seconds_summary_sum[5m]) / rate(http_request_duration_seconds_summary_count[5m])<br><br># 每个服务的中位数延迟<br>max by(service) (http_request_duration_seconds_summary&#123;quantile=&quot;0.5&quot;&#125;)<br></code></pre></td></tr></table></figure>
+<p><strong>最佳实践与限制</strong>：</p>
+<ul>
+<li>Summary 预计算的分位数不能跨实例聚合（这是关键限制）</li>
+<li>适用于分位数精度要求高且实例相对独立的场景</li>
+<li>客户端计算分位数会增加应用资源消耗</li>
+<li>分位数设置后不可更改，需提前规划好监控需求</li>
+</ul>
+<h2 id="二promql-查询语言精通">二、PromQL 查询语言精通</h2>
+<p>PromQL 是 Prometheus
+的强大武器，掌握它能让我们精确提取所需的监控数据。</p>
+<h3 id="基础查询与标签选择">1. 基础查询与标签选择</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 基本查询与精确匹配<br>http_requests_total&#123;status=&quot;200&quot;, method=&quot;GET&quot;&#125;<br><br># 正则表达式匹配<br>http_requests_total&#123;path=~&quot;/api/v1/.+&quot;, method!=&quot;OPTIONS&quot;&#125;<br><br># 范围查询（返回时间序列）<br>http_requests_total&#123;status=&quot;500&quot;&#125;[5m]<br></code></pre></td></tr></table></figure>
+<h3 id="操作符与函数">2. 操作符与函数</h3>
+<p><strong>算术运算符</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 计算内存使用率百分比<br>100 * (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes<br></code></pre></td></tr></table></figure>
+<p><strong>聚合函数</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 按服务和路径分组求和<br>sum by(service, path) (rate(http_requests_total[5m]))<br><br># 丢弃instance标签求最大值<br>max without(instance) (node_cpu_seconds_total)<br></code></pre></td></tr></table></figure>
+<p><strong>瞬时向量函数</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 标签替换<br>label_replace(up, &quot;host&quot;, &quot;$1&quot;, &quot;instance&quot;, &quot;(.*):.*&quot;)<br><br># 按标签分组取topk<br>topk by(path) (5, http_request_duration_seconds_sum / http_request_duration_seconds_count)<br></code></pre></td></tr></table></figure>
+<h3 id="复杂查询模式">3. 复杂查询模式</h3>
+<p><strong>SLI/SLO 监控</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 服务可用性SLI<br>sum(rate(http_requests_total&#123;status=~&quot;2..|3..&quot;&#125;[5m])) / sum(rate(http_requests_total[5m]))<br><br># 延迟SLO<br>histogram_quantile(0.99, sum by(le) (rate(http_request_duration_seconds_bucket[5m]))) &lt; 0.3<br></code></pre></td></tr></table></figure>
+<p><strong>异常检测</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 相对于历史同期的异常增长<br>rate(http_requests_total[5m])<br>  &gt; 2 * avg_over_time(rate(http_requests_total[5m])[1d:5m] offset 1d)<br></code></pre></td></tr></table></figure>
+<p><strong>预测分析</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 磁盘空间预测<br>predict_linear(node_filesystem_free_bytes&#123;mountpoint=&quot;/&quot;&#125;[6h], 7 * 24 * 3600) &lt; 10 * 1024 * 1024 * 1024<br></code></pre></td></tr></table></figure>
+<h2 id="三实战应用场景">三、实战应用场景</h2>
+<h3 id="服务健康度监控">1. 服务健康度监控</h3>
+<p><strong>RED 方法实现</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs promql"># Rate - 请求率<br>sum by(service) (rate(http_requests_total[5m]))<br><br># Error - 错误率<br>sum by(service) (rate(http_requests_total&#123;status=~&quot;5..&quot;&#125;[5m])) / sum by(service) (rate(http_requests_total[5m]))<br><br># Duration - P95延迟<br>histogram_quantile(0.95, sum by(service, le) (rate(http_request_duration_seconds_bucket[5m])))<br></code></pre></td></tr></table></figure>
+<p><strong>服务依赖健康度</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 数据库查询错误率<br>sum(rate(database_query_errors_total[5m])) / sum(rate(database_queries_total[5m]))<br><br># 第三方API调用延迟<br>histogram_quantile(0.99, sum by(api_name, le) (rate(api_request_duration_seconds_bucket[5m])))<br></code></pre></td></tr></table></figure>
+<h3 id="性能瓶颈分析">2. 性能瓶颈分析</h3>
+<p><strong>热点 API 发现</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 延迟最高的10个接口<br>topk(10,<br>  histogram_quantile(0.95, sum by(method, path, le) (rate(http_request_duration_seconds_bucket[5m])))<br>)<br><br># 请求量最大的接口<br>topk(10, sum by(method, path) (rate(http_requests_total[5m])))<br></code></pre></td></tr></table></figure>
+<p><strong>数据库性能分析</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 平均查询时间趋势<br>rate(db_query_duration_seconds_sum[5m]) / rate(db_query_duration_seconds_count[5m])<br><br># 慢查询比例<br>sum(rate(db_query_duration_seconds_bucket&#123;le=&quot;+Inf&quot;&#125;[5m])) - sum(rate(db_query_duration_seconds_bucket&#123;le=&quot;0.1&quot;&#125;[5m])) / sum(rate(db_query_duration_seconds_bucket&#123;le=&quot;+Inf&quot;&#125;[5m]))<br></code></pre></td></tr></table></figure>
+<h3 id="容量规划与告警">3. 容量规划与告警</h3>
+<p><strong>资源预测</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs promql"># CPU使用率预测<br>predict_linear(avg by(instance) (rate(node_cpu_seconds_total&#123;mode!=&quot;idle&quot;&#125;[6h])) [3d:], 7 * 24 * 3600) &gt; 0.85<br><br># 内存压力告警<br>(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes &gt; 0.9<br></code></pre></td></tr></table></figure>
+<p><strong>流量容量规划</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 带宽使用预测<br>predict_linear(rate(node_network_transmit_bytes_total[12h])[7d:], 30 * 24 * 3600)<br></code></pre></td></tr></table></figure>
+<h2 id="四最佳实践与性能优化">四、最佳实践与性能优化</h2>
+<h3 id="指标命名与标签设计">1. 指标命名与标签设计</h3>
+<p><strong>命名规范</strong>：</p>
+<ul>
+<li>使用 snake_case</li>
+<li>包含单位后缀（_bytes, _seconds, _total）</li>
+<li>保持风格一致性</li>
+</ul>
+<p><strong>标签最佳实践</strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// 合理设计标签维度</span><br>apiLatency := prometheus.NewHistogramVec(<br>    prometheus.HistogramOpts&#123;<br>        Name:    <span class="hljs-string">&quot;api_request_duration_seconds&quot;</span>,<br>        Help:    <span class="hljs-string">&quot;API request duration in seconds&quot;</span>,<br>        Buckets: prometheus.ExponentialBuckets(<span class="hljs-number">0.001</span>, <span class="hljs-number">2</span>, <span class="hljs-number">10</span>),<br>    &#125;,<br>    []<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;service&quot;</span>, <span class="hljs-string">&quot;endpoint&quot;</span>, <span class="hljs-string">&quot;status_code&quot;</span>&#125;, <span class="hljs-comment">// 合理的低基数标签</span><br>)<br><br><span class="hljs-comment">// 不可变标签使用ConstLabels</span><br>prometheus.NewGaugeVec(<br>    prometheus.GaugeOpts&#123;<br>        Name:        <span class="hljs-string">&quot;service_info&quot;</span>,<br>        Help:        <span class="hljs-string">&quot;Service information&quot;</span>,<br>        ConstLabels: prometheus.Labels&#123;<span class="hljs-string">&quot;version&quot;</span>: <span class="hljs-string">&quot;v2.1.3&quot;</span>, <span class="hljs-string">&quot;environment&quot;</span>: <span class="hljs-string">&quot;production&quot;</span>&#125;,<br>    &#125;,<br>    []<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;instance&quot;</span>&#125;,<br>)<br></code></pre></td></tr></table></figure>
+<h3 id="客户端性能优化">2. 客户端性能优化</h3>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-comment">// 缓存常用标签组合以提高性能</span><br>getCounter := requestCounter.WithLabelValues(<span class="hljs-string">&quot;GET&quot;</span>, <span class="hljs-string">&quot;/api/users&quot;</span>, <span class="hljs-string">&quot;200&quot;</span>)<br><span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">100</span>; i++ &#123;<br>    getCounter.Inc() <span class="hljs-comment">// 重用标签组合，避免重复创建</span><br>&#125;<br><br><span class="hljs-comment">// 批量更新方式</span><br><span class="hljs-keyword">var</span> rpcDurations = prometheus.NewSummaryVec(<br>    prometheus.SummaryOpts&#123;<br>        Name:       <span class="hljs-string">&quot;rpc_durations_seconds&quot;</span>,<br>        Help:       <span class="hljs-string">&quot;RPC latency distributions.&quot;</span>,<br>        Objectives: <span class="hljs-keyword">map</span>[<span class="hljs-type">float64</span>]<span class="hljs-type">float64</span>&#123;<span class="hljs-number">0.5</span>: <span class="hljs-number">0.05</span>, <span class="hljs-number">0.9</span>: <span class="hljs-number">0.01</span>, <span class="hljs-number">0.99</span>: <span class="hljs-number">0.001</span>&#125;,<br>    &#125;,<br>    []<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;service&quot;</span>&#125;,<br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">ObserveBatch</span><span class="hljs-params">(durations <span class="hljs-keyword">map</span>[<span class="hljs-type">string</span>]<span class="hljs-type">float64</span>)</span></span> &#123;<br>    <span class="hljs-keyword">for</span> service, duration := <span class="hljs-keyword">range</span> durations &#123;<br>        rpcDurations.WithLabelValues(service).Observe(duration)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="查询优化">3. 查询优化</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs promql"># 优化前：高基数查询<br>sum(rate(http_requests_total&#123;path=~&quot;/api/.*&quot;&#125;[5m])) by (path, method, status)<br><br># 优化后：降低基数，按需聚合<br>sum(rate(http_requests_total&#123;path=~&quot;/api/.*&quot;&#125;[5m])) by (method, status)<br><br># 优化聚合顺序（先聚合再求和）<br>sum(<br>  avg by(instance) (rate(node_cpu_seconds_total&#123;mode!=&quot;idle&quot;&#125;[5m]))<br>)<br></code></pre></td></tr></table></figure>
+<h2 id="五常见陷阱与解决方案">五、常见陷阱与解决方案</h2>
+<h3 id="高基数问题">1. 高基数问题</h3>
+<p><strong>问题</strong>：标签组合过多导致时间序列爆炸
+<strong>解决方案</strong>：</p>
+<ul>
+<li>限制标签基数，避免使用 UserID、SessionID 等作为标签</li>
+<li>使用<code>label_replace</code>和正则表达式转换高基数标签</li>
+<li>考虑使用 Exemplars 而非标签存储高基数数据</li>
+</ul>
+<h3 id="数据类型选择误区">2. 数据类型选择误区</h3>
+<p><strong>Counter vs Gauge</strong>：请求数应使用 Counter 而非 Gauge
+<strong>Histogram vs Summary</strong>：需要聚合分析请使用
+Histogram，精确分位数可选 Summary</p>
+<h3 id="查询性能问题">3. 查询性能问题</h3>
+<p><strong>问题</strong>：复杂查询导致 Prometheus 高负载
+<strong>解决方案</strong>：</p>
+<ul>
+<li>使用记录规则预计算常用查询</li>
+<li>合理设置 scrape 间隔，避免过度采集</li>
+<li>对高请求量接口使用客户端聚合</li>
+</ul>
+<h2 id="总结与展望">总结与展望</h2>
+<p>Prometheus 的四种数据类型各有所长：Counter 适合累积事件计数，Gauge
+适合瞬时状态测量，Histogram 适合分布统计和百分位分析，Summary
+适合客户端精确分位数计算。与之配合的 PromQL
+提供了强大的数据查询和分析能力，共同构成了完整的监控解决方案。</p>
+<p>随着云原生技术的发展，Prometheus 生态也在不断壮大，与
+Grafana、Alertmanager、Thanos
+等工具集成，能够构建更完善的监控告警平台。在微服务架构中，结合
+RED（Rate、Error、Duration）和
+USE（Utilization、Saturation、Errors）方法论，可以构建全面的可观测性系统。</p>
+<p>无论你是刚开始使用 Prometheus
+的新手，还是寻求优化监控系统的资深工程师，希望本文对你理解和应用
+Prometheus
+有所帮助。记住，好的监控不仅能及时发现问题，更能预测和防范问题，最终服务于业务可靠性和用户体验的提升。</p>
+<hr />
+<p><em>参考资源:</em></p>
+<ul>
+<li>Prometheus 官方文档: https://prometheus.io/docs/</li>
+<li>Google SRE 书籍:
+https://sre.google/sre-book/monitoring-distributed-systems/</li>
+<li>Prometheus 实战: https://prometheusbook.com/</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%9C%8D%E5%8A%A1%E7%9B%91%E6%8E%A7/" class="category-chain-item">服务监控</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/prometheus/" class="print-no-link">#prometheus</a>
+      
+        <a href="/tags/%E6%9C%8D%E5%8A%A1%E7%9B%91%E6%8E%A7/" class="print-no-link">#服务监控</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>服务监控丨Prometheus 四大数据类型详解</div>
+      <div>https://hedon.top/2025/02/26/prometheus-data-type/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Hedon Wang</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>2025-02-26</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>Licensed under</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/02/15/go-action-jwt/" title="在 Go 项目中实现 JWT 用户认证与续期机制">
+                        <span class="hidden-mobile">在 Go 项目中实现 JWT 用户认证与续期机制</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"hedon954/hedonspace","repo-id":"R_kgDOKt17sQ","category":"Q&A","category-id":"DIC_kwDOKt17sc4CbAt-","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":0,"input-position":"top","lang":"en"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>Table of Contents</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="leancloud-site-pv-container" style="display: none">
+        总访问量 
+        <span id="leancloud-site-pv"></span>
+         次
+      </span>
+    
+    
+      <span id="leancloud-site-uv-container" style="display: none">
+        总访客数 
+        <span id="leancloud-site-uv"></span>
+         人
+      </span>
+    
+    
+
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/leancloud.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>
