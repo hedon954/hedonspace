@@ -1,0 +1,1024 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/hedon.png">
+  <link rel="icon" href="/img/hedon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Hedon Wang">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="通过一个 HTTP 请求与响应，深入探索背后的网络通信机制，从 DNS 解析、TCP 连接到数据封装与传输，全面解析数据包如何穿越局域网与公网到达目标服务器。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="网络数据包的完整旅程：从发送到接收的全过程">
+<meta property="og:url" content="https://hedon.top/2025/03/01/net-data-journey/index.html">
+<meta property="og:site_name" content="HedonSpace">
+<meta property="og:description" content="通过一个 HTTP 请求与响应，深入探索背后的网络通信机制，从 DNS 解析、TCP 连接到数据封装与传输，全面解析数据包如何穿越局域网与公网到达目标服务器。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/cn1.png">
+<meta property="article:published_time" content="2025-03-01T04:58:37.000Z">
+<meta property="article:modified_time" content="2025-03-01T06:37:56.027Z">
+<meta property="article:author" content="Hedon Wang">
+<meta property="article:tag" content="计算机网络">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/cn1.png">
+  
+  
+  
+  <title>网络数据包的完整旅程：从发送到接收的全过程 - HedonSpace</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"hedon.top","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":30,"cursorChar":"_","loop":false,"scope":["home"]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":4},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"Eig99zG5BYQGKXxcMOU7DH7e-gzGzoHsz","app_key":"dBP7lew0wt2GQdNdo6t2EE5m","server_url":"https://eig99zg5.lc-cn-n1-shared.com","path":"window.location.pathname","ignore_local":true}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+    <!-- Google tag (gtag.js) -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        Fluid.utils.createScript("https://www.googletagmanager.com/gtag/js?id=", function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+          gtag('js', new Date());
+          gtag('config', '');
+        });
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.0.0"><link rel="alternate" href="/atom.xml" title="HedonSpace" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>HedonSpace</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>Home</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>Archives</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>Categories</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>Tags</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>About</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/banner/net-data-journey.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">网络数据包的完整旅程：从发送到接收的全过程</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        Hedon Wang
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-03-01 12:58" pubdate>
+          2025-03-01 12:58
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.1k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          16 mins
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="leancloud-page-views"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">网络数据包的完整旅程：从发送到接收的全过程</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>不知道你是否曾经好奇你发出的一个网络请求，最终是怎么到达对端，并将你想要的信息返回给你的。本文将通过一个
+HTTP
+请求与响应，从一个比较宏观的角度来梳理下一个数据包在网络中的旅途，旨在帮助笔者和各位读者建立起对计算机网络模型一个比较全面的认知。</p>
+<blockquote>
+<p>本文参考极客时间《网络架构实战课（谢友鹏）》，再根据笔者的知识面、按照个人理解，补充更多丰富具体的内容。</p>
+</blockquote>
+<h1 id="实战">实战</h1>
+<p>好，那我们直接开始，我们先使用 <code>curl</code> 来发起一个 HTTP
+请求，看看这过程中发生了什么：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">curl -o /dev/null -v https://example.com<br></code></pre></td></tr></table></figure>
+<p>在笔者的 mac 机器上，这行命令的输出如下：</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250301131247066.png" srcset="/img/loading.gif" lazyload
+alt="curl https//example.com 结果分析" />
+<figcaption aria-hidden="true">curl https//example.com
+结果分析</figcaption>
+</figure>
+<p>当我们发起请求时，首先会对 <code>example.com</code>
+进行域名解析，分别尝试解析到它的 <code>IPv6</code> 和
+<code>IPv4</code>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">* IPv6: (none)<br>* IPv4: 23.215.0.138, 96.7.128.198, 23.192.228.80, 23.192.228.84, 23.215.0.136, 96.7.128.175<br></code></pre></td></tr></table></figure>
+<p>因为我们使用的是 <code>https</code> 协议，所以会尝试跟这些地址的
+<code>443</code> 端口建立 <code>TCP</code> 连接，（如果是
+<code>https</code> 则跟 <code>80</code> 端口），并进行
+<code>TLS 握手验证</code>，如果成功了，则会建立 <code>TCP</code>
+连接。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs go">*   Trying <span class="hljs-number">23.215</span><span class="hljs-number">.0</span><span class="hljs-number">.138</span>:<span class="hljs-number">443.</span>..<br>...[TLS handshake]<br>* Connected to example.com (<span class="hljs-number">23.215</span><span class="hljs-number">.0</span><span class="hljs-number">.138</span>) port <span class="hljs-number">443</span><br></code></pre></td></tr></table></figure>
+<p>建立连接后，就开始发送 <code>HTTP</code> 请求，这里使用的是 HTTP2
+协议。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs bash">* using HTTP/2<br>  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* [HTTP/2] [1] OPENED stream <span class="hljs-keyword">for</span> https://example.com/<br>* [HTTP/2] [1] [:method: GET]<br>* [HTTP/2] [1] [:scheme: https]<br>* [HTTP/2] [1] [:authority: example.com]<br>* [HTTP/2] [1] [:path: /]<br>* [HTTP/2] [1] [user-agent: curl/8.10.1]<br>* [HTTP/2] [1] [accept: */*]<br>&#125; [5 bytes data]<br>&gt; GET / HTTP/2<br>&gt; Host: example.com<br>&gt; User-Agent: curl/8.10.1<br>&gt; Accept: */*<br>&gt;<br>* Request completely sent off<br></code></pre></td></tr></table></figure>
+<p>最后，服务器返回了 HTTP 200 OK 的响应。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs bash">&#123; [5 bytes data]<br>* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):<br>&#123; [265 bytes data]<br>* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):<br>&#123; [265 bytes data]<br>&lt; HTTP/2 200<br>&lt; content-type: text/html<br>&lt; etag: <span class="hljs-string">&quot;84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134&quot;</span><br>&lt; last-modified: Mon, 13 Jan 2025 20:11:20 GMT<br>&lt; cache-control: max-age=1374<br>&lt; <span class="hljs-built_in">date</span>: Sat, 01 Mar 2025 05:01:03 GMT<br>&lt; alt-svc: h3=<span class="hljs-string">&quot;:443&quot;</span>; ma=93600,h3-29=<span class="hljs-string">&quot;:443&quot;</span>; ma=93600,quic=<span class="hljs-string">&quot;:443&quot;</span>; ma=93600; v=<span class="hljs-string">&quot;43&quot;</span><br>&lt; content-length: 1256<br>&lt;<br>&#125; [5 bytes data]<br>100  1256  100  1256    0     0   1172      0  0:00:01  0:00:01 --:--:--  1172<br>* Connection <span class="hljs-comment">#0 to host example.com left intact</span><br></code></pre></td></tr></table></figure>
+<p>要进一步了解网络数据包的细节，我们可以通过抓包工具进行分析。你可以使用
+<code>tcpdump</code> 抓取与 example.com 的通信数据包。</p>
+<p>运行如下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">sudo tcpdump host example.com -w example.com.pcap<br></code></pre></td></tr></table></figure>
+<p>然后再另外一个命令行窗口再次发送请求：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">curl -o /dev/null -v https://example.com<br></code></pre></td></tr></table></figure>
+<p>回到 <code>tcpdump</code> 的窗口并结束监听，我们就会得到
+<code>example.com.pcap</code> 的抓包文件，可以通过
+<code>Wireshark</code> 软件打开该文件：</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250301133015523.png" srcset="/img/loading.gif" lazyload
+alt="tcpdump 分析结果" />
+<figcaption aria-hidden="true">tcpdump 分析结果</figcaption>
+</figure>
+<h1 id="网络分层">网络分层</h1>
+<p>通过上述实验，我们可以清晰看到网络是分层的，主流的分层模型有 OSI
+七层模型和 TCP/IP 四层模型，它们的对应关系及常见的协议如下图所示：</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/OSI-vs-TCP.png" srcset="/img/loading.gif" lazyload
+alt="OSI-vs-TCP/IP" />
+<figcaption aria-hidden="true">OSI-vs-TCP/IP</figcaption>
+</figure>
+<p>我们在 Wireshark
+上方随便选择一个数据包，使用鼠标点击下方左侧的每一层，可以在右侧看到对应的层级数据。从链路层到应用层，每一层的数据都是对下一层的进一步封装。</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250301134103404.png" srcset="/img/loading.gif" lazyload
+alt="数据包封装" />
+<figcaption aria-hidden="true">数据包封装</figcaption>
+</figure>
+<p>在发送方，用户程序需要传输的数据会经过逐层封装。首先添加应用层的 HTTP
+Header，然后是传输层的 TCP Header，接着是网络层的 IP
+Header，最后在链路层添加以太网帧的帧头和帧尾，包括源 MAC 地址、目的 MAC
+地址等链路层信息，最终形成网络中传输的完整数据包。</p>
+<p>在接收方，数据包会按相反的顺序逐层解封装。接收设备从链路层开始解析数据，依次解读网络层、传输层和应用层的信息，最后将数据传递给接收方的应用程序。</p>
+<p>如下图所示：</p>
+<figure>
+<img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/cn1.png" srcset="/img/loading.gif" lazyload
+alt="数据包封装 &amp; 解析" />
+<figcaption aria-hidden="true">数据包封装 &amp; 解析</figcaption>
+</figure>
+<p>我们在 Wireshark
+中点开下面的每一层，可以看到如下信息，我在图标注了最重要的几个信息：<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250301135433547.png" srcset="/img/loading.gif" lazyload
+alt="网络数据包关键信息" /></p>
+<h1 id="网络之旅">网络之旅</h1>
+<p>经过上述实验，我们可以做个小总结：</p>
+<p>通过上述实验，我们可以清晰理解数据包的传输过程：</p>
+<ul>
+<li>HTTP
+请求是网络通信的应用层内容，它需要通过各层网络协议的封装才能实现端到端传输。</li>
+<li>从发送方角度，数据传输遵循一个明确的逻辑顺序：首先将域名（example.com）解析为
+IP 地址，然后基于该 IP 地址和目标端口（443）建立 TCP 连接，接着找到目标
+IP 的 MAC 地址，最终由网卡将完整封装的数据包发送到网络中。</li>
+<li>从接收方角度，服务器处理数据包的过程是一个自下而上的解封装过程：数据链路层接收到的帧包含源
+MAC 地址，网络层解析出 IPv4 地址和协议类型，传输层识别出 TCP
+协议和源端口号，最终在应用层获取并处理 HTTP
+请求数据。服务器根据这些信息构建响应，并按相反顺序封装返回给客户端。</li>
+</ul>
+<p>这种分层处理机制确保了网络通信的灵活性和可靠性，每层只需关注自己的职责，共同完成端到端的数据传输任务。</p>
+<p>好，那么这里就有 2 个最关键的问题：</p>
+<ol type="1">
+<li>如何通过域名获得 IP 地址？</li>
+<li>如何通过 IP 地址获取 MAC 地址？</li>
+</ol>
+<h2 id="dns-解析">DNS 解析</h2>
+<p>DNS（Domain Name
+System，域名系统）是互联网的一项核心服务，它允许我们使用易记的域名（如
+<code>example.com</code>）而不是数字 IP 地址（如
+<code>93.184.216.34</code>）来访问网站。</p>
+<p>当你在浏览器中输入一个域名时，DNS 解析按以下步骤进行：</p>
+<ol type="1">
+<li><p><strong>浏览器缓存检查</strong>：浏览器首先检查自己的缓存，看是否已经存储了该域名对应的
+IP 地址。</p></li>
+<li><p><strong>操作系统缓存检查</strong>：如果浏览器缓存中没有，系统会检查操作系统的
+DNS 缓存（如 Windows 的 DNS Client 服务）。</p></li>
+<li><p><strong>路由器缓存检查</strong>：若系统缓存中也没有，请求会被发送到你的路由器，它也维护着一个
+DNS 缓存。</p></li>
+<li><p><strong>ISP DNS
+服务器查询</strong>：如果以上缓存都未命中，请求会被发送到你的
+ISP（互联网服务提供商）的 DNS 服务器。</p></li>
+<li><p><strong>递归查询</strong>：ISP 的 DNS 服务器会执行递归查询：</p>
+<ul>
+<li>首先查询根域名服务器（Root DNS Server）</li>
+<li>根服务器会引导到顶级域名服务器（TLD DNS Server，如 .com, .net, .org
+等）</li>
+<li>顶级域名服务器会引导到权威域名服务器（Authoritative DNS
+Server）</li>
+<li>权威服务器会返回该域名的 IP 地址</li>
+</ul></li>
+<li><p><strong>结果返回与缓存</strong>：一旦获取到 IP
+地址，它会被沿着查询路径返回，并在各个层级上缓存一段时间（由 TTL
+值决定）。</p></li>
+</ol>
+<p>你可以使用以下工具查询 DNS 信息：</p>
+<ul>
+<li><strong>nslookup</strong>：<code>nslookup example.com</code></li>
+<li><strong>dig</strong>：<code>dig example.com</code></li>
+<li><strong>host</strong>：<code>host example.com</code></li>
+</ul>
+<p>这些工具可以帮助你了解域名的解析过程和结果。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs bash">➜  ~ host example.com<br>example.com has address 23.215.0.138<br>example.com has address 23.192.228.84<br>example.com has address 23.215.0.136<br>example.com has address 23.192.228.80<br>example.com has address 96.7.128.175<br>example.com has address 96.7.128.198<br>example.com has IPv6 address 2600:1408:ec00:36::1736:7f31<br>example.com has IPv6 address 2600:1406:3a00:21::173e:2e65<br>example.com has IPv6 address 2600:1406:3a00:21::173e:2e66<br>example.com has IPv6 address 2600:1406:bc00:53::b81e:94c8<br>example.com has IPv6 address 2600:1406:bc00:53::b81e:94ce<br>example.com has IPv6 address 2600:1408:ec00:36::1736:7f24<br>example.com mail is handled by 0 .<br></code></pre></td></tr></table></figure>
+<p>通过 DNS 解析将域名转换为 IP
+地址后，网络通信的下一步就是确定如何将数据包发送到目标 IP
+地址，这就需要用到 ARP 协议来获取目标设备的 MAC 地址。</p>
+<h2 id="穿越客户端局域网">穿越客户端局域网</h2>
+<p><strong>当我们发送一个网络请求时，数据包如何找到离开家庭/办公网络的"出口"？</strong></p>
+<p>数据包首先需要解决的是"该往哪走"的问题：</p>
+<ol type="1">
+<li><p><strong>问题：我需要直接联系目标设备还是找个"中介"？</strong></p>
+<p>解决方案：子网判断</p>
+<ul>
+<li>设备会比较目标 IP 与自己的 IP 和子网掩码</li>
+<li>就像判断收件人是不是住在同一个小区</li>
+</ul></li>
+<li><p><strong>问题：如何找到同一网络中的设备？</strong></p>
+<p>解决方案：ARP 协议</p>
+<ul>
+<li>类似于小区广播："谁是 202 号房的？请告诉我你的门牌号！"</li>
+<li>目标设备回应自己的 MAC 地址（设备的"身份证号"）</li>
+</ul></li>
+<li><p><strong>问题：目标在远方，如何离开本地网络？</strong></p>
+<p>解决方案：默认网关</p>
+<ul>
+<li>就像不认识远方收件人的地址，先交给小区门卫（路由器）</li>
+<li>数据包头上标注最终目的地 IP，但先送到网关的 MAC 地址</li>
+</ul></li>
+<li><p><strong>问题：数据如何在本地网络中转发？</strong></p>
+<p>解决方案：交换机的 MAC 地址表</p>
+<ul>
+<li>交换机就像小区内的快递员，记住了每家每户的门牌号</li>
+<li>它查表后将包裹精确送到对应的门口，不会打扰其他住户</li>
+</ul></li>
+</ol>
+<p>简单来说，数据包在本地网络中的旅程就像是快递先确认收件人是否在同一小区，如果是，直接送达；如果不是，则交给小区出口的保安，由他负责进一步转发。</p>
+<h2 id="穿越公网">穿越公网</h2>
+<p><strong>数据包离开了本地网络，如何在茫茫互联网中找到遥远的目标服务器？</strong></p>
+<p>数据包在互联网上的旅程就像一次跨国旅行：</p>
+<ol type="1">
+<li><p><strong>问题：如何从私人区域进入公共世界？</strong></p>
+<p>解决方案：NAT（网络地址转换）</p>
+<ul>
+<li><p>就像多人共用一个护照出国，本地设备共享一个公网 IP</p></li>
+<li><p>路由器会记住谁发了什么请求，回程时能送回正确的设备</p></li>
+</ul></li>
+<li><p><strong>问题：互联网如此庞大复杂，谁来管理这些网络？</strong></p>
+<p>解决方案：自治系统（Autonomous System, AS）</p>
+<ul>
+<li><p>AS 就像互联网世界的"国家"或"独立王国"</p></li>
+<li><p>每个 AS 由单一技术管理机构控制（如
+ISP、大企业或教育机构）</p></li>
+<li><p>你的数据包首先进入你的 ISP 所在的 AS，然后可能穿越多个
+AS</p></li>
+<li><p>每个 AS 有唯一的 AS 号（ASN），如 AS7018(AT&amp;T) 或
+AS8075(Microsoft)</p></li>
+</ul></li>
+<li><p><strong>问题：这些"网络王国"如何相互通信和合作？</strong></p>
+<p>解决方案：BGP 协议(边界网关协议)</p>
+<ul>
+<li><p>BGP 是 AS 之间的"外交语言"，用于宣告路由信息</p></li>
+<li><p>它告诉其他 AS："通过我可以到达这些网络"</p></li>
+<li><p>路由器根据 BGP 信息，决定数据包应该经过哪些 AS</p></li>
+</ul></li>
+<li><p><strong>问题：如何决定数据包在 AS 内部该走哪条路？</strong></p>
+<p>解决方案：内部路由协议</p>
+<ul>
+<li><p>AS 内部使用 OSPF 或 IS-IS 等协议来找到最佳路径</p></li>
+<li><p>路由器像城市中的交通指挥，根据"路况"决定下一个方向</p></li>
+</ul></li>
+<li><p><strong>问题：不同运营商之间如何连接？</strong></p>
+<p>解决方案：互联网交换中心（IXP）</p>
+<ul>
+<li><p>就像不同航空公司在大型枢纽机场交换乘客</p></li>
+<li><p>数据包在 IXP 从一个 AS “转机”到另一个 AS</p></li>
+<li><p>这减少了路径长度，提高了传输效率</p></li>
+</ul></li>
+<li><p><strong>问题：我能知道我的数据经过了哪些地方吗？</strong></p>
+<p>解决方案：路径追踪工具</p>
+<ul>
+<li><p>traceroute/tracert 就像给数据包装上 GPS</p></li>
+<li><p>你可以看到数据包穿越的不同 AS 和路由器</p></li>
+</ul></li>
+</ol>
+<p>互联网就像一个巨大的全球快递网络，你的数据包可能穿越多个国家、经过海底电缆，由不同的运营商接力传递，最终到达目的地的网络。</p>
+<h2 id="穿越服务端局域网">穿越服务端局域网</h2>
+<p><strong>数据包到达目标所在网络后，如何找到并到达最终的服务器？</strong></p>
+<p>数据包抵达目的地网络，就像国际快递到达目标城市，还需要最后一段"本地配送"：</p>
+<ol type="1">
+<li><p><strong>问题：如何确保只有合法请求能进入网络？</strong></p>
+<p>解决方案：防火墙和安全策略</p>
+<ul>
+<li>就像机场海关，检查入境者是否符合入境条件</li>
+<li>只有合法的数据包才能通过安全检查</li>
+</ul></li>
+<li><p><strong>问题：大型网站如何处理海量请求？</strong></p>
+<p>解决方案：负载均衡</p>
+<ul>
+<li>像大型医院的分诊台，将病人分配到不同的医生处</li>
+<li>根据服务器负载、用户位置等因素智能分发请求</li>
+</ul></li>
+<li><p><strong>问题：如何在数据中心复杂环境中找到目标服务器？</strong></p>
+<p>解决方案：内部路由与最后一跳 ARP</p>
+<ul>
+<li>数据中心内部有自己的"地图"和"道路系统"</li>
+<li>最后一个路由器会通过 ARP 找到服务器的具体位置</li>
+</ul></li>
+<li><p><strong>问题：现代云环境中，服务器可能是虚拟的，怎么处理？</strong></p>
+<p>解决方案：虚拟网络</p>
+<ul>
+<li>物理服务器上可能运行多个虚拟机或容器</li>
+<li>虚拟交换机将数据包准确送达虚拟环境中的目标应用</li>
+</ul></li>
+</ol>
+<p>这就像国际快递最后的“最后一公里”配送 -
+从目的地城市的分拣中心，经过层层筛选，最终送到收件人手中。</p>
+<h2 id="总结">总结</h2>
+<p>网络请求就像一封国际信件的旅程：</p>
+<ol type="1">
+<li><p>本地投递：从你家出发，判断收件人是否在同小区。如不在，交给小区出口的门卫（网关）。</p></li>
+<li><p>国际运输：</p>
+<ul>
+<li>先经过你所在“国家”（你 ISP 的 AS）的海关（NAT）</li>
+<li>然后可能穿越多个“国家”（不同的 AS）</li>
+<li>各国海关（路由器）通过“国际条约”（BGP）决定包裹走向</li>
+<li>有时通过“国际中转站”（IXP）快速转运到其他“国家”</li>
+</ul></li>
+<li><p>目的地配送：</p>
+<ul>
+<li><p>通过目的地“海关”（防火墙）入境检查</p></li>
+<li><p>经过“分拣中心”（负载均衡器）分配处理人员</p></li>
+<li><p>最终通过“本地快递员”（内部路由和交换）送达收件人手中</p></li>
+</ul></li>
+</ol>
+<p>数据包就这样完成了客户端设备到服务器的全程旅行，然后服务器的响应再沿着类似的路径返回到客户端设备，完成整个请求-响应循环。</p>
+<h1 id="参考">参考</h1>
+<ul>
+<li><p><a
+target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/846257">极客时间《网络架构实战课》</a></p></li>
+<li><p><a
+target="_blank" rel="noopener" href="https://www.geeksforgeeks.org/difference-between-osi-model-and-tcp-ip-model/">Difference
+Between OSI Model and TCP/IP Model</a></p></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" class="category-chain-item">计算机基础</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" class="category-chain-item">计算机网络</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" class="print-no-link">#计算机网络</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>网络数据包的完整旅程：从发送到接收的全过程</div>
+      <div>https://hedon.top/2025/03/01/net-data-journey/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Hedon Wang</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>2025-03-01</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>Licensed under</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/02/27/solution-push-ack/" title="解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化">
+                        <span class="hidden-mobile">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"hedon954/hedonspace","repo-id":"R_kgDOKt17sQ","category":"Q&A","category-id":"DIC_kwDOKt17sc4CbAt-","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":0,"input-position":"top","lang":"en"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>Table of Contents</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="leancloud-site-pv-container" style="display: none">
+        总访问量 
+        <span id="leancloud-site-pv"></span>
+         次
+      </span>
+    
+    
+      <span id="leancloud-site-uv-container" style="display: none">
+        总访客数 
+        <span id="leancloud-site-uv"></span>
+         人
+      </span>
+    
+    
+
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/leancloud.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>
