@@ -44,6 +44,7 @@
 
   <link rel="stylesheet" href="/css/main.css?v=1.29.1">
 
+
   
     <link rel="shortcut icon" href="/assets/favicon.png">
   
@@ -244,7 +245,8 @@ GOMAXPROCS（可配置）个。</td>
 CPU
 资源，所以引入了多进程。又因为进程拥有的资源太多，其创建、切换和销毁都会占用很长时间，所以引入了更小粒度的线程。随着计算机科学的进步，现在看来，线程拥有的资源也是“比较多”的，所以线程的创建、切换和销毁代价也是“相对大”的。所以很多编程语言就引入了协程这个概念，其核心目的就是应用层自己抽象一个比线程更小粒度的调度单元，应用层结合操作系统的多线程能力，自己来管理“调度单元”的创建、切换和销毁，从而尽可能减少由线程切换带来的开销，以做到更轻量级的并发。</p>
 <p>不同的编程语言可能有不同的实现，而关键就在于如何让调度更快、开销更小。这便是我们本文要探讨的主要内容。</p>
-<details class="tag-plugin colorful folding" color="blue" open><summary><span>Go 语言的实现</span></summary><div class="body"><p>线程想运行任务就得获取 P，从 P 的本地队列获取 G，当 P的本地队列为空时，M 会尝试从全局队列获得一批 G 放到 P的本地队列，或者从其他 P 的本地队列中“偷”一半 G 放到自己的本地队列。然后M 运行 G，G 执行之后，再从 P 获取下一个 G，如此不断重复下去。</p></div></details>
+<details class="tag-plugin colorful folding" color="blue" open><summary><p>Go 语言的实现</p>
+</summary><div class="body"><p>线程想运行任务就得获取 P，从 P 的本地队列获取 G，当 P的本地队列为空时，M 会尝试从全局队列获得一批 G 放到 P的本地队列，或者从其他 P 的本地队列中“偷”一半 G 放到自己的本地队列。然后M 运行 G，G 执行之后，再从 P 获取下一个 G，如此不断重复下去。</p></div></details>
 <p>在进入更加具体深入的讨论之前，我们需要重点思考以下几个问题：</p>
 <ol type="1">
 <li>G 我们可以随便创建，可能有成千上万个，那 P 和 M 有多少个呢？</li>
@@ -1157,7 +1159,7 @@ exitsyscall()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link
     ctx.search = {};
     ctx.search.service = `local_search`;
     if (ctx.search.service == 'local_search') {
-      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
       ctx.search[ctx.search.service] = service_obj;
     }
   }
@@ -1483,7 +1485,7 @@ exitsyscall()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link
 
 <script defer>
   window.addEventListener('DOMContentLoaded', (event) => {
-    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"}}`));
     for (let id of Object.keys(ctx.services)) {
       const js = ctx.services[id].js;
       if (id == 'siteinfo') {
@@ -1548,7 +1550,7 @@ exitsyscall()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link
   });
 </script><script>
   ctx.fancybox = {
-    selector: `.timenode p>img`,
+    selector: `.timenode p>img, .md-text img:not([class]), .md-text .image img`,
     css: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
     js: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
   };
