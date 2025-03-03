@@ -1,20 +1,24 @@
 
-
-<!DOCTYPE html>
-<html lang="en" data-default-color-scheme=auto>
-
-
+<!DOCTYPE html><html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <link rel="apple-touch-icon" sizes="76x76" href="/img/hedon.png">
-  <link rel="icon" href="/img/hedon.png">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1" theme-name="Stellar" theme-version="1.29.1">
   
-  <meta name="theme-color" content="#2f4154">
-  <meta name="author" content="Hedon Wang">
-  <meta name="keywords" content="">
+  <meta name="generator" content="Hexo 7.0.0">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  <link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin><link rel="preconnect" href="https://unpkg.com" crossorigin><link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  
+  <title>Kafka 顺序消息实现 - HedonSpace</title>
+
   
     <meta name="description" content="本文详细介绍了如何实现 Kafka 的顺序消息，同时给出了消息队列顺序消息的通用实现思路，并简单介绍了 RabbitMQ、RocketMQ 和 Pulsar 在顺序消息方面的实现思路。">
 <meta property="og:type" content="article">
@@ -29,296 +33,66 @@
 <meta property="article:tag" content="Kafka">
 <meta property="article:tag" content="中间件">
 <meta property="article:tag" content="消息队列">
-<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:card" content="summary">
   
   
   
-  <title>Kafka 顺序消息实现 - HedonSpace</title>
+  <meta name="keywords" content="Kafka,中间件,消息队列">
 
-  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
-
-
-
-  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
-
-  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
-
-  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
-
-
-
-<!-- 主题依赖的图标库，不要自行修改 -->
-<!-- Do not modify the link that theme dependent icons -->
-
-<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
-
-
-
-<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
-
-
-<link  rel="stylesheet" href="/css/main.css" />
-
-
-  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  <!-- feed -->
   
-    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+    <link rel="alternate" href="/atom.xml" title="HedonSpace" type="application/atom+xml">
   
 
-
-
-
-  <script id="fluid-configs">
-    var Fluid = window.Fluid || {};
-    Fluid.ctx = Object.assign({}, Fluid.ctx)
-    var CONFIG = {"hostname":"hedon.top","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":30,"cursorChar":"_","loop":false,"scope":["home"]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":4},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"Eig99zG5BYQGKXxcMOU7DH7e-gzGzoHsz","app_key":"dBP7lew0wt2GQdNdo6t2EE5m","server_url":"https://eig99zg5.lc-cn-n1-shared.com","path":"window.location.pathname","ignore_local":true}},"search_path":"/local-search.xml","include_content_in_search":true};
-
-    if (CONFIG.web_analytics.follow_dnt) {
-      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
-      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
-    }
-  </script>
-  <script  src="/js/utils.js" ></script>
-  <script  src="/js/color-schema.js" ></script>
-  
-
-  
-
-  
-    <!-- Google tag (gtag.js) -->
-    <script async>
-      if (!Fluid.ctx.dnt) {
-        Fluid.utils.createScript("https://www.googletagmanager.com/gtag/js?id=", function() {
-          window.dataLayer = window.dataLayer || [];
-          function gtag() {
-            dataLayer.push(arguments);
-          }
-          gtag('js', new Date());
-          gtag('config', '');
-        });
-      }
-    </script>
-  
+  <link rel="stylesheet" href="/css/main.css?v=1.29.1">
 
   
 
   
 
-  
-
-  
-    
-  
-
-
-
-  
-<meta name="generator" content="Hexo 7.0.0"><link rel="alternate" href="/atom.xml" title="HedonSpace" type="application/atom+xml">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/xaoxuu/favicon/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/xaoxuu/favicon/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/xaoxuu/favicon/favicon-16x16.png"><link rel="manifest" href="/assets/xaoxuu/favicon/site.webmanifest"><link rel="shortcut icon" href="/assets/xaoxuu/favicon/favicon.ico"><meta name="theme-color" content="#f8f8f8"><link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/lxgw-wenkai-screen-webfont/1.7.0/style.min.css" media="all" />
 </head>
-
-
 <body>
-  
 
-  <header>
-    
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
 
-<div class="header-inner" style="height: 70vh;">
-  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
-  <div class="container">
-    <a class="navbar-brand" href="/">
-      <strong>HedonSpace</strong>
-    </a>
 
-    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
-            data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <div class="animated-icon"><span></span><span></span><span></span></div>
-    </button>
+<header class="header"><div class="logo-wrap"><div class="icon"><img no-lazy class="icon" src="/assets/icon.svg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></div><a class="title" href="/"><div class="main" ff="title">Stellar</div><div class="sub normal cap">每个人的独立博客</div><div class="sub hover cap" style="opacity:0"> Designed by xaoxuu</div></a></div></header>
 
-    <!-- Collapsible content -->
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ml-auto text-center">
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/">
-                <i class="iconfont icon-home-fill"></i>
-                <span>Home</span>
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/archives/">
-                <i class="iconfont icon-archive-fill"></i>
-                <span>Archives</span>
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/categories/">
-                <i class="iconfont icon-category-fill"></i>
-                <span>Categories</span>
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/tags/">
-                <i class="iconfont icon-tags-fill"></i>
-                <span>Tags</span>
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/about/">
-                <i class="iconfont icon-user-fill"></i>
-                <span>About</span>
-              </a>
-            </li>
-          
-        
-        
-          <li class="nav-item" id="search-btn">
-            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
-              <i class="iconfont icon-search"></i>
-            </a>
-          </li>
-          
-        
-        
-          <li class="nav-item" id="color-toggle-btn">
-            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
-              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
-            </a>
-          </li>
-        
-      </ul>
-    </div>
-  </div>
-</nav>
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="Search"></form><div id="search-result"></div><div class="search-no-result">No Results!</div></div>
 
-  
 
-<div id="banner" class="banner" parallax=true
-     style="background: url('/banner/kafka-ordered-msg.jpg') no-repeat center center; background-size: cover;">
-  <div class="full-bg-img">
-    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
-      <div class="banner-text text-center fade-in-up">
-        <div class="h2">
-          
-            <span id="subtitle">Kafka 顺序消息实现</span>
-          
-        </div>
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="专栏" href="/topic/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="探索" href="/explore/" style="color:#FA6400"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M20 12a8 8 0 1 1-16 0a8 8 0 0 1 16 0" opacity=".5"/><path fill="currentColor" d="M17.712 5.453c1.047-.193 2.006-.259 2.797-.152c.77.103 1.536.393 1.956 1.064c.446.714.312 1.542-.012 2.258c-.33.728-.918 1.499-1.672 2.268c-1.516 1.547-3.836 3.226-6.597 4.697c-2.763 1.472-5.495 2.484-7.694 2.92c-1.095.217-2.098.299-2.923.201c-.8-.095-1.6-.383-2.032-1.075c-.47-.752-.296-1.63.07-2.379c.375-.768 1.032-1.586 1.872-2.403L4 12.416c0 .219.083.71.168 1.146c.045.23.09.444.123.596c-.652.666-1.098 1.263-1.339 1.756c-.277.567-.208.825-.145.925c.072.116.305.305.937.38c.609.073 1.44.018 2.455-.183c2.02-.4 4.613-1.351 7.28-2.772c2.667-1.42 4.85-3.015 6.23-4.423c.694-.707 1.15-1.334 1.377-1.836c.233-.515.167-.75.107-.844c-.07-.112-.289-.294-.883-.374c-.542-.072-1.272-.041-2.163.112L16.87 5.656c.338-.101.658-.17.842-.203"/></svg></a><a class="nav-item" title="社交" href="/friends/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
 
-        
-          
-  <div class="mt-3">
-    
-      <span class="post-meta mr-2">
-        <i class="iconfont icon-author" aria-hidden="true"></i>
-        Hedon Wang
-      </span>
-    
-    
-      <span class="post-meta">
-        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2023-11-23 23:42" pubdate>
-          2023-11-23 23:42
-        </time>
-      </span>
-    
-  </div>
 
-  <div class="mt-1">
-    
-      <span class="post-meta mr-2">
-        <i class="iconfont icon-chart"></i>
-        
-          10k words
-        
-      </span>
-    
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">Recent Update</span></div><div class="widget-body fs14"><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2024/04/23/rust-action-inverted-index-concurrency/"><span class="title">Rust 实战丨并发构建倒排索引</span></a><a class="item title" href="/2023/11/22/kakfa-cluster-deploy/"><span class="title">Kafka 集群部署</span></a><a class="item title" href="/2023/11/22/kafka-kraft-deploy/"><span class="title">Kafka 集群部署（KRaft）</span></a><a class="item title" href="/2023/12/07/go-start/"><span class="title">Go1.21.0 程序启动过程</span></a><a class="item title" href="/2024/01/20/go-gpm/"><span class="title">深入浅出 Go 语言的 GPM 模型（Go1.21）</span></a><a class="item title" href="/2025/03/01/net-data-journey/"><span class="title">网络数据包的完整旅程：从发送到接收的全过程</span></a><a class="item title" href="/2024/04/28/epoll/"><span class="title">epoll</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a><a class="item title" href="/2025/02/26/prometheus-data-type/"><span class="title">服务监控丨Prometheus 四大数据类型详解</span></a></div></widget>
+</div>
 
-    
-      <span class="post-meta mr-2">
-        <i class="iconfont icon-clock-fill"></i>
-        
-        
-        
-          26 mins
-        
-      </span>
-    
+</div></aside><div class="l_main" id="main">
 
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">Home</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">Blog</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/Kafka/">Kafka</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">Posted on: <time datetime="2023-11-23T15:42:34.000Z">2023-11-23</time></span><span class="sep updated"></span><span class="text updated">Updated on: <time datetime="2023-11-29T02:47:34.943Z">2023-11-29</time></span></div></div></div>
     
-    
+    <div class="bottom only-title">
       
-        <span id="leancloud-page-views-container" class="post-meta" style="display: none">
-          <i class="iconfont icon-eye" aria-hidden="true"></i>
-          <span id="leancloud-page-views"></span> 次
-        </span>
-        
-      
-    
-  </div>
-
-
+      <div class="text-area">
+        <h1 class="text title"><span>Kafka 顺序消息实现</span></h1>
         
       </div>
-
-      
     </div>
-  </div>
-</div>
-
-</div>
-
-  </header>
-
-  <main>
     
-      
-
-<div class="container-fluid nopadding-x">
-  <div class="row nomargin-x">
-    <div class="side-col d-none d-lg-block col-lg-2">
-      
-
-    </div>
-
-    <div class="col-lg-8 nopadding-x-md">
-      <div class="container nopadding-x-md" id="board-ctn">
-        <div id="board">
-          <article class="post-content mx-auto">
-            <h1 id="seo-header">Kafka 顺序消息实现</h1>
-            
-            
-              <div class="markdown-body">
-                
-                <h2 id="版本说明">版本说明</h2>
+  </div>
+  </div><article class="md-text content"><h2 id="版本说明">版本说明</h2>
 <p>本文所有的讨论均在如下版本进行，其他版本可能会有所不同。</p>
 <ul>
 <li>Kafka: 3.6.0</li>
@@ -354,7 +128,7 @@ B 树、B+
 会按顺序存储消息，消费者再按顺序消费消息，那么天然就实现了我们要的<strong>顺序消息</strong>了，如下：</p>
 <figure>
 <img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231124235214392.png" srcset="/img/loading.gif" lazyload
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231124235214392.png"
 alt="消息队列顺序存储结构" />
 <figcaption aria-hidden="true">消息队列顺序存储结构</figcaption>
 </figure>
@@ -409,7 +183,7 @@ buffer）中，并在后台线程中批量发送消息到 Kafka 集群。</li>
 </ol>
 <figure>
 <img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231125013322459.png" srcset="/img/loading.gif" lazyload
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231125013322459.png"
 alt="Kafka 生产者组件 -《Kafka权威指南第2版》" />
 <figcaption aria-hidden="true">Kafka 生产者组件
 -《Kafka权威指南第2版》</figcaption>
@@ -423,7 +197,7 @@ alt="Kafka 生产者组件 -《Kafka权威指南第2版》" />
 的分区策略，这样就可以让所有消息都被分到同一个分区中。</li>
 <li>实现并指定<strong>自定义分区策略</strong>，可以根据业务需求，将需要顺序消费的消息都分到固定一个分区中。</li>
 </ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// 如下例子，所有使用&quot;same-key&quot;作为key的消息都会被发送到同一个Partition</span><br>ProducerRecord&lt;String, String&gt; record = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ProducerRecord</span>&lt;String, String&gt;(<span class="hljs-string">&quot;topic&quot;</span>, <span class="hljs-string">&quot;same-key&quot;</span>, <span class="hljs-string">&quot;message&quot;</span>);<br>producer.send(record);<br></code></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 如下例子，所有使用&quot;same-key&quot;作为key的消息都会被发送到同一个Partition</span></span><br><span class="line">ProducerRecord&lt;String, String&gt; record = <span class="keyword">new</span> <span class="title class_">ProducerRecord</span>&lt;String, String&gt;(<span class="string">&quot;topic&quot;</span>, <span class="string">&quot;same-key&quot;</span>, <span class="string">&quot;message&quot;</span>);</span><br><span class="line">producer.send(record);</span><br></pre></td></tr></table></figure>
 <h3 id="重平衡带来的问题">重平衡带来的问题</h3>
 <p>如果采用上述的第 2 种思路：<strong>固定消息 key，依靠 key hash
 分区策略，实现单一分区</strong>。在我们只有 1
@@ -463,7 +237,7 @@ P，它会从上一次提交的偏移量（offset）开始消费。假设消费�
 </ol>
 <figure>
 <img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231125003222491.png" srcset="/img/loading.gif" lazyload
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231125003222491.png"
 alt="重平衡导致消息失序" />
 <figcaption aria-hidden="true">重平衡导致消息失序</figcaption>
 </figure>
@@ -552,7 +326,7 @@ Kakfa 的消息的 Key 是一样的。</p>
 顺序消息的实现细节。</p>
 <p>首先我们在集群上创建一个 topic <code>ordered-msg-topic</code>，分区为
 <code>3</code> 个，运行以下命令：</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/kafka-3.6.0/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic ordered-msg-topic --partitions 3 --replication-factor 1<br></code></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/opt/kafka-3.6.0/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic ordered-msg-topic --partitions 3 --replication-factor 1</span><br></pre></td></tr></table></figure>
 <p>搭建 Kafka 集群可以看这两篇：<a
 href="https://hedon.top/2023/11/22/kakfa-cluster-deploy/">Kafka集群搭建(Zookeeper)</a>、<a
 href="https://hedon.top/2023/11/22/kafka-kraft-deploy/">Kafka集群搭建(KRaft)</a>。</p>
@@ -560,25 +334,25 @@ href="https://hedon.top/2023/11/22/kafka-kraft-deploy/">Kafka集群搭建(KRaft)
 <p>正常情况下，使用单一生产者同步发送和单一消费者同步发送，只要我们保证
 key 是固定的，则所有消息都会写到同一个分区，是可以实现顺序消息的。</p>
 <p>代码目录如下：</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">├─config<br>│      config.go		<span class="hljs-comment"># 常量定义</span><br>├─consumer<br>│      consumer.go		<span class="hljs-comment"># 消费者</span><br>└─producer<br>        producer.go		<span class="hljs-comment"># 生产者</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">├─config</span><br><span class="line">│      config.go		<span class="comment"># 常量定义</span></span><br><span class="line">├─consumer</span><br><span class="line">│      consumer.go		<span class="comment"># 消费者</span></span><br><span class="line">└─producer</span><br><span class="line">        producer.go		<span class="comment"># 生产者</span></span><br></pre></td></tr></table></figure>
 <p>首先我们先定义一些常量：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;github.com/segmentio/kafka-go&quot;</span><br><br><span class="hljs-keyword">var</span> (<br>	Topic      = <span class="hljs-string">&quot;ordered-msg-topic&quot;</span><br>	Brokers    = []<span class="hljs-type">string</span>&#123;<span class="hljs-string">&quot;kafka1.com:9092&quot;</span>, <span class="hljs-string">&quot;kafka2.com:9092&quot;</span>, <span class="hljs-string">&quot;kafka3.com:9092&quot;</span>&#125;<br>	Addr       = kafka.TCP(Brokers...)<br>	GroupId    = <span class="hljs-string">&quot;ordered-msg-group&quot;</span><br>	MessageKey = []<span class="hljs-type">byte</span>(<span class="hljs-string">&quot;message-key&quot;</span>)<br>)<br></code></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;github.com/segmentio/kafka-go&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> (</span><br><span class="line">	Topic      = <span class="string">&quot;ordered-msg-topic&quot;</span></span><br><span class="line">	Brokers    = []<span class="type">string</span>&#123;<span class="string">&quot;kafka1.com:9092&quot;</span>, <span class="string">&quot;kafka2.com:9092&quot;</span>, <span class="string">&quot;kafka3.com:9092&quot;</span>&#125;</span><br><span class="line">	Addr       = kafka.TCP(Brokers...)</span><br><span class="line">	GroupId    = <span class="string">&quot;ordered-msg-group&quot;</span></span><br><span class="line">	MessageKey = []<span class="type">byte</span>(<span class="string">&quot;message-key&quot;</span>)</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
 <p>我们先实现生产者端，主要是不断往 <code>ordered-msg-topic</code>
 中写入数据：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;context&quot;</span><br>	<span class="hljs-string">&quot;fmt&quot;</span><br>	<span class="hljs-string">&quot;time&quot;</span><br><br>	<span class="hljs-string">&quot;kafka-go-examples/orderedmsg/config&quot;</span><br><br>	<span class="hljs-string">&quot;github.com/segmentio/kafka-go&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">NewProducer</span><span class="hljs-params">()</span></span> *kafka.Writer &#123;<br>	<span class="hljs-keyword">return</span> &amp;kafka.Writer&#123;<br>		Addr:     config.Addr,<br>		Topic:    config.Topic,<br>		Balancer: &amp;kafka.Hash&#123;&#125;, <span class="hljs-comment">// 哈希分区</span><br>	&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">NewMessages</span><span class="hljs-params">(count <span class="hljs-type">int</span>)</span></span> []kafka.Message &#123;<br>	res := <span class="hljs-built_in">make</span>([]kafka.Message, count)<br>	<span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; count; i++ &#123;<br>		res[i] = kafka.Message&#123;<br>			Key:   config.MessageKey,<br>			Value: []<span class="hljs-type">byte</span>(fmt.Sprintf(<span class="hljs-string">&quot;msg-%d&quot;</span>, i+<span class="hljs-number">1</span>)),<br>		&#125;<br>	&#125;<br>	<span class="hljs-keyword">return</span> res<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	producer := NewProducer()<br>	messages := NewMessages(<span class="hljs-number">100</span>)<br>	<span class="hljs-keyword">if</span> err := producer.WriteMessages(context.Background(), messages...); err != <span class="hljs-literal">nil</span> &#123;<br>		<span class="hljs-built_in">panic</span>(err)<br>	&#125;<br>	_ = producer.Close()<br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;context&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;time&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;kafka-go-examples/orderedmsg/config&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;github.com/segmentio/kafka-go&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewProducer</span><span class="params">()</span></span> *kafka.Writer &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;kafka.Writer&#123;</span><br><span class="line">		Addr:     config.Addr,</span><br><span class="line">		Topic:    config.Topic,</span><br><span class="line">		Balancer: &amp;kafka.Hash&#123;&#125;, <span class="comment">// 哈希分区</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewMessages</span><span class="params">(count <span class="type">int</span>)</span></span> []kafka.Message &#123;</span><br><span class="line">	res := <span class="built_in">make</span>([]kafka.Message, count)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; count; i++ &#123;</span><br><span class="line">		res[i] = kafka.Message&#123;</span><br><span class="line">			Key:   config.MessageKey,</span><br><span class="line">			Value: []<span class="type">byte</span>(fmt.Sprintf(<span class="string">&quot;msg-%d&quot;</span>, i+<span class="number">1</span>)),</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> res</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	producer := NewProducer()</span><br><span class="line">	messages := NewMessages(<span class="number">100</span>)</span><br><span class="line">	<span class="keyword">if</span> err := producer.WriteMessages(context.Background(), messages...); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(err)</span><br><span class="line">	&#125;</span><br><span class="line">	_ = producer.Close()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>我们再来实现消费者，目前我们就启动 1 个消费者：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;context&quot;</span><br>	<span class="hljs-string">&quot;fmt&quot;</span><br>	<span class="hljs-string">&quot;time&quot;</span><br><br>	<span class="hljs-string">&quot;kafka-go-examples/orderedmsg/config&quot;</span><br><br>	<span class="hljs-string">&quot;github.com/segmentio/kafka-go&quot;</span><br>)<br><br><span class="hljs-keyword">type</span> Consumer <span class="hljs-keyword">struct</span> &#123;<br>	Id <span class="hljs-type">string</span><br>	*kafka.Reader<br>&#125;<br><br><span class="hljs-comment">// NewConsumer 创建一个消费者，它属于 config.GroupId 这个消费者组</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">NewConsumer</span><span class="hljs-params">(id <span class="hljs-type">string</span>)</span></span> *Consumer &#123;<br>	c := &amp;Consumer&#123;<br>		Id: id,<br>		Reader: kafka.NewReader(kafka.ReaderConfig&#123;<br>			Brokers: config.Brokers,<br>			GroupID: config.GroupId,<br>			Topic:   config.Topic,<br>			Dialer: &amp;kafka.Dialer&#123;<br>				ClientID: id,<br>			&#125;,<br>		&#125;),<br>	&#125;<br>	<span class="hljs-keyword">return</span> c<br>&#125;<br><br><span class="hljs-comment">// Read 读取消息，intervalMs 用来控制消费者的消费速度</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(c *Consumer)</span></span> Read(intervalMs <span class="hljs-type">int</span>) &#123;<br>	fmt.Printf(<span class="hljs-string">&quot;%s start read\n&quot;</span>, c.Id)<br>	<span class="hljs-keyword">for</span> &#123;<br>		msg, err := c.ReadMessage(context.Background())<br>		<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>			fmt.Printf(<span class="hljs-string">&quot;%s read msg err: %v\n&quot;</span>, c.Id, err)<br>			<span class="hljs-keyword">return</span><br>		&#125;<br>		<span class="hljs-comment">// 模拟消费速度</span><br>		time.Sleep(time.Millisecond * time.Duration(intervalMs))<br>		fmt.Printf(<span class="hljs-string">&quot;%s read msg: %s, time: %s\n&quot;</span>, c.Id, <span class="hljs-type">string</span>(msg.Value), time.Now().Format(<span class="hljs-string">&quot;03-04-05&quot;</span>))<br>	&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	c1 := NewConsumer(<span class="hljs-string">&quot;consumer-1&quot;</span>)<br>	c1.Read(<span class="hljs-number">500</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;context&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;time&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;kafka-go-examples/orderedmsg/config&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;github.com/segmentio/kafka-go&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Consumer <span class="keyword">struct</span> &#123;</span><br><span class="line">	Id <span class="type">string</span></span><br><span class="line">	*kafka.Reader</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// NewConsumer 创建一个消费者，它属于 config.GroupId 这个消费者组</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewConsumer</span><span class="params">(id <span class="type">string</span>)</span></span> *Consumer &#123;</span><br><span class="line">	c := &amp;Consumer&#123;</span><br><span class="line">		Id: id,</span><br><span class="line">		Reader: kafka.NewReader(kafka.ReaderConfig&#123;</span><br><span class="line">			Brokers: config.Brokers,</span><br><span class="line">			GroupID: config.GroupId,</span><br><span class="line">			Topic:   config.Topic,</span><br><span class="line">			Dialer: &amp;kafka.Dialer&#123;</span><br><span class="line">				ClientID: id,</span><br><span class="line">			&#125;,</span><br><span class="line">		&#125;),</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> c</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Read 读取消息，intervalMs 用来控制消费者的消费速度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Consumer)</span></span> Read(intervalMs <span class="type">int</span>) &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;%s start read\n&quot;</span>, c.Id)</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		msg, err := c.ReadMessage(context.Background())</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			fmt.Printf(<span class="string">&quot;%s read msg err: %v\n&quot;</span>, c.Id, err)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 模拟消费速度</span></span><br><span class="line">		time.Sleep(time.Millisecond * time.Duration(intervalMs))</span><br><span class="line">		fmt.Printf(<span class="string">&quot;%s read msg: %s, time: %s\n&quot;</span>, c.Id, <span class="type">string</span>(msg.Value), time.Now().Format(<span class="string">&quot;03-04-05&quot;</span>))</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	c1 := NewConsumer(<span class="string">&quot;consumer-1&quot;</span>)</span><br><span class="line">	c1.Read(<span class="number">500</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>启动生产者生产消息，然后启动消费者，观察控制台，不难看出这种情况下就是顺序消费：</p>
-<figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs tex">consumer-1 read msg: msg-10, time: 04:29:10<br>consumer-1 read msg: msg-11, time: 04:29:11<br>consumer-1 read msg: msg-12, time: 04:29:12<br>consumer-1 read msg: msg-13, time: 04:29:13<br>consumer-1 read msg: msg-14, time: 04:29:14<br>consumer-1 read msg: msg-15, time: 04:29:15<br>consumer-1 read msg: msg-16, time: 04:29:16<br></code></pre></td></tr></table></figure>
+<figure class="highlight tex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">consumer-1 read msg: msg-10, time: 04:29:10</span><br><span class="line">consumer-1 read msg: msg-11, time: 04:29:11</span><br><span class="line">consumer-1 read msg: msg-12, time: 04:29:12</span><br><span class="line">consumer-1 read msg: msg-13, time: 04:29:13</span><br><span class="line">consumer-1 read msg: msg-14, time: 04:29:14</span><br><span class="line">consumer-1 read msg: msg-15, time: 04:29:15</span><br><span class="line">consumer-1 read msg: msg-16, time: 04:29:16</span><br></pre></td></tr></table></figure>
 <h3 id="重平衡带来的问题-1">重平衡带来的问题</h3>
 <p>我们先重建 topic，清楚掉之前的数据：</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/kafka-3.6.0/bin/kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic ordered-msg-topic<br></code></pre></td></tr></table></figure>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/opt/kafka-3.6.0/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic ordered-msg-topic --partitions 3 --replication-factor 1<br></code></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/opt/kafka-3.6.0/bin/kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic ordered-msg-topic</span><br></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/opt/kafka-3.6.0/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic ordered-msg-topic --partitions 3 --replication-factor 1</span><br></pre></td></tr></table></figure>
 <p>下面我们来采用消费者组的形式消费消息，在这期间，我们不断往消费者组中新增消费者，使其发生重平衡，我们来观察下消息的消费情况。</p>
 <p>修改消费者端的 main()：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	<span class="hljs-comment">// 先启动 c1</span><br>	c1 := NewConsumer(<span class="hljs-string">&quot;consumer-1&quot;</span>)<br>	<span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>		c1.Read(<span class="hljs-number">500</span>)<br>	&#125;()<br><br>	<span class="hljs-comment">// 5 秒后启动 c2</span><br>	time.Sleep(<span class="hljs-number">5</span> * time.Second)<br>	<span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>		c2 := NewConsumer(<span class="hljs-string">&quot;consumer-2&quot;</span>)<br>		c2.Read(<span class="hljs-number">300</span>)<br>	&#125;()<br><br>	<span class="hljs-comment">// 再 10 秒后启动 c3 和 c4</span><br>	time.Sleep(<span class="hljs-number">10</span> * time.Second)<br>	<span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>		c3 := NewConsumer(<span class="hljs-string">&quot;consumer-3&quot;</span>)<br>		c3.Read(<span class="hljs-number">100</span>)<br>	&#125;()<br>	<span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>		c4 := NewConsumer(<span class="hljs-string">&quot;consumer-4&quot;</span>)<br>		c4.Read(<span class="hljs-number">100</span>)<br>	&#125;()<br><br>	<span class="hljs-keyword">select</span> &#123;&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 先启动 c1</span></span><br><span class="line">	c1 := NewConsumer(<span class="string">&quot;consumer-1&quot;</span>)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		c1.Read(<span class="number">500</span>)</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 5 秒后启动 c2</span></span><br><span class="line">	time.Sleep(<span class="number">5</span> * time.Second)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		c2 := NewConsumer(<span class="string">&quot;consumer-2&quot;</span>)</span><br><span class="line">		c2.Read(<span class="number">300</span>)</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 再 10 秒后启动 c3 和 c4</span></span><br><span class="line">	time.Sleep(<span class="number">10</span> * time.Second)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		c3 := NewConsumer(<span class="string">&quot;consumer-3&quot;</span>)</span><br><span class="line">		c3.Read(<span class="number">100</span>)</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		c4 := NewConsumer(<span class="string">&quot;consumer-4&quot;</span>)</span><br><span class="line">		c4.Read(<span class="number">100</span>)</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">select</span> &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>先启动生产者重新生产数据，然后再启动消费者消费数据，观察控制台：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs bash">consumer-1 start <span class="hljs-built_in">read</span><br>consumer-1 <span class="hljs-built_in">read</span> msg: msg-1, time: 04:44:28<br>consumer-1 <span class="hljs-built_in">read</span> msg: msg-2, time: 04:44:28<br>consumer-1 <span class="hljs-built_in">read</span> msg: msg-3, time: 04:44:29		<span class="hljs-comment"># consumer-1 按顺序消费</span><br>consumer-2 start <span class="hljs-built_in">read</span>						  <span class="hljs-comment"># consumer-2 进来</span><br>consumer-1 <span class="hljs-built_in">read</span> msg: msg-4, time: 04:44:30<br>consumer-1 <span class="hljs-built_in">read</span> msg: msg-5, time: 04:44:30<br>consumer-1 <span class="hljs-built_in">read</span> msg: msg-6, time: 04:44:31      <span class="hljs-comment"># 这里相差了 6s，就是在进行重平衡</span><br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-7, time: 04:44:37      <span class="hljs-comment"># 重平衡后发现原来的分区给 consumer-2 消费了</span><br>consumer-1 <span class="hljs-built_in">read</span> msg: msg-7, time: 04:44:37	    <span class="hljs-comment"># 这里发生了重复消费</span><br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-8, time: 04:44:37<br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-9, time: 04:44:37<br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-10, time: 04:44:38<br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-11, time: 04:44:38<br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-12, time: 04:44:38<br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-13, time: 04:44:39<br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-14, time: 04:44:39<br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-15, time: 04:44:39      <span class="hljs-comment"># consumer-2 按顺序消息</span><br>consumer-4 start <span class="hljs-built_in">read</span>						   <span class="hljs-comment"># consumer-3 和 consumer-4 进来</span><br>consumer-3 start <span class="hljs-built_in">read</span><br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-16, time: 04:44:40	   <br>consumer-4 <span class="hljs-built_in">read</span> msg: msg-17, time: 04:44:46      <span class="hljs-comment"># 这里发生重平衡</span><br>consumer-4 <span class="hljs-built_in">read</span> msg: msg-18, time: 04:44:46      <span class="hljs-comment"># 重平衡后由 consumer-4 负责该分区</span><br>consumer-2 <span class="hljs-built_in">read</span> msg: msg-17, time: 04:44:46      <span class="hljs-comment"># 这里由于 2 的速度比 4 慢很多，所以就乱序了，还重复消费</span><br>consumer-4 <span class="hljs-built_in">read</span> msg: msg-19, time: 04:44:46<br>consumer-4 <span class="hljs-built_in">read</span> msg: msg-20, time: 04:44:46<br><span class="hljs-comment"># ...</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">consumer-1 start <span class="built_in">read</span></span><br><span class="line">consumer-1 <span class="built_in">read</span> msg: msg-1, time: 04:44:28</span><br><span class="line">consumer-1 <span class="built_in">read</span> msg: msg-2, time: 04:44:28</span><br><span class="line">consumer-1 <span class="built_in">read</span> msg: msg-3, time: 04:44:29		<span class="comment"># consumer-1 按顺序消费</span></span><br><span class="line">consumer-2 start <span class="built_in">read</span>						  <span class="comment"># consumer-2 进来</span></span><br><span class="line">consumer-1 <span class="built_in">read</span> msg: msg-4, time: 04:44:30</span><br><span class="line">consumer-1 <span class="built_in">read</span> msg: msg-5, time: 04:44:30</span><br><span class="line">consumer-1 <span class="built_in">read</span> msg: msg-6, time: 04:44:31      <span class="comment"># 这里相差了 6s，就是在进行重平衡</span></span><br><span class="line">consumer-2 <span class="built_in">read</span> msg: msg-7, time: 04:44:37      <span class="comment"># 重平衡后发现原来的分区给 consumer-2 消费了</span></span><br><span class="line">consumer-1 <span class="built_in">read</span> msg: msg-7, time: 04:44:37	    <span class="comment"># 这里发生了重复消费</span></span><br><span class="line">consumer-2 <span class="built_in">read</span> msg: msg-8, time: 04:44:37</span><br><span class="line">consumer-2 <span class="built_in">read</span> msg: msg-9, time: 04:44:37</span><br><span class="line">consumer-2 <span class="built_in">read</span> msg: msg-10, time: 04:44:38</span><br><span class="line">consumer-2 <span class="built_in">read</span> msg: msg-11, time: 04:44:38</span><br><span class="line">consumer-2 <span class="built_in">read</span> msg: msg-12, time: 04:44:38</span><br><span class="line">consumer-2 <span class="built_in">read</span> msg: msg-13, time: 04:44:39</span><br><span class="line">consumer-2 <span class="built_in">read</span> msg: msg-14, time: 04:44:39</span><br><span class="line">consumer-2 <span class="built_in">read</span> msg: msg-15, time: 04:44:39      <span class="comment"># consumer-2 按顺序消息</span></span><br><span class="line">consumer-4 start <span class="built_in">read</span>						   <span class="comment"># consumer-3 和 consumer-4 进来</span></span><br><span class="line">consumer-3 start <span class="built_in">read</span></span><br><span class="line">consumer-2 <span class="built_in">read</span> msg: msg-16, time: 04:44:40	   </span><br><span class="line">consumer-4 <span class="built_in">read</span> msg: msg-17, time: 04:44:46      <span class="comment"># 这里发生重平衡</span></span><br><span class="line">consumer-4 <span class="built_in">read</span> msg: msg-18, time: 04:44:46      <span class="comment"># 重平衡后由 consumer-4 负责该分区</span></span><br><span class="line">consumer-2 <span class="built_in">read</span> msg: msg-17, time: 04:44:46      <span class="comment"># 这里由于 2 的速度比 4 慢很多，所以就乱序了，还重复消费</span></span><br><span class="line">consumer-4 <span class="built_in">read</span> msg: msg-19, time: 04:44:46</span><br><span class="line">consumer-4 <span class="built_in">read</span> msg: msg-20, time: 04:44:46</span><br><span class="line"><span class="comment"># ...</span></span><br></pre></td></tr></table></figure>
 <h3 id="总结">总结</h3>
 <p>当我们采用消费者组的时候，由于重平衡机制的存在，单纯从 Kafka
 的角度来说是无法完全实现顺序消息的，只能通过静态成员功能、避免分区数量变化和减少消费者组成员数量变化等方式来尽可能减少重平衡的发生，进而尽可能维持消息的顺序性。</p>
@@ -599,432 +373,513 @@ target="_blank" rel="noopener" href="https://www.rabbitmq.com/tutorials/tutorial
 官方文档</a></li>
 </ul>
 
-                
-              </div>
-            
-            <hr/>
-            <div>
-              <div class="post-metas my-3">
-  
-    <div class="post-meta mr-3 d-flex align-items-center">
-      <i class="iconfont icon-category"></i>
-      
-
-<span class="category-chains">
-  
-  
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>License</span></div>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
     
-      <span class="category-chain">
+    <section id="share">
+      <div class="header"><span>Share</span></div>
+      <div class="body">
+        <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://hedon.top/2023/11/23/kafka-ordered-msg/" /></div>
+        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2023/11/23/kafka-ordered-msg/&title=Kafka 顺序消息实现 - HedonSpace&summary=本文详细介绍了如何实现 Kafka 的顺序消息，同时给出了消息队列顺序消息的通用实现思路，并简单介绍了 RabbitMQ、RocketMQ 和 Pulsar 在顺序消息方面的实现思路。"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=Kafka 顺序消息实现 - HedonSpace&amp;body=https://hedon.top/2023/11/23/kafka-ordered-msg/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;Copied!&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
         
-  <a href="/categories/Kafka/" class="category-chain-item">Kafka</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
+        <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
+          <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://hedon.top/2023/11/23/kafka-ordered-msg/"/>
+        </div>
+        
+      </div>
+    </section>
     </div>
-  
-  
-    <div class="post-meta">
-      <i class="iconfont icon-tags"></i>
-      
-        <a href="/tags/Kafka/" class="print-no-link">#Kafka</a>
-      
-        <a href="/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6/" class="print-no-link">#中间件</a>
-      
-        <a href="/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/" class="print-no-link">#消息队列</a>
-      
-    </div>
-  
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">Newer</div><a href="/2023/11/29/go-compilation/">Go1.21.0 程序编译过程</a></div><div class="item" id="next"><div class="note">Older</div><a href="/2023/11/22/kafka-kraft-deploy/">Kafka 集群部署（KRaft）</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">On This Page</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%89%88%E6%9C%AC%E8%AF%B4%E6%98%8E"><span class="toc-text">版本说明</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA%E5%85%88%E8%A1%8C"><span class="toc-text">结论先行</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B8%AD%E7%9A%84%E9%A1%BA%E5%BA%8F%E6%B6%88%E6%81%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0"><span class="toc-text">消息队列中的顺序消息如何实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A1%BA%E5%BA%8F%E6%B6%88%E6%81%AF%E5%AE%9A%E4%B9%89"><span class="toc-text">顺序消息定义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B6%88%E6%81%AF%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84"><span class="toc-text">消息存储结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E6%9D%A1%E4%BB%B6"><span class="toc-text">基本条件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#kafka-%E9%A1%BA%E5%BA%8F%E6%B6%88%E6%81%AF%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-text">Kafka 顺序消息的实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%99%E5%85%A5%E6%B6%88%E6%81%AF%E7%9A%84%E8%BF%87%E7%A8%8B"><span class="toc-text">写入消息的过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E5%8D%95%E4%B8%80%E5%88%86%E5%8C%BA"><span class="toc-text">实现单一分区</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%8D%E5%B9%B3%E8%A1%A1%E5%B8%A6%E6%9D%A5%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">重平衡带来的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%93%E8%A7%A3%E9%87%8D%E5%B9%B3%E8%A1%A1%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">缓解重平衡的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E6%88%90%E5%91%98%E5%8A%9F%E8%83%BD"><span class="toc-text">静态成员功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B9%82%E7%AD%89%E6%80%A7"><span class="toc-text">幂等性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B6%E4%BB%96%E5%B8%B8%E8%A7%81%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E9%A1%BA%E5%BA%8F%E6%B6%88%E6%81%AF%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-text">其他常见消息队列顺序消息的实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#pulsar"><span class="toc-text">Pulsar</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#rabbitmq"><span class="toc-text">RabbitMQ</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#rocketmq"><span class="toc-text">RocketMQ</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98-kafka-%E5%AE%9E%E7%8E%B0%E9%A1%BA%E5%BA%8F%E6%B6%88%E6%81%AF"><span class="toc-text">实战 Kafka 实现顺序消息</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8D%95%E7%94%9F%E4%BA%A7%E8%80%85%E5%8D%95%E6%B6%88%E8%B4%B9%E8%80%85"><span class="toc-text">单生产者单消费者</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%8D%E5%B9%B3%E8%A1%A1%E5%B8%A6%E6%9D%A5%E7%9A%84%E9%97%AE%E9%A2%98-1"><span class="toc-text">重平衡带来的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>Scroll to Top</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
 </div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `Just`,
+      min: `minutes ago`,
+      hour: `hours ago`,
+      day: `days ago`,
+    },
+    root : `/`,
+  };
 
-
-              
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js`,
+    marked: `https://cdn.jsdelivr.net/npm/marked@13.0.1/lib/marked.umd.min.js`
+  }
   
 
-  <div class="license-box my-3">
-    <div class="license-title">
-      <div>Kafka 顺序消息实现</div>
-      <div>https://hedon.top/2023/11/23/kafka-ordered-msg/</div>
-    </div>
-    <div class="license-meta">
-      
-        <div class="license-meta-item">
-          <div>Author</div>
-          <div>Hedon Wang</div>
-        </div>
-      
-      
-        <div class="license-meta-item license-meta-date">
-          <div>Posted on</div>
-          <div>2023-11-23</div>
-        </div>
-      
-      
-      
-        <div class="license-meta-item">
-          <div>Licensed under</div>
-          <div>
-            
-              
-              
-                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
-                  <span class="hint--top hint--rounded" aria-label="BY - Attribution">
-                    <i class="iconfont icon-by"></i>
-                  </span>
-                </a>
-              
-            
-          </div>
-        </div>
-      
-    </div>
-    <div class="license-icon iconfont"></div>
-  </div>
+</script>
 
-
-
-              
-                <div class="post-prevnext my-3">
-                  <article class="post-prev col-6">
-                    
-                    
-                      <a href="/2023/11/29/go-compilation/" title="Go1.21.0 程序编译过程">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Go1.21.0 程序编译过程</span>
-                        <span class="visible-mobile">Previous</span>
-                      </a>
-                    
-                  </article>
-                  <article class="post-next col-6">
-                    
-                    
-                      <a href="/2023/11/22/kafka-kraft-deploy/" title="Kafka 集群部署（KRaft）">
-                        <span class="hidden-mobile">Kafka 集群部署（KRaft）</span>
-                        <span class="visible-mobile">Next</span>
-                        <i class="iconfont icon-arrowright"></i>
-                      </a>
-                    
-                  </article>
-                </div>
-              
-            </div>
-
-            
-  
-  
-    <article id="comments" lazyload>
-      
-    <div id="giscus" class="giscus"></div>
-    <script type="text/javascript">
-      Fluid.utils.loadComments('#giscus', function() {
-        var options = {"repo":"hedon954/hedonspace","repo-id":"R_kgDOKt17sQ","category":"Q&A","category-id":"DIC_kwDOKt17sc4CbAt-","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":0,"input-position":"top","lang":"en"};
-        var attributes = {};
-        for (let option in options) {
-          if (!option.startsWith('theme-')) {
-            var key = option.startsWith('data-') ? option : 'data-' + option;
-            attributes[key] = options[option];
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
           }
         }
-        var light = 'light';
-        var dark = 'dark';
-        window.GiscusThemeLight = light;
-        window.GiscusThemeDark = dark;
-        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
-        for (let attribute in attributes) {
-          var value = attributes[attribute];
-          if (value === undefined || value === null || value === '') {
-            delete attributes[attribute];
-          }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
         }
-        var s = document.createElement('script');
-        s.setAttribute('src', 'https://giscus.app/client.js');
-        s.setAttribute('crossorigin', 'anonymous');
-        for (let attribute in attributes) {
-          s.setAttribute(attribute, attributes[attribute]);
-        }
-        var ss = document.getElementsByTagName('script');
-        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
-        e.parentNode.insertBefore(s, e.nextSibling);
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
       });
-    </script>
-    <noscript>Please enable JavaScript to view the comments</noscript>
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
 
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
 
-    </article>
-  
-
-
-          </article>
-        </div>
-      </div>
-    </div>
-
-    <div class="side-col d-none d-lg-block col-lg-2">
-      
-  <aside class="sidebar" style="margin-left: -1rem">
-    <div id="toc">
-  <p class="toc-header">
-    <i class="iconfont icon-list"></i>
-    <span>Table of Contents</span>
-  </p>
-  <div class="toc-body" id="toc-body"></div>
-</div>
-
-
-
-  </aside>
-
-
-    </div>
-  </div>
-</div>
-
-
-
-
-
-  
-
-
-
-  
-
-
-
-  
-
-
-
-  
-
-
-
-  
-
-
-
-
-
-
-
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
     
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
 
-    
-      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
-        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
-      </a>
-    
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
 
-    
-      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
-     aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header text-center">
-        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
-        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body mx-3">
-        <div class="md-form mb-5">
-          <input type="text" id="local-search-input" class="form-control validate">
-          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
-        </div>
-        <div class="list-group" id="local-search-result"></div>
-      </div>
-    </div>
-  </div>
-</div>
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
 
-    
 
-    
-  </main>
+<!-- required -->
+<script src="/js/main.js?v=1.29.1" defer></script>
 
-  <footer>
-    <div class="footer-inner">
-  
-    <div class="footer-content">
-       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
-    </div>
-  
-  
-    <div class="statistics">
-  
-  
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
 
-  
-    
-      <span id="leancloud-site-pv-container" style="display: none">
-        总访问量 
-        <span id="leancloud-site-pv"></span>
-         次
-      </span>
-    
-    
-      <span id="leancloud-site-uv-container" style="display: none">
-        总访客数 
-        <span id="leancloud-site-uv"></span>
-         人
-      </span>
-    
-    
+    applyThemeToGiscus(theme)
+  }
 
-  
-</div>
+  const applyThemeToGiscus = (theme) => {
+    theme = theme === 'auto' ? 'preferred_color_scheme' : theme
 
-  
-  
-  
-</div>
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
 
-  </footer>
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
 
-  <!-- Scripts -->
-  
-  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
-  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
 
-  <script>
-    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
-    NProgress.start()
-    window.addEventListener('load', function() {
-      NProgress.done();
+    const messages = {
+      light: `Switched to Light Mode`,
+      dark: `Switched to Dark Mode`,
+      auto: `Switched to Auto Mode`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    }
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
     })
-  </script>
-
-
-<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
-<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
-<script  src="/js/events.js" ></script>
-<script  src="/js/plugins.js" ></script>
-
-
-
-
-
-  
-    <script  src="/js/img-lazyload.js" ></script>
-  
-
-
-
-
-  
+  }
+</script>
 <script>
-  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
-    var toc = jQuery('#toc');
-    if (toc.length === 0 || !window.tocbot) { return; }
-    var boardCtn = jQuery('#board-ctn');
-    var boardTop = boardCtn.offset().top;
-
-    window.tocbot.init(Object.assign({
-      tocSelector     : '#toc-body',
-      contentSelector : '.markdown-body',
-      linkClass       : 'tocbot-link',
-      activeLinkClass : 'tocbot-active-link',
-      listClass       : 'tocbot-list',
-      isCollapsedClass: 'tocbot-is-collapsed',
-      collapsibleClass: 'tocbot-is-collapsible',
-      scrollSmooth    : true,
-      includeTitleTags: true,
-      headingsOffset  : -boardTop,
-    }, CONFIG.toc));
-    if (toc.find('.toc-list-item').length > 0) {
-      toc.css('visibility', 'visible');
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
     }
-
-    Fluid.events.registerRefreshCallback(function() {
-      if ('tocbot' in window) {
-        tocbot.refresh();
-        var toc = jQuery('#toc');
-        if (toc.length === 0 || !tocbot) {
-          return;
-        }
-        if (toc.find('.toc-list-item').length > 0) {
-          toc.css('visibility', 'visible');
-        }
-      }
-    });
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
   });
 </script>
 
 
-  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+<!-- inject -->
 
-  <script>Fluid.plugins.codeWidget();</script>
-
-
-  
-<script>
-  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
-    window.anchors.options = {
-      placement: CONFIG.anchorjs.placement,
-      visible  : CONFIG.anchorjs.visible
-    };
-    if (CONFIG.anchorjs.icon) {
-      window.anchors.options.icon = CONFIG.anchorjs.icon;
-    }
-    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
-    var res = [];
-    for (var item of el) {
-      res.push('.markdown-body > ' + item.trim());
-    }
-    if (CONFIG.anchorjs.placement === 'left') {
-      window.anchors.options.class = 'anchorjs-link-left';
-    }
-    window.anchors.add(res.join(', '));
-
-    Fluid.events.registerRefreshCallback(function() {
-      if ('anchors' in window) {
-        anchors.removeAll();
-        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
-        var res = [];
-        for (var item of el) {
-          res.push('.markdown-body > ' + item.trim());
-        }
-        if (CONFIG.anchorjs.placement === 'left') {
-          anchors.options.class = 'anchorjs-link-left';
-        }
-        anchors.add(res.join(', '));
-      }
-    });
-  });
-</script>
-
-
-  
-<script>
-  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
-    Fluid.plugins.fancyBox();
-  });
-</script>
-
-
-  <script>Fluid.plugins.imageCaption();</script>
-
-  <script defer src="/js/leancloud.js" ></script>
-
-  <script  src="/js/local-search.js" ></script>
-
-
-
-
-
-<!-- 主题的启动项，将它保持在最底部 -->
-<!-- the boot of the theme, keep it at the bottom -->
-<script  src="/js/boot.js" ></script>
-
-
-  
-
-  <noscript>
-    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
-  </noscript>
-</body>
-</html>
+</div></body></html>
