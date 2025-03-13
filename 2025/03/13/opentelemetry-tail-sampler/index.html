@@ -29,7 +29,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
 <meta property="article:published_time" content="2025-03-13T07:10:27.000Z">
-<meta property="article:modified_time" content="2025-03-13T07:21:16.219Z">
+<meta property="article:modified_time" content="2025-03-13T07:31:39.913Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="opentelemetry">
 <meta property="article:tag" content="服务监控">
@@ -85,7 +85,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E6%9C%8D%E5%8A%A1%E7%9B%91%E6%8E%A7/">服务监控</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-03-13T07:10:27.000Z">2025-03-13</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-03-13T07:21:16.219Z">2025-03-13</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-03-13T07:10:27.000Z">2025-03-13</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-03-13T07:31:39.913Z">2025-03-13</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -138,21 +138,46 @@ Go SDK
 <p>这确保了采样决策能够一致地传播到整个分布式链路中。</p>
 <h2 id="为什么-opentelemetry-不支持尾采样">为什么 OpenTelemetry
 不支持尾采样？</h2>
-<p>基于上述分析，我们可以理解 OpenTelemetry SDK 不支持尾采样的原因：</p>
-<h3 id="分布式系统的一致性">1. 分布式系统的一致性</h3>
-<p>在分布式系统中，一条链路可能跨越多个服务。如果在链路结束后才决定是否采样，就需要协调所有参与服务的决策，这在技术上非常具有挑战性。前置采样通过传播采样标志，确保了整个链路的采样一致性。</p>
-<h3 id="性能和资源考量">2. 性能和资源考量</h3>
-<p>前置采样可以在早期就丢弃不需要的数据，大大减少资源消耗。相比之下，尾采样需要临时存储所有链路数据，直到决策完成，这会带来显著的内存开销。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">前置采样：不采样的链路 → 直接丢弃 → 节省资源</span><br><span class="line">尾采样：所有链路 → 临时存储 → 决策 → 部分丢弃 → 资源消耗大</span><br></pre></td></tr></table></figure>
-<h3 id="实时性要求">3. 实时性要求</h3>
-<p>OpenTelemetry
-设计为支持实时监控场景。前置采样能够立即提供数据，而尾采样会引入延迟，因为需要等待链路完成才能做决策。</p>
-<h3 id="架构分层考虑">4. 架构分层考虑</h3>
-<p>OpenTelemetry 遵循关注点分离原则，将不同功能放在适当的层次：</p>
+<p>最重要的原因是：<font color="red">在 SDK
+中找不到尾巴！因为不知道链路什么时候结束！</font></p>
+<p>在分布式系统中，一条链路可能跨越多个服务，所以你在某一个服务中，是不知道链路是否结束的，而
+OpenTelemetry 也不是一次性上报一整条链路，而是每个 <code>span</code>
+独立上报，最后再拼接到一起。</p>
+<h3 id="opentelemetry-上报原理">OpenTelemetry 上报原理</h3>
+<ol type="1">
+<li><p>独立上报</p>
 <ul>
-<li>SDK 层：负责数据收集和基本处理，包括前置采样</li>
-<li>Collector 层：负责数据聚合和高级处理，可以实现尾采样</li>
-</ul>
+<li><p>每个 <code>span</code> 在结束时（调用
+<code>span.End()</code>）会被传递给 <code>SpanProcessor</code></p></li>
+<li><p><code>SpanProcessor</code> 决定如何处理这个
+<code>span</code>（立即导出或批量导出）</p></li>
+<li><p>导出是独立的，不会等待整个 <code>trace</code> 完成</p></li>
+</ul></li>
+<li><p>批处理机制</p>
+<ul>
+<li><p>默认使用 <code>BatchSpanProcessor</code>，它会收集一定数量的
+<code>spans</code> 或等待一定时间然后批量导出</p></li>
+<li><p>但这个批处理与 <code>trace</code>
+完整性无关，只是为了效率</p></li>
+</ul></li>
+</ol>
+<h3 id="collector-如何实现尾采样">Collector 如何实现尾采样</h3>
+<p>Collector 通过以下方式解决这些问题：</p>
+<ol type="1">
+<li><p>设置等待时间窗口</p>
+<ul>
+<li><p>为每个 trace 设置一个等待期（如 10 秒）</p></li>
+<li><p>在此期间收集该 trace 的所有 spans</p></li>
+<li><p><strong>超过等待期后，基于已收集的 spans 做决策</strong></p></li>
+</ul></li>
+<li><p>集中式收集</p>
+<ul>
+<li><p>所有服务的 spans 都发送到 Collector</p></li>
+<li><p>Collector 有更全面的视图来关联 spans</p></li>
+</ul></li>
+<li><p>专门的资源分配：Collector
+作为独立组件，有专门的资源处理这种复杂逻辑，不会影响应用性能。</p></li>
+</ol>
 <h2 id="如何在-opentelemetry-生态中实现尾采样">如何在 OpenTelemetry
 生态中实现尾采样？</h2>
 <p>虽然 SDK 不直接支持尾采样，但 OpenTelemetry
@@ -249,7 +274,7 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 <widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E7%BD%AE%E9%87%87%E6%A0%B7-vs-%E5%B0%BE%E9%87%87%E6%A0%B7"><span class="toc-text">前置采样 vs 尾采样</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#opentelemetry-%E7%9A%84%E9%87%87%E6%A0%B7%E5%AE%9E%E7%8E%B0"><span class="toc-text">OpenTelemetry 的采样实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%87%E6%A0%B7%E6%A0%87%E5%BF%97%E7%9A%84%E4%BC%A0%E6%92%AD%E6%9C%BA%E5%88%B6"><span class="toc-text">采样标志的传播机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88-opentelemetry-%E4%B8%8D%E6%94%AF%E6%8C%81%E5%B0%BE%E9%87%87%E6%A0%B7"><span class="toc-text">为什么 OpenTelemetry
-不支持尾采样？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">1. 分布式系统的一致性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%A7%E8%83%BD%E5%92%8C%E8%B5%84%E6%BA%90%E8%80%83%E9%87%8F"><span class="toc-text">2. 性能和资源考量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E6%97%B6%E6%80%A7%E8%A6%81%E6%B1%82"><span class="toc-text">3. 实时性要求</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E5%88%86%E5%B1%82%E8%80%83%E8%99%91"><span class="toc-text">4. 架构分层考虑</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E5%9C%A8-opentelemetry-%E7%94%9F%E6%80%81%E4%B8%AD%E5%AE%9E%E7%8E%B0%E5%B0%BE%E9%87%87%E6%A0%B7"><span class="toc-text">如何在 OpenTelemetry
+不支持尾采样？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#opentelemetry-%E4%B8%8A%E6%8A%A5%E5%8E%9F%E7%90%86"><span class="toc-text">OpenTelemetry 上报原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#collector-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%B0%BE%E9%87%87%E6%A0%B7"><span class="toc-text">Collector 如何实现尾采样</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E5%9C%A8-opentelemetry-%E7%94%9F%E6%80%81%E4%B8%AD%E5%AE%9E%E7%8E%B0%E5%B0%BE%E9%87%87%E6%A0%B7"><span class="toc-text">如何在 OpenTelemetry
 生态中实现尾采样？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8-opentelemetry-collector"><span class="toc-text">1. 使用 OpenTelemetry
 Collector</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%93%E5%90%88%E5%89%8D%E7%BD%AE%E9%87%87%E6%A0%B7%E5%92%8C%E9%94%99%E8%AF%AF%E6%8D%95%E8%8E%B7"><span class="toc-text">2. 结合前置采样和错误捕获</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E4%B8%93%E9%97%A8%E7%9A%84%E5%90%8E%E7%AB%AF%E7%B3%BB%E7%BB%9F"><span class="toc-text">3. 使用专门的后端系统</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA"><span class="toc-text">结论</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%E6%A1%88%E4%BE%8B"><span class="toc-text">实战案例</span></a></li></ol></div><div class="widget-footer">
 
