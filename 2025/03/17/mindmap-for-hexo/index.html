@@ -28,7 +28,7 @@
 <meta property="og:description" content="本文详细介绍了如何在 Hexo 博客中优雅地集成 Markmap 思维导图，让你能够直接在 Markdown 文件中创建交互式思维导图。同时这也是一个 Hexo 插件的标准实现案例。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-03-17T10:21:18.000Z">
-<meta property="article:modified_time" content="2025-03-17T11:47:49.625Z">
+<meta property="article:modified_time" content="2025-03-17T11:57:48.209Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="hexo">
 <meta property="article:tag" content="markmap">
@@ -83,7 +83,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E5%B0%8F%E6%8A%80%E6%9C%AF/">小技术</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-03-17T10:21:18.000Z">2025-03-17</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-03-17T11:47:49.625Z">2025-03-17</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-03-17T10:21:18.000Z">2025-03-17</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-03-17T11:57:48.209Z">2025-03-17</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -117,37 +117,31 @@ Hexo 博客中集成 Markmap，让你能够直接在 Markdown
 <p>在主题配置文件中添加必要的资源引用：</p>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">inject:</span></span><br><span class="line">  <span class="attr">head:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&lt;link</span> <span class="string">rel=&quot;stylesheet&quot;</span> <span class="string">href=&quot;/css/markmap.css&quot;&gt;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&lt;script</span> <span class="string">src=&quot;https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18&quot;&gt;&lt;/script&gt;</span></span><br></pre></td></tr></table></figure>
 <h2 id="使用方法">使用方法</h2>
-<div class="tag-plugin tabs" align="center"id="tab_1"><div class="nav-tabs"><div class="tab active"><a href="#tab_1-1">代码块</a></div><div class="tab"><a href="#tab_1-2">效果</a></div></div><div class="tab-content"><div class="tab-pane active" id="tab_1-1"><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">&#123;% markmap %&#125;</span><br><span class="line"></span><br><span class="line"><span class="section"># 技术栈</span></span><br><span class="line"></span><br><span class="line"><span class="section">## 前端</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> Vue.js</span><br><span class="line"><span class="bullet">-</span> React</span><br><span class="line"><span class="bullet">-</span> Angular</span><br><span class="line"></span><br><span class="line"><span class="section">## 后端</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> Node.js</span><br><span class="line"><span class="bullet">-</span> Python</span><br><span class="line"><span class="bullet">-</span> Go</span><br><span class="line"></span><br><span class="line"><span class="section">## 数据库</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> MySQL</span><br><span class="line"><span class="bullet">-</span> MongoDB</span><br><span class="line"><span class="bullet">-</span> Redis</span><br><span class="line"></span><br><span class="line">&#123;% endmarkmap %&#125;</span><br></pre></td></tr></table></figure></div><div class="tab-pane" id="tab_1-2"><div id="markmap-f2dd3fbc-9bb6-4700-a128-f252744c602f" class="markmap">
+<div class="tag-plugin tabs" align="center"id="tab_1"><div class="nav-tabs"><div class="tab active"><a href="#tab_1-1">代码块</a></div><div class="tab"><a href="#tab_1-2">效果</a></div></div><div class="tab-content"><div class="tab-pane active" id="tab_1-1"><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;% markmap %&#125;</span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 技术栈</span><br><span class="line"><span class="bullet">  -</span> 前端</span><br><span class="line"><span class="bullet">    -</span> Vue.js</span><br><span class="line"><span class="bullet">    -</span> React</span><br><span class="line"><span class="bullet">    -</span> Angular</span><br><span class="line"><span class="bullet">  -</span> 后端</span><br><span class="line"><span class="bullet">    -</span> Node.js</span><br><span class="line"><span class="bullet">    -</span> Python</span><br><span class="line"><span class="bullet">    -</span> Go</span><br><span class="line"><span class="bullet">  -</span> 数据库</span><br><span class="line"><span class="bullet">    -</span> MySQL</span><br><span class="line"><span class="bullet">    -</span> MongoDB</span><br><span class="line"><span class="bullet">    -</span> Redis</span><br><span class="line"></span><br><span class="line">&#123;% endmarkmap %&#125;</span><br></pre></td></tr></table></figure></div><div class="tab-pane" id="tab_1-2"><div id="markmap-d2e4e661-4c06-4fbf-90eb-c80e10ca5487" class="markmap">
 <script type="text/template">
 
-# 技术栈
-
-## 前端
-
-- Vue.js
-- React
-- Angular
-
-## 后端
-
-- Node.js
-- Python
-- Go
-
-## 数据库
-
-- MySQL
-- MongoDB
-- Redis
+- 技术栈
+  - 前端
+    - Vue.js
+    - React
+    - Angular
+  - 后端
+    - Node.js
+    - Python
+    - Go
+  - 数据库
+    - MySQL
+    - MongoDB
+    - Redis
 
   </script>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const template = document.querySelector('#markmap-f2dd3fbc-9bb6-4700-a128-f252744c602f script[type="text/template"]');
+  const template = document.querySelector('#markmap-d2e4e661-4c06-4fbf-90eb-c80e10ca5487 script[type="text/template"]');
   if (template) {
     const content = template.textContent;
-    window.markmap.autoLoader.renderString(content, null, document.querySelector('#markmap-f2dd3fbc-9bb6-4700-a128-f252744c602f'));
+    window.markmap.autoLoader.renderString(content, null, document.querySelector('#markmap-d2e4e661-4c06-4fbf-90eb-c80e10ca5487'));
   }
 });
 </script></div></div></div>
