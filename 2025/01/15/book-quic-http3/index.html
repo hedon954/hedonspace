@@ -28,7 +28,7 @@
 <meta property="og:description" content="整理阅读《解密 QUIC&#x2F;HTTP3：未来互联网的基石》笔记。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-01-15T11:17:20.000Z">
-<meta property="article:modified_time" content="2025-03-17T11:09:29.565Z">
+<meta property="article:modified_time" content="2025-03-17T11:42:00.371Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="QUIC">
 <meta property="article:tag" content="HTTP3">
@@ -53,7 +53,7 @@
 
   
 
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon.png"><link rel="shortcut icon" href="/assets/favicon.png"><meta name="theme-color" content="#f8f8f8"><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/markmap.css"><script src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script><link rel="stylesheet" href="/css/excalidraw.css"><script src="https://unpkg.com/react@17/umd/react.production.min.js"></script><script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script><script src="https://unpkg.com/@excalidraw/excalidraw@0.15.3/dist/excalidraw.production.min.js"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon.png"><link rel="shortcut icon" href="/assets/favicon.png"><meta name="theme-color" content="#f8f8f8"><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/markmap.css"><script src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
 </head>
 <body>
 
@@ -84,7 +84,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-01-15T11:17:20.000Z">2025-01-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-03-17T11:09:29.565Z">2025-03-17</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-01-15T11:17:20.000Z">2025-01-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-03-17T11:42:00.371Z">2025-03-17</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -95,8 +95,7 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>无法加载 Excalidraw 文件: /excalidraw/chrono.excalidraw</p>
-<h1 id="quic-产生背景">1. QUIC 产生背景</h1>
+  </div><article class="md-text content"><h1 id="quic-产生背景">1. QUIC 产生背景</h1>
 <h2 id="常见网络协议">常见网络协议</h2>
 <ul>
 <li><code>UDP</code></li>
@@ -118,8 +117,7 @@ Protocol）：用于电话网络。</li>
 <li><p><code>SSLv3</code>：分为握手阶段和数据传输阶段。</p>
 <ul>
 <li>握手阶段完成对端点的认证和确定保护数据传输的密钥。</li>
-<li>一旦确定了密钥，后面的数据传输和 SSL
-协议过程都受到加密和完整性保护。</li>
+<li>一旦确定了密钥，后面的数据传输和SSL协议过程都受到加密和完整性保护。</li>
 </ul></li>
 <li><p><code>TSL1.0</code>：基于 SSLv3，存在 CBC（Cipher Block
 Chaining，密文分组链接）加密和解密模式漏洞，使得主动攻击者可以观察到当前记录的
@@ -127,10 +125,10 @@ IV（Intiallization
 Vector，初始化向量），猜测一个数据库，进行数据注入。</p></li>
 <li><p><code>TSL1.1</code>：修复了 TSL1.0 的一些关键安全问题：</p>
 <ul>
-<li>BC 加密使用每条记录一个的显式 IV；</li>
+<li>BC 加密使用每条记录一个的显式IV；</li>
 <li>为了防止 CBC 填充攻击，使用 bad_record_mac 错误码代替
 decryption_failed 回复填充错误；</li>
-<li>支持传输参数的 IANA（Internet Assigned Numbers
+<li>支持传输参数的IANA（Internet Assigned Numbers
 Authority，互联网数字分配机构）注册，增加了传输参数的灵活性；</li>
 <li>改进了连接关闭过早情况下的连接恢复问题。</li>
 </ul>
@@ -166,8 +164,8 @@ ECDHE（Elliptic Curve Diffie-Hellman Ephemeral，椭圆曲线 DH
 临时密钥交换算法）和 DHE（Diffie-Hellman Ephemeral, DH
 临时密钥交换算法）。</li>
 <li>ServerHello 之后的消息都加密传输。</li>
-<li>删除了压缩功能。之前版本的压缩功能由于存在被攻击的风险实际上很少使用，而且现代的压缩基本都在应用层实现，比如
-HTTP 就自己实现的压缩。</li>
+<li>删除了压缩功能。之前版本的压缩功能由于存在被攻击的风险实际上很少使用，而且现代的压缩基本都在应用层实现，比如HTTP
+就自己实现的压缩。</li>
 </ul></li>
 </ul></li>
 </ul>
