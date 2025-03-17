@@ -70,7 +70,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/03/17/mindmap-for-hexo/"><span class="title">在 Hexo 博客中优雅地集成 Markmap 思维导图</span></a><a class="item title" href="/2025/01/15/book-quic-http3/"><span class="title">读书笔记丨解密 QUIC/HTTP3：未来互联网的基石</span></a><a class="item title" href="/2025/03/13/opentelemetry-tail-sampler/"><span class="title">为什么 OpenTelemetry 的 SDK 中不支持尾采样 Hook？</span></a><a class="item title" href="/2025/03/11/note-ddd-awareness/"><span class="title">读书笔记丨《悟道领域驱动设计》</span></a><a class="item title" href="/2024/03/06/rust-action-httpie/"><span class="title">Rust 实战丨HTTPie</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2024/03/02/rust-crate-reqwest/"><span class="title">Rust reqwest 简明教程</span></a><a class="item title" href="/2024/03/02/rust-crate-clap/"><span class="title">深入探索 Rust 的 clap 库：命令行解析的艺术</span></a><a class="item title" href="/2024/05/11/rust-crate-chrono/"><span class="title">时间处理基础：Rust 的 chrono 库教程</span></a><a class="item title" href="/2024/03/05/rust-crate-anyhow/"><span class="title">Rust anyhow 简明教程</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/03/17/backend-road/"><span class="title">后端开发之路</span></a><a class="item title" href="/2025/03/17/mindmap-for-hexo/"><span class="title">在 Hexo 博客中优雅地集成 Markmap 思维导图</span></a><a class="item title" href="/2025/01/15/book-quic-http3/"><span class="title">读书笔记丨解密 QUIC/HTTP3：未来互联网的基石</span></a><a class="item title" href="/2025/03/13/opentelemetry-tail-sampler/"><span class="title">为什么 OpenTelemetry 的 SDK 中不支持尾采样 Hook？</span></a><a class="item title" href="/2025/03/11/note-ddd-awareness/"><span class="title">读书笔记丨《悟道领域驱动设计》</span></a><a class="item title" href="/2024/03/06/rust-action-httpie/"><span class="title">Rust 实战丨HTTPie</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2024/03/02/rust-crate-reqwest/"><span class="title">Rust reqwest 简明教程</span></a><a class="item title" href="/2024/03/02/rust-crate-clap/"><span class="title">深入探索 Rust 的 clap 库：命令行解析的艺术</span></a><a class="item title" href="/2024/05/11/rust-crate-chrono/"><span class="title">时间处理基础：Rust 的 chrono 库教程</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -117,7 +117,13 @@ Hexo 博客中集成 Markmap，让你能够直接在 Markdown
 <p>在主题配置文件中添加必要的资源引用：</p>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">inject:</span></span><br><span class="line">  <span class="attr">head:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&lt;link</span> <span class="string">rel=&quot;stylesheet&quot;</span> <span class="string">href=&quot;/css/markmap.css&quot;&gt;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&lt;script</span> <span class="string">src=&quot;https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18&quot;&gt;&lt;/script&gt;</span></span><br></pre></td></tr></table></figure>
 <h2 id="使用方法">使用方法</h2>
-<div class="tag-plugin tabs" align="center"id="tab_1"><div class="nav-tabs"><div class="tab active"><a href="#tab_1-1">代码块</a></div><div class="tab"><a href="#tab_1-2">效果</a></div></div><div class="tab-content"><div class="tab-pane active" id="tab_1-1"><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;% markmap %&#125;</span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 技术栈</span><br><span class="line"><span class="bullet">  -</span> 前端</span><br><span class="line"><span class="bullet">    -</span> Vue.js</span><br><span class="line"><span class="bullet">    -</span> React</span><br><span class="line"><span class="bullet">    -</span> Angular</span><br><span class="line"><span class="bullet">  -</span> 后端</span><br><span class="line"><span class="bullet">    -</span> Node.js</span><br><span class="line"><span class="bullet">    -</span> Python</span><br><span class="line"><span class="bullet">    -</span> Go</span><br><span class="line"><span class="bullet">  -</span> 数据库</span><br><span class="line"><span class="bullet">    -</span> MySQL</span><br><span class="line"><span class="bullet">    -</span> MongoDB</span><br><span class="line"><span class="bullet">    -</span> Redis</span><br><span class="line"></span><br><span class="line">&#123;% endmarkmap %&#125;</span><br></pre></td></tr></table></figure></div><div class="tab-pane" id="tab_1-2"><div id="markmap-d2e4e661-4c06-4fbf-90eb-c80e10ca5487" class="markmap">
+<div class="tag-plugin tabs" align="center"id="tab_1"><div class="nav-tabs"><div class="tab active"><a href="#tab_1-1">代码块</a></div><div class="tab"><a href="#tab_1-2">效果</a></div></div><div class="tab-content"><div class="tab-pane active" id="tab_1-1"><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;% markmap %&#125;</span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 技术栈</span><br><span class="line"><span class="bullet">  -</span> 前端</span><br><span class="line"><span class="bullet">    -</span> Vue.js</span><br><span class="line"><span class="bullet">    -</span> React</span><br><span class="line"><span class="bullet">    -</span> Angular</span><br><span class="line"><span class="bullet">  -</span> 后端</span><br><span class="line"><span class="bullet">    -</span> Node.js</span><br><span class="line"><span class="bullet">    -</span> Python</span><br><span class="line"><span class="bullet">    -</span> Go</span><br><span class="line"><span class="bullet">  -</span> 数据库</span><br><span class="line"><span class="bullet">    -</span> MySQL</span><br><span class="line"><span class="bullet">    -</span> MongoDB</span><br><span class="line"><span class="bullet">    -</span> Redis</span><br><span class="line"></span><br><span class="line">&#123;% endmarkmap %&#125;</span><br></pre></td></tr></table></figure></div><div class="tab-pane" id="tab_1-2"><style>
+svg.markmap {
+        width: 100%;
+        height: 500px;
+      }
+</style>
+<div id="markmap-38363406-3382-4644-a685-ff73bd8b2767" class="markmap">
 <script type="text/template">
 
 - 技术栈
@@ -135,16 +141,7 @@ Hexo 博客中集成 Markmap，让你能够直接在 Markdown
     - Redis
 
   </script>
-</div>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const template = document.querySelector('#markmap-d2e4e661-4c06-4fbf-90eb-c80e10ca5487 script[type="text/template"]');
-  if (template) {
-    const content = template.textContent;
-    window.markmap.autoLoader.renderString(content, null, document.querySelector('#markmap-d2e4e661-4c06-4fbf-90eb-c80e10ca5487'));
-  }
-});
-</script></div></div></div>
+</div></div></div></div>
 <h2 id="工作原理">工作原理</h2>
 <h3 id="hexo-插件系统">1. Hexo 插件系统</h3>
 <ul>
@@ -240,7 +237,7 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
     </section>
     </div>
 </article>
-<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/03/13/opentelemetry-tail-sampler/">为什么 OpenTelemetry 的 SDK 中不支持尾采样 Hook？</a></div></section></div>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2025/03/17/backend-road/">后端开发之路</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/03/13/opentelemetry-tail-sampler/">为什么 OpenTelemetry 的 SDK 中不支持尾采样 Hook？</a></div></section></div>
 
 
 
