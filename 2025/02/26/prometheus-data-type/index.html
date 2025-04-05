@@ -1,0 +1,1079 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1" theme-name="Stellar" theme-version="1.29.1">
+  
+  <meta name="generator" content="Hexo 6.3.0">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  <link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin><link rel="preconnect" href="https://unpkg.com" crossorigin><link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  
+  <title>服务监控丨Prometheus 四大数据类型详解 - HedonWang</title>
+
+  
+    <meta name="description" content="本文介绍了 Prometheus 的四大数据类型及其 PromQL 查询语言，帮助开发团队构建强大的可观测性系统。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="服务监控丨Prometheus 四大数据类型详解">
+<meta property="og:url" content="https://hedon.top/2025/02/26/prometheus-data-type/index.html">
+<meta property="og:site_name" content="HedonWang">
+<meta property="og:description" content="本文介绍了 Prometheus 的四大数据类型及其 PromQL 查询语言，帮助开发团队构建强大的可观测性系统。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-02-26T07:52:10.000Z">
+<meta property="article:modified_time" content="2025-04-05T14:31:32.877Z">
+<meta property="article:author" content="Hedon Wang">
+<meta property="article:tag" content="服务监控">
+<meta property="article:tag" content="prometheus">
+<meta name="twitter:card" content="summary">
+  
+  
+  
+  <meta name="keywords" content="服务监控,prometheus">
+
+  <!-- feed -->
+  
+    <link rel="alternate" href="/atom.xml" title="HedonWang" type="application/atom+xml">
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.29.1">
+
+
+  
+    <link rel="shortcut icon" href="/assets/favicon.png">
+  
+
+  
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon.png"><link rel="shortcut icon" href="/assets/favicon.png"><meta name="theme-color" content="#f8f8f8"><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/markmap.css"><script src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><div class="icon"><img no-lazy class="icon" src="/assets/favicon.png" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></div><a class="title" href="/"><div class="main" ff="title">HedonWang</div><div class="sub cap">君子求诸己，律己则安。</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="专栏" href="/topic/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="关于我" href="/about/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a><a class="nav-item" title="思维导图" href="/html/mindmap.html" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/04/05/python-mindmap/"><span class="title">Python 知识图谱</span></a><a class="item title" href="/2024/01/20/go-gpm/"><span class="title">深入浅出 Go 语言的 GPM 模型（Go1.21）</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a><a class="item title" href="/2024/05/11/rust-crate-chrono/"><span class="title">时间处理基础：Rust 的 chrono 库教程</span></a><a class="item title" href="/2024/03/02/rust-crate-clap/"><span class="title">深入探索 Rust 的 clap 库：命令行解析的艺术</span></a><a class="item title" href="/2024/03/02/rust-crate-reqwest/"><span class="title">Rust reqwest 简明教程</span></a><a class="item title" href="/2024/01/17/rust-action-mandelbrot/"><span class="title">Rust 实战丨绘制曼德博集</span></a><a class="item title" href="/2024/06/06/rust-action-sse/"><span class="title">Rust 实战丨SSE(Server-Sent Events)</span></a><a class="item title" href="/2024/11/26/rust-bootcamp/"><span class="title">Rust 训练营总结丨第三次入门 Rust</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E6%9C%8D%E5%8A%A1%E7%9B%91%E6%8E%A7/">服务监控</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-02-26T07:52:10.000Z">2025-02-26</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-04-05T14:31:32.877Z">2025-04-05</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>服务监控丨Prometheus 四大数据类型详解</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h2 id="前言">前言</h2>
+<p>在微服务和云原生架构的世界中，一套强大的监控系统是保障服务稳定性的基石。Prometheus
+作为 CNCF
+的明星项目，凭借其简单高效的特性，已成为事实上的云原生监控标准。本文将深入剖析
+Prometheus 的四大数据类型及其 PromQL
+查询语言，帮助开发团队构建强大的可观测性系统。</p>
+<h2 id="结论先行prometheus-四大数据类型速览">结论先行：Prometheus
+四大数据类型速览</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 22%" />
+<col style="width: 19%" />
+<col style="width: 19%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>特性</th>
+<th>Counter</th>
+<th>Gauge</th>
+<th>Histogram</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>定义</strong></td>
+<td>只增不减的累积计数器</td>
+<td>可增可减的瞬时值</td>
+<td>观测值分布的分桶统计</td>
+<td>客户端计算的分位数统计</td>
+</tr>
+<tr class="even">
+<td><strong>重置行为</strong></td>
+<td>服务重启时归零</td>
+<td>保持当前值</td>
+<td>桶计数归零</td>
+<td>计数归零</td>
+</tr>
+<tr class="odd">
+<td><strong>典型应用</strong></td>
+<td>请求计数、错误数、流量统计</td>
+<td>温度、内存使用、连接数</td>
+<td>请求延迟、响应大小</td>
+<td>请求延迟、队列等待时间</td>
+</tr>
+<tr class="even">
+<td><strong>数据点</strong></td>
+<td>单一值</td>
+<td>单一值</td>
+<td>_bucket、_sum、count</td>
+<td>{quantile="x"}、_sum、_count</td>
+</tr>
+<tr class="odd">
+<td><strong>查询重点</strong></td>
+<td>rate()、increase()</td>
+<td>直接使用、预测函数</td>
+<td>histogram_quantile()</td>
+<td>直接读取分位数</td>
+</tr>
+<tr class="even">
+<td><strong>分布式聚合</strong></td>
+<td>可以（sum、rate）</td>
+<td>可以（avg、max、min）</td>
+<td>可以（百分位也可聚合）</td>
+<td>有限（分位数不可聚合）</td>
+</tr>
+<tr class="odd">
+<td><strong>资源消耗</strong></td>
+<td>低</td>
+<td>低</td>
+<td>中（依赖桶数量）</td>
+<td>中（客户端计算）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="一prometheus-核心数据类型详解">一、Prometheus
+核心数据类型详解</h2>
+<h3 id="counter计数器持续增长的累积值">1.
+Counter（计数器）：持续增长的累积值</h3>
+<p>Counter
+是最简单但也最常用的指标类型，代表一个只增不减的累积数值。每当事件发生，计数器增加；当监控目标重启时，计数器归零。</p>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>API 请求总数</li>
+<li>错误发生次数</li>
+<li>处理任务的数量</li>
+<li>网络流量字节数</li>
+</ul>
+<p><strong>正确的代码实现</strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 声明带标签的计数器</span></span><br><span class="line">requestCounter := prometheus.NewCounterVec(</span><br><span class="line">    prometheus.CounterOpts&#123;</span><br><span class="line">        Name: <span class="string">&quot;http_requests_total&quot;</span>,</span><br><span class="line">        Help: <span class="string">&quot;Total number of HTTP requests&quot;</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    []<span class="type">string</span>&#123;<span class="string">&quot;method&quot;</span>, <span class="string">&quot;path&quot;</span>, <span class="string">&quot;status&quot;</span>&#125;, <span class="comment">// 定义标签维度</span></span><br><span class="line">)</span><br><span class="line">prometheus.MustRegister(requestCounter)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用标签记录请求</span></span><br><span class="line">requestCounter.WithLabelValues(<span class="string">&quot;GET&quot;</span>, <span class="string">&quot;/api/users&quot;</span>, <span class="string">&quot;200&quot;</span>).Inc()</span><br></pre></td></tr></table></figure>
+<p><strong>PromQL 查询技巧</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 每秒请求率（5分钟窗口）</span><br><span class="line">rate(http_requests_total&#123;status=&quot;200&quot;&#125;[5m])</span><br><span class="line"></span><br><span class="line"># 错误率计算</span><br><span class="line">sum(rate(http_requests_total&#123;status=~&quot;5..&quot;&#125;[5m])) / sum(rate(http_requests_total[5m]))</span><br><span class="line"></span><br><span class="line"># 1小时内的请求增量</span><br><span class="line">increase(http_requests_total[1h])</span><br></pre></td></tr></table></figure>
+<p><strong>最佳实践</strong>：</p>
+<ul>
+<li>永远不要直接使用 Counter 的原始值，总是使用 <code>rate()</code> 或
+<code>increase()</code></li>
+<li>使用有意义的标签进行多维度分析，但避免高基数标签</li>
+<li>Counter 重置（如服务重启）会被 <code>rate()</code> 函数自动处理</li>
+</ul>
+<h3 id="gauge仪表盘可变的瞬时值">2. Gauge（仪表盘）：可变的瞬时值</h3>
+<p>Gauge 表示一个可增可减的瞬时测量值，反映系统的当前状态。</p>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>内存使用量</li>
+<li>CPU 使用率</li>
+<li>当前活跃连接数</li>
+<li>队列深度</li>
+<li>温度等物理量</li>
+</ul>
+<p><strong>正确的代码实现</strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 声明带标签的仪表盘</span></span><br><span class="line">memoryGauge := prometheus.NewGaugeVec(</span><br><span class="line">    prometheus.GaugeOpts&#123;</span><br><span class="line">        Name: <span class="string">&quot;app_memory_usage_bytes&quot;</span>,</span><br><span class="line">        Help: <span class="string">&quot;Current memory usage in bytes&quot;</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    []<span class="type">string</span>&#123;<span class="string">&quot;component&quot;</span>, <span class="string">&quot;instance&quot;</span>&#125;,</span><br><span class="line">)</span><br><span class="line">prometheus.MustRegister(memoryGauge)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 设置当前值</span></span><br><span class="line">memoryGauge.WithLabelValues(<span class="string">&quot;api-server&quot;</span>, <span class="string">&quot;instance-1&quot;</span>).Set(<span class="type">float64</span>(getCurrentMemoryUsage()))</span><br></pre></td></tr></table></figure>
+<p><strong>PromQL 查询技巧</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"># 直接使用当前值</span><br><span class="line">app_memory_usage_bytes&#123;component=&quot;api-server&quot;&#125;</span><br><span class="line"></span><br><span class="line"># 统计聚合</span><br><span class="line">avg_over_time(app_memory_usage_bytes[1h])</span><br><span class="line">max_over_time(app_memory_usage_bytes[24h])</span><br><span class="line"></span><br><span class="line"># 趋势预测（线性回归）</span><br><span class="line">predict_linear(app_memory_usage_bytes[6h], 4 * 3600)</span><br><span class="line"></span><br><span class="line"># 计算变化率</span><br><span class="line">(app_memory_usage_bytes - app_memory_usage_bytes offset 1h) / app_memory_usage_bytes offset 1h</span><br></pre></td></tr></table></figure>
+<p><strong>最佳实践</strong>：</p>
+<ul>
+<li>Gauge 可以直接使用其瞬时值，不需要像 Counter 那样使用 rate</li>
+<li>对于容易波动的指标，考虑使用 <code>avg_over_time</code>
+平滑数据</li>
+<li>利用 <code>predict_linear</code> 进行容量规划和趋势预测</li>
+</ul>
+<h3 id="histogram直方图观测值分布的分桶统计">3.
+Histogram（直方图）：观测值分布的分桶统计</h3>
+<p>Histogram
+允许对观测值（如请求延迟）进行分布式统计，将数据分散到预定义的桶中，是分析性能分布的理想工具。</p>
+<p><strong>自动生成的指标</strong>：</p>
+<ul>
+<li><code>&lt;metric&gt;_bucket&#123;le="&lt;upper bound&gt;"&#125;</code>:
+小于等于特定阈值的观测值计数</li>
+<li><code>&lt;metric&gt;_sum</code>: 所有观测值的总和</li>
+<li><code>&lt;metric&gt;_count</code>: 观测值总数</li>
+</ul>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>请求延迟分布</li>
+<li>响应大小分布</li>
+<li>批处理任务执行时间</li>
+<li>任何需要百分位数分析的场景</li>
+</ul>
+<p><strong>正确的代码实现</strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 声明带标签的直方图</span></span><br><span class="line">durationHistogram := prometheus.NewHistogramVec(</span><br><span class="line">    prometheus.HistogramOpts&#123;</span><br><span class="line">        Name:    <span class="string">&quot;http_request_duration_seconds&quot;</span>,</span><br><span class="line">        Help:    <span class="string">&quot;HTTP request duration in seconds&quot;</span>,</span><br><span class="line">        Buckets: prometheus.ExponentialBuckets(<span class="number">0.001</span>, <span class="number">2</span>, <span class="number">10</span>), <span class="comment">// 从1ms开始指数增长</span></span><br><span class="line">    &#125;,</span><br><span class="line">    []<span class="type">string</span>&#123;<span class="string">&quot;method&quot;</span>, <span class="string">&quot;path&quot;</span>&#125;,</span><br><span class="line">)</span><br><span class="line">prometheus.MustRegister(durationHistogram)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 记录请求延迟</span></span><br><span class="line">durationHistogram.WithLabelValues(<span class="string">&quot;GET&quot;</span>, <span class="string">&quot;/api/users&quot;</span>).Observe(responseTime)</span><br></pre></td></tr></table></figure>
+<p><strong>PromQL 查询技巧</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"># 计算平均响应时间</span><br><span class="line">rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m])</span><br><span class="line"></span><br><span class="line"># 计算P90延迟</span><br><span class="line">histogram_quantile(0.9, rate(http_request_duration_seconds_bucket[5m]))</span><br><span class="line"></span><br><span class="line"># 按API路径分析P95延迟</span><br><span class="line">histogram_quantile(0.95, sum by(path, le) (rate(http_request_duration_seconds_bucket[5m])))</span><br><span class="line"></span><br><span class="line"># 计算SLO：延迟小于100ms的请求比例</span><br><span class="line">sum(rate(http_request_duration_seconds_bucket&#123;le=&quot;0.1&quot;&#125;[5m])) / sum(rate(http_request_duration_seconds_count[5m]))</span><br></pre></td></tr></table></figure>
+<p><strong>最佳实践</strong>：</p>
+<ul>
+<li>仔细设计桶边界，覆盖关键分位数区域</li>
+<li>对于延迟指标，通常使用指数桶比线性桶更合理</li>
+<li>利用 <code>histogram_quantile</code> 计算任意分位数</li>
+<li>桶的数量会影响存储和性能，权衡精度和开销</li>
+</ul>
+<h3 id="summary摘要客户端计算的分位数统计">4.
+Summary（摘要）：客户端计算的分位数统计</h3>
+<p>Summary 与 Histogram
+类似，但在客户端直接计算并存储分位数，无需服务器端计算。</p>
+<p><strong>自动生成的指标</strong>：</p>
+<ul>
+<li><code>&lt;metric&gt;&#123;quantile="&lt;φ&gt;"&#125;</code>: φ 分位数的值</li>
+<li><code>&lt;metric&gt;_sum</code>: 所有观测值的总和</li>
+<li><code>&lt;metric&gt;_count</code>: 观测值总数</li>
+</ul>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li>需要高精度分位数的场景</li>
+<li>客户端计算分位数更高效的情况</li>
+<li>对服务器端聚合要求不高的场景</li>
+</ul>
+<p><strong>正确的代码实现</strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 声明带标签的摘要</span></span><br><span class="line">durationSummary := prometheus.NewSummaryVec(</span><br><span class="line">    prometheus.SummaryOpts&#123;</span><br><span class="line">        Name:       <span class="string">&quot;http_request_duration_seconds_summary&quot;</span>,</span><br><span class="line">        Help:       <span class="string">&quot;HTTP request duration in seconds&quot;</span>,</span><br><span class="line">        Objectives: <span class="keyword">map</span>[<span class="type">float64</span>]<span class="type">float64</span>&#123;<span class="number">0.5</span>: <span class="number">0.05</span>, <span class="number">0.9</span>: <span class="number">0.01</span>, <span class="number">0.99</span>: <span class="number">0.001</span>&#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">    []<span class="type">string</span>&#123;<span class="string">&quot;method&quot;</span>, <span class="string">&quot;path&quot;</span>&#125;,</span><br><span class="line">)</span><br><span class="line">prometheus.MustRegister(durationSummary)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 记录请求延迟</span></span><br><span class="line">durationSummary.WithLabelValues(<span class="string">&quot;POST&quot;</span>, <span class="string">&quot;/api/login&quot;</span>).Observe(responseTime)</span><br></pre></td></tr></table></figure>
+<p><strong>PromQL 查询技巧</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 直接读取P99延迟</span><br><span class="line">http_request_duration_seconds_summary&#123;quantile=&quot;0.99&quot;, method=&quot;GET&quot;, path=&quot;/api/users&quot;&#125;</span><br><span class="line"></span><br><span class="line"># 计算平均响应时间</span><br><span class="line">rate(http_request_duration_seconds_summary_sum[5m]) / rate(http_request_duration_seconds_summary_count[5m])</span><br><span class="line"></span><br><span class="line"># 每个服务的中位数延迟</span><br><span class="line">max by(service) (http_request_duration_seconds_summary&#123;quantile=&quot;0.5&quot;&#125;)</span><br></pre></td></tr></table></figure>
+<p><strong>最佳实践与限制</strong>：</p>
+<ul>
+<li>Summary 预计算的分位数不能跨实例聚合（这是关键限制）</li>
+<li>适用于分位数精度要求高且实例相对独立的场景</li>
+<li>客户端计算分位数会增加应用资源消耗</li>
+<li>分位数设置后不可更改，需提前规划好监控需求</li>
+</ul>
+<h2 id="二promql-查询语言精通">二、PromQL 查询语言精通</h2>
+<p>PromQL 是 Prometheus
+的强大武器，掌握它能让我们精确提取所需的监控数据。</p>
+<h3 id="基础查询与标签选择">1. 基础查询与标签选择</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 基本查询与精确匹配</span><br><span class="line">http_requests_total&#123;status=&quot;200&quot;, method=&quot;GET&quot;&#125;</span><br><span class="line"></span><br><span class="line"># 正则表达式匹配</span><br><span class="line">http_requests_total&#123;path=~&quot;/api/v1/.+&quot;, method!=&quot;OPTIONS&quot;&#125;</span><br><span class="line"></span><br><span class="line"># 范围查询（返回时间序列）</span><br><span class="line">http_requests_total&#123;status=&quot;500&quot;&#125;[5m]</span><br></pre></td></tr></table></figure>
+<h3 id="操作符与函数">2. 操作符与函数</h3>
+<p><strong>算术运算符</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 计算内存使用率百分比</span><br><span class="line">100 * (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes</span><br></pre></td></tr></table></figure>
+<p><strong>聚合函数</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 按服务和路径分组求和</span><br><span class="line">sum by(service, path) (rate(http_requests_total[5m]))</span><br><span class="line"></span><br><span class="line"># 丢弃instance标签求最大值</span><br><span class="line">max without(instance) (node_cpu_seconds_total)</span><br></pre></td></tr></table></figure>
+<p><strong>瞬时向量函数</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 标签替换</span><br><span class="line">label_replace(up, &quot;host&quot;, &quot;$1&quot;, &quot;instance&quot;, &quot;(.*):.*&quot;)</span><br><span class="line"></span><br><span class="line"># 按标签分组取topk</span><br><span class="line">topk by(path) (5, http_request_duration_seconds_sum / http_request_duration_seconds_count)</span><br></pre></td></tr></table></figure>
+<h3 id="复杂查询模式">3. 复杂查询模式</h3>
+<p><strong>SLI/SLO 监控</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 服务可用性SLI</span><br><span class="line">sum(rate(http_requests_total&#123;status=~&quot;2..|3..&quot;&#125;[5m])) / sum(rate(http_requests_total[5m]))</span><br><span class="line"></span><br><span class="line"># 延迟SLO</span><br><span class="line">histogram_quantile(0.99, sum by(le) (rate(http_request_duration_seconds_bucket[5m]))) &lt; 0.3</span><br></pre></td></tr></table></figure>
+<p><strong>异常检测</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># 相对于历史同期的异常增长</span><br><span class="line">rate(http_requests_total[5m])</span><br><span class="line">  &gt; 2 * avg_over_time(rate(http_requests_total[5m])[1d:5m] offset 1d)</span><br></pre></td></tr></table></figure>
+<p><strong>预测分析</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 磁盘空间预测</span><br><span class="line">predict_linear(node_filesystem_free_bytes&#123;mountpoint=&quot;/&quot;&#125;[6h], 7 * 24 * 3600) &lt; 10 * 1024 * 1024 * 1024</span><br></pre></td></tr></table></figure>
+<h2 id="三实战应用场景">三、实战应用场景</h2>
+<h3 id="服务健康度监控">1. 服务健康度监控</h3>
+<p><strong>RED 方法实现</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># Rate - 请求率</span><br><span class="line">sum by(service) (rate(http_requests_total[5m]))</span><br><span class="line"></span><br><span class="line"># Error - 错误率</span><br><span class="line">sum by(service) (rate(http_requests_total&#123;status=~&quot;5..&quot;&#125;[5m])) / sum by(service) (rate(http_requests_total[5m]))</span><br><span class="line"></span><br><span class="line"># Duration - P95延迟</span><br><span class="line">histogram_quantile(0.95, sum by(service, le) (rate(http_request_duration_seconds_bucket[5m])))</span><br></pre></td></tr></table></figure>
+<p><strong>服务依赖健康度</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 数据库查询错误率</span><br><span class="line">sum(rate(database_query_errors_total[5m])) / sum(rate(database_queries_total[5m]))</span><br><span class="line"></span><br><span class="line"># 第三方API调用延迟</span><br><span class="line">histogram_quantile(0.99, sum by(api_name, le) (rate(api_request_duration_seconds_bucket[5m])))</span><br></pre></td></tr></table></figure>
+<h3 id="性能瓶颈分析">2. 性能瓶颈分析</h3>
+<p><strong>热点 API 发现</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># 延迟最高的10个接口</span><br><span class="line">topk(10,</span><br><span class="line">  histogram_quantile(0.95, sum by(method, path, le) (rate(http_request_duration_seconds_bucket[5m])))</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"># 请求量最大的接口</span><br><span class="line">topk(10, sum by(method, path) (rate(http_requests_total[5m])))</span><br></pre></td></tr></table></figure>
+<p><strong>数据库性能分析</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 平均查询时间趋势</span><br><span class="line">rate(db_query_duration_seconds_sum[5m]) / rate(db_query_duration_seconds_count[5m])</span><br><span class="line"></span><br><span class="line"># 慢查询比例</span><br><span class="line">sum(rate(db_query_duration_seconds_bucket&#123;le=&quot;+Inf&quot;&#125;[5m])) - sum(rate(db_query_duration_seconds_bucket&#123;le=&quot;0.1&quot;&#125;[5m])) / sum(rate(db_query_duration_seconds_bucket&#123;le=&quot;+Inf&quot;&#125;[5m]))</span><br></pre></td></tr></table></figure>
+<h3 id="容量规划与告警">3. 容量规划与告警</h3>
+<p><strong>资源预测</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># CPU使用率预测</span><br><span class="line">predict_linear(avg by(instance) (rate(node_cpu_seconds_total&#123;mode!=&quot;idle&quot;&#125;[6h])) [3d:], 7 * 24 * 3600) &gt; 0.85</span><br><span class="line"></span><br><span class="line"># 内存压力告警</span><br><span class="line">(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes &gt; 0.9</span><br></pre></td></tr></table></figure>
+<p><strong>流量容量规划</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 带宽使用预测</span><br><span class="line">predict_linear(rate(node_network_transmit_bytes_total[12h])[7d:], 30 * 24 * 3600)</span><br></pre></td></tr></table></figure>
+<h2 id="四最佳实践与性能优化">四、最佳实践与性能优化</h2>
+<h3 id="指标命名与标签设计">1. 指标命名与标签设计</h3>
+<p><strong>命名规范</strong>：</p>
+<ul>
+<li>使用 snake_case</li>
+<li>包含单位后缀（_bytes, _seconds, _total）</li>
+<li>保持风格一致性</li>
+</ul>
+<p><strong>标签最佳实践</strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 合理设计标签维度</span></span><br><span class="line">apiLatency := prometheus.NewHistogramVec(</span><br><span class="line">    prometheus.HistogramOpts&#123;</span><br><span class="line">        Name:    <span class="string">&quot;api_request_duration_seconds&quot;</span>,</span><br><span class="line">        Help:    <span class="string">&quot;API request duration in seconds&quot;</span>,</span><br><span class="line">        Buckets: prometheus.ExponentialBuckets(<span class="number">0.001</span>, <span class="number">2</span>, <span class="number">10</span>),</span><br><span class="line">    &#125;,</span><br><span class="line">    []<span class="type">string</span>&#123;<span class="string">&quot;service&quot;</span>, <span class="string">&quot;endpoint&quot;</span>, <span class="string">&quot;status_code&quot;</span>&#125;, <span class="comment">// 合理的低基数标签</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 不可变标签使用ConstLabels</span></span><br><span class="line">prometheus.NewGaugeVec(</span><br><span class="line">    prometheus.GaugeOpts&#123;</span><br><span class="line">        Name:        <span class="string">&quot;service_info&quot;</span>,</span><br><span class="line">        Help:        <span class="string">&quot;Service information&quot;</span>,</span><br><span class="line">        ConstLabels: prometheus.Labels&#123;<span class="string">&quot;version&quot;</span>: <span class="string">&quot;v2.1.3&quot;</span>, <span class="string">&quot;environment&quot;</span>: <span class="string">&quot;production&quot;</span>&#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">    []<span class="type">string</span>&#123;<span class="string">&quot;instance&quot;</span>&#125;,</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<h3 id="客户端性能优化">2. 客户端性能优化</h3>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 缓存常用标签组合以提高性能</span></span><br><span class="line">getCounter := requestCounter.WithLabelValues(<span class="string">&quot;GET&quot;</span>, <span class="string">&quot;/api/users&quot;</span>, <span class="string">&quot;200&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">100</span>; i++ &#123;</span><br><span class="line">    getCounter.Inc() <span class="comment">// 重用标签组合，避免重复创建</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 批量更新方式</span></span><br><span class="line"><span class="keyword">var</span> rpcDurations = prometheus.NewSummaryVec(</span><br><span class="line">    prometheus.SummaryOpts&#123;</span><br><span class="line">        Name:       <span class="string">&quot;rpc_durations_seconds&quot;</span>,</span><br><span class="line">        Help:       <span class="string">&quot;RPC latency distributions.&quot;</span>,</span><br><span class="line">        Objectives: <span class="keyword">map</span>[<span class="type">float64</span>]<span class="type">float64</span>&#123;<span class="number">0.5</span>: <span class="number">0.05</span>, <span class="number">0.9</span>: <span class="number">0.01</span>, <span class="number">0.99</span>: <span class="number">0.001</span>&#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">    []<span class="type">string</span>&#123;<span class="string">&quot;service&quot;</span>&#125;,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ObserveBatch</span><span class="params">(durations <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">float64</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> service, duration := <span class="keyword">range</span> durations &#123;</span><br><span class="line">        rpcDurations.WithLabelValues(service).Observe(duration)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="查询优化">3. 查询优化</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"># 优化前：高基数查询</span><br><span class="line">sum(rate(http_requests_total&#123;path=~&quot;/api/.*&quot;&#125;[5m])) by (path, method, status)</span><br><span class="line"></span><br><span class="line"># 优化后：降低基数，按需聚合</span><br><span class="line">sum(rate(http_requests_total&#123;path=~&quot;/api/.*&quot;&#125;[5m])) by (method, status)</span><br><span class="line"></span><br><span class="line"># 优化聚合顺序（先聚合再求和）</span><br><span class="line">sum(</span><br><span class="line">  avg by(instance) (rate(node_cpu_seconds_total&#123;mode!=&quot;idle&quot;&#125;[5m]))</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<h2 id="五常见陷阱与解决方案">五、常见陷阱与解决方案</h2>
+<h3 id="高基数问题">1. 高基数问题</h3>
+<p><strong>问题</strong>：标签组合过多导致时间序列爆炸
+<strong>解决方案</strong>：</p>
+<ul>
+<li>限制标签基数，避免使用 UserID、SessionID 等作为标签</li>
+<li>使用<code>label_replace</code>和正则表达式转换高基数标签</li>
+<li>考虑使用 Exemplars 而非标签存储高基数数据</li>
+</ul>
+<h3 id="数据类型选择误区">2. 数据类型选择误区</h3>
+<p><strong>Counter vs Gauge</strong>：请求数应使用 Counter 而非 Gauge
+<strong>Histogram vs Summary</strong>：需要聚合分析请使用
+Histogram，精确分位数可选 Summary</p>
+<h3 id="查询性能问题">3. 查询性能问题</h3>
+<p><strong>问题</strong>：复杂查询导致 Prometheus 高负载
+<strong>解决方案</strong>：</p>
+<ul>
+<li>使用记录规则预计算常用查询</li>
+<li>合理设置 scrape 间隔，避免过度采集</li>
+<li>对高请求量接口使用客户端聚合</li>
+</ul>
+<h2 id="总结与展望">总结与展望</h2>
+<p>Prometheus 的四种数据类型各有所长：Counter 适合累积事件计数，Gauge
+适合瞬时状态测量，Histogram 适合分布统计和百分位分析，Summary
+适合客户端精确分位数计算。与之配合的 PromQL
+提供了强大的数据查询和分析能力，共同构成了完整的监控解决方案。</p>
+<p>随着云原生技术的发展，Prometheus 生态也在不断壮大，与
+Grafana、Alertmanager、Thanos
+等工具集成，能够构建更完善的监控告警平台。在微服务架构中，结合
+RED（Rate、Error、Duration）和
+USE（Utilization、Saturation、Errors）方法论，可以构建全面的可观测性系统。</p>
+<p>无论你是刚开始使用 Prometheus
+的新手，还是寻求优化监控系统的资深工程师，希望本文对你理解和应用
+Prometheus
+有所帮助。记住，好的监控不仅能及时发现问题，更能预测和防范问题，最终服务于业务可靠性和用户体验的提升。</p>
+<hr />
+<p><em>参考资源:</em></p>
+<ul>
+<li>Prometheus 官方文档: https://prometheus.io/docs/</li>
+<li>Google SRE 书籍:
+https://sre.google/sre-book/monitoring-distributed-systems/</li>
+<li>Prometheus 实战: https://prometheusbook.com/</li>
+</ul>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+    <section id="share">
+      <div class="header"><span>分享文章</span></div>
+      <div class="body">
+        <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://hedon.top/2025/02/26/prometheus-data-type/" /></div>
+        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/02/26/prometheus-data-type/&title=服务监控丨Prometheus 四大数据类型详解 - HedonWang&summary=本文介绍了 Prometheus 的四大数据类型及其 PromQL 查询语言，帮助开发团队构建强大的可观测性系统。"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=服务监控丨Prometheus 四大数据类型详解 - HedonWang&amp;body=https://hedon.top/2025/02/26/prometheus-data-type/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
+        
+        <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
+          <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://hedon.top/2025/02/26/prometheus-data-type/"/>
+        </div>
+        
+      </div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2025/02/27/solution-push-ack/">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/02/15/go-action-jwt/">在 Go 项目中实现 JWT 用户认证与续期机制</a></div></section></div>
+
+
+
+
+  <div class="related-wrap md-text" id="comments">
+    <section class='header cmt-title cap theme'>
+      <p>快来参与讨论吧~</p>
+
+    </section>
+    <section class='body cmt-body giscus'>
+      
+
+<svg class="loading" style="vertical-align:middle;fill:currentColor;overflow:hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2709"><path d="M832 512c0-176-144-320-320-320V128c211.2 0 384 172.8 384 384h-64zM192 512c0 176 144 320 320 320v64C300.8 896 128 723.2 128 512h64z" p-id="2710"></path></svg>
+
+<div id="giscus" src="https://giscus.app/client.js" data-repo="hedon954/hedonspace" data-repo-id="R_kgDOKt17sQ" data-category="Q&A" data-category-id="DIC_kwDOKt17sc4CbAt-" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="preferred_color_scheme" data-lang="zh-CN" data-loading="lazy" crossorigin="anonymous"></div>
+
+    </section>
+  </div>
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA%E5%85%88%E8%A1%8Cprometheus-%E5%9B%9B%E5%A4%A7%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E9%80%9F%E8%A7%88"><span class="toc-text">结论先行：Prometheus
+四大数据类型速览</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80prometheus-%E6%A0%B8%E5%BF%83%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E8%AF%A6%E8%A7%A3"><span class="toc-text">一、Prometheus
+核心数据类型详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#counter%E8%AE%A1%E6%95%B0%E5%99%A8%E6%8C%81%E7%BB%AD%E5%A2%9E%E9%95%BF%E7%9A%84%E7%B4%AF%E7%A7%AF%E5%80%BC"><span class="toc-text">1.
+Counter（计数器）：持续增长的累积值</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#gauge%E4%BB%AA%E8%A1%A8%E7%9B%98%E5%8F%AF%E5%8F%98%E7%9A%84%E7%9E%AC%E6%97%B6%E5%80%BC"><span class="toc-text">2. Gauge（仪表盘）：可变的瞬时值</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#histogram%E7%9B%B4%E6%96%B9%E5%9B%BE%E8%A7%82%E6%B5%8B%E5%80%BC%E5%88%86%E5%B8%83%E7%9A%84%E5%88%86%E6%A1%B6%E7%BB%9F%E8%AE%A1"><span class="toc-text">3.
+Histogram（直方图）：观测值分布的分桶统计</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#summary%E6%91%98%E8%A6%81%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%AE%A1%E7%AE%97%E7%9A%84%E5%88%86%E4%BD%8D%E6%95%B0%E7%BB%9F%E8%AE%A1"><span class="toc-text">4.
+Summary（摘要）：客户端计算的分位数统计</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8Cpromql-%E6%9F%A5%E8%AF%A2%E8%AF%AD%E8%A8%80%E7%B2%BE%E9%80%9A"><span class="toc-text">二、PromQL 查询语言精通</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E7%A1%80%E6%9F%A5%E8%AF%A2%E4%B8%8E%E6%A0%87%E7%AD%BE%E9%80%89%E6%8B%A9"><span class="toc-text">1. 基础查询与标签选择</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%93%8D%E4%BD%9C%E7%AC%A6%E4%B8%8E%E5%87%BD%E6%95%B0"><span class="toc-text">2. 操作符与函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%8D%E6%9D%82%E6%9F%A5%E8%AF%A2%E6%A8%A1%E5%BC%8F"><span class="toc-text">3. 复杂查询模式</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E5%AE%9E%E6%88%98%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-text">三、实战应用场景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E5%81%A5%E5%BA%B7%E5%BA%A6%E7%9B%91%E6%8E%A7"><span class="toc-text">1. 服务健康度监控</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%A7%E8%83%BD%E7%93%B6%E9%A2%88%E5%88%86%E6%9E%90"><span class="toc-text">2. 性能瓶颈分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%B9%E9%87%8F%E8%A7%84%E5%88%92%E4%B8%8E%E5%91%8A%E8%AD%A6"><span class="toc-text">3. 容量规划与告警</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%E4%B8%8E%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96"><span class="toc-text">四、最佳实践与性能优化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%87%E6%A0%87%E5%91%BD%E5%90%8D%E4%B8%8E%E6%A0%87%E7%AD%BE%E8%AE%BE%E8%AE%A1"><span class="toc-text">1. 指标命名与标签设计</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96"><span class="toc-text">2. 客户端性能优化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96"><span class="toc-text">3. 查询优化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E5%B8%B8%E8%A7%81%E9%99%B7%E9%98%B1%E4%B8%8E%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="toc-text">五、常见陷阱与解决方案</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%AB%98%E5%9F%BA%E6%95%B0%E9%97%AE%E9%A2%98"><span class="toc-text">1. 高基数问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E9%80%89%E6%8B%A9%E8%AF%AF%E5%8C%BA"><span class="toc-text">2. 数据类型选择误区</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9F%A5%E8%AF%A2%E6%80%A7%E8%83%BD%E9%97%AE%E9%A2%98"><span class="toc-text">3. 查询性能问题</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%B1%95%E6%9C%9B"><span class="toc-text">总结与展望</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js`,
+    marked: `https://cdn.jsdelivr.net/npm/marked@13.0.1/lib/marked.umd.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function (response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function (data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function (error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+
+<!-- required -->
+<script src="/js/main.js?v=1.29.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    applyThemeToGiscus(theme)
+  }
+
+  const applyThemeToGiscus = (theme) => {
+    theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+  <script type="module">
+  const el = document.querySelector('#comments #giscus');
+  util.viewportLazyload(el, load_discus, false);
+
+  function load_discus() {
+    if (!el) return;
+    try {
+        el.innerHTML = '';
+      } catch (error) {
+        console.error(error);
+      }
+      const script = document.createElement('script');
+      script.async = true;
+      for (const key of Object.keys(el.attributes)) {
+        const attr = el.attributes[key];
+        if (['class', 'id'].includes(attr.name) === false) {
+          script.setAttribute(attr.name, attr.value);
+        }
+      }
+      el.appendChild(script);
+  }
+</script>
+
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":"https://site-info-api-hedon.vercel.app/api/v1?url={href}"},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img, .md-text img:not([class]), .md-text .image img`,
+    css: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
