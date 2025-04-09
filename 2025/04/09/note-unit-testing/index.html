@@ -23,14 +23,14 @@
     <meta name="description" content="本文总结了读者在阅读《Unit Testing》书籍中的收获和思考。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="读书笔记丨《Unit Testing Principles, Practices, and Patterns》">
-<meta property="og:url" content="https://hedon.top/2025/03/21/note-unit-testing/index.html">
+<meta property="og:url" content="https://hedon.top/2025/04/09/note-unit-testing/index.html">
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文总结了读者在阅读《Unit Testing》书籍中的收获和思考。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
 <meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
-<meta property="article:published_time" content="2025-03-21T05:19:20.000Z">
-<meta property="article:modified_time" content="2025-03-24T02:21:48.802Z">
+<meta property="article:published_time" content="2025-04-09T05:19:20.000Z">
+<meta property="article:modified_time" content="2025-04-09T04:56:46.434Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="单元测试">
 <meta property="article:tag" content="读书笔记">
@@ -73,7 +73,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/08/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/04/05/python-mindmap/"><span class="title">Python 知识图谱</span></a><a class="item title" href="/2025/03/21/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/03/17/backend-road/"><span class="title">后端开发之路</span></a><a class="item title" href="/2025/03/17/mindmap-for-hexo/"><span class="title">在 Hexo 博客中优雅地集成 Markmap 思维导图</span></a><a class="item title" href="/2025/01/15/book-quic-http3/"><span class="title">读书笔记丨解密 QUIC/HTTP3：未来互联网的基石</span></a><a class="item title" href="/2025/03/13/opentelemetry-tail-sampler/"><span class="title">为什么 OpenTelemetry 的 SDK 中不支持尾采样 Hook？</span></a><a class="item title" href="/2025/03/11/note-ddd-awareness/"><span class="title">读书笔记丨《悟道领域驱动设计》</span></a><a class="item title" href="/2024/03/06/rust-action-httpie/"><span class="title">Rust 实战丨HTTPie</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/08/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/04/05/python-mindmap/"><span class="title">Python 知识图谱</span></a><a class="item title" href="/2025/03/17/backend-road/"><span class="title">后端开发之路</span></a><a class="item title" href="/2025/03/17/mindmap-for-hexo/"><span class="title">在 Hexo 博客中优雅地集成 Markmap 思维导图</span></a><a class="item title" href="/2025/01/15/book-quic-http3/"><span class="title">读书笔记丨解密 QUIC/HTTP3：未来互联网的基石</span></a><a class="item title" href="/2025/03/13/opentelemetry-tail-sampler/"><span class="title">为什么 OpenTelemetry 的 SDK 中不支持尾采样 Hook？</span></a><a class="item title" href="/2025/03/11/note-ddd-awareness/"><span class="title">读书笔记丨《悟道领域驱动设计》</span></a><a class="item title" href="/2024/03/06/rust-action-httpie/"><span class="title">Rust 实战丨HTTPie</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -86,7 +86,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-03-21T05:19:20.000Z">2025-03-21</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-03-24T02:21:48.802Z">2025-03-24</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-04-09T05:19:20.000Z">2025-04-09</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-04-09T04:56:46.434Z">2025-04-09</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -173,18 +173,18 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
     <section id="share">
       <div class="header"><span>分享文章</span></div>
       <div class="body">
-        <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://hedon.top/2025/03/21/note-unit-testing/" /></div>
-        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/03/21/note-unit-testing/&title=读书笔记丨《Unit Testing Principles, Practices, and Patterns》 - HedonWang&pics=/banner/note-unit-testing.jpg&summary=本文总结了读者在阅读《Unit Testing》书籍中的收获和思考。"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=读书笔记丨《Unit Testing Principles, Practices, and Patterns》 - HedonWang&amp;body=https://hedon.top/2025/03/21/note-unit-testing/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
+        <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://hedon.top/2025/04/09/note-unit-testing/" /></div>
+        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/04/09/note-unit-testing/&title=读书笔记丨《Unit Testing Principles, Practices, and Patterns》 - HedonWang&pics=/banner/note-unit-testing.jpg&summary=本文总结了读者在阅读《Unit Testing》书籍中的收获和思考。"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=读书笔记丨《Unit Testing Principles, Practices, and Patterns》 - HedonWang&amp;body=https://hedon.top/2025/04/09/note-unit-testing/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
         
         <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
-          <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://hedon.top/2025/03/21/note-unit-testing/"/>
+          <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://hedon.top/2025/04/09/note-unit-testing/"/>
         </div>
         
       </div>
     </section>
     </div>
 </article>
-<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2025/04/05/python-mindmap/">Python 知识图谱</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/03/17/backend-road/">后端开发之路</a></div></section></div>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/04/09/note-unit-testing-excerpt/">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</a></div></section></div>
 
 
 
