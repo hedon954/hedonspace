@@ -28,7 +28,7 @@
 <meta property="og:description" content="本文从零开始，从简单到精细，一步步实现一个高性能的 oneshot channel。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-05-29T14:11:03.000Z">
-<meta property="article:modified_time" content="2025-05-30T03:47:25.234Z">
+<meta property="article:modified_time" content="2025-05-30T04:34:29.800Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Rust">
 <meta property="article:tag" content="并发编程">
@@ -83,7 +83,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/Rust/">Rust</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/Rust/Rust-%E5%AE%9E%E6%88%98/">Rust 实战</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-05-29T14:11:03.000Z">2025-05-29</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-05-30T03:47:25.234Z">2025-05-30</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-05-29T14:11:03.000Z">2025-05-29</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-05-30T04:34:29.800Z">2025-05-30</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -108,21 +108,23 @@ target="_blank" rel="noopener" href="https://marabos.nl/atomics/">Rust Atomics a
 一书，来实现一个 <code>oneshot channel</code>。</p>
 <p>在 Go 语言中，有一句名言：</p>
 <blockquote>
-<p>不要使用共享内存来通信，要通过通信来共享内存。</p>
+<p>Don't communicate by sharing memory, share memory by communicating.
+不要通过共享内存来通信，而要通过通信来共享内存。</p>
 </blockquote>
 <p>讲的就是通道 <code>channel</code>。使用 <code>channel</code>
-来通信，一方面可以避免临界资源的并发问题，另一方面可以解耦生产者和消费者。</p>
-<p><code>channel</code> 的种类有很多种：</p>
+来通信，一方面可以避免共享状态的并发竞争问题，另一方面可以解耦生产者和消费者。</p>
+<p><code>channel</code> 根据生产者和消费者的数量，可以分为以下几种：</p>
 <ol type="1">
-<li>单生产者单消费者。</li>
-<li>单生产者多消费者。</li>
-<li>多生产者多消费者。</li>
+<li><strong>单生产者单消费者</strong> (SPSC)</li>
+<li><strong>单生产者多消费者</strong> (SPMC)</li>
+<li><strong>多生产者单消费者</strong> (MPSC)</li>
+<li><strong>多生产者多消费者</strong> (MPMC)</li>
 </ol>
-<p>在<strong>单生产者单消费者</strong>这个分类中，还有一种很常用的
-<code>channel</code>，叫一次性 channel，也叫
-<code>oneshot channel</code>。熟悉 Go
-语言的读者应该经常会有如下这类使用场景，这就是典型的
-<code>oneshot channel</code>。</p>
+<p>在<strong>单生产者单消费者</strong>这个分类中，有一种特殊且常用的场景，叫<strong>一次性通道</strong>（oneshot
+channel）。它在 SPSC
+的基础上增加了额外约束：整个生命周期内只传递一次数据，传递完成后通道就失效了。</p>
+<p>熟悉 Go 语言的读者应该对以下使用场景很熟悉，这些都是典型的 oneshot
+channel 应用：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">demo1</span><span class="params">()</span></span> &#123;</span><br><span class="line">	done := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="comment">// ... do something</span></span><br><span class="line">		<span class="built_in">close</span>(done)</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	&lt;-done</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">demo2</span><span class="params">()</span></span> &#123;</span><br><span class="line">	oneShot := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>, <span class="number">1</span>)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		oneShot &lt;- generateText()</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	text := &lt;-oneShot</span><br><span class="line">	doSthWithText(text)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">generateText</span><span class="params">()</span></span> <span class="type">string</span> &#123;</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">doSthWithText</span><span class="params">(text <span class="type">string</span>)</span></span> &#123;</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>在 Rust 社区里面，就有一个非常优秀的 <a
@@ -132,39 +134,33 @@ target="_blank" rel="noopener" href="https://marabos.nl/atomics/building-channel
 and Locks</a> 一书，来尝试实现一个 <code>oneshot channel</code>!</p>
 <h2 id="读完本篇你能学到什么">读完本篇你能学到什么</h2>
 <ol type="1">
-<li><strong>一次性 (oneshot) 通道的场景与优势</strong>
+<li><p><strong>一次性 (oneshot) 通道的场景与优势</strong></p>
 <ul>
-<li>了解它与多生产者/多消费者通道的区别<br />
-</li>
+<li>了解它与多生产者/多消费者通道的区别</li>
 <li>掌握常见使用模式（如线程同步、单次结果返回）</li>
 </ul></li>
-<li><strong>Rust 并发核心原语的渐进式实践</strong>
+<li><p><strong>Rust 并发核心原语的渐进式实践</strong></p>
 <ul>
-<li><code>UnsafeCell</code>：内部可变性基石<br />
-</li>
+<li><code>UnsafeCell</code>：内部可变性基石</li>
 <li><code>AtomicBool</code> +
-<code>Ordering::&#123;Release,Acquire&#125;</code>：最小化同步原语<br />
-</li>
+<code>Ordering::&#123;Release,Acquire&#125;</code>：最小化同步原语</li>
 <li><code>MaybeUninit&lt;T&gt;</code>：零成本延迟初始化</li>
 </ul></li>
-<li><strong>用所有权与生命周期设计零误用 API</strong>
+<li><p><strong>用所有权与生命周期设计零误用 API</strong></p>
 <ul>
-<li>将 <code>Sender</code> / <code>Receiver</code>
-拆分并一次性消费<br />
-</li>
+<li>将 <code>Sender</code> / <code>Receiver</code> 拆分并一次性消费</li>
 <li>生命周期引用 vs <code>Arc</code> 的权衡与替换技巧</li>
 </ul></li>
-<li><strong>线程挂起/唤醒机制</strong>
+<li><p><strong>线程挂起/唤醒机制</strong></p>
 <ul>
 <li><code>std::thread::park / unpark</code> 的阻塞式等待模型</li>
 </ul></li>
-<li><strong>类型系统层面的“防呆”手段</strong>
+<li><p><strong>类型系统层面的“防呆”手段</strong></p>
 <ul>
-<li>利用 <code>PhantomData</code> 禁止跨线程误用<br />
-</li>
+<li>利用 <code>PhantomData</code> 禁止跨线程误用</li>
 <li><code>Drop</code> 手动回收，避免内存泄漏</li>
 </ul></li>
-<li><strong>一步步优化的思考路径</strong>
+<li><p><strong>一步步优化的思考路径</strong></p>
 <ul>
 <li>如何发现问题 → 提出假设 → 实现 → 验证 → 再迭代</li>
 </ul></li>
@@ -627,18 +623,13 @@ oneshot channel</strong>，还更进一步体验了 Rust 在并发领域
 <p>核心记忆点：</p>
 <ul>
 <li><strong>内部可变性</strong>：<code>UnsafeCell</code>
-是所有并发原语的基石。<br />
-</li>
+是所有并发原语的基石。</li>
 <li><strong>延迟初始化</strong>：<code>MaybeUninit&lt;T&gt;</code> +
-“就绪标志” 是零成本组合。<br />
-</li>
-<li><strong>Release / Acquire</strong>：最轻量的跨线程可见性保障。<br />
-</li>
-<li><strong>所有权设计 API</strong>：让编译器替你兜底逻辑约束。<br />
-</li>
+“就绪标志” 是零成本组合。</li>
+<li><strong>Release / Acquire</strong>：最轻量的跨线程可见性保障。</li>
+<li><strong>所有权设计 API</strong>：让编译器替你兜底逻辑约束。</li>
 <li><strong>PhantomData</strong>：零大小但能影响 <code>Send/Sync</code>
-的类型级标记。<br />
-</li>
+的类型级标记。</li>
 <li><strong>迭代思路</strong>：先跑通，再收口安全性与性能，最后用类型系统“防呆”。</li>
 </ul>
 <p>完整的代码可以参考：<a
