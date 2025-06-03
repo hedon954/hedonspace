@@ -1,0 +1,1296 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1" theme-name="Stellar" theme-version="1.29.1">
+  
+  <meta name="generator" content="Hexo 6.3.0">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  <link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin><link rel="preconnect" href="https://unpkg.com" crossorigin><link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  
+  <title>Rust 实战丨手写一个 Arc - HedonWang</title>
+
+  
+    <meta name="description" content="本文从零开始，通过多版本迭代，实现一个安全的 Rust Arc。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust 实战丨手写一个 Arc">
+<meta property="og:url" content="https://hedon.top/2025/06/03/rust-action-arc/index.html">
+<meta property="og:site_name" content="HedonWang">
+<meta property="og:description" content="本文从零开始，通过多版本迭代，实现一个安全的 Rust Arc。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-06-03T05:00:00.000Z">
+<meta property="article:modified_time" content="2025-06-03T17:40:31.836Z">
+<meta property="article:author" content="Hedon Wang">
+<meta property="article:tag" content="Rust">
+<meta property="article:tag" content="并发编程">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <meta name="keywords" content="Rust,并发编程">
+
+  <!-- feed -->
+  
+    <link rel="alternate" href="/atom.xml" title="HedonWang" type="application/atom+xml">
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.29.1">
+
+
+  
+    <link rel="shortcut icon" href="/assets/favicon.png">
+  
+
+  
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon.png"><link rel="shortcut icon" href="/assets/favicon.png"><meta name="theme-color" content="#f8f8f8"><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/markmap.css"><script src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><div class="icon"><img no-lazy class="icon" src="/assets/favicon.png" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></div><a class="title" href="/"><div class="main" ff="title">HedonWang</div><div class="sub cap">君子求诸己，律己则安。</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="专栏" href="/topic/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="关于我" href="/about/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a><a class="nav-item" title="思维导图" href="/html/mindmap.html" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/04/08/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2024/01/20/go-gpm/"><span class="title">深入浅出 Go 语言的 GPM 模型（Go1.21）</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top"><img class="bg lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/banner/rust-action-arc.jpg">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/Rust/">Rust</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/Rust/Rust-%E5%AE%9E%E6%88%98/">Rust 实战</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-06-03T05:00:00.000Z">2025-06-03</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-03T17:40:31.836Z">2025-06-04</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Rust 实战丨手写一个 Arc</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p>系列文章：</p>
+<ul>
+<li><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust
+原理丨聊一聊 Rust 的 Atomic 和内存顺序</a></li>
+<li><a href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust
+实战丨手写一个 SpinLock</a></li>
+<li><a
+href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust
+实战丨手写一个 oneshot channel</a></li>
+</ul>
+<p>继上篇 <a
+href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust
+实战丨手写一个 oneshot channel</a>，本篇我们继续参考 <a
+target="_blank" rel="noopener" href="https://marabos.nl/atomics/">Rust Atomics and Locks</a>
+一书，来实现一个 <code>Arc</code>。</p>
+<h2 id="arc-简介">Arc 简介</h2>
+<p><code>Arc</code>（<em>Atomic Reference Counted</em>）是 Rust
+标准库里位于 <code>std::sync</code> 模块中的智能指针，用于
+<strong>在多个线程之间安全地共享只读数据</strong>。和只适用于单线程场景的
+<code>Rc&lt;T&gt;</code> 不同，<code>Arc&lt;T&gt;</code>
+的引用计数增减操作使用原子指令，从而保证跨线程的内存安全。</p>
+<p>我们举一个例子：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">    age: <span class="type">u16</span>,</span><br><span class="line">    name: <span class="type">String</span>,</span><br><span class="line">    address: <span class="type">String</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[test]</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">without_arc_should_not_work</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">p</span> = Person &#123;</span><br><span class="line">        age: <span class="number">18</span>,</span><br><span class="line">        name: <span class="string">&quot;hedon&quot;</span>.<span class="title function_ invoke__">to_string</span>(),</span><br><span class="line">        address: <span class="string">&quot;China&quot;</span>.<span class="title function_ invoke__">to_string</span>(),</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="keyword">let</span> <span class="variable">p1</span> = &amp;p;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p1);</span><br><span class="line">        &#125;);</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="keyword">let</span> <span class="variable">p2</span> = &amp;p;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p2);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">p3</span> = &amp;p;  <span class="comment">// &lt;--------- 报错</span></span><br><span class="line">    thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p3);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>执行上面这个测试用例，我们会得到如下的报错信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">error[E0597]: `p` does not live long enough</span><br><span class="line"><span class="meta prompt_">  --&gt; </span><span class="language-bash">src/arc.rs:31:18</span></span><br><span class="line">   |</span><br><span class="line">14 |           let p = Person &#123;</span><br><span class="line">   |               - binding `p` declared here</span><br><span class="line">...</span><br><span class="line">31 |           let p3 = &amp;p;</span><br><span class="line">   |                    ^^ borrowed value does not live long enough</span><br><span class="line">32 | /         thread::spawn(move || &#123;</span><br><span class="line">33 | |             println!(&quot;&#123;:?&#125;&quot;, p3);</span><br><span class="line">34 | |         &#125;);</span><br><span class="line">   | |__________- argument requires that `p` is borrowed for `&#x27;static`</span><br><span class="line">35 |       &#125;</span><br><span class="line">   |       - `p` dropped here while still borrowed</span><br></pre></td></tr></table></figure>
+<p><strong><code>scope</code> 里的线程</strong>必须在闭包结束前
+join；因而可以捕获非 <code>'static</code>
+数据，所以这个时候我们使用引用，是没问题的。但是在
+<strong><code>thread::spawn</code></strong> 中，需要
+<code>'static</code>，这个时候，仅使用引用，就无法保证生命周期符合要求了。</p>
+<p>这个时候，我们可以使用 <code>Arc</code> 来将 <code>p</code>
+包起来，如下所示：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">    age: <span class="type">u16</span>,</span><br><span class="line">    name: <span class="type">String</span>,</span><br><span class="line">    address: <span class="type">String</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[test]</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">arc_should_work</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">p</span> = Arc::<span class="title function_ invoke__">new</span>(Person &#123;  <span class="comment">// 使用 Arc</span></span><br><span class="line">        age: <span class="number">18</span>,</span><br><span class="line">        name: <span class="string">&quot;hedon&quot;</span>.<span class="title function_ invoke__">to_string</span>(),</span><br><span class="line">        address: <span class="string">&quot;China&quot;</span>.<span class="title function_ invoke__">to_string</span>(),</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="keyword">let</span> <span class="variable">p1</span> = Arc::<span class="title function_ invoke__">clone</span>(&amp;p); <span class="comment">// 等价于 p.clone()</span></span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p1);</span><br><span class="line">        &#125;);</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="keyword">let</span> <span class="variable">p2</span> = p.<span class="title function_ invoke__">clone</span>(); <span class="comment">// 等价于 Arc::clone(&amp;p)</span></span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p2);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">p3</span> = p.<span class="title function_ invoke__">clone</span>();  <span class="comment">// &lt;----- 编译通过</span></span><br><span class="line">    thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p3);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>现象</th>
+<th>关键原因</th>
+<th><code>Arc</code> 怎么解决</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>thread::spawn</code> 要求闭包里的 <strong>所有捕获值都满足
+<code>'static</code></strong>；<code>&amp;p</code> 只是对栈上变量
+<code>p</code> 的借用，不具备 <code>'static</code> 生命周期。</td>
+<td>线程可能在父栈帧结束后仍继续运行，如果还持有对局部变量的引用就会悬垂。</td>
+<td><code>Arc::new(p)</code> 把数据移到堆上，返回的智能指针本身是
+<code>'static</code>；克隆 <code>Arc</code> 只是原子计数
++1，任何线程都能安全持有。</td>
+</tr>
+<tr class="even">
+<td>想给 <strong>多个线程同时用同一份数据</strong>，但引用只有
+“临时借阅” 语义，生命周期无法跨线程。</td>
+<td>Rust 的借用规则禁止 “多所有权 + 并发”。</td>
+<td><code>Arc</code> 通过 <strong>原子引用计数</strong>
+实现多所有权，最后一个线程 <code>drop</code> 时才真正释放。</td>
+</tr>
+</tbody>
+</table>
+<p>OK，在简单回顾完 <code>Arc</code>
+的作用后，我们正式开始自己来实现一个可以媲美标准库的
+<code>Arc</code>。</p>
+<h2 id="读完本篇你能学到什么">读完本篇你能学到什么</h2>
+<h2 id="v0基础引用计数">v0：基础引用计数</h2>
+<p>我们先来分析一下基本的数据结构改如何定义，在之前的 <a
+href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust
+实战丨手写一个 SpinLock</a>，我们讲到了 C++/Rust 常用的并发编程方式
+RAII（Resource Acquisition Is
+Initialization，资源获取即初始化），其核心思想是：<strong>在对象构造函数中获取资源，在析构函数中释放资源</strong>。上面的案例中，我们在初始化
+<code>Person</code> 的时候其实也是应用了这种思路。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">p</span> = Arc::<span class="title function_ invoke__">new</span>(Person &#123;</span><br><span class="line">    age: <span class="number">18</span>,</span><br><span class="line">    name: <span class="string">&quot;hedon&quot;</span>.<span class="title function_ invoke__">to_string</span>(),</span><br><span class="line">    address: <span class="string">&quot;China&quot;</span>.<span class="title function_ invoke__">to_string</span>(),</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>所以我们的自定义 <code>Arc</code> 需要泛型
+<code>T</code>，使其可以承载不同的数据类型的数据
+<code>data</code>，同时为了做引用计数，它需要一个数值类型
+<code>ref_count</code> 来计数，为了并发安全，我们可以选择原子类型
+<code>AtomicUsize</code>。</p>
+<p>在 <code>Arc</code> 中，我们需要自己管理 <code>data</code>
+的生命周期，除了使用裸指针 <code>*mut T</code> 或 <code>*const T</code>
+之外，我们可以使用 <code>std::ptr::NonNull&lt;T&gt;</code>
+，它是一个零成本、保证非空、支持协变（可安全向子类型转换）的裸指针包装器，具体可参考<strong>附录
+1. NonNull&lt;T&gt;</strong>。</p>
+<p>综上，我们可以定义以下数据结构：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">ArcData</span>&lt;T&gt; &#123;</span><br><span class="line">    ref_count: AtomicUsize,</span><br><span class="line">    data: T,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    ptr: NonNull&lt;ArcData&lt;T&gt;&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; Arc&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">new</span>(data: T) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        Arc &#123;</span><br><span class="line">            ptr: NonNull::<span class="title function_ invoke__">from</span>(<span class="type">Box</span>::<span class="title function_ invoke__">leak</span>(<span class="type">Box</span>::<span class="title function_ invoke__">new</span>(ArcData &#123;</span><br><span class="line">                ref_count: AtomicUsize::<span class="title function_ invoke__">new</span>(<span class="number">1</span>),</span><br><span class="line">                data,</span><br><span class="line">            &#125;))),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol type="1">
+<li>我们定义了 <code>ArcData</code> 和 <code>Arc</code> 两个结构，其中
+<code>ArcData</code> 包含引用计数 <code>ref_count</code> 和实际数据
+<code>data</code>。</li>
+<li>在 <code>Arc</code> 中，我们使用 <code>NonNull</code> 来管理
+<code>ArcData</code> 的生命周期。初始化时，先用 <code>Box::new()</code>
+在堆上分配内存，再通过 <code>Box::leak()</code> 放弃
+<code>Box&lt;T&gt;</code> 的所有权，交由 <code>Arc</code>
+自行管理。</li>
+</ol>
+<p>另外，跨线程发送 <code>Arc&lt;T&gt;</code> 会导致 <code>T</code>
+对象被共享，即 <code>T</code> 需要满足 <code>Sync</code>
+trait，而跨线程发送 <code>Arc&lt;T&gt;</code>
+也会导致需要由另外一个线程来释放 <code>T</code>，所以需要 <code>T</code>
+满足 <code>Send</code> trait。所以只有当 <code>T</code> 满足
+<code>Send+Sync</code> 的时候，<code>Arc&lt;T&gt;</code> 才是
+<code>Send</code> 的，对于 <code>Sync</code> 也是同理，因为我们可以为
+<code>Arc&lt;T&gt;</code> 分别实现 <code>Sync</code> 和
+<code>Send</code> trait：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">unsafe</span> <span class="keyword">impl</span>&lt;T: <span class="built_in">Send</span> + <span class="built_in">Sync</span>&gt; <span class="built_in">Send</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;&#125;</span><br><span class="line"><span class="keyword">unsafe</span> <span class="keyword">impl</span>&lt;T: <span class="built_in">Send</span> + <span class="built_in">Sync</span>&gt; <span class="built_in">Sync</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>为了能够便捷的获取 <code>data</code>，我们先为
+<code>Arc&lt;T&gt;</code> 实现一个 <code>data()</code> 用于获取
+<code>ArcData&lt;T&gt;</code>，同时为其实现 <code>Deref</code>
+trait，用于像指针一样无感操作 <code>data: T</code>：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; Arc&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">data</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;ArcData&lt;T&gt; &#123;</span><br><span class="line">        <span class="keyword">unsafe</span> &#123; <span class="keyword">self</span>.ptr.<span class="title function_ invoke__">as_ref</span>() &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; Deref <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">type</span> <span class="title class_">Target</span> = T;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">deref</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;<span class="keyword">Self</span>::Target &#123;</span><br><span class="line">        &amp;<span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().data</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>基础部分我们已经铺垫完了，现在我们需要来实现 2 个最重要的 trait
+了：</p>
+<ul>
+<li><strong>Clone</strong>: <code>Arc</code> 引用计数的关键，在每次
+<code>clone()</code> 的时候，我们不拷贝 <code>data</code>，而是让
+<code>ref_count</code> 自增，进行引用计数。</li>
+<li><strong>Drop</strong>: 在 <code>Arc&lt;T&gt;</code>
+实例离开作用域的时候，我们需要让 <code>ref_count</code>
+自减，同时在最后一个 <code>Arc&lt;T&gt;</code>
+被销毁时，我们需要主动释放 <code>ArcData&lt;T&gt;</code>
+的内存资源。</li>
+</ul>
+<p>我们先来实现 <code>Clone</code>：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Clone</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">clone</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">      	<span class="comment">// <span class="doctag">TODO:</span> 处理整型溢出的情况</span></span><br><span class="line">        <span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().ref_count.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Ordering::Relaxed) </span><br><span class="line">        Arc &#123; ptr: <span class="keyword">self</span>.ptr &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为这里没有其他原子操作需要跟当前操作建立严格的
+<code>happens-before</code> 关系，所以这里我们可以使用最松的
+<code>Relaxed</code> 内存顺序。</p>
+<p>接下来看下 <code>Drop</code>：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span> &lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().ref_count.<span class="title function_ invoke__">fetch_sub</span>(<span class="number">1</span>, ???) == <span class="number">1</span> &#123; <span class="comment">// &lt;----- 这里需要什么使用内存顺序约束？</span></span><br><span class="line">            <span class="keyword">unsafe</span> &#123;</span><br><span class="line">                <span class="title function_ invoke__">drop</span>(<span class="type">Box</span>::<span class="title function_ invoke__">from_raw</span>(<span class="keyword">self</span>.ptr.<span class="title function_ invoke__">as_ptr</span>()));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对于
+<code>Drop</code>，我们就需要好好想一想需要什么内存顺序约束了。在最后一个
+<code>drop</code> 的时候，我们有 2 个目标：</p>
+<ol type="1">
+<li><strong>不能过早释放</strong>：确保在引用计数减到 0
+并销毁对象之前，没有别的线程仍在使用这份数据；</li>
+<li><strong>要看得见别人写的东西</strong>：如果别的线程在它们各自的
+<code>drop</code>
+里面对共享对象做了写入，最后一个线程做析构时必须“看到”这些写入，否则就可能出现数据竞争或次序错误。</li>
+</ol>
+<p>换言之，我们需要最后一个 <code>fetch_sub</code> 跟前面其他每一个
+<code>fetch_sub</code> 都建立起 happens before 关系，也即我们需要一对
+Release 和 Acquire 来保证 happens-before。</p>
+<p>这里简单回顾一下 <code>Release</code> 和
+<code>Acquire</code>，不熟悉的读者可以参阅：<a
+href="https://hedon.top/2024/11/11/rust-memory-order/">Rust 原理丨聊一聊
+Rust 的 Atomic 和内存顺序</a>。</p>
+<ul>
+<li><code>Release</code>:
+作用于写操作（store），确保该操作之前的所有内存访问不会被重排到这个
+Release 操作之后。</li>
+<li><code>Acquire</code>:
+作用于读操作（load），确保该操作之后的所有内存访问不会被重排到这个
+Acquire 操作之前。</li>
+<li>当一个线程通过 <code>Acquire</code> 读取到另一个线程通过
+<code>Release</code> 写入的值时，会建立一个 happens-before
+关系：<strong>线程 A 中 Release 写入之前的所有内存写操作，对于线程 B 中
+Acquire 读取之后的所有内存读操作都是可见的</strong>。</li>
+</ul>
+<p>我们当然可以使用 <code>Release</code> 和 <code>Acuqire</code>
+的结合体 <code>AcqRel</code>
+来一步到位解决这个问题。不过考虑到只有最后一个 <code>drop</code>
+需要满足这个关系，我们可以尝试做得更优雅一些。</p>
+<p><strong>在这种仅需在临界值保证 happens-before
+的场景下，我们都可以单独在临界情况下使用一个 <code>fence</code> 来建立起
+happens-before。</strong></p>
+<p>具体来说：</p>
+<ul>
+<li><strong>对于非最终 <code>drop</code></strong>：我们只需要使用
+<code>Release</code>，即
+<code>fetch_sub(1, Ordering::Release)</code>，它保证了别的线程如果最终做“最后一次
+drop”，只要它对相同原子执行一条 <em>Acquire</em>
+操作，它就能同步到前面所有线程对数据做过的改动。</li>
+<li><strong>对于最终 <code>drop</code></strong>：在调用
+<code>fetch_sub</code> 的时候我们仍需要 <code>Release</code>
+语义，但是调用时，我们并不知道自己是不是“最后那个线程”。当
+<code>fetch_sub</code> 返回 <code>1</code>
+的时候，说明我们是“最后那个线程”。这个时候，我们需要建立一个
+<code>fetch(Acuqire)</code>，与之前的所有 <code>Release</code>
+形成配对，确保看到<strong>之前所有的历史写入</strong>，这个时候我们才能确定已经没有别的线程在使用数据了，我们才可以安全地销毁对象。</li>
+</ul>
+<p>如下图所示；</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">    participant A as Thread A</span><br><span class="line">    participant B as Thread B</span><br><span class="line">    participant C as Thread C&lt;br/&gt;(最后 drop)</span><br><span class="line"></span><br><span class="line">    %% 普通写入</span><br><span class="line">    A-&gt;&gt;A: write shared data …</span><br><span class="line">    B-&gt;&gt;B: write shared data …</span><br><span class="line"></span><br><span class="line">    %% 非最终 drop：Release 写</span><br><span class="line">    A-&gt;&gt;A: fetch_sub (Release)  ⬅ 计数 n→n-1</span><br><span class="line">    B-&gt;&gt;B: fetch_sub (Release)  ⬅ 计数 n-1→n-2</span><br><span class="line"></span><br><span class="line">    %% 形成 release-sequence</span><br><span class="line">    Note over A,B: 这两次 Release 写组成&lt;br/&gt;同一条 release-sequence</span><br><span class="line"></span><br><span class="line">    %% 最终 drop：Release 写 &amp; 返回 1</span><br><span class="line">    C-&gt;&gt;C: fetch_sub (Release)  ⬅ 返回 1 → 计数 0</span><br><span class="line"></span><br><span class="line">    %% Acquire fence 同步</span><br><span class="line">    C--&gt;&gt;C: fence (Acquire)&lt;br/&gt;【接收 release-sequence】</span><br><span class="line"></span><br><span class="line">    %% 安全析构</span><br><span class="line">    C-&gt;&gt;C: drop(Box::from_raw)</span><br><span class="line"></span><br><span class="line">    %% 结果说明</span><br><span class="line">    Note over C: fence (Acquire) 使 A/B&lt;br/&gt;对共享数据的写必定&lt;br/&gt;在析构前可见</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>经过这么一顿分析后，我们最终的 <code>Drop</code> 实现如下：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="comment">// ❶ 所有 `drop` 都执行：Release</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().ref_count.<span class="title function_ invoke__">fetch_sub</span>(<span class="number">1</span>, Ordering::Release) == <span class="number">1</span> &#123;</span><br><span class="line">            <span class="comment">// ❷ 只有最后一个引用才会进来</span></span><br><span class="line">            std::sync::atomic::<span class="title function_ invoke__">fence</span>(Ordering::Acquire); <span class="comment">// ❸ 补上 Acquire</span></span><br><span class="line">            <span class="keyword">unsafe</span> &#123;</span><br><span class="line">                <span class="comment">// ❹ 现在可以安全地回收并析构</span></span><br><span class="line">                <span class="title function_ invoke__">drop</span>(<span class="type">Box</span>::<span class="title function_ invoke__">from_raw</span>(<span class="keyword">self</span>.ptr.<span class="title function_ invoke__">as_ptr</span>()));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>步骤拆分如下：</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 31%" />
+<col style="width: 43%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>步骤</th>
+<th>发生了什么</th>
+<th>语义 &amp; 作用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>① <code>val = fetch_sub(1, Release)</code></strong></td>
+<td>把引用计数原子减 1，并返回减前的旧值</td>
+<td>提供 <em>Release</em>，与之前所有 <code>Release</code> 或
+<code>AcqRel</code> 写入建立 release-sequence</td>
+</tr>
+<tr class="even">
+<td><strong>② 判断 <code>val == 1</code></strong></td>
+<td>若旧值是 1 → 现在减到 0，说明“我是最后一个”</td>
+<td><strong>只有这时才需要额外的 Acquire</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>③ <code>fence(Acquire)</code></strong></td>
+<td>发出一条 Acquire 栅栏</td>
+<td>与那条 release-sequence
+对接，<em>同步至此</em>（拿到“所有历史写入”的可见性）</td>
+</tr>
+<tr class="even">
+<td><strong>④ <code>drop(Box::from_raw(ptr))</code></strong></td>
+<td>独占地回收堆内存并运行 <code>T</code> 的析构</td>
+<td>现在安全：①没人再持有引用；②我已看到所有之前线程对 <code>T</code>
+做的写入</td>
+</tr>
+</tbody>
+</table>
+<p>自此，我们第一个版本的 <code>Arc</code>
+就实现完毕了，我们来看一下最终完成的代码：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">ArcData</span>&lt;T&gt; &#123;</span><br><span class="line">    ref_count: AtomicUsize,</span><br><span class="line">    data: T,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    ptr: NonNull&lt;ArcData&lt;T&gt;&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; Arc&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">new</span>(data: T) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        Arc &#123;</span><br><span class="line">            ptr: NonNull::<span class="title function_ invoke__">from</span>(<span class="type">Box</span>::<span class="title function_ invoke__">leak</span>(<span class="type">Box</span>::<span class="title function_ invoke__">new</span>(ArcData &#123;</span><br><span class="line">                ref_count: AtomicUsize::<span class="title function_ invoke__">new</span>(<span class="number">1</span>),</span><br><span class="line">                data,</span><br><span class="line">            &#125;))),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">data</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;ArcData&lt;T&gt; &#123;</span><br><span class="line">        <span class="keyword">unsafe</span> &#123; <span class="keyword">self</span>.ptr.<span class="title function_ invoke__">as_ref</span>() &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">unsafe</span> <span class="keyword">impl</span>&lt;T: <span class="built_in">Send</span> + <span class="built_in">Sync</span>&gt; <span class="built_in">Send</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;&#125;</span><br><span class="line"><span class="keyword">unsafe</span> <span class="keyword">impl</span>&lt;T: <span class="built_in">Send</span> + <span class="built_in">Sync</span>&gt; <span class="built_in">Sync</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; Deref <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">type</span> <span class="title class_">Target</span> = T;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">deref</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;<span class="keyword">Self</span>::Target &#123;</span><br><span class="line">        &amp;<span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().data</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Clone</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">clone</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        <span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().ref_count.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Ordering::Relaxed);</span><br><span class="line">        Arc &#123; ptr: <span class="keyword">self</span>.ptr &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().ref_count.<span class="title function_ invoke__">fetch_sub</span>(<span class="number">1</span>, Ordering::Release) == <span class="number">1</span> &#123;</span><br><span class="line">            <span class="title function_ invoke__">fence</span>(Ordering::Acquire);</span><br><span class="line">            <span class="keyword">unsafe</span> &#123;</span><br><span class="line">                <span class="title function_ invoke__">drop</span>(<span class="type">Box</span>::<span class="title function_ invoke__">from_raw</span>(<span class="keyword">self</span>.ptr.<span class="title function_ invoke__">as_ptr</span>()));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>写个单元测试验证一下：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[test]</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">arc_should_work</span>() &#123;</span><br><span class="line">    <span class="keyword">static</span> NUM_DROPS: AtomicUsize = AtomicUsize::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">DetectDrop</span>;</span><br><span class="line">    <span class="keyword">impl</span> <span class="title class_">Drop</span> <span class="keyword">for</span> <span class="title class_">DetectDrop</span> &#123;</span><br><span class="line">        <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">            NUM_DROPS.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Ordering::Relaxed);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建 2 个 Arc 共享一个元组，包含一个字符串和 DetectDrop 对象</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">x</span> = Arc::<span class="title function_ invoke__">new</span>((<span class="string">&quot;hedon&quot;</span>, DetectDrop));</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">y</span> = x.<span class="title function_ invoke__">clone</span>();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将 x 转移到另外一个线程并使用它</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">t</span> = thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || &#123;</span><br><span class="line">        <span class="built_in">assert_eq!</span>(x.<span class="number">0</span>, <span class="string">&quot;hedon&quot;</span>); <span class="comment">// 可以正常使用</span></span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 这里，y 应该也是可以正常使用的</span></span><br><span class="line">    <span class="built_in">assert_eq!</span>(y.<span class="number">0</span>, <span class="string">&quot;hedon&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 等待 t 线程执行完毕</span></span><br><span class="line">    t.<span class="title function_ invoke__">join</span>().<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 这个时候 `x` 已经被释放了，但是`y` 还没有被释放，</span></span><br><span class="line">    <span class="comment">// 所以 `DetectDrop` 应该还没被释放。</span></span><br><span class="line">    <span class="built_in">assert_eq!</span>(NUM_DROPS.<span class="title function_ invoke__">load</span>(Ordering::Relaxed), <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 手动释放掉 `y`，这是最后一个 `Arc`，所以 `DetectDrop` 应该会被释放</span></span><br><span class="line">    <span class="title function_ invoke__">drop</span>(y);</span><br><span class="line">    <span class="built_in">assert_eq!</span>(NUM_DROPS.<span class="title function_ invoke__">load</span>(Ordering::Relaxed), <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>执行结果是 ok 的：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">running 1 test</span><br><span class="line">test arc::tests::arc_should_work ... ok</span><br><span class="line"></span><br><span class="line">successes:</span><br><span class="line"></span><br><span class="line">successes:</span><br><span class="line">    arc::tests::arc_should_work</span><br><span class="line"></span><br><span class="line">test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s</span><br></pre></td></tr></table></figure>
+<h2 id="v1-实现-get_mut-获取可变引用">v1: 实现 get_mut 获取可变引用</h2>
+<p>按照前面版本的实现，我们是不能为 <code>Arc&lt;T&gt;</code> 实现
+<code>DerefMut</code> trait 的，因为我们不能无条件地提供
+<code>&amp;mut T</code> 可变引用，因为它可能同时被其他的
+<code>Arc&lt;T&gt;</code> 所访问中。</p>
+<p>不过，当满足一定条件的时候，我们还是可以提供 <code>&amp;mut T</code>
+可变引用的。具体来说，需要满足 2 个条件：</p>
+<ol type="1">
+<li>使用 <code>&amp;mut Arc&lt;T&gt;</code> 保证当前
+<code>Arc&lt;T&gt;</code> 只有一个地方在使用；</li>
+<li>需要确保全局只有一个 <code>Arc&lt;T&gt;</code>。</li>
+</ol>
+<p>为了避免跟 <code>DerefMut</code>
+混淆，我们将其声明为一个静态方法，并将 <code>Arc&lt;T&gt;</code>
+作为参数，同时因为只有满足特定条件的情况下，才能返回
+<code>&amp;mut T</code>，所以我们使用 <code>Option</code>
+作为返回值。如下：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">get_mut</span>(arc: &amp;<span class="keyword">mut</span> Arc&lt;T&gt;) <span class="punctuation">-&gt;</span> <span class="type">Option</span>&lt;&amp;<span class="keyword">mut</span> T&gt; &#123;</span><br><span class="line">    <span class="keyword">if</span> arc.<span class="title function_ invoke__">data</span>().ref_count.<span class="title function_ invoke__">load</span>(Ordering::Relaxed) == <span class="number">1</span> &#123;</span><br><span class="line">        <span class="title function_ invoke__">fence</span>(Ordering::Acquire);</span><br><span class="line">        <span class="comment">// Safety: 没有其他地方可以访问数据，</span></span><br><span class="line">        <span class="comment">// 因为我们使用了 &amp;mut 独占引用，而且此时只有一个 `Arc`。</span></span><br><span class="line">        <span class="keyword">unsafe</span> &#123; <span class="title function_ invoke__">Some</span>(&amp;<span class="keyword">mut</span> arc.ptr.<span class="title function_ invoke__">as_mut</span>().data) &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="literal">None</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol type="1">
+<li><p>这里我们在确定只有一个 <code>Arc</code> 实例的时候，使用
+<code>fetch(Acuqire)</code> 来跟所有其他 <code>Arc</code> 执行
+<code>drop()</code> 的 <code>fetch_sub(Release)</code> 建立
+happens-before 关系。</p></li>
+<li><p>因为此时 <code>ref_count=1</code>，说明仅有当前 <code>Arc</code>
+这一个实例，而 <code>get_mut</code> 需要的又是独占引用，所以当前
+<code>Arc</code> 不可能再被拿去做 <code>clone()</code>
+操作，所以在这个情况下，是可以保证有且仅有一个 <code>Arc</code>
+实例，所以我们是可以安全返回 <code>&amp;mut T</code> 的。</p></li>
+<li><p>返回的 <code>&amp;mut T</code> 会隐式地借用参数
+<code>&amp;mut Arc&lt;T&gt;</code> 的生命周期，而 Rust
+不允许可变引用和只读引用交叉存在，所以当前仅剩的这个
+<code>Arc</code>，直到 <code>&amp;mut T</code>
+作用域结束之前，都是不可用的，所以在那之前，不会再被拿去执行
+<code>clone()</code> 和 <code>Deref</code> 等操作，所以是安全的。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[test]</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">get_mut_should_be_safe</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">x</span> = Arc::<span class="title function_ invoke__">new</span>(<span class="built_in">vec!</span>[]);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">v</span> = Arc::<span class="title function_ invoke__">get_mut</span>(&amp;<span class="keyword">mut</span> x).<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line">    v.<span class="title function_ invoke__">push</span>(<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">y</span> = x.<span class="title function_ invoke__">clone</span>(); <span class="comment">// &lt;---- cannot borrow `x` as immutable</span></span><br><span class="line">    v.<span class="title function_ invoke__">push</span>(<span class="number">2</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如上面这个例子，就会报错：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">error[E0502]: cannot borrow `x` as immutable because it is also borrowed as mutable</span><br><span class="line"><span class="meta prompt_">   --&gt; </span><span class="language-bash">src/arc.rs:117:17</span></span><br><span class="line">    |</span><br><span class="line">114 |         let v = Arc::get_mut(&amp;mut x).unwrap();</span><br><span class="line">    |                              ------ mutable borrow occurs here</span><br><span class="line">...</span><br><span class="line">117 |         let y = x.clone();</span><br><span class="line">    |                 ^ immutable borrow occurs here</span><br><span class="line">118 |         v.push(2);</span><br><span class="line">    |         - mutable borrow later used here</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="v2弱指针-weakt-解决循环引用">v2：弱指针 Weak&lt;T&gt;
+解决循环引用</h2>
+<h2 id="总结">总结</h2>
+<h2 id="附录">附录</h2>
+<h3 id="nonnullt">1. NonNull&lt;T&gt;</h3>
+<p><code>std::prt::NonNull&lt;T&gt;</code> 是一个
+<strong>零成本、非空、协变</strong>
+的裸指针包装器。它本质上只是把一个原始指针塞进
+<code>#[repr(transparent)]</code> 的新类型中，但强制保证
+<strong>绝不为空</strong>，因此可以拿到「空值当作枚举判别位」这份额外信息
+—— <code>Option&lt;NonNull&lt;T&gt;&gt;</code>
+与一个普通指针占用同样大小。</p>
+<p>重要特性：</p>
+<ul>
+<li><strong>永远非空</strong>：创建时若传入空指针即触发
+<strong>未定义行为</strong>。编译器可依赖这一点做优化，例如把
+<code>Option&lt;NonNull&lt;T&gt;&gt;</code> 合并为一个指针宽度。</li>
+<li><strong>协变</strong>：与 <code>*mut T</code>
+不同，<code>NonNull&lt;T&gt;</code> 可以在
+<code>U: Deref&lt;Target = T&gt;</code>
+的场景下安全向子类型转换（因为禁止空值带来了额外保证），这使它非常适合构建自定义智能指针。</li>
+<li><strong>无自动 Drop</strong>：<code>NonNull</code>
+只存地址，不持有所有权；销毁与释放内存仍由外部逻辑决定（如
+<code>Box::from_raw</code>、<code>Vec::dealloc</code> 等）。</li>
+</ul>
+<p>我们将其与裸指针、 <code>Box&lt;T&gt;</code> 智能指针和引用
+<code>&amp;T</code> 做一个简单的比较：</p>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 21%" />
+<col style="width: 39%" />
+<col style="width: 15%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>特性</th>
+<th><code>*mut T</code> / <code>*const T</code></th>
+<th><code>NonNull&lt;T&gt;</code></th>
+<th><code>Box&lt;T&gt;</code> / <code>&amp;T</code></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>是否允许为空</strong></td>
+<td>✅</td>
+<td><strong>❌ 必须非空</strong></td>
+<td>不适用</td>
+</tr>
+<tr class="even">
+<td><strong>协变性</strong></td>
+<td><code>*mut</code> 不协变</td>
+<td><strong>协变</strong>（可安全向子类型转换）</td>
+<td><code>&amp;T</code> 协变</td>
+</tr>
+<tr class="odd">
+<td><strong>Option 优化</strong></td>
+<td>❌ 多 1 B 判别字节</td>
+<td><strong>✅ 与裸指针同尺寸</strong></td>
+<td>已自带优化</td>
+</tr>
+<tr class="even">
+<td><strong>所有权 / drop 责任</strong></td>
+<td>没有</td>
+<td>没有（纯指针）</td>
+<td>有</td>
+</tr>
+<tr class="odd">
+<td><strong>Send / Sync</strong></td>
+<td>与 <code>T</code> 无关</td>
+<td>默认 <code>!Send !Sync</code></td>
+<td>取决于 <code>T</code></td>
+</tr>
+<tr class="even">
+<td><strong>常见用途</strong></td>
+<td>FFI、底层算法</td>
+<td><strong>智能指针内部、侵入式容器、裁掉空判</strong></td>
+<td>高层所有权模型</td>
+</tr>
+</tbody>
+</table>
+<p>关键的 API：</p>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 44%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>分组</th>
+<th>代表方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>构造</strong></td>
+<td><code>NonNull::new(ptr)</code> →
+<code>Option&lt;NonNull&lt;T&gt;&gt;</code>
+<br><code>unsafe &#123; NonNull::new_unchecked(ptr) &#125;</code>
+<br><code>NonNull::dangling()</code></td>
+<td>安全 / 不安全 / 占位</td>
+</tr>
+<tr class="even">
+<td><strong>引用视图</strong></td>
+<td><code>unsafe</code> <br><code>fn as_ref</code> /
+<code>as_mut</code></td>
+<td>把裸指针临时借用成 <code>&amp;T</code> /
+<code>&amp;mut T</code></td>
+</tr>
+<tr class="odd">
+<td><strong>裸指针互转</strong></td>
+<td><code>fn as_ptr</code></td>
+<td>取回 <code>*mut T</code>，解引用仍需 <code>unsafe</code></td>
+</tr>
+<tr class="even">
+<td><strong>类型转换</strong></td>
+<td><code>fn cast&lt;U&gt;</code> <br><code>fn cast_mut</code> /
+<code>cast_const</code></td>
+<td>保留地址，换类型或可变性</td>
+</tr>
+<tr class="odd">
+<td><strong>地址运算</strong></td>
+<td><code>unsafe fn add / byte_add / sub / offset</code></td>
+<td>指针算术，与 <code>ptr::add</code> 族一致</td>
+</tr>
+<tr class="even">
+<td><strong>切片助手</strong></td>
+<td><code>NonNull::slice_from_raw_parts(data, len)</code>
+<br><code>fn len()</code></td>
+<td>1.70+ 稳定，为 <code>[T]</code> 提供非空裸切片构造 (<a
+target="_blank" rel="noopener" href="https://rustwiki.org/zh-CN/std/ptr/struct.NonNull.html?utm_source=chatgpt.com">rustwiki.org</a>)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ 任何把 <code>NonNull</code> 重新解释为引用或解引用的操作，都必须在
+<code>unsafe</code> 块里手动保证内存有效性与别名规则。</p>
+</blockquote>
+<p>典型使用场景：</p>
+<table>
+<colgroup>
+<col style="width: 39%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>场景</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>智能指针内部实现</strong>
+(<code>Box</code>/<code>Rc</code>/<code>Arc</code>)</td>
+<td>需要 <em>非空</em> 原始指针存放被管对象，且要在 <code>Option</code>
+等场景下节省空间</td>
+</tr>
+<tr class="even">
+<td><strong>自研侵入式链表 / 红黑树</strong></td>
+<td>节点自身持有前后指针字段
+<code>NonNull&lt;Node&lt;T&gt;&gt;</code>，天然避免空判分支</td>
+</tr>
+<tr class="odd">
+<td><strong>惰性初始化 / <code>Vec::new</code></strong></td>
+<td>先用 <code>NonNull::dangling()</code>
+占位，等真正分配后再写入正确地址</td>
+</tr>
+<tr class="even">
+<td><strong>FFI</strong></td>
+<td>C API 明确保证参数永不为空时，用 <code>NonNull</code>
+在类型层面表达前置条件</td>
+</tr>
+<tr class="odd">
+<td><strong>自引用结构（Pin 工作区）</strong></td>
+<td>在完成真正初始化前使用 <code>NonNull::dangling()</code>
+保存指向自身字段的指针</td>
+</tr>
+</tbody>
+</table>
+
+<div class="article-footer fs14">
+    <section id="references">
+      <div class="header"><span>参考资料</span></div>
+      <div class="body">
+        <ul>
+        <li class="post-title">
+          <p><a target="_blank" rel="noopener" href="https://marabos.nl/atomics/">Rust Atomics and Locks</a></p>
+
+        </li>
+        
+        <li class="post-title">
+          <p><a target="_blank" rel="noopener" href="https://doc.rust-lang.org/book/">Rust Programming
+Language</a></p>
+
+        </li>
+        
+        <li class="post-title">
+          <p><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust
+原理丨聊一聊 Rust 的 Atomic 和内存顺序</a></p>
+
+        </li>
+        
+        <li class="post-title">
+          <p><a href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust
+实战丨手写一个 SpinLock</a></p>
+
+        </li>
+        
+        <li class="post-title">
+          <p><a
+href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust
+实战丨手写一个 oneshot channel</a></p>
+
+        </li>
+        </ul>
+      </div>
+    </section>
+    
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+    <section id="share">
+      <div class="header"><span>分享文章</span></div>
+      <div class="body">
+        <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://hedon.top/2025/06/03/rust-action-arc/" /></div>
+        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/06/03/rust-action-arc/&title=Rust 实战丨手写一个 Arc - HedonWang&pics=/banner/rust-action-arc.jpg&summary=本文从零开始，通过多版本迭代，实现一个安全的 Rust Arc。"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=Rust 实战丨手写一个 Arc - HedonWang&amp;body=https://hedon.top/2025/06/03/rust-action-arc/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
+        
+        <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
+          <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://hedon.top/2025/06/03/rust-action-arc/"/>
+        </div>
+        
+      </div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/05/29/rust-action-oneshot-channel/">Rust 实战丨手写一个 oneshot channel</a></div></section></div>
+
+
+
+
+  <div class="related-wrap md-text" id="comments">
+    <section class='header cmt-title cap theme'>
+      <p>快来参与讨论吧~</p>
+
+    </section>
+    <section class='body cmt-body giscus'>
+      
+
+<svg class="loading" style="vertical-align:middle;fill:currentColor;overflow:hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2709"><path d="M832 512c0-176-144-320-320-320V128c211.2 0 384 172.8 384 384h-64zM192 512c0 176 144 320 320 320v64C300.8 896 128 723.2 128 512h64z" p-id="2710"></path></svg>
+
+<div id="giscus" src="https://giscus.app/client.js" data-repo="hedon954/hedonspace" data-repo-id="R_kgDOKt17sQ" data-category="Q&A" data-category-id="DIC_kwDOKt17sc4CbAt-" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="preferred_color_scheme" data-lang="zh-CN" data-loading="lazy" crossorigin="anonymous"></div>
+
+    </section>
+  </div>
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#arc-%E7%AE%80%E4%BB%8B"><span class="toc-text">Arc 简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%BB%E5%AE%8C%E6%9C%AC%E7%AF%87%E4%BD%A0%E8%83%BD%E5%AD%A6%E5%88%B0%E4%BB%80%E4%B9%88"><span class="toc-text">读完本篇你能学到什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#v0%E5%9F%BA%E7%A1%80%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0"><span class="toc-text">v0：基础引用计数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#v1-%E5%AE%9E%E7%8E%B0-get_mut-%E8%8E%B7%E5%8F%96%E5%8F%AF%E5%8F%98%E5%BC%95%E7%94%A8"><span class="toc-text">v1: 实现 get_mut 获取可变引用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#v2%E5%BC%B1%E6%8C%87%E9%92%88-weakt-%E8%A7%A3%E5%86%B3%E5%BE%AA%E7%8E%AF%E5%BC%95%E7%94%A8"><span class="toc-text">v2：弱指针 Weak&lt;T&gt;
+解决循环引用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%99%84%E5%BD%95"><span class="toc-text">附录</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#nonnullt"><span class="toc-text">1. NonNull&lt;T&gt;</span></a></li></ol></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+    tag_plugins: {
+      chat: Object.assign({"api":"https://siteinfo.listentothewind.cn/api/v1"}),
+    }
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js`,
+    marked: `https://cdn.jsdelivr.net/npm/marked@13.0.1/lib/marked.umd.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  function RunItem() {
+    this.list = []; // 存放回调函数
+    this.start = () => {
+      for (var i = 0; i < this.list.length; i++) {
+        this.list[i].run();
+      }
+    };
+    this.push = (fn, name, setRequestAnimationFrame = true) => {
+      let myfn = fn
+      if (setRequestAnimationFrame) {
+        myfn = () => {
+          utils.requestAnimationFrame(fn)
+        }
+      }
+      var f = new Item(myfn, name);
+      this.list.push(f);
+    };
+    this.remove = (name) => {
+      for (let index = 0; index < this.list.length; index++) {
+        const e = this.list[index];
+        if (e.name == name) {
+          this.list.splice(index, 1);
+        }
+      }
+    }
+    // 构造一个可以run的对象
+    function Item(fn, name) {
+      // 函数名称
+      this.name = name || fn.name;
+      // run方法
+      this.run = () => {
+        try {
+          fn()
+        } catch (error) {
+          console.log(error);
+        }
+      };
+    }
+  }
+
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')) {
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function () {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function (response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function (data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function (error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+    /********************** requestAnimationFrame ********************************/
+    // 1、requestAnimationFrame 会把每一帧中的所有 DOM 操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+    // 2、在隐藏或不可见的元素中，requestAnimationFrame 将不会进行重绘或回流，这当然就意味着更少的的 cpu，gpu 和内存使用量。
+    requestAnimationFrame: (fn) => {
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+      }
+      window.requestAnimationFrame(fn)
+    },
+    dark: {},
+  };
+
+  // utils.dark.mode 当前模式 dark or light
+  // utils.dark.toggle() 暗黑模式触发器
+  // utils.dark.push(callBack[,"callBackName"]) 传入触发器回调函数
+  utils.dark.method = {
+    toggle: new RunItem(),
+  };
+  utils.dark = Object.assign(utils.dark, {
+    push: utils.dark.method.toggle.push,
+  });
+</script>
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+
+<!-- required -->
+<script src="/js/main.js?v=1.29.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    applyThemeToGiscus(theme)
+  }
+
+  const applyThemeToGiscus = (theme) => {
+    theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+    utils.dark.mode = newTheme === 'auto' ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : newTheme;
+    utils.dark.method.toggle.start();
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    } else {
+      utils.dark.mode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    utils.dark.method.toggle.start();
+  })()
+</script>
+
+
+<!-- optional -->
+
+  <script type="module">
+  const el = document.querySelector('#comments #giscus');
+  util.viewportLazyload(el, load_discus, false);
+
+  function load_discus() {
+    if (!el) return;
+    try {
+        el.innerHTML = '';
+      } catch (error) {
+        console.error(error);
+      }
+      const script = document.createElement('script');
+      script.async = true;
+      for (const key of Object.keys(el.attributes)) {
+        const attr = el.attributes[key];
+        if (['class', 'id'].includes(attr.name) === false) {
+          script.setAttribute(attr.name, attr.value);
+        }
+      }
+      el.appendChild(script);
+  }
+</script>
+
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":"https://site-info-api-hedon.vercel.app/api/v1?url={href}"},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"voice":{"js":"/js/plugins/voice.js"},"video":{"js":"/js/plugins/video.js"},"download-file":{"js":"/js/plugins/download-file.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else if (id == 'voice') {
+        ctx.voiceAudios = document.querySelectorAll('.voice>audio');
+        if (ctx.voiceAudios?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            createVoiceDom(ctx.voiceAudios);
+          });
+        }
+      } else if (id == 'video') {
+        ctx.videos = document.querySelectorAll('.video>video');
+        if (ctx.videos?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            videoEvents(ctx.videos);
+          });
+        }
+      } else if (id == 'download-file') {
+        ctx.files = document.querySelectorAll('.file');
+        if (ctx.files?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            downloadFileEvent(ctx.files);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+
+    // chat iphone time
+    let phoneTimes = document.querySelectorAll('.chat .status-bar .time');
+
+    if (phoneTimes.length > 0) {
+      NowTime();
+      var date = new Date();
+      var sec = date.getSeconds();
+      var firstAdjustInterval = setInterval(firstAdjustTime, 1000 * (60 - sec));
+    }
+
+    function firstAdjustTime() {
+      NowTime();
+      clearInterval(firstAdjustInterval);
+      setInterval(NowTime, 1000 * 60);
+    }
+
+    function NowTime() {
+      for (let i = 0; i < phoneTimes.length; ++i) {
+        var timeSpan = phoneTimes[i];
+        var date = new Date();
+        var hour = date.getHours();
+        var min = date.getMinutes();
+        timeSpan.innerHTML = check(hour) + ":" + check(min);
+      }
+    };
+
+    function check(val) {
+      if (val < 10) {
+        return ("0" + val);
+      }
+      return (val);
+    }
+
+    // chat quote
+    const chat_quote_obverser = new IntersectionObserver((entries, observer) => {
+      entries.filter((entry) => { return entry.isIntersecting }).sort((a, b) => a.intersectionRect.y !== b.intersectionRect.y ? a.intersectionRect.y - b.intersectionRect.y : a.intersectionRect.x - b.intersectionRect.x).forEach((entry, index) => {
+          observer.unobserve(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('quote-blink');
+            setTimeout(() => {
+              entry.target.classList.remove('quote-blink');
+            }, 1000);
+          }, Math.max(100, 16) * (index + 1));
+        });
+    });
+
+    var chatQuotes = document.querySelectorAll(".chat .talk .quote");
+    chatQuotes.forEach((quote) => {
+      quote.addEventListener('click', function () {
+        var chatCellDom = document.getElementById("quote-" + quote.getAttribute("quotedCellTag"));
+        if (chatCellDom) {
+          var chatDiv = chatCellDom.parentElement;
+          var mid = chatDiv.clientHeight / 2;
+          var offsetTop = chatCellDom.offsetTop;
+          if (offsetTop > mid - chatCellDom.clientHeight / 2) {
+            chatDiv.scrollTo({
+              top: chatCellDom.offsetTop - mid + chatCellDom.clientHeight / 2,
+              behavior: "smooth"
+            });
+          } else {
+            chatDiv.scrollTo({
+              top: 0,
+              behavior: "smooth"
+            });
+          }
+          chat_quote_obverser.observe(chatCellDom);
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img, .md-text img:not([class]), .md-text .image img`,
+    css: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
