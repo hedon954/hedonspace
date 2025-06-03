@@ -28,7 +28,7 @@
 <meta property="og:description" content="本文从零开始，通过多版本迭代，实现一个安全的 Rust Arc。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-06-03T05:00:00.000Z">
-<meta property="article:modified_time" content="2025-06-03T17:40:31.836Z">
+<meta property="article:modified_time" content="2025-06-03T17:45:32.961Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Rust">
 <meta property="article:tag" content="并发编程">
@@ -83,7 +83,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/Rust/">Rust</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/Rust/Rust-%E5%AE%9E%E6%88%98/">Rust 实战</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-06-03T05:00:00.000Z">2025-06-03</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-03T17:40:31.836Z">2025-06-04</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-06-03T05:00:00.000Z">2025-06-03</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-03T17:45:32.961Z">2025-06-04</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -129,9 +129,9 @@ join；因而可以捕获非 <code>'static</code>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">    age: <span class="type">u16</span>,</span><br><span class="line">    name: <span class="type">String</span>,</span><br><span class="line">    address: <span class="type">String</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[test]</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">arc_should_work</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">p</span> = Arc::<span class="title function_ invoke__">new</span>(Person &#123;  <span class="comment">// 使用 Arc</span></span><br><span class="line">        age: <span class="number">18</span>,</span><br><span class="line">        name: <span class="string">&quot;hedon&quot;</span>.<span class="title function_ invoke__">to_string</span>(),</span><br><span class="line">        address: <span class="string">&quot;China&quot;</span>.<span class="title function_ invoke__">to_string</span>(),</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="keyword">let</span> <span class="variable">p1</span> = Arc::<span class="title function_ invoke__">clone</span>(&amp;p); <span class="comment">// 等价于 p.clone()</span></span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p1);</span><br><span class="line">        &#125;);</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="keyword">let</span> <span class="variable">p2</span> = p.<span class="title function_ invoke__">clone</span>(); <span class="comment">// 等价于 Arc::clone(&amp;p)</span></span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p2);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">p3</span> = p.<span class="title function_ invoke__">clone</span>();  <span class="comment">// &lt;----- 编译通过</span></span><br><span class="line">    thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p3);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <table>
 <colgroup>
-<col style="width: 33%" />
-<col style="width: 33%" />
-<col style="width: 33%" />
+<col style="width: 39%" />
+<col style="width: 23%" />
+<col style="width: 37%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -221,7 +221,7 @@ trait，用于像指针一样无感操作 <code>data: T</code>：</p>
 的内存资源。</li>
 </ul>
 <p>我们先来实现 <code>Clone</code>：</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Clone</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">clone</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">      	<span class="comment">// <span class="doctag">TODO:</span> 处理整型溢出的情况</span></span><br><span class="line">        <span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().ref_count.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Ordering::Relaxed) </span><br><span class="line">        Arc &#123; ptr: <span class="keyword">self</span>.ptr &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Clone</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">clone</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">      	<span class="comment">// <span class="doctag">TODO:</span> 处理整型溢出的情况</span></span><br><span class="line">        <span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().ref_count.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Ordering::Relaxed)</span><br><span class="line">        Arc &#123; ptr: <span class="keyword">self</span>.ptr &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>因为这里没有其他原子操作需要跟当前操作建立严格的
 <code>happens-before</code> 关系，所以这里我们可以使用最松的
 <code>Relaxed</code> 内存顺序。</p>
@@ -279,15 +279,41 @@ drop”，只要它对相同原子执行一条 <em>Acquire</em>
 形成配对，确保看到<strong>之前所有的历史写入</strong>，这个时候我们才能确定已经没有别的线程在使用数据了，我们才可以安全地销毁对象。</li>
 </ul>
 <p>如下图所示；</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">    participant A as Thread A</span><br><span class="line">    participant B as Thread B</span><br><span class="line">    participant C as Thread C&lt;br/&gt;(最后 drop)</span><br><span class="line"></span><br><span class="line">    %% 普通写入</span><br><span class="line">    A-&gt;&gt;A: write shared data …</span><br><span class="line">    B-&gt;&gt;B: write shared data …</span><br><span class="line"></span><br><span class="line">    %% 非最终 drop：Release 写</span><br><span class="line">    A-&gt;&gt;A: fetch_sub (Release)  ⬅ 计数 n→n-1</span><br><span class="line">    B-&gt;&gt;B: fetch_sub (Release)  ⬅ 计数 n-1→n-2</span><br><span class="line"></span><br><span class="line">    %% 形成 release-sequence</span><br><span class="line">    Note over A,B: 这两次 Release 写组成&lt;br/&gt;同一条 release-sequence</span><br><span class="line"></span><br><span class="line">    %% 最终 drop：Release 写 &amp; 返回 1</span><br><span class="line">    C-&gt;&gt;C: fetch_sub (Release)  ⬅ 返回 1 → 计数 0</span><br><span class="line"></span><br><span class="line">    %% Acquire fence 同步</span><br><span class="line">    C--&gt;&gt;C: fence (Acquire)&lt;br/&gt;【接收 release-sequence】</span><br><span class="line"></span><br><span class="line">    %% 安全析构</span><br><span class="line">    C-&gt;&gt;C: drop(Box::from_raw)</span><br><span class="line"></span><br><span class="line">    %% 结果说明</span><br><span class="line">    Note over C: fence (Acquire) 使 A/B&lt;br/&gt;对共享数据的写必定&lt;br/&gt;在析构前可见</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<pre class="mermaid">sequenceDiagram
+    participant A as Thread A
+    participant B as Thread B
+    participant C as Thread C<br/>(最后 drop)
+
+    %% 普通写入
+    A->>A: write shared data …
+    B->>B: write shared data …
+
+    %% 非最终 drop：Release 写
+    A->>A: fetch_sub (Release)  ⬅ 计数 n→n-1
+    B->>B: fetch_sub (Release)  ⬅ 计数 n-1→n-2
+
+    %% 形成 release-sequence
+    Note over A,B: 这两次 Release 写组成<br/>同一条 release-sequence
+
+    %% 最终 drop：Release 写 & 返回 1
+    C->>C: fetch_sub (Release)  ⬅ 返回 1 → 计数 0
+
+    %% Acquire fence 同步
+    C-->>C: fence (Acquire)<br/>【接收 release-sequence】
+
+    %% 安全析构
+    C->>C: drop(Box::from_raw)
+
+    %% 结果说明
+    Note over C: fence (Acquire) 使 A/B<br/>对共享数据的写必定<br/>在析构前可见</pre>
 <p>经过这么一顿分析后，我们最终的 <code>Drop</code> 实现如下：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="comment">// ❶ 所有 `drop` 都执行：Release</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().ref_count.<span class="title function_ invoke__">fetch_sub</span>(<span class="number">1</span>, Ordering::Release) == <span class="number">1</span> &#123;</span><br><span class="line">            <span class="comment">// ❷ 只有最后一个引用才会进来</span></span><br><span class="line">            std::sync::atomic::<span class="title function_ invoke__">fence</span>(Ordering::Acquire); <span class="comment">// ❸ 补上 Acquire</span></span><br><span class="line">            <span class="keyword">unsafe</span> &#123;</span><br><span class="line">                <span class="comment">// ❹ 现在可以安全地回收并析构</span></span><br><span class="line">                <span class="title function_ invoke__">drop</span>(<span class="type">Box</span>::<span class="title function_ invoke__">from_raw</span>(<span class="keyword">self</span>.ptr.<span class="title function_ invoke__">as_ptr</span>()));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>步骤拆分如下：</p>
 <table>
 <colgroup>
-<col style="width: 25%" />
-<col style="width: 31%" />
-<col style="width: 43%" />
+<col style="width: 23%" />
+<col style="width: 28%" />
+<col style="width: 48%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -317,7 +343,7 @@ drop”，只要它对相同原子执行一条 <em>Acquire</em>
 <tr class="even">
 <td><strong>④ <code>drop(Box::from_raw(ptr))</code></strong></td>
 <td>独占地回收堆内存并运行 <code>T</code> 的析构</td>
-<td>现在安全：①没人再持有引用；②我已看到所有之前线程对 <code>T</code>
+<td>现在安全：① 没人再持有引用；② 我已看到所有之前线程对 <code>T</code>
 做的写入</td>
 </tr>
 </tbody>
@@ -451,9 +477,9 @@ happens-before 关系。</p></li>
 <p>关键的 API：</p>
 <table>
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 44%" />
-<col style="width: 44%" />
+<col style="width: 5%" />
+<col style="width: 43%" />
+<col style="width: 51%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -510,8 +536,8 @@ target="_blank" rel="noopener" href="https://rustwiki.org/zh-CN/std/ptr/struct.N
 <p>典型使用场景：</p>
 <table>
 <colgroup>
-<col style="width: 39%" />
-<col style="width: 60%" />
+<col style="width: 36%" />
+<col style="width: 63%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -1276,7 +1302,35 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
     }
   });
 </script>
+<script defer type="text/javascript" src="https://cdn.jsdelivr.net/npm/mermaid@v9/dist/mermaid.min.js"></script>
 <script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    var mermaid_config = {
+      startOnLoad: true,
+      theme:
+        "" == "auto" &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "neutral",
+      logLevel: 3,
+      themeVariables: {
+        darkMode: true
+      },
+      flowchart: {
+        useMaxWidth: false,
+        htmlLabels: true,
+        curve: "linear"
+      },
+      gantt: {
+        axisFormat: "%Y/%m/%d"
+      },
+      sequence: {
+        actorMargin: 50
+      }
+    }
+    mermaid.initialize(mermaid_config);
+  });
+</script><script>
   document.addEventListener('DOMContentLoaded', function () {
     window.codeElements = document.querySelectorAll('.code');
     if (window.codeElements.length > 0) {

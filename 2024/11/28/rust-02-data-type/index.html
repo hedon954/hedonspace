@@ -97,7 +97,37 @@
 href="https://hedon.top/2024/11/28/rust-01-type-system/">Rust
 的类型系统</a>，这一篇我们继续来了解 Rust 的数据类型。我画了一张 Rust
 基础知识图谱，希望可以帮助你更好地定位当前所在的位置。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">mindmap</span><br><span class="line">  root((Rust 数据类型))</span><br><span class="line">    数值类型</span><br><span class="line">      整数</span><br><span class="line">        有符号</span><br><span class="line">          i8/i16/i32/i64/i128/isize</span><br><span class="line">        无符号</span><br><span class="line">          u8/u16/u32/u64/u128/usize</span><br><span class="line">      浮点数</span><br><span class="line">        f32</span><br><span class="line">        f64</span><br><span class="line">      布尔型</span><br><span class="line">        bool</span><br><span class="line">      字符型</span><br><span class="line">        char</span><br><span class="line">    复合类型</span><br><span class="line">      元组 Tuple</span><br><span class="line">      数组 Array</span><br><span class="line">      切片 Slice</span><br><span class="line">      字符串</span><br><span class="line">        String</span><br><span class="line">        str</span><br><span class="line">      结构体 Struct</span><br><span class="line">      枚举 Enum</span><br><span class="line">    特殊类型</span><br><span class="line">      单元类型 unit</span><br><span class="line">      Never类型 !</span><br><span class="line">      指针类型</span><br><span class="line">        引用 &amp;T</span><br><span class="line">        原始指针 *const/*mut</span><br><span class="line">        智能指针</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">mindmap
+  root((Rust 数据类型))
+    数值类型
+      整数
+        有符号
+          i8/i16/i32/i64/i128/isize
+        无符号
+          u8/u16/u32/u64/u128/usize
+      浮点数
+        f32
+        f64
+      布尔型
+        bool
+      字符型
+        char
+    复合类型
+      元组 Tuple
+      数组 Array
+      切片 Slice
+      字符串
+        String
+        str
+      结构体 Struct
+      枚举 Enum
+    特殊类型
+      单元类型 unit
+      Never类型 !
+      指针类型
+        引用 &T
+        原始指针 *const/*mut
+        智能指针</pre>
 
 <div class="article-footer fs14">
     <section id="license">
