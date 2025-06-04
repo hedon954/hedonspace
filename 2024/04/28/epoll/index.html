@@ -27,6 +27,8 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文总结了高性能网络服务器中大量使用的 I&#x2F;O 多路复用技术 epoll，涵盖工作原理、数据结构、事件监听和中断等相关内容。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240429121302958.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/epoll_principle.jpg">
 <meta property="article:published_time" content="2024-04-28T12:27:29.000Z">
 <meta property="article:modified_time" content="2025-04-05T14:31:32.871Z">
 <meta property="article:author" content="Hedon Wang">
@@ -34,6 +36,7 @@
 <meta property="article:tag" content="网络编程">
 <meta property="article:tag" content="非阻塞 I&#x2F;0">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240429121302958.png">
   
   
   
@@ -71,7 +74,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/04/08/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2024/01/20/go-gpm/"><span class="title">深入浅出 Go 语言的 GPM 模型（Go1.21）</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/04/08/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2024/01/20/go-gpm/"><span class="title">深入浅出 Go 语言的 GPM 模型（Go1.21）</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -95,209 +98,127 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><h1 id="前言">前言</h1>
-<p><code>epoll</code> 是一种 I/O
-多路复用技术，主要用于高性能的网络服务器中，特别是在处理大量并发连接时。它是
-Linux 特有的，自 Linux 内核 2.5.44
-版本引入，并在后续版本中不断优化。<code>epoll</code>
-能够帮助服务器高效地管理数以千计的客户端连接，是 <code>select</code> 和
-<code>poll</code> 方法的现代替代品。</p>
-<p>本文不对 <code>epoll</code>
-的源码进行分析，仅做原理上的总结，方便快速查阅回顾。各大论坛很多大佬都对
-<code>epoll</code>
-的源码进行了详尽的分析，感兴趣的读者可以看「参考」篇章。</p>
-<h1 id="主要特点">主要特点</h1>
-<ol type="1">
-<li><strong>效率高</strong>: 相较于 <code>select</code> 和
-<code>poll</code>，<code>epoll</code>
-可以更高效地处理大量的并发连接。<code>select</code> 和 <code>poll</code>
-的效率随着监视的文件描述符数量增加而线性下降，而 <code>epoll</code>
-则不会因为监视的文件描述符数量增加而显著降低效率。</li>
-<li><strong>扩展性好</strong>: <code>epoll</code>
-使用一种称为事件通知的机制，只会处理那些真正发生了事件的文件描述符。这意味着系统不必重新检查所有文件描述符，从而大大减少了不必要的
-CPU 开销。</li>
-<li><strong>支持边缘触发和水平触发</strong>: <code>epoll</code> 支持
-<code>Edge Triggered</code> 和水平触发 <code>Level Triggered</code>
-两种模式。边缘触发模式只在文件描述符状态改变时才通知应用程序，适用于非阻塞
-I/O；而水平触发模式则在有事件可读或可写时都会通知应用程序，更容易使用但效率略低。</li>
+  </div><article class="md-text content"><h1>前言</h1>
+<p><code>epoll</code> 是一种 I/O 多路复用技术，主要用于高性能的网络服务器中，特别是在处理大量并发连接时。它是 Linux 特有的，自 Linux 内核 2.5.44 版本引入，并在后续版本中不断优化。<code>epoll</code> 能够帮助服务器高效地管理数以千计的客户端连接，是 <code>select</code> 和 <code>poll</code> 方法的现代替代品。</p>
+<p>本文不对 <code>epoll</code> 的源码进行分析，仅做原理上的总结，方便快速查阅回顾。各大论坛很多大佬都对 <code>epoll</code> 的源码进行了详尽的分析，感兴趣的读者可以看「参考」篇章。</p>
+<h1>主要特点</h1>
+<ol>
+<li><strong>效率高</strong>: 相较于 <code>select</code> 和 <code>poll</code>，<code>epoll</code> 可以更高效地处理大量的并发连接。<code>select</code> 和 <code>poll</code> 的效率随着监视的文件描述符数量增加而线性下降，而 <code>epoll</code> 则不会因为监视的文件描述符数量增加而显著降低效率。</li>
+<li><strong>扩展性好</strong>: <code>epoll</code> 使用一种称为事件通知的机制，只会处理那些真正发生了事件的文件描述符。这意味着系统不必重新检查所有文件描述符，从而大大减少了不必要的 CPU 开销。</li>
+<li><strong>支持边缘触发和水平触发</strong>: <code>epoll</code> 支持 <code>Edge Triggered</code> 和水平触发 <code>Level Triggered</code> 两种模式。边缘触发模式只在文件描述符状态改变时才通知应用程序，适用于非阻塞 I/O；而水平触发模式则在有事件可读或可写时都会通知应用程序，更容易使用但效率略低。</li>
 </ol>
-<h1 id="结论先行">结论先行</h1>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240429121302958.png"
-alt="epoll flow chart" />
-<figcaption aria-hidden="true">epoll flow chart</figcaption>
-</figure>
-<h1 id="工作原理">工作原理</h1>
+<h1>结论先行</h1>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240429121302958.png" alt="epoll flow chart"></p>
+<h1>工作原理</h1>
 <p><code>epoll</code> 的工作可以分为三个主要步骤：</p>
-<ol type="1">
-<li><strong>创建 epoll 实例</strong>: 使用 <code>epoll_create</code>
-函数创建一个 <code>epoll</code> 实例。</li>
-<li><strong>添加/修改/删除文件描述符</strong>: 使用
-<code>epoll_ctl</code> 函数将新的文件描述符添加到 <code>epoll</code>
-实例中，或者修改、删除已存在的文件描述符。这些操作与文件描述符的数量无关，因此执行速度非常快。</li>
-<li><strong>等待事件发生</strong>: 使用 <code>epoll_wait</code>
-函数等待事件的发生。这个函数可以同时监控多个文件描述符，当指定的文件描述符上发生了注册的事件时，函数返回，并告知哪些文件描述符上发生了事件。</li>
+<ol>
+<li><strong>创建 epoll 实例</strong>: 使用 <code>epoll_create</code> 函数创建一个 <code>epoll</code> 实例。</li>
+<li><strong>添加/修改/删除文件描述符</strong>: 使用 <code>epoll_ctl</code> 函数将新的文件描述符添加到 <code>epoll</code> 实例中，或者修改、删除已存在的文件描述符。这些操作与文件描述符的数量无关，因此执行速度非常快。</li>
+<li><strong>等待事件发生</strong>: 使用 <code>epoll_wait</code> 函数等待事件的发生。这个函数可以同时监控多个文件描述符，当指定的文件描述符上发生了注册的事件时，函数返回，并告知哪些文件描述符上发生了事件。</li>
 </ol>
-<h1 id="et-lt">ET &amp; LT</h1>
-<p>在 <code>epoll</code> 中，边缘触发（ET, Edge
-Triggered）和水平触发（LT, Level
-Triggered）是两种不同的事件通知方式，它们定义了操作系统如何通知应用程序文件描述符上的
-I/O 事件。</p>
+<h1>ET &amp; LT</h1>
+<p>在 <code>epoll</code> 中，边缘触发（ET, Edge Triggered）和水平触发（LT, Level Triggered）是两种不同的事件通知方式，它们定义了操作系统如何通知应用程序文件描述符上的 I/O 事件。</p>
 <p>这两种模式的主要区别在于何时以及如何多次通知应用程序关于某个文件描述符的事件。</p>
-<h2 id="水平触发level-triggered">水平触发（Level Triggered）</h2>
+<h2 id="水平触发（Level-Triggered）">水平触发（Level Triggered）</h2>
 <ul>
-<li><strong>定义</strong>: 在水平触发模式下，只要文件描述符上有未处理的
-I/O 事件存在，<code>epoll_wait</code>
-就会通知应用程序。这意味着，如果数据可读取但未被完全读取，<code>epoll_wait</code>
-会在下次调用时再次返回该文件描述符。</li>
-<li><strong>行为</strong>:
-这种模式更容易编程，因为应用程序可以不用担心在一个操作中处理所有数据。如果数据还在，<code>epoll_wait</code>
-会继续通知你。</li>
-<li><strong>适用场景</strong>:
-更适合那些简单的应用或者对实时性要求不是非常高的应用，因为它简化了处理逻辑。</li>
+<li><strong>定义</strong>: 在水平触发模式下，只要文件描述符上有未处理的 I/O 事件存在，<code>epoll_wait</code> 就会通知应用程序。这意味着，如果数据可读取但未被完全读取，<code>epoll_wait</code> 会在下次调用时再次返回该文件描述符。</li>
+<li><strong>行为</strong>: 这种模式更容易编程，因为应用程序可以不用担心在一个操作中处理所有数据。如果数据还在，<code>epoll_wait</code> 会继续通知你。</li>
+<li><strong>适用场景</strong>: 更适合那些简单的应用或者对实时性要求不是非常高的应用，因为它简化了处理逻辑。</li>
 </ul>
-<h2 id="边缘触发edge-triggered">边缘触发（Edge Triggered）</h2>
+<h2 id="边缘触发（Edge-Triggered）">边缘触发（Edge Triggered）</h2>
 <ul>
-<li><strong>定义</strong>:
-在边缘触发模式下，只有状态变化时（例如从无数据到有数据），<code>epoll_wait</code>
-才会通知应用程序。一旦通知了应用程序某事件发生，除非有新的数据到达或状态再次发生变化，否则不会再次通知应用程序该事件。</li>
-<li><strong>行为</strong>:
-这要求应用程序必须立即处理所有事件，因为之后不会再收到关于这些事件的通知。这意味着应用程序必须循环读取或写入，直到数据被完全处理完，以确保不遗漏任何事件。</li>
-<li><strong>适用场景</strong>:
-适合需要高性能的场景，因为它减少了事件处理的次数，但要求程序必须更加小心地管理
-I/O 操作。</li>
+<li><strong>定义</strong>: 在边缘触发模式下，只有状态变化时（例如从无数据到有数据），<code>epoll_wait</code> 才会通知应用程序。一旦通知了应用程序某事件发生，除非有新的数据到达或状态再次发生变化，否则不会再次通知应用程序该事件。</li>
+<li><strong>行为</strong>: 这要求应用程序必须立即处理所有事件，因为之后不会再收到关于这些事件的通知。这意味着应用程序必须循环读取或写入，直到数据被完全处理完，以确保不遗漏任何事件。</li>
+<li><strong>适用场景</strong>: 适合需要高性能的场景，因为它减少了事件处理的次数，但要求程序必须更加小心地管理 I/O 操作。</li>
 </ul>
 <h2 id="比较和选择">比较和选择</h2>
 <ul>
-<li><strong>性能</strong>:
-边缘触发通常提供更高的性能，因为它减少了系统调用的次数和不必要的事件处理。</li>
-<li><strong>编程复杂性</strong>:
-边缘触发模式编程比水平触发复杂，因为需要确保每次事件被彻底处理，并且更容易遇到如“惊群效应”（多个进程或线程被同一个事件唤醒）等问题。</li>
-<li><strong>可靠性</strong>:
-水平触发因为其简单的行为模式，在可靠性处理上更为直接和容易。</li>
+<li><strong>性能</strong>: 边缘触发通常提供更高的性能，因为它减少了系统调用的次数和不必要的事件处理。</li>
+<li><strong>编程复杂性</strong>: 边缘触发模式编程比水平触发复杂，因为需要确保每次事件被彻底处理，并且更容易遇到如“惊群效应”（多个进程或线程被同一个事件唤醒）等问题。</li>
+<li><strong>可靠性</strong>: 水平触发因为其简单的行为模式，在可靠性处理上更为直接和容易。</li>
 </ul>
 <p>通常，选择哪种模式取决于应用的具体需求、预期的负载以及开发者对事件处理逻辑的控制程度。高性能服务器通常选择边缘触发模式，以最大化其效率，而简单的或者低负载应用可能会更倾向于使用水平触发，以简化开发和调试过程。</p>
-<h1 id="数据结构">数据结构</h1>
-<p><code>epoll</code> 使用 2
-种关键的数据结构来维护和跟踪文件描述符（FD）和事件：</p>
-<ol type="1">
-<li><strong>红黑树（Red-Black Tree）</strong>:
-用于存储所有注册的文件描述符及其事件。红黑树是一种自平衡二叉搜索树，能够在对数时间内完成插入、删除和查找操作，这使得管理大量文件描述符变得高效。</li>
-<li><strong>就绪列表（Ready List）</strong>:
-当事件发生（如可读、可写等）并被内核检测到时，相应的 FD
-会被添加到一个就绪列表中。这个列表仅包含实际有事件发生的文件描述符，从而减少了
-<code>epoll_wait</code> 调用的处理时间。</li>
+<h1>数据结构</h1>
+<p><code>epoll</code> 使用 2 种关键的数据结构来维护和跟踪文件描述符（FD）和事件：</p>
+<ol>
+<li><strong>红黑树（Red-Black Tree）</strong>: 用于存储所有注册的文件描述符及其事件。红黑树是一种自平衡二叉搜索树，能够在对数时间内完成插入、删除和查找操作，这使得管理大量文件描述符变得高效。</li>
+<li><strong>就绪列表（Ready List）</strong>: 当事件发生（如可读、可写等）并被内核检测到时，相应的 FD 会被添加到一个就绪列表中。这个列表仅包含实际有事件发生的文件描述符，从而减少了 <code>epoll_wait</code> 调用的处理时间。</li>
 </ol>
-<h1 id="工作细节">工作细节</h1>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/epoll_principle.jpg"
-alt="epoll data structure" />
-<figcaption aria-hidden="true">epoll data structure</figcaption>
-</figure>
-<ol type="1">
-<li>通过调用 <code>epoll_create()</code> 函数创建并初始化一个
-<code>eventpoll</code> 对象。</li>
-<li>通过调用 <code>epoll_ctl()</code> 函数把被监听的文件句柄 (如 socket
-句柄) 封装成 <code>epitem</code> 对象并且添加到 <code>eventpoll</code>
-对象的红黑树中进行管理。</li>
-<li>通过调用 <code>epoll_wait()</code>
-函数等待被监听的文件状态发生改变。</li>
-<li>当被监听的文件状态发生改变时（如 socket
-接收到数据），会把文件句柄对应 <code>epitem</code> 对象添加到
-<code>eventpoll</code> 对象的就绪队列 <code>rdllist</code>
-中。并且把就绪队列的文件列表复制到 <code>epoll_wait()</code> 函数的
-<code>events</code> 参数中。</li>
+<h1>工作细节</h1>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/epoll_principle.jpg" alt="epoll data structure"></p>
+<ol>
+<li>通过调用 <code>epoll_create()</code> 函数创建并初始化一个 <code>eventpoll</code> 对象。</li>
+<li>通过调用 <code>epoll_ctl()</code> 函数把被监听的文件句柄 (如 socket 句柄) 封装成 <code>epitem</code> 对象并且添加到 <code>eventpoll</code> 对象的红黑树中进行管理。</li>
+<li>通过调用 <code>epoll_wait()</code> 函数等待被监听的文件状态发生改变。</li>
+<li>当被监听的文件状态发生改变时（如 socket 接收到数据），会把文件句柄对应 <code>epitem</code> 对象添加到 <code>eventpoll</code> 对象的就绪队列 <code>rdllist</code> 中。并且把就绪队列的文件列表复制到 <code>epoll_wait()</code> 函数的 <code>events</code> 参数中。</li>
 <li>唤醒调用 <code>epoll_wait()</code> 函数被阻塞（睡眠）的进程。</li>
 </ol>
-<h1 id="事件监听">事件监听</h1>
+<h1>事件监听</h1>
 <p>内核中的事件监听和回调机制是通过高效的事件驱动模型实现的，而不是简单的循环检查（如在用户空间中的轮询）。这种机制利用了现代操作系统的中断和回调系统，以及针对异步事件的优化处理策略。</p>
 <p>以下是这个过程的详细解释：</p>
-<h2 id="中断和中断处理">1. 中断和中断处理</h2>
-<p>在硬件层面，大多数 I/O 操作（如网络通信、磁盘
-I/O）都是通过中断驱动的。当一个 I/O
-设备准备好数据或需要服务时，它会产生一个中断信号，这个信号被发送到
-CPU。CPU 响应中断，并执行一个预定的中断处理程序（Interrupt Service
-Routine, ISR），该程序是由设备的驱动程序提供的。</p>
-<h2 id="事件和回调">2. 事件和回调</h2>
-<p>在 ISR
-中，与设备相关的事件（例如网络包的接收、硬盘读取完成）会被检测到，并且可以在此阶段调用特定的回调函数。这些回调函数是在设备驱动或相关的内核模块中定义的，用来通知内核其他部分或者相关的进程有关事件的发生。</p>
-<h2 id="文件描述符的回调机制">3. 文件描述符的回调机制</h2>
-<p>对于 <code>epoll</code> 等 I/O
-多路复用技术，内核为每个文件描述符维护了一个事件处理机制。当文件描述符被创建时，相关的设备或资源会注册一组回调函数，这些函数会在特定的操作（如读、写、错误）上被触发。例如，一个网络套接字可能会在数据到达时触发一个“可读”事件的回调。</p>
-<h2 id="epoll-的事件绑定">4. <code>epoll</code> 的事件绑定</h2>
-<p>当一个文件描述符被加入到 <code>epoll</code>
-监听队列中，<code>epoll</code>
-会利用这些回调来获得事件通知。<code>epoll</code>
-操作相关的代码会将一个额外的回调函数绑定到这些文件描述符上。当文件描述符的状态改变时（如数据可读），这个回调函数将被触发，然后它会将相应的文件描述符标记为“就绪”，并放入
-<code>epoll</code> 的就绪队列。</p>
-<h2 id="事件通知和唤醒">5. 事件通知和唤醒</h2>
-<p>当 <code>epoll_wait</code>
-被调用且有事件就绪时，内核会检查就绪队列，并将这些事件传递给等待的进程。如果没有事件就绪，进程将被挂起直到有事件发生。事件的发生会触发内核调度程序唤醒相应的进程。</p>
-<h2 id="效率和性能">6. 效率和性能</h2>
-<p>这种基于中断的事件通知机制意味着内核不需要不断循环检查每个文件描述符的状态，从而极大地提高了效率。事件只有在实际发生时才被处理，且处理通常是由硬件中断直接触发的，这使得整个系统更加响应快速，减少了无效的
-CPU 使用。</p>
-<p>这种设计使得 Linux 内核在处理大量并发 I/O
-操作时能够保持高效和稳定，适合构建高性能的网络服务和应用。</p>
-<h1 id="中断">中断</h1>
-<p>中断机制是计算机硬件和操作系统核心功能之一，它允许外设或硬件异步地通知
-CPU 需要处理某些事件。中断机制的实现并不依赖于类似于 <code>for</code>
-循环的轮询检查，而是建立在更为直接和高效的硬件和处理器架构支持之上。</p>
-<p>当 CPU
-接收到中断信号时，它是通过一套内建于硬件的协调机制来识别和响应中断的。这个过程涉及硬件电路设计、处理器架构和操作系统的中断管理功能。</p>
+<h2 id="1-中断和中断处理">1. 中断和中断处理</h2>
+<p>在硬件层面，大多数 I/O 操作（如网络通信、磁盘 I/O）都是通过中断驱动的。当一个 I/O 设备准备好数据或需要服务时，它会产生一个中断信号，这个信号被发送到 CPU。CPU 响应中断，并执行一个预定的中断处理程序（Interrupt Service Routine, ISR），该程序是由设备的驱动程序提供的。</p>
+<h2 id="2-事件和回调">2. 事件和回调</h2>
+<p>在 ISR 中，与设备相关的事件（例如网络包的接收、硬盘读取完成）会被检测到，并且可以在此阶段调用特定的回调函数。这些回调函数是在设备驱动或相关的内核模块中定义的，用来通知内核其他部分或者相关的进程有关事件的发生。</p>
+<h2 id="3-文件描述符的回调机制">3. 文件描述符的回调机制</h2>
+<p>对于 <code>epoll</code> 等 I/O 多路复用技术，内核为每个文件描述符维护了一个事件处理机制。当文件描述符被创建时，相关的设备或资源会注册一组回调函数，这些函数会在特定的操作（如读、写、错误）上被触发。例如，一个网络套接字可能会在数据到达时触发一个“可读”事件的回调。</p>
+<h2 id="4-epoll-的事件绑定">4. <code>epoll</code> 的事件绑定</h2>
+<p>当一个文件描述符被加入到 <code>epoll</code> 监听队列中，<code>epoll</code> 会利用这些回调来获得事件通知。<code>epoll</code> 操作相关的代码会将一个额外的回调函数绑定到这些文件描述符上。当文件描述符的状态改变时（如数据可读），这个回调函数将被触发，然后它会将相应的文件描述符标记为“就绪”，并放入 <code>epoll</code> 的就绪队列。</p>
+<h2 id="5-事件通知和唤醒">5. 事件通知和唤醒</h2>
+<p>当 <code>epoll_wait</code> 被调用且有事件就绪时，内核会检查就绪队列，并将这些事件传递给等待的进程。如果没有事件就绪，进程将被挂起直到有事件发生。事件的发生会触发内核调度程序唤醒相应的进程。</p>
+<h2 id="6-效率和性能">6. 效率和性能</h2>
+<p>这种基于中断的事件通知机制意味着内核不需要不断循环检查每个文件描述符的状态，从而极大地提高了效率。事件只有在实际发生时才被处理，且处理通常是由硬件中断直接触发的，这使得整个系统更加响应快速，减少了无效的 CPU 使用。</p>
+<p>这种设计使得 Linux 内核在处理大量并发 I/O 操作时能够保持高效和稳定，适合构建高性能的网络服务和应用。</p>
+<h1>中断</h1>
+<p>中断机制是计算机硬件和操作系统核心功能之一，它允许外设或硬件异步地通知 CPU 需要处理某些事件。中断机制的实现并不依赖于类似于 <code>for</code> 循环的轮询检查，而是建立在更为直接和高效的硬件和处理器架构支持之上。</p>
+<p>当 CPU 接收到中断信号时，它是通过一套内建于硬件的协调机制来识别和响应中断的。这个过程涉及硬件电路设计、处理器架构和操作系统的中断管理功能。</p>
 <p>以下是 CPU 如何知道有中断发生，并且如何处理这一中断的详细步骤：</p>
 <h2 id="中断信号的检测和响应">中断信号的检测和响应</h2>
-<ol type="1">
-<li><p><strong>中断请求线（IRQ）</strong>：外部设备通过连接到处理器的一个特定的硬件线路（IRQ）发送中断信号。这个线路直接与处理器内的中断控制单元（Interrupt
-Controller）相连。</p></li>
-<li><p><strong>中断控制器</strong>：大多数现代计算机系统使用一个或多个中断控制器来管理中断信号。中断控制器的任务是接收来自各种外部设备的中断请求，并将这些请求优先级排序后发送给
-CPU。</p></li>
-<li><p><strong>中断向量</strong>：当中断控制器接收到一个中断信号后，它会根据中断源确定一个中断向量。这个向量是一个数字，指向中断向量表中对应的入口，该入口包含了处理该中断的中断服务例程（ISR）的地址。</p></li>
+<ol>
+<li>
+<p><strong>中断请求线（IRQ）</strong>：外部设备通过连接到处理器的一个特定的硬件线路（IRQ）发送中断信号。这个线路直接与处理器内的中断控制单元（Interrupt Controller）相连。</p>
+</li>
+<li>
+<p><strong>中断控制器</strong>：大多数现代计算机系统使用一个或多个中断控制器来管理中断信号。中断控制器的任务是接收来自各种外部设备的中断请求，并将这些请求优先级排序后发送给 CPU。</p>
+</li>
+<li>
+<p><strong>中断向量</strong>：当中断控制器接收到一个中断信号后，它会根据中断源确定一个中断向量。这个向量是一个数字，指向中断向量表中对应的入口，该入口包含了处理该中断的中断服务例程（ISR）的地址。</p>
+</li>
 </ol>
-<h2 id="cpu-如何处理中断">CPU 如何处理中断</h2>
-<ol type="1">
-<li><p><strong>当前指令的完成</strong>：当 CPU
-接收到中断控制器发出的中断信号时，它首先会完成当前执行的指令。这是为了保证程序的状态能够正确保存，从而在中断处理完毕后可以无缝地恢复执行。</p></li>
-<li><p><strong>保存上下文</strong>：一旦当前指令执行完毕，CPU
-会自动保存当前的程序状态，包括程序计数器（PC）、寄存器和其他必要的状态信息。这些信息通常被推送到当前的栈上。</p></li>
-<li><p><strong>跳转到 ISR</strong>：CPU
-使用中断向量来访问中断向量表，找到与中断号对应的中断服务例程（ISR）的地址，并跳转到该地址开始执行
-ISR。这个过程是自动的，由处理器的内部机制控制。</p></li>
-<li><p><strong>执行
-ISR</strong>：中断服务例程会执行必要的操作来处理中断，比如读取数据缓冲区、清除设备状态或发送信号等。</p></li>
-<li><p><strong>恢复上下文并返回</strong>：一旦 ISR
-执行完成，处理器会从栈上恢复之前保存的程序状态，并将控制权返回到被中断的程序，继续执行。</p></li>
+<h2 id="CPU-如何处理中断">CPU 如何处理中断</h2>
+<ol>
+<li>
+<p><strong>当前指令的完成</strong>：当 CPU 接收到中断控制器发出的中断信号时，它首先会完成当前执行的指令。这是为了保证程序的状态能够正确保存，从而在中断处理完毕后可以无缝地恢复执行。</p>
+</li>
+<li>
+<p><strong>保存上下文</strong>：一旦当前指令执行完毕，CPU 会自动保存当前的程序状态，包括程序计数器（PC）、寄存器和其他必要的状态信息。这些信息通常被推送到当前的栈上。</p>
+</li>
+<li>
+<p><strong>跳转到 ISR</strong>：CPU 使用中断向量来访问中断向量表，找到与中断号对应的中断服务例程（ISR）的地址，并跳转到该地址开始执行 ISR。这个过程是自动的，由处理器的内部机制控制。</p>
+</li>
+<li>
+<p><strong>执行 ISR</strong>：中断服务例程会执行必要的操作来处理中断，比如读取数据缓冲区、清除设备状态或发送信号等。</p>
+</li>
+<li>
+<p><strong>恢复上下文并返回</strong>：一旦 ISR 执行完成，处理器会从栈上恢复之前保存的程序状态，并将控制权返回到被中断的程序，继续执行。</p>
+</li>
 </ol>
 <h2 id="硬件支持">硬件支持</h2>
-<p>这一过程大量依赖于处理器的硬件支持，如中断向量表通常是固定在处理器的特定内存地址上的。此外，现代处理器如
-x86
-架构还提供了更高级的功能，比如支持多重中断控制器和高级可编程中断控制器（APIC）等。</p>
-<p>这种基于硬件的中断响应机制允许 CPU
-快速有效地处理各种外部事件，确保系统的响应性和稳定性。</p>
-<h1 id="参考">参考</h1>
+<p>这一过程大量依赖于处理器的硬件支持，如中断向量表通常是固定在处理器的特定内存地址上的。此外，现代处理器如 x86 架构还提供了更高级的功能，比如支持多重中断控制器和高级可编程中断控制器（APIC）等。</p>
+<p>这种基于硬件的中断响应机制允许 CPU 快速有效地处理各种外部事件，确保系统的响应性和稳定性。</p>
+<h1>参考</h1>
 <ul>
-<li><a
-target="_blank" rel="noopener" href="https://blog.csdn.net/zhangyanfei01/article/details/114959103">图解
-| 深入揭秘 epoll 是如何实现 IO 多路复用的！</a></li>
-<li><a
-target="_blank" rel="noopener" href="https://blog.csdn.net/zhpCSDN921011/article/details/125580548">一图总结
-epoll 的总体工作流程</a></li>
-<li><a
-target="_blank" rel="noopener" href="https://thetechsolo.wordpress.com/2016/02/29/scalable-io-events-vs-multithreading-based/">scalable-io-events-vs-multithreading-based</a></li>
-<li><a
-target="_blank" rel="noopener" href="https://github.com/liexusong/linux-source-code-analyze/blob/master/epoll-principle.md">Epoll
-实现原理</a></li>
-<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/667412830">网络编程之 epoll
-源码深度剖析</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/zhangyanfei01/article/details/114959103">图解 | 深入揭秘 epoll 是如何实现 IO 多路复用的！</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/zhpCSDN921011/article/details/125580548">一图总结 epoll 的总体工作流程</a></li>
+<li><a target="_blank" rel="noopener" href="https://thetechsolo.wordpress.com/2016/02/29/scalable-io-events-vs-multithreading-based/">scalable-io-events-vs-multithreading-based</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/liexusong/linux-source-code-analyze/blob/master/epoll-principle.md">Epoll 实现原理</a></li>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/667412830">网络编程之 epoll 源码深度剖析</a></li>
 </ul>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -337,18 +258,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%BB%E8%A6%81%E7%89%B9%E7%82%B9"><span class="toc-text">主要特点</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA%E5%85%88%E8%A1%8C"><span class="toc-text">结论先行</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="toc-text">工作原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#et-lt"><span class="toc-text">ET &amp; LT</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B0%B4%E5%B9%B3%E8%A7%A6%E5%8F%91level-triggered"><span class="toc-text">水平触发（Level Triggered）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BE%B9%E7%BC%98%E8%A7%A6%E5%8F%91edge-triggered"><span class="toc-text">边缘触发（Edge Triggered）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%AF%94%E8%BE%83%E5%92%8C%E9%80%89%E6%8B%A9"><span class="toc-text">比较和选择</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%B7%A5%E4%BD%9C%E7%BB%86%E8%8A%82"><span class="toc-text">工作细节</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%8B%E4%BB%B6%E7%9B%91%E5%90%AC"><span class="toc-text">事件监听</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%AD%E6%96%AD%E5%92%8C%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86"><span class="toc-text">1. 中断和中断处理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E4%BB%B6%E5%92%8C%E5%9B%9E%E8%B0%83"><span class="toc-text">2. 事件和回调</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6%E7%9A%84%E5%9B%9E%E8%B0%83%E6%9C%BA%E5%88%B6"><span class="toc-text">3. 文件描述符的回调机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#epoll-%E7%9A%84%E4%BA%8B%E4%BB%B6%E7%BB%91%E5%AE%9A"><span class="toc-text">4. epoll 的事件绑定</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E4%BB%B6%E9%80%9A%E7%9F%A5%E5%92%8C%E5%94%A4%E9%86%92"><span class="toc-text">5. 事件通知和唤醒</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%88%E7%8E%87%E5%92%8C%E6%80%A7%E8%83%BD"><span class="toc-text">6. 效率和性能</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%AD%E6%96%AD"><span class="toc-text">中断</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%AD%E6%96%AD%E4%BF%A1%E5%8F%B7%E7%9A%84%E6%A3%80%E6%B5%8B%E5%92%8C%E5%93%8D%E5%BA%94"><span class="toc-text">中断信号的检测和响应</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#cpu-%E5%A6%82%E4%BD%95%E5%A4%84%E7%90%86%E4%B8%AD%E6%96%AD"><span class="toc-text">CPU 如何处理中断</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A1%AC%E4%BB%B6%E6%94%AF%E6%8C%81"><span class="toc-text">硬件支持</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">主要特点</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">结论先行</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">工作原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">ET &amp; LT</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B0%B4%E5%B9%B3%E8%A7%A6%E5%8F%91%EF%BC%88Level-Triggered%EF%BC%89"><span class="toc-text">水平触发（Level Triggered）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BE%B9%E7%BC%98%E8%A7%A6%E5%8F%91%EF%BC%88Edge-Triggered%EF%BC%89"><span class="toc-text">边缘触发（Edge Triggered）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%AF%94%E8%BE%83%E5%92%8C%E9%80%89%E6%8B%A9"><span class="toc-text">比较和选择</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">工作细节</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">事件监听</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E4%B8%AD%E6%96%AD%E5%92%8C%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86"><span class="toc-text">1. 中断和中断处理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BA%8B%E4%BB%B6%E5%92%8C%E5%9B%9E%E8%B0%83"><span class="toc-text">2. 事件和回调</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6%E7%9A%84%E5%9B%9E%E8%B0%83%E6%9C%BA%E5%88%B6"><span class="toc-text">3. 文件描述符的回调机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-epoll-%E7%9A%84%E4%BA%8B%E4%BB%B6%E7%BB%91%E5%AE%9A"><span class="toc-text">4. epoll 的事件绑定</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E4%BA%8B%E4%BB%B6%E9%80%9A%E7%9F%A5%E5%92%8C%E5%94%A4%E9%86%92"><span class="toc-text">5. 事件通知和唤醒</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E6%95%88%E7%8E%87%E5%92%8C%E6%80%A7%E8%83%BD"><span class="toc-text">6. 效率和性能</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">中断</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%AD%E6%96%AD%E4%BF%A1%E5%8F%B7%E7%9A%84%E6%A3%80%E6%B5%8B%E5%92%8C%E5%93%8D%E5%BA%94"><span class="toc-text">中断信号的检测和响应</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#CPU-%E5%A6%82%E4%BD%95%E5%A4%84%E7%90%86%E4%B8%AD%E6%96%AD"><span class="toc-text">CPU 如何处理中断</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A1%AC%E4%BB%B6%E6%94%AF%E6%8C%81"><span class="toc-text">硬件支持</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">参考</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
