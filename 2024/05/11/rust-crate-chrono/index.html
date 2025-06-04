@@ -27,15 +27,11 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文全面的指南深入介绍了如何在 Rust 中使用 chrono 库来精确处理和转换时间与日期。从基本概念到高级功能，本文提供了实用的代码示例和详尽的解释，帮助你在任何 Rust 项目中高效管理时间。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512010241356.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512002330526.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512002106738.png">
 <meta property="article:published_time" content="2024-05-11T15:52:55.000Z">
 <meta property="article:modified_time" content="2025-04-05T14:31:32.881Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Rust">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512010241356.png">
   
   
   
@@ -73,7 +69,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/04/08/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2024/01/20/go-gpm/"><span class="title">深入浅出 Go 语言的 GPM 模型（Go1.21）</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/04/08/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2024/01/20/go-gpm/"><span class="title">深入浅出 Go 语言的 GPM 模型（Go1.21）</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -97,122 +93,173 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>在开发过程中，我们经常有对时间和日期处理的需求。不论是日历应用、日程安排、还是时间戳记录，准确的时间数据处理都是必不可少的。Rust 社区提供的 <code>chrono</code> 库以其强大的功能和灵活的接口，在 Rust 开发者中广受欢迎。本文将简单介绍 <code>chrono</code> 库，展示如何利用它来精确处理和转换时间和日期，帮助你在任何 Rust 项目中都能高效地管理时间。</p>
-<h1>版本</h1>
+  </div><article class="md-text content"><p>在开发过程中，我们经常有对时间和日期处理的需求。不论是日历应用、日程安排、还是时间戳记录，准确的时间数据处理都是必不可少的。Rust
+社区提供的 <code>chrono</code> 库以其强大的功能和灵活的接口，在 Rust
+开发者中广受欢迎。本文将简单介绍 <code>chrono</code>
+库，展示如何利用它来精确处理和转换时间和日期，帮助你在任何 Rust
+项目中都能高效地管理时间。</p>
+<h1 id="版本">版本</h1>
 <ul>
 <li><code>chrono</code>: 0.4.38</li>
 </ul>
-<h1>结论先行</h1>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512010241356.png" alt="chrono 各种时间类型转换图"></p>
-<h1>时间相关概念</h1>
+<h1 id="结论先行">结论先行</h1>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512010241356.png"
+alt="chrono 各种时间类型转换图" />
+<figcaption aria-hidden="true">chrono 各种时间类型转换图</figcaption>
+</figure>
+<h1 id="时间相关概念">时间相关概念</h1>
 <table>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 88%" />
+</colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>概念</th>
 <th>理解</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td>UNIX 时间戳（UNIX Timestamp）</td>
-<td>也称为 POSIX 时间或 Epoch 时间，是自 1970 年 1 月 1 日（UTC 时区）以来经过的秒数，不计入闰秒。这是一种非常通用的时间表示方法，在编程中广泛使用，因为它可以简化时间差的计算。</td>
+<td>也称为 POSIX 时间或 Epoch 时间，是自 1970 年 1 月 1 日（UTC
+时区）以来经过的秒数，不计入闰秒。这是一种非常通用的时间表示方法，在编程中广泛使用，因为它可以简化时间差的计算。</td>
 </tr>
-<tr>
+<tr class="even">
 <td>UTC（协调世界时）</td>
-<td>全称为协调世界时（Coordinated Universal Time），是目前国际上广泛采用的时间标准。它基本上与格林威治平均时（GMT）相同，但在技术上更加精确，因为它使用原子钟来保持时间准确。世界各地的时间都是以 UTC 为基础，加上或减去一定的小时数来定义的。</td>
+<td>全称为协调世界时（Coordinated Universal
+Time），是目前国际上广泛采用的时间标准。它基本上与格林威治平均时（GMT）相同，但在技术上更加精确，因为它使用原子钟来保持时间准确。世界各地的时间都是以
+UTC 为基础，加上或减去一定的小时数来定义的。</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>时区（Time Zone）</td>
-<td>时区是地球上划分的标准时间区域。由于地球自西向东旋转，每向东移动一定角度，当地的太阳时间就会相应地提前。世界被分成了 24 个时区，每个时区通常相差一小时。时区允许地区内的人们能在大致相同的时间内，经历类似的日夜更替模式。</td>
+<td>时区是地球上划分的标准时间区域。由于地球自西向东旋转，每向东移动一定角度，当地的太阳时间就会相应地提前。世界被分成了
+24
+个时区，每个时区通常相差一小时。时区允许地区内的人们能在大致相同的时间内，经历类似的日夜更替模式。</td>
 </tr>
-<tr>
+<tr class="even">
 <td>UTC+8</td>
-<td>UTC+8 是 UTC 时间加上 8 小时的时间区。中国大陆就是位于这个时区。例如，当 UTC 时间为 00:00 时，UTC+8 的时间就是 08:00。</td>
+<td>UTC+8 是 UTC 时间加上 8
+小时的时间区。中国大陆就是位于这个时区。例如，当 UTC 时间为 00:00
+时，UTC+8 的时间就是 08:00。</td>
 </tr>
 </tbody>
 </table>
-<h1>chrono 关键类型</h1>
+<h1 id="chrono-关键类型">chrono 关键类型</h1>
 <table>
+<colgroup>
+<col style="width: 4%" />
+<col style="width: 60%" />
+<col style="width: 34%" />
+</colgroup>
 <thead>
-<tr>
+<tr class="header">
 <th>类型</th>
 <th>含义</th>
 <th>适用场景</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td>DateTime&lt;Tz&gt;</td>
-<td>一个带有时区的日期和时间类型，其中 <code>Tz</code> 是实现了 <code>TimeZone</code> 特质的类型，如 <code>Utc</code> 和 <code>Local</code> 。这意味着 <code>DateTime</code> 考虑了时区的影响，可以表示全球任意地点的精确时间。</td>
+<td>一个带有时区的日期和时间类型，其中 <code>Tz</code> 是实现了
+<code>TimeZone</code> 特质的类型，如 <code>Utc</code> 和
+<code>Local</code> 。这意味着 <code>DateTime</code>
+考虑了时区的影响，可以表示全球任意地点的精确时间。</td>
 <td>广泛用于需要考虑时区转换的场景，如存储用户的本地时间或在不同地区之间转换时间。</td>
 </tr>
-<tr>
+<tr class="even">
 <td>NaiveDateTime</td>
 <td>一个“天真的”日期和时间，即不包含任何时区信息的日期和时间。这种类型仅仅表示一个日历日期和一天中的时间，而没有任何关于地理或政治时区的数据。</td>
 <td>对于一些时区不重要的场景非常有用，比如记录电影的发行日期或历史事件的日期。</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>NaiveDate</td>
 <td>仅表示一个日历日期，不包括时间或时区信息。</td>
 <td>它用于处理只需要日期而不关心具体时间的场景，如生日、节日等。</td>
 </tr>
-<tr>
+<tr class="even">
 <td>NaiveTime</td>
 <td>是一个只表示一天中时间的类型，它不包含日期或时区信息。</td>
 <td>这个类型适用于需要处理具体某个时间点（如开会时间、日常活动的开始时间）但不需要日期数据的情景。</td>
 </tr>
 </tbody>
 </table>
-<h1>chrono 时区类型</h1>
-<p><code>chrono</code> 支持多种时区类型，方便进行全球时间的转换和计算：</p>
+<h1 id="chrono-时区类型">chrono 时区类型</h1>
+<p><code>chrono</code>
+支持多种时区类型，方便进行全球时间的转换和计算：</p>
 <ul>
 <li><strong><code>Utc</code></strong>: 用于处理协调世界时。</li>
-<li><strong><code>Local</code></strong>: 代表服务器或用户的本地时区。</li>
-<li><strong><code>FixedOffset</code></strong>: 允许定义任意的小时和分钟偏移量，适合固定偏移的时间计算。</li>
+<li><strong><code>Local</code></strong>:
+代表服务器或用户的本地时区。</li>
+<li><strong><code>FixedOffset</code></strong>:
+允许定义任意的小时和分钟偏移量，适合固定偏移的时间计算。</li>
 </ul>
-<h1>常用功能</h1>
+<h1 id="常用功能">常用功能</h1>
 <h2 id="获取当前时间">获取当前时间</h2>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">local_datetime</span>: DateTime&lt;Local&gt; = Local::<span class="title function_ invoke__">now</span>();</span><br><span class="line"><span class="keyword">let</span> <span class="variable">utc_datetime</span>: DateTime&lt;Utc&gt; = Utc::<span class="title function_ invoke__">now</span>();</span><br></pre></td></tr></table></figure>
-<h2 id="DateTime-转-String">DateTime 转 String</h2>
+<h2 id="datetime-转-string">DateTime 转 String</h2>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, local_datetime.<span class="title function_ invoke__">to_rfc2822</span>()); <span class="comment">// Sun, 12 May 2024 00:15:55 +0800</span></span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, local_datetime.<span class="title function_ invoke__">to_rfc3339</span>()); <span class="comment">// 2024-05-12T00:15:55.325058+08:00</span></span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, local_datetime.<span class="title function_ invoke__">to_string</span>()); <span class="comment">// 2024-05-12 00:15:55.325058 +08:00</span></span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, local_datetime.format(<span class="string">&quot;%Y-%m-%d %H:%M:%S&quot;</span>)) <span class="comment">// 2024-05-12 00:15:55</span></span><br></pre></td></tr></table></figure>
-<h2 id="String-转-DateTime">String 转 DateTime</h2>
-<p>字符串带时区信息，使用 <code>DateTime::parse_from_str(s, f)</code>。</p>
+<h2 id="string-转-datetime">String 转 DateTime</h2>
+<p>字符串带时区信息，使用
+<code>DateTime::parse_from_str(s, f)</code>。</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">format_withzone</span> = <span class="string">&quot;%Y-%m-%d %H:%M:%S %z&quot;</span>;</span><br><span class="line"><span class="keyword">let</span> <span class="variable">datetime_withzone_str</span> = <span class="string">&quot;2024-01-01 00:00:00 +08:00&quot;</span>;</span><br><span class="line"><span class="keyword">let</span> <span class="variable">local_datetime</span> =</span><br><span class="line">    DateTime::<span class="title function_ invoke__">parse_from_str</span>(&amp;datetime_withzone_str, &amp;format_withzone).<span class="title function_ invoke__">unwrap</span>();</span><br></pre></td></tr></table></figure>
-<p>字符串无时区信息，使用 <code>NaiveDateTime::parse_from_str(s, f)</code>。</p>
+<p>字符串无时区信息，使用
+<code>NaiveDateTime::parse_from_str(s, f)</code>。</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">format</span> = <span class="string">&quot;%Y-%m-%d %H:%M:%S&quot;</span>;</span><br><span class="line"><span class="keyword">let</span> <span class="variable">datetime_str</span> = <span class="string">&quot;2024-01-01 00:00:00&quot;</span>;</span><br><span class="line"><span class="keyword">let</span> <span class="variable">local_datetime</span> = NaiveDateTime::<span class="title function_ invoke__">parse_from_str</span>(&amp;datetime_str, &amp;format)</span><br><span class="line">    .<span class="title function_ invoke__">unwrap</span>()</span><br><span class="line">    .<span class="title function_ invoke__">and_local_timezone</span>(Local) <span class="comment">// 转为带时区的 DateTime</span></span><br><span class="line">    .<span class="title function_ invoke__">unwrap</span>();</span><br></pre></td></tr></table></figure>
-<h2 id="DateTime-转-timestamp">DateTime 转 timestamp</h2>
+<h2 id="datetime-转-timestamp">DateTime 转 timestamp</h2>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">local_datetime</span> = Local::<span class="title function_ invoke__">now</span>();</span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;seconds: &#123;&#125;&quot;</span>, local_datetime.<span class="title function_ invoke__">timestamp</span>()); <span class="comment">// 1715444324</span></span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;millis: &#123;&#125;&quot;</span>, local_datetime.<span class="title function_ invoke__">timestamp_millis</span>()); <span class="comment">// 1715444338610</span></span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;micros: &#123;&#125;&quot;</span>, local_datetime.<span class="title function_ invoke__">timestamp_micros</span>()); <span class="comment">// 1715444338610873</span></span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;nacos: &#123;&#125;&quot;</span>, local_datetime.<span class="title function_ invoke__">timestamp_nanos_opt</span>().<span class="title function_ invoke__">unwrap</span>()); <span class="comment">// 1715444338610873000</span></span><br></pre></td></tr></table></figure>
-<h2 id="timestamp-转-DateTime">timestamp 转 DateTime</h2>
+<h2 id="timestamp-转-datetime">timestamp 转 DateTime</h2>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">utc_datetime</span>: DateTime&lt;Utc&gt; = DateTime::<span class="title function_ invoke__">from_timestamp</span>(<span class="number">1704139200</span>, <span class="number">0</span>).<span class="title function_ invoke__">unwrap</span>(); <span class="comment">// 默认是 Utc</span></span><br><span class="line"><span class="keyword">let</span> <span class="variable">local_datetime</span>: DateTime&lt;Local&gt; = DateTime::<span class="title function_ invoke__">from_timestamp</span>(<span class="number">1704139200</span>, <span class="number">0</span>).<span class="title function_ invoke__">unwrap</span>().<span class="title function_ invoke__">into</span>(); <span class="comment">// 使用 into() 转为 Local</span></span><br></pre></td></tr></table></figure>
 <h2 id="时区转换">时区转换</h2>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> chrono::&#123;DateTime, FixedOffset, Utc&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">utc_date_time</span>: DateTime&lt;Utc&gt; = Utc::<span class="title function_ invoke__">now</span>();</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">fixed_offset</span> = FixedOffset::<span class="title function_ invoke__">east</span>(<span class="number">8</span> * <span class="number">3600</span>); <span class="comment">// 转为 utc+8 东八区</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">local_date_time</span> = utc_date_time.<span class="title function_ invoke__">with_timezone</span>(&amp;fixed_offset);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Local time in UTC+8: &#123;&#125;&quot;</span>, local_date_time);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h2 id="时间计算">时间计算</h2>
 <p>时间加减：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> chrono::&#123;Duration, Local&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="variable">now</span> = Local::<span class="title function_ invoke__">now</span>();</span><br><span class="line"><span class="keyword">let</span> <span class="variable">yesterday</span> = now - Duration::<span class="title function_ invoke__">hours</span>(<span class="number">24</span>);</span><br></pre></td></tr></table></figure>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512002330526.png" alt="chrono time duration methods"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512002330526.png"
+alt="chrono time duration methods" />
+<figcaption aria-hidden="true">chrono time duration methods</figcaption>
+</figure>
 <p>时间间隔：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> chrono::&#123;Duration, Local&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> <span class="variable">now</span> = Local::<span class="title function_ invoke__">now</span>();</span><br><span class="line"><span class="keyword">let</span> <span class="variable">yesterday</span> = now - Duration::<span class="title function_ invoke__">hours</span>(<span class="number">24</span>);</span><br><span class="line"><span class="keyword">let</span> <span class="variable">hour_interval</span> = (now - yesterday).<span class="title function_ invoke__">num_hours</span>();</span><br></pre></td></tr></table></figure>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512002106738.png" alt="chrono time interval methods"></p>
-<h1>总结</h1>
-<p>通过本文的详细介绍和实用示例，我们了解了如何使用 Rust 的 <code>chrono</code> 库来精确处理时间和日期。<code>chrono</code> 不仅支持复杂的时区计算和全球时间管理，还提供了方便的日期时间解析和格式化工具，以及灵活的时间运算功能。掌握了这些技能后，你将能够在任何需要精确时间数据处理的 Rust 应用中，提供稳定和高效的解决方案。</p>
-<p>时间是每个程序的基石，而 <code>chrono</code> 就是那把能够操纵时间的魔杖。</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20240512002106738.png"
+alt="chrono time interval methods" />
+<figcaption aria-hidden="true">chrono time interval methods</figcaption>
+</figure>
+<h1 id="总结">总结</h1>
+<p>通过本文的详细介绍和实用示例，我们了解了如何使用 Rust 的
+<code>chrono</code> 库来精确处理时间和日期。<code>chrono</code>
+不仅支持复杂的时区计算和全球时间管理，还提供了方便的日期时间解析和格式化工具，以及灵活的时间运算功能。掌握了这些技能后，你将能够在任何需要精确时间数据处理的
+Rust 应用中，提供稳定和高效的解决方案。</p>
+<p>时间是每个程序的基石，而 <code>chrono</code>
+就是那把能够操纵时间的魔杖。</p>
 <p>希望本文能对你有帮助，peace! enjoy coding~</p>
 <blockquote>
 <p>参考：</p>
 <ul>
-<li><a target="_blank" rel="noopener" href="https://docs.rs/chrono/latest/chrono/">chrono crate</a></li>
-<li><a target="_blank" rel="noopener" href="https://blog.stackademic.com/rust-working-with-date-and-time-30e003cd59e8">rust-working-with-date-and-time</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.rs/chrono/latest/chrono/">chrono
+crate</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://blog.stackademic.com/rust-working-with-date-and-time-30e003cd59e8">rust-working-with-date-and-time</a></li>
 </ul>
 <p>作图：</p>
 <ul>
-<li><a target="_blank" rel="noopener" href="https://excalidraw.com/">https://excalidraw.com/</a></li>
+<li>https://excalidraw.com/</li>
 </ul>
 </blockquote>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -252,15 +299,18 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">版本</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">结论先行</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">时间相关概念</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">chrono 关键类型</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">chrono 时区类型</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">常用功能</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96%E5%BD%93%E5%89%8D%E6%97%B6%E9%97%B4"><span class="toc-text">获取当前时间</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DateTime-%E8%BD%AC-String"><span class="toc-text">DateTime 转 String</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#String-%E8%BD%AC-DateTime"><span class="toc-text">String 转 DateTime</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DateTime-%E8%BD%AC-timestamp"><span class="toc-text">DateTime 转 timestamp</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#timestamp-%E8%BD%AC-DateTime"><span class="toc-text">timestamp 转 DateTime</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%B6%E5%8C%BA%E8%BD%AC%E6%8D%A2"><span class="toc-text">时区转换</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%B6%E9%97%B4%E8%AE%A1%E7%AE%97"><span class="toc-text">时间计算</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%89%88%E6%9C%AC"><span class="toc-text">版本</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA%E5%85%88%E8%A1%8C"><span class="toc-text">结论先行</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%97%B6%E9%97%B4%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5"><span class="toc-text">时间相关概念</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#chrono-%E5%85%B3%E9%94%AE%E7%B1%BB%E5%9E%8B"><span class="toc-text">chrono 关键类型</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#chrono-%E6%97%B6%E5%8C%BA%E7%B1%BB%E5%9E%8B"><span class="toc-text">chrono 时区类型</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E5%8A%9F%E8%83%BD"><span class="toc-text">常用功能</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96%E5%BD%93%E5%89%8D%E6%97%B6%E9%97%B4"><span class="toc-text">获取当前时间</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#datetime-%E8%BD%AC-string"><span class="toc-text">DateTime 转 String</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#string-%E8%BD%AC-datetime"><span class="toc-text">String 转 DateTime</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#datetime-%E8%BD%AC-timestamp"><span class="toc-text">DateTime 转 timestamp</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#timestamp-%E8%BD%AC-datetime"><span class="toc-text">timestamp 转 DateTime</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%B6%E5%8C%BA%E8%BD%AC%E6%8D%A2"><span class="toc-text">时区转换</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%B6%E9%97%B4%E8%AE%A1%E7%AE%97"><span class="toc-text">时间计算</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

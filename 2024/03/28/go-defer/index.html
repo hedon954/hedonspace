@@ -27,18 +27,11 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文将深入浅出地介绍 defer 的工作原理，探究其背后的机制，并通过丰富的案例来展示它的实际应用。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/Go%20defer.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/1651037338287-fd17c81d-a1ad-4bc7-ae7e-eec8a264af5f.jpeg">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240328133312845-20240328202233278.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240328140733594.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240328140859879.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240328192005520.png">
 <meta property="article:published_time" content="2024-03-28T12:34:50.000Z">
 <meta property="article:modified_time" content="2025-04-05T14:31:32.873Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Go">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/Go%20defer.png">
   
   
   
@@ -76,7 +69,7 @@
 <div class="widgets">
 <widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">专栏：Go 底层原理</span></div><div class="widget-body"><a class="item active" href="/2024/03/28/go-defer/"><span class="title">深入浅出 Go 语言的 defer 机制</span><svg class="active-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11.098v4.993c0 3.096 0 4.645-.734 5.321c-.35.323-.792.526-1.263.58c-.987.113-2.14-.907-4.445-2.946c-1.02-.901-1.529-1.352-2.118-1.47a2.225 2.225 0 0 0-.88 0c-.59.118-1.099.569-2.118 1.47c-2.305 2.039-3.458 3.059-4.445 2.945a2.238 2.238 0 0 1-1.263-.579C3 20.736 3 19.188 3 16.091v-4.994C3 6.81 3 4.666 4.318 3.333C5.636 2 7.758 2 12 2c4.243 0 6.364 0 7.682 1.332C21 4.665 21 6.81 21 11.098" opacity=".5"/><path fill="currentColor" d="M9 5.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5z"/></svg></a><a class="item" href="/2024/03/09/go-struct/"><span class="title">深入 Go 语言核心：结构体的全方位解析</span></a><a class="item" href="/2024/01/20/go-gpm/"><span class="title">深入浅出 Go 语言的 GPM 模型（Go1.21）</span></a><a class="item" href="/2023/12/07/go-start/"><span class="title">Go1.21.0 程序启动过程</span></a><a class="item" href="/2023/11/29/go-compilation/"><span class="title">Go1.21.0 程序编译过程</span></a></div></widget>
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/04/08/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2024/01/20/go-gpm/"><span class="title">深入浅出 Go 语言的 GPM 模型（Go1.21）</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/04/08/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2024/01/20/go-gpm/"><span class="title">深入浅出 Go 语言的 GPM 模型（Go1.21）</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -100,96 +93,192 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>Go 语言以其简洁的语法和强大的并发支持而闻名。在这些特性中，<code>defer</code> 语句是 Go 语言提供的一项独特功能，它允许我们推迟函数的执行直到包含它的函数即将返回。这个简单而强大的机制不仅可以帮助我们处理资源释放和错误处理，还能让代码更加简洁和安全。本文将深入浅出地介绍 <code>defer</code> 的工作原理，探究其背后的机制，并通过丰富的案例来展示它的实际应用。</p>
-<p>笔者本来以为 Go 语言的 <code>defer</code> 其实东西不多，就是类似于“栈”的操作罢了，无非就是用于释放资源、后进先出而已。但是最近在阅读完《深入理解 Go 语言》、《Go 底层原理剖析》和《Go 语言设计与实现》中关于 <code>defer</code> 的篇章。发现其中隐含的道道和坑还是比较有意思的，特此整理这篇文章，希望能对 Go <code>defer</code> 原理感兴趣的读者带来一些帮助。</p>
+  </div><article class="md-text content"><p>Go
+语言以其简洁的语法和强大的并发支持而闻名。在这些特性中，<code>defer</code>
+语句是 Go
+语言提供的一项独特功能，它允许我们推迟函数的执行直到包含它的函数即将返回。这个简单而强大的机制不仅可以帮助我们处理资源释放和错误处理，还能让代码更加简洁和安全。本文将深入浅出地介绍
+<code>defer</code>
+的工作原理，探究其背后的机制，并通过丰富的案例来展示它的实际应用。</p>
+<p>笔者本来以为 Go 语言的 <code>defer</code>
+其实东西不多，就是类似于“栈”的操作罢了，无非就是用于释放资源、后进先出而已。但是最近在阅读完《深入理解
+Go 语言》、《Go 底层原理剖析》和《Go 语言设计与实现》中关于
+<code>defer</code>
+的篇章。发现其中隐含的道道和坑还是比较有意思的，特此整理这篇文章，希望能对
+Go <code>defer</code> 原理感兴趣的读者带来一些帮助。</p>
 <p>本文具体会包含以下内容：</p>
 <ul>
-<li><strong><code>defer</code> 机制简介</strong>：介绍 <code>defer</code> 关键字的基本概念和它在 Go 语言中的作用。</li>
-<li><strong><code>defer</code> 的工作原理</strong>：深入探讨 <code>defer</code> 在函数执行结束时如何工作的细节。</li>
-<li><strong><code>defer</code> 的执行顺序</strong>：解释 <code>defer</code> 语句是如何按照后进先出（LIFO）的顺序执行的。</li>
-<li><strong>参数预计算和值传递</strong>：讨论 <code>defer</code> 语句中参数是如何被预先计算和传递的。</li>
-<li><strong>环境变量和闭包</strong>：探讨 <code>defer</code> 如何与闭包一起工作，以及如何捕获和影响环境变量。</li>
-<li><strong><code>defer</code> 与错误处理</strong>：说明如何利用 <code>defer</code> 和 <code>recover</code> 进行错误处理和异常捕获。</li>
-<li><strong><code>defer</code> 的实现细节</strong>：深入分析 <code>defer</code> 的不同实现策略，包括堆上分配、栈上分配和开放编码。</li>
+<li><strong><code>defer</code> 机制简介</strong>：介绍
+<code>defer</code> 关键字的基本概念和它在 Go 语言中的作用。</li>
+<li><strong><code>defer</code> 的工作原理</strong>：深入探讨
+<code>defer</code> 在函数执行结束时如何工作的细节。</li>
+<li><strong><code>defer</code> 的执行顺序</strong>：解释
+<code>defer</code> 语句是如何按照后进先出（LIFO）的顺序执行的。</li>
+<li><strong>参数预计算和值传递</strong>：讨论 <code>defer</code>
+语句中参数是如何被预先计算和传递的。</li>
+<li><strong>环境变量和闭包</strong>：探讨 <code>defer</code>
+如何与闭包一起工作，以及如何捕获和影响环境变量。</li>
+<li><strong><code>defer</code> 与错误处理</strong>：说明如何利用
+<code>defer</code> 和 <code>recover</code> 进行错误处理和异常捕获。</li>
+<li><strong><code>defer</code> 的实现细节</strong>：深入分析
+<code>defer</code>
+的不同实现策略，包括堆上分配、栈上分配和开放编码。</li>
 </ul>
-<h1>版本声明</h1>
+<h1 id="版本声明">版本声明</h1>
 <ul>
 <li>Go1.22</li>
 </ul>
-<h1>思维导图</h1>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/Go%20defer.png" alt="Go defer"></p>
-<h1>核心要点</h1>
+<h1 id="思维导图">思维导图</h1>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/Go%20defer.png"
+alt="Go defer" />
+<figcaption aria-hidden="true">Go defer</figcaption>
+</figure>
+<h1 id="核心要点">核心要点</h1>
 <p>对于后面将要分析的各种各样的情况，在分析的时候只要遵循以下几个核心点，基本上就不会跑偏：</p>
-<ol>
+<ol type="1">
 <li>延迟执行：在函数结束时执行，包括正常返回或遭遇 panic。</li>
 <li>栈式执行顺序：后定义的 <code>defer</code> 先执行（LIFO）。</li>
 <li>参数预计算：<code>defer</code> 语句定义时即计算并固定参数值。</li>
 <li>值传递原则：<code>defer</code> 拷贝参数，使用定义时的值。</li>
-<li>环境变量捕获：在 <code>defer</code> 中可以跟一个闭包，闭包可以捕获环境变量，当然这包括具名返回值。</li>
+<li>环境变量捕获：在 <code>defer</code>
+中可以跟一个闭包，闭包可以捕获环境变量，当然这包括具名返回值。</li>
 </ol>
-<p>特别说明的是，虽然我们通常将 <code>defer</code> 想象为使用栈进行管理，但是实际实现上，<code>defer</code> 并不都是存放在栈上的，我们后面会具体分析到。这种实现细节通常对于编写正确的 Go 代码并不重要，但了解这一点对于深入理解语言内部机制可能是有帮助的。</p>
-<h1>基本用法</h1>
-<p>在 Go 语言中，<code>defer</code> 语句通常用于确保一个函数调用在程序执行结束时发生，常见的用例包括文件关闭、锁释放、资源回收等。</p>
+<p>特别说明的是，虽然我们通常将 <code>defer</code>
+想象为使用栈进行管理，但是实际实现上，<code>defer</code>
+并不都是存放在栈上的，我们后面会具体分析到。这种实现细节通常对于编写正确的
+Go
+代码并不重要，但了解这一点对于深入理解语言内部机制可能是有帮助的。</p>
+<h1 id="基本用法">基本用法</h1>
+<p>在 Go 语言中，<code>defer</code>
+语句通常用于确保一个函数调用在程序执行结束时发生，常见的用例包括文件关闭、锁释放、资源回收等。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">readFile</span><span class="params">(filename <span class="type">string</span>)</span></span> <span class="type">error</span> &#123;</span><br><span class="line">    f, err := os.Open(filename)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> err</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 确保文件在函数返回时关闭</span></span><br><span class="line">    <span class="keyword">defer</span> f.Close()</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ... 处理文件 ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在上面的例子中，<code>defer f.Close()</code> 保证了无论 <code>readFile</code> 函数如何返回（正常返回或发生错误），<code>f.Close()</code> 都会被调用，从而避免了资源泄露。</p>
-<h1>执行顺序</h1>
-<p><code>defer</code> 的执行顺序是先进后出，即“栈”操作。这里借用刘丹冰老师的一张图来演示这个过程：</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/1651037338287-fd17c81d-a1ad-4bc7-ae7e-eec8a264af5f.jpeg" alt="Go defer 执行顺序"></p>
+<p>在上面的例子中，<code>defer f.Close()</code> 保证了无论
+<code>readFile</code>
+函数如何返回（正常返回或发生错误），<code>f.Close()</code>
+都会被调用，从而避免了资源泄露。</p>
+<h1 id="执行顺序">执行顺序</h1>
+<p><code>defer</code>
+的执行顺序是先进后出，即“栈”操作。这里借用刘丹冰老师的一张图来演示这个过程：</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/1651037338287-fd17c81d-a1ad-4bc7-ae7e-eec8a264af5f.jpeg"
+alt="Go defer 执行顺序" />
+<figcaption aria-hidden="true">Go defer 执行顺序</figcaption>
+</figure>
 <p>我们可以通过以下代码进行验证：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">func1</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;func1...&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">func2</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;func2...&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">func3</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;func3...&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> func1()</span><br><span class="line">	<span class="keyword">defer</span> func2()</span><br><span class="line">	<span class="keyword">defer</span> func3()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>输出如下：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">func3...</span><br><span class="line">func2...</span><br><span class="line">func1...</span><br></pre></td></tr></table></figure>
-<h1>参数求值与陷阱</h1>
-<p>关于 <code>defer</code> 参数这一块，是一个比较容易出错的地方。我们先来看一个例子，你可以分析下它的输出会是什么？</p>
+<h1 id="参数求值与陷阱">参数求值与陷阱</h1>
+<p>关于 <code>defer</code>
+参数这一块，是一个比较容易出错的地方。我们先来看一个例子，你可以分析下它的输出会是什么？</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">printI</span><span class="params">(i <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;printI i:&quot;</span>, i)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	i := <span class="number">10</span></span><br><span class="line">	<span class="keyword">defer</span> printI(i * <span class="number">10</span>)</span><br><span class="line">	i = i + <span class="number">1</span></span><br><span class="line">	fmt.Println(<span class="string">&quot;main i:&quot;</span>, i)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>按照我们之前总结的核心点：<strong>参数预计算：<code>defer</code> 语句定义时即计算并固定参数值</strong>。具体来说，在把 <code>defer</code> 压入“栈”时，会同时压入<strong>函数地址</strong>和<strong>函数形参</strong>，也就是会在这个时候就把参数先算好。所以在执行到第 7 行代码的时候，就会把 <code>i*10</code> 算好，然后同 <code>printI</code> 一同压入到延迟执行栈中。</p>
+<p>按照我们之前总结的核心点：<strong>参数预计算：<code>defer</code>
+语句定义时即计算并固定参数值</strong>。具体来说，在把 <code>defer</code>
+压入“栈”时，会同时压入<strong>函数地址</strong>和<strong>函数形参</strong>，也就是会在这个时候就把参数先算好。所以在执行到第
+7 行代码的时候，就会把 <code>i*10</code> 算好，然后同
+<code>printI</code> 一同压入到延迟执行栈中。</p>
 <p>所以最后的结果就是：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">main i: 11</span><br><span class="line">printI i: 100</span><br></pre></td></tr></table></figure>
 <p>关于<strong>参数值传递</strong>，笔者这里再举两个例子进行比较，体会后你应该就理解了。</p>
-<p>第一个例子中，<code>defer</code> 后面参数是指针，本质上<strong>值传递</strong>，但是拷贝的是指针，所以在 <code>defer</code> 中修改的东西，最后会反馈到指针指向的对象，所以对 <code>testUser</code> 的返回值是有影响的。</p>
+<p>第一个例子中，<code>defer</code>
+后面参数是指针，本质上<strong>值传递</strong>，但是拷贝的是指针，所以在
+<code>defer</code> 中修改的东西，最后会反馈到指针指向的对象，所以对
+<code>testUser</code> 的返回值是有影响的。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span>&#123;</span><br><span class="line">	name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">testUser</span><span class="params">()</span></span> *User &#123;</span><br><span class="line">	user := &amp;User&#123;&#125;</span><br><span class="line">	user.name = <span class="string">&quot;name-1&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">(u *User)</span></span> &#123;</span><br><span class="line">		u.name = <span class="string">&quot;name-defer&quot;</span></span><br><span class="line">	&#125;(user)</span><br><span class="line"></span><br><span class="line">	user.name = <span class="string">&quot;name-2&quot;</span></span><br><span class="line">	<span class="keyword">return</span> user</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	user := testUser()</span><br><span class="line">	fmt.Println(user)</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// &amp;&#123;name-defer&#125;</span></span><br></pre></td></tr></table></figure>
-<p>第二个例子中，我们传入的就是结构体示例本身了，因为值传递，即拷贝了一份新的 <code>user</code>，所以闭包内的修改对外面是不产生影响的。</p>
+<p>第二个例子中，我们传入的就是结构体示例本身了，因为值传递，即拷贝了一份新的
+<code>user</code>，所以闭包内的修改对外面是不产生影响的。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;</span><br><span class="line">	name <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">testUser</span><span class="params">()</span></span> User &#123;</span><br><span class="line">	user := User&#123;&#125;</span><br><span class="line">	user.name = <span class="string">&quot;name-1&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">(u User)</span></span> &#123;</span><br><span class="line">		u.name = <span class="string">&quot;name-defer&quot;</span></span><br><span class="line">	&#125;(user)</span><br><span class="line"></span><br><span class="line">	user.name = <span class="string">&quot;name-2&quot;</span></span><br><span class="line">	<span class="keyword">return</span> user</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	user := testUser()</span><br><span class="line">	fmt.Println(user)</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// &#123;name-2&#125;</span></span><br></pre></td></tr></table></figure>
-<h1>环境变量捕获</h1>
+<h1 id="环境变量捕获">环境变量捕获</h1>
 <p>将上面的一个例子进行简单修改，会输出什么呢？</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">printI</span><span class="params">(i <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;printI i:&quot;</span>, i)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	i := <span class="number">10</span></span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		printI(i * <span class="number">10</span>)</span><br><span class="line">	&#125;()</span><br><span class="line">	i = i + <span class="number">1</span></span><br><span class="line">	fmt.Println(<span class="string">&quot;main i:&quot;</span>, i)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>这个时候其实没有参数，所以会直接将下面闭包压入延迟栈中。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">  printI(i * <span class="number">10</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>而闭包是可以捕获环境变量的，所以在 <code>main</code> return 后，<code>defer</code> 可以捕获到 <code>i</code> 的值，为更新后的 <code>i+1</code>，最后再进行 <code>printI(i * 10)</code>。</p>
+<p>而闭包是可以捕获环境变量的，所以在 <code>main</code> return
+后，<code>defer</code> 可以捕获到 <code>i</code> 的值，为更新后的
+<code>i+1</code>，最后再进行 <code>printI(i * 10)</code>。</p>
 <p>所以输出结果是：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">main i: <span class="number">11</span></span><br><span class="line">printI i: <span class="number">110</span></span><br></pre></td></tr></table></figure>
-<p>所以说，<code>defer</code> 后面的闭包，是可以捕获环境变量的，如果这个变量是返回值的话，那么理所应当也是可以对其产生作用的，如：</p>
+<p>所以说，<code>defer</code>
+后面的闭包，是可以捕获环境变量的，如果这个变量是返回值的话，那么理所应当也是可以对其产生作用的，如：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">getI</span><span class="params">()</span></span> (i <span class="type">int</span>) &#123;</span><br><span class="line">	i = <span class="number">1</span></span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		i *= <span class="number">10</span></span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">return</span> <span class="number">20</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(getI())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这段代码中，<code>getI</code> 的返回值是有名字的 <code>i</code>，<code>getI</code> 执行了 <code>return 20</code>，其实就是将 <code>i</code> 设置为 <code>20</code>，所以在执行到 <code>defer </code> 闭包的时候，捕获到了 <code>i=20</code>，并将其进行了修改。所以最终输出：</p>
+<p>这段代码中，<code>getI</code> 的返回值是有名字的
+<code>i</code>，<code>getI</code> 执行了
+<code>return 20</code>，其实就是将 <code>i</code> 设置为
+<code>20</code>，所以在执行到 <code>defer</code> 闭包的时候，捕获到了
+<code>i=20</code>，并将其进行了修改。所以最终输出：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">200</span></span><br></pre></td></tr></table></figure>
-<h1>错误处理与 defer</h1>
-<p>我们都知道 Go 程序中遇到 <code>panic</code> 就会中断后面的执行流程直接返回，这个时候我们可以在 <code>defer</code> 中结合 <code>recover</code> 来捕获这个 <code>panic</code>，从而保护程序不崩溃。</p>
+<h1 id="错误处理与-defer">错误处理与 defer</h1>
+<p>我们都知道 Go 程序中遇到 <code>panic</code>
+就会中断后面的执行流程直接返回，这个时候我们可以在 <code>defer</code>
+中结合 <code>recover</code> 来捕获这个
+<code>panic</code>，从而保护程序不崩溃。</p>
 <p>如：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">panicAndRecover</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">if</span> err := <span class="built_in">recover</span>(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			fmt.Println(err)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	fmt.Println(<span class="string">&quot;函数中正常流程&quot;</span>)</span><br><span class="line">	<span class="built_in">panic</span>(<span class="string">&quot;出现异常&quot;</span>)</span><br><span class="line">	fmt.Println(<span class="string">&quot;panic 后的语句永远执行不到&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	panicAndRecover()</span><br><span class="line">	fmt.Println(<span class="string">&quot;正常回到 main&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 函数中正常流程</span></span><br><span class="line"><span class="comment">// 出现异常</span></span><br><span class="line"><span class="comment">// 正常回到 main</span></span><br></pre></td></tr></table></figure>
-<p>更进一步，如果我们在 <code>defer</code> 中也有 <code>panic</code> 呢？请思考下列代码：</p>
+<p>更进一步，如果我们在 <code>defer</code> 中也有 <code>panic</code>
+呢？请思考下列代码：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">panicAndRecover</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;第 1 个入栈的 defer&quot;</span>)</span><br><span class="line">		<span class="keyword">if</span> err := <span class="built_in">recover</span>(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			fmt.Println(<span class="string">&quot;最终捕获的 panic:&quot;</span>, err)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;第 2 个入栈的 defer&quot;</span>)</span><br><span class="line">		<span class="built_in">panic</span>(<span class="string">&quot;第 2 个入栈的 defer 发生 panic&quot;</span>)</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	fmt.Println(<span class="string">&quot;panicAndRecover 函数中正常流程&quot;</span>)</span><br><span class="line">	<span class="built_in">panic</span>(<span class="string">&quot;panicAndRecover 出现异常&quot;</span>)</span><br><span class="line">	fmt.Println(<span class="string">&quot;panic 后的语句永远执行不到&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	panicAndRecover()</span><br><span class="line">	fmt.Println(<span class="string">&quot;正常回到 main&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>上述代码中，我们在 <code>panicAndRecover</code> 强行抛出 <code>panic</code>，由于 <code>defer</code> 先进后出，所以我们会先执行第 2 个 <code>defer</code>，其中也发生了 <code>panic</code>，我们在第 1 个 <code>defer</code> 中对 <code>panic</code> 进行 <code>recover</code>，最终的现象是只捕获到了后面抛出的 <code>panic</code>：</p>
+<p>上述代码中，我们在 <code>panicAndRecover</code> 强行抛出
+<code>panic</code>，由于 <code>defer</code> 先进后出，所以我们会先执行第
+2 个 <code>defer</code>，其中也发生了 <code>panic</code>，我们在第 1 个
+<code>defer</code> 中对 <code>panic</code> 进行
+<code>recover</code>，最终的现象是只捕获到了后面抛出的
+<code>panic</code>：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">panicAndRecover 函数中正常流程</span><br><span class="line">第 2 个入栈的 defer</span><br><span class="line">第 1 个入栈的 defer</span><br><span class="line">最终捕获的 panic: 第 2 个入栈的 defer 发生 panic</span><br><span class="line">正常回到 main</span><br></pre></td></tr></table></figure>
 <p>这是为什么呢？</p>
-<p>在 Go 语言中，<code>panic</code> 函数实际上是创建了一个 <code>panic</code> 对象，并抛出这个对象。</p>
-<p>当一个 <code>panic</code> 发生并开始向上传播时，Go 运行时会检查每个 <code>defer</code>。如果 <code>defer</code> 中包含 <code>recover</code> 调用，并且它被执行，那么 <code>recover</code> 会捕获当前的 <code>panic</code>，并且防止它继续向上传播。如果 <code>defer</code> 中再次发生 <code>panic</code>，那么原来的 <code>panic</code> 就不会被 <code>recover</code> 捕获，因为 <code>defer</code> 函数已经退出了。在这种情况下，新的 <code>panic</code> 会导致程序崩溃，因为没有更多的 <code>defer</code> 函数去 <code>recover</code> 这个新的 <code>panic</code>。</p>
-<p>这说明了 Go 程序中不允许同时有多个活跃的 <code>panic</code> 存在，这个设计确保了在任何给定的时刻，只有一个 <code>panic</code> 能够被处理。这样做有几个原因：</p>
-<ol>
-<li><strong>简化错误处理：</strong> 如果同时存在多个 <code>panic</code>，就会变得非常复杂去确定如何处理它们，尤其是在它们之间存在依赖关系的时候。一个 <code>panic</code> 应该表示一个不可恢复的错误，如果有多个这样的错误同时存在，程序的状态可能会变得非常不确定。</li>
-<li><strong>保持一致性：</strong> <code>panic</code> 通常表示程序中出现了严重错误，可能会破坏程序的一致性或安全性。如果允许多个 <code>panic</code> 同时存在，就很难保证程序状态的一致性，因为不同的 <code>panic</code> 可能需要回退不同的操作。</li>
-<li><strong>避免资源泄漏：</strong> <code>defer</code> 语句用于确保资源被释放，例如文件和锁。如果在处理一个 <code>panic</code> 的过程中，又发生了另一个 <code>panic</code>，可能会导致 <code>defer</code> 语句中剩余的清理代码无法执行，从而引起资源泄漏。</li>
-<li><strong>控制流程清晰：</strong> <code>panic</code> 和 <code>recover</code> 的设计使得错误的控制流程清晰且可预测。一旦一个 <code>panic</code> 被 <code>recover</code> 捕获，程序可以选择是否继续执行，或者是通过重新 <code>panic</code> 来终止程序。这种决策过程在多个 <code>panic</code> 情况下会变得复杂且难以管理。</li>
+<p>在 Go 语言中，<code>panic</code> 函数实际上是创建了一个
+<code>panic</code> 对象，并抛出这个对象。</p>
+<p>当一个 <code>panic</code> 发生并开始向上传播时，Go 运行时会检查每个
+<code>defer</code>。如果 <code>defer</code> 中包含 <code>recover</code>
+调用，并且它被执行，那么 <code>recover</code> 会捕获当前的
+<code>panic</code>，并且防止它继续向上传播。如果 <code>defer</code>
+中再次发生 <code>panic</code>，那么原来的 <code>panic</code> 就不会被
+<code>recover</code> 捕获，因为 <code>defer</code>
+函数已经退出了。在这种情况下，新的 <code>panic</code>
+会导致程序崩溃，因为没有更多的 <code>defer</code> 函数去
+<code>recover</code> 这个新的 <code>panic</code>。</p>
+<p>这说明了 Go 程序中不允许同时有多个活跃的 <code>panic</code>
+存在，这个设计确保了在任何给定的时刻，只有一个 <code>panic</code>
+能够被处理。这样做有几个原因：</p>
+<ol type="1">
+<li><strong>简化错误处理：</strong> 如果同时存在多个
+<code>panic</code>，就会变得非常复杂去确定如何处理它们，尤其是在它们之间存在依赖关系的时候。一个
+<code>panic</code>
+应该表示一个不可恢复的错误，如果有多个这样的错误同时存在，程序的状态可能会变得非常不确定。</li>
+<li><strong>保持一致性：</strong> <code>panic</code>
+通常表示程序中出现了严重错误，可能会破坏程序的一致性或安全性。如果允许多个
+<code>panic</code> 同时存在，就很难保证程序状态的一致性，因为不同的
+<code>panic</code> 可能需要回退不同的操作。</li>
+<li><strong>避免资源泄漏：</strong> <code>defer</code>
+语句用于确保资源被释放，例如文件和锁。如果在处理一个 <code>panic</code>
+的过程中，又发生了另一个 <code>panic</code>，可能会导致
+<code>defer</code> 语句中剩余的清理代码无法执行，从而引起资源泄漏。</li>
+<li><strong>控制流程清晰：</strong> <code>panic</code> 和
+<code>recover</code> 的设计使得错误的控制流程清晰且可预测。一旦一个
+<code>panic</code> 被 <code>recover</code>
+捕获，程序可以选择是否继续执行，或者是通过重新 <code>panic</code>
+来终止程序。这种决策过程在多个 <code>panic</code>
+情况下会变得复杂且难以管理。</li>
 </ol>
-<p>因此，在 Go 的设计中，不允许同时存在多个活跃的 <code>panic</code>。一旦发生 <code>panic</code>，它必须被 <code>recover</code> 处理，否则程序将会终止。这确保了错误处理的清晰性和程序的稳定性。</p>
-<h1>defer 放在哪</h1>
-<p><code>defer</code> 实际上不一定是放在栈上的，截止 Go1.22，<code>defer</code> 其实用 3 种分配策略：</p>
+<p>因此，在 Go 的设计中，不允许同时存在多个活跃的
+<code>panic</code>。一旦发生 <code>panic</code>，它必须被
+<code>recover</code>
+处理，否则程序将会终止。这确保了错误处理的清晰性和程序的稳定性。</p>
+<h1 id="defer-放在哪">defer 放在哪</h1>
+<p><code>defer</code> 实际上不一定是放在栈上的，截止
+Go1.22，<code>defer</code> 其实用 3 种分配策略：</p>
 <ul>
 <li>堆上分配</li>
 <li>栈上分配</li>
 <li>开放编码</li>
 </ul>
 <h2 id="执行机制">执行机制</h2>
-<p>在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.22/src/cmd/compile/internal/ssagen/ssa.go">ssa.go</a> 文件中，我们可以找到 <code>state.stmt()</code>，这个函数是负责在 Go 程序编译过程中中间代码生成阶段时对不同语句的处理过程，其中对于 <code>ODEFER</code> 即 <code>defer</code> 语句的处理逻辑如下：</p>
+<p>在 <a
+target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.22/src/cmd/compile/internal/ssagen/ssa.go">ssa.go</a>
+文件中，我们可以找到 <code>state.stmt()</code>，这个函数是负责在 Go
+程序编译过程中中间代码生成阶段时对不同语句的处理过程，其中对于
+<code>ODEFER</code> 即 <code>defer</code> 语句的处理逻辑如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// stmt converts the statement n to SSA and adds it to s.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *state)</span></span> stmt(n ir.Node) &#123;</span><br><span class="line">	s.stmtList(n.Init())</span><br><span class="line">	<span class="keyword">switch</span> n.Op() &#123;</span><br><span class="line">			<span class="keyword">case</span> ir.ODEFER:</span><br><span class="line">      n := n.(*ir.GoDeferStmt)</span><br><span class="line">      <span class="keyword">if</span> base.Debug.Defer &gt; <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">var</span> defertype <span class="type">string</span></span><br><span class="line">        <span class="keyword">if</span> s.hasOpenDefers &#123;</span><br><span class="line">          defertype = <span class="string">&quot;open-coded&quot;</span></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> n.Esc() == ir.EscNever &#123;</span><br><span class="line">          defertype = <span class="string">&quot;stack-allocated&quot;</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          defertype = <span class="string">&quot;heap-allocated&quot;</span></span><br><span class="line">        &#125;</span><br><span class="line">        base.WarnfAt(n.Pos(), <span class="string">&quot;%s defer&quot;</span>, defertype)</span><br><span class="line">      &#125;</span><br><span class="line">			...</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>可以看到，总共有 3 种分配策略：</p>
 <ul>
@@ -197,98 +286,178 @@
 <li><strong>stack-allocated</strong>: n.Esc() == ir.EscNever</li>
 <li><strong>heap-allocated</strong>: 默认</li>
 </ul>
-<p>默认是堆分配，在 Go1.13 以前，也只有堆分配这一种策略，不过该实现的性能较差。Go 语言在 1.13 中引入栈上分配的结构体，<a target="_blank" rel="noopener" href="https://go-review.googlesource.com/c/go/+/171758">减少了 30% 的额外开销</a>，并在 1.14 中引入了基于开放编码的 <code>defer</code>，使得该关键字的额外开销<a target="_blank" rel="noopener" href="https://go-review.googlesource.com/c/go/+/190098/6">几乎可以忽略不计</a>。</p>
-<p>本文中不对具体的分配机制进行分析，这一块会比较复杂，笔者本身也不是很感兴趣，便决定对此不过分深究，感兴趣的读者推荐详细阅读《Go 语言设计与实现》中关于 <code>defer</code> 关键字的分析：<a target="_blank" rel="noopener" href="https://draveness.me/golang/docs/part2-foundation/ch05-keyword/golang-defer/%E3%80%82">https://draveness.me/golang/docs/part2-foundation/ch05-keyword/golang-defer/。</a></p>
-<p>本文只讨论什么情况下会使用什么分配策略。由于堆分配是默认的，我们就不作分析了，具体来看看 <code>s.hasOpenDefers == true</code> 和 <code>n.Esc() == ir.EscNever</code> 什么时候会成立。</p>
+<p>默认是堆分配，在 Go1.13
+以前，也只有堆分配这一种策略，不过该实现的性能较差。Go 语言在 1.13
+中引入栈上分配的结构体，<a
+target="_blank" rel="noopener" href="https://go-review.googlesource.com/c/go/+/171758">减少了 30%
+的额外开销</a>，并在 1.14 中引入了基于开放编码的
+<code>defer</code>，使得该关键字的额外开销<a
+target="_blank" rel="noopener" href="https://go-review.googlesource.com/c/go/+/190098/6">几乎可以忽略不计</a>。</p>
+<p>本文中不对具体的分配机制进行分析，这一块会比较复杂，笔者本身也不是很感兴趣，便决定对此不过分深究，感兴趣的读者推荐详细阅读《Go
+语言设计与实现》中关于 <code>defer</code>
+关键字的分析：https://draveness.me/golang/docs/part2-foundation/ch05-keyword/golang-defer/。</p>
+<p>本文只讨论什么情况下会使用什么分配策略。由于堆分配是默认的，我们就不作分析了，具体来看看
+<code>s.hasOpenDefers == true</code> 和
+<code>n.Esc() == ir.EscNever</code> 什么时候会成立。</p>
 <h2 id="栈上分配">栈上分配</h2>
-<p>我们先来看栈上分配，要满足栈上分配，则需要满足 <code>n.Esc() == ir.EscNever</code>。</p>
+<p>我们先来看栈上分配，要满足栈上分配，则需要满足
+<code>n.Esc() == ir.EscNever</code>。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	EscUnknown = <span class="literal">iota</span></span><br><span class="line">	EscNone    <span class="comment">// Does not escape to heap, result, or parameters.</span></span><br><span class="line">	EscHeap    <span class="comment">// Reachable from the heap</span></span><br><span class="line">	EscNever   <span class="comment">// By construction will not escape.</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
-<p>当 <code>n</code> 的逃逸分析结果是 <code>ir.EscNever</code>，则表明该 <code>defer</code> 语句从不逃逸（不会在函数调用结束后仍然被引用），这种情况下 <code>defer</code> 将被分配到栈上（stack-allocated）。否则，如果 <code>defer</code> 逃逸了，就会被分配到堆上（heap-allocated）。</p>
+<p>当 <code>n</code> 的逃逸分析结果是 <code>ir.EscNever</code>，则表明该
+<code>defer</code>
+语句从不逃逸（不会在函数调用结束后仍然被引用），这种情况下
+<code>defer</code> 将被分配到栈上（stack-allocated）。否则，如果
+<code>defer</code> 逃逸了，就会被分配到堆上（heap-allocated）。</p>
 <p>那 <code>defer</code> 语句什么时候会逃逸呢？</p>
 <blockquote>
-<p>在 Go 中，一个变量的逃逸意味着它的生命周期超出了当前函数的范围。在函数内定义的变量通常分配在栈上，而在堆上分配内存需要更复杂的管理。在一些情况下，编译器可能会选择将变量分配在堆上，这种情况下我们称之为逃逸。</p>
+<p>在 Go
+中，一个变量的逃逸意味着它的生命周期超出了当前函数的范围。在函数内定义的变量通常分配在栈上，而在堆上分配内存需要更复杂的管理。在一些情况下，编译器可能会选择将变量分配在堆上，这种情况下我们称之为逃逸。</p>
 </blockquote>
-<p>对于 <code>defer</code> 语句，如果它引用了函数外的变量，这个 <code>defer</code> 就会逃逸。例如：</p>
+<p>对于 <code>defer</code> 语句，如果它引用了函数外的变量，这个
+<code>defer</code> 就会逃逸。例如：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x = <span class="number">10</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">someFunction</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        fmt.Println(x) <span class="comment">// 这里引用了外部变量 x</span></span><br><span class="line">    &#125;()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在这个例子中，<code>defer</code> 函数内部引用了 <code>x</code> 这个外部变量，因此 <code>defer</code> 语句需要确保 <code>x</code> 在 <code>defer</code> 函数执行时仍然有效。为了满足这个条件，编译器可能会将 <code>x</code> 分配在堆上，而不是栈上。</p>
+<p>在这个例子中，<code>defer</code> 函数内部引用了 <code>x</code>
+这个外部变量，因此 <code>defer</code> 语句需要确保 <code>x</code> 在
+<code>defer</code> 函数执行时仍然有效。为了满足这个条件，编译器可能会将
+<code>x</code> 分配在堆上，而不是栈上。</p>
 <h2 id="开放编码">开放编码</h2>
-<p>先给结论，在开发过程中，要使用开放编码策略，你只需要关注以下 4 点即可：</p>
-<ol>
+<p>先给结论，在开发过程中，要使用开放编码策略，你只需要关注以下 4
+点即可：</p>
+<ol type="1">
 <li>函数的 <code>defer</code> 数量不能超过 8 个；</li>
 <li>函数的 <code>defer</code> 关键字不能在循环中执行；</li>
 <li>函数的 <code>defer</code> 中不能发生逃逸；</li>
-<li>函数的 <code>return</code> 语句与 <code>defer</code> 语句的乘积小于或者等于 15 个；</li>
+<li>函数的 <code>return</code> 语句与 <code>defer</code>
+语句的乘积小于或者等于 15 个；</li>
 </ol>
-<hr>
+<hr />
 <p>Ok，下面是具体的分析过程。</p>
-<p>借助 Goland 的能力，将鼠标光标放在 <code>s.hasOpenDefers</code> 上，按住 <strong>Command</strong> 加点击鼠标，可以看到该属性的使用情况：</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240328133312845-20240328202233278.png" alt="s.hasOpenDefers"></p>
-<p>可以看到该属性的判断逻辑都在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.22/src/cmd/compile/internal/ssagen/ssa.go">ssa.go</a> 文件中的 <code>buildssa()</code> 函数中。去掉一些无关的代码，核心逻辑如下：</p>
+<p>借助 Goland 的能力，将鼠标光标放在 <code>s.hasOpenDefers</code>
+上，按住 <strong>Command</strong>
+加点击鼠标，可以看到该属性的使用情况：</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240328133312845-20240328202233278.png"
+alt="s.hasOpenDefers" />
+<figcaption aria-hidden="true">s.hasOpenDefers</figcaption>
+</figure>
+<p>可以看到该属性的判断逻辑都在 <a
+target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.22/src/cmd/compile/internal/ssagen/ssa.go">ssa.go</a>
+文件中的 <code>buildssa()</code>
+函数中。去掉一些无关的代码，核心逻辑如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// buildssa builds an SSA function for fn.</span></span><br><span class="line"><span class="comment">// worker indicates which of the backend workers is doing the processing.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">buildssa</span><span class="params">(fn *ir.Func, worker <span class="type">int</span>)</span></span> *ssa.Func &#123;</span><br><span class="line">	...</span><br><span class="line">  <span class="comment">// ①</span></span><br><span class="line">	s.hasOpenDefers = base.Flag.N == <span class="number">0</span> &amp;&amp; s.hasdefer &amp;&amp; !s.curfn.OpenCodedDeferDisallowed()</span><br><span class="line">	<span class="keyword">switch</span> &#123;</span><br><span class="line">  <span class="comment">// ②</span></span><br><span class="line">	<span class="keyword">case</span> base.Debug.NoOpenDefer != <span class="number">0</span>:</span><br><span class="line">		s.hasOpenDefers = <span class="literal">false</span></span><br><span class="line">	<span class="keyword">case</span> s.hasOpenDefers &amp;&amp; (base.Ctxt.Flag_shared || base.Ctxt.Flag_dynlink) &amp;&amp; base.Ctxt.Arch.Name == <span class="string">&quot;386&quot;</span>:</span><br><span class="line">    <span class="comment">// ③</span></span><br><span class="line">		<span class="comment">// Don&#x27;t support open-coded defers for 386 ONLY when using shared</span></span><br><span class="line">		<span class="comment">// libraries, because there is extra code (added by rewriteToUseGot())</span></span><br><span class="line">		<span class="comment">// preceding the deferreturn/ret code that we don&#x27;t track correctly.</span></span><br><span class="line">		s.hasOpenDefers = <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">  <span class="comment">// ④</span></span><br><span class="line">	<span class="keyword">if</span> s.hasOpenDefers &amp;&amp; <span class="built_in">len</span>(s.curfn.Exit) &gt; <span class="number">0</span> &#123;</span><br><span class="line">		<span class="comment">// Skip doing open defers if there is any extra exit code (likely</span></span><br><span class="line">		<span class="comment">// race detection), since we will not generate that code in the</span></span><br><span class="line">		<span class="comment">// case of the extra deferreturn/ret segment.</span></span><br><span class="line">		s.hasOpenDefers = <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">  <span class="comment">// ⑤</span></span><br><span class="line">	<span class="keyword">if</span> s.hasOpenDefers &#123;</span><br><span class="line">		<span class="comment">// Similarly, skip if there are any heap-allocated result</span></span><br><span class="line">		<span class="comment">// parameters that need to be copied back to their stack slots.</span></span><br><span class="line">		<span class="keyword">for</span> _, f := <span class="keyword">range</span> s.curfn.Type().Results().FieldSlice() &#123;</span><br><span class="line">			<span class="keyword">if</span> !f.Nname.(*ir.Name).OnStack() &#123;</span><br><span class="line">				s.hasOpenDefers = <span class="literal">false</span></span><br><span class="line">				<span class="keyword">break</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">  <span class="comment">// ⑥</span></span><br><span class="line">	<span class="keyword">if</span> s.hasOpenDefers &amp;&amp;</span><br><span class="line">		s.curfn.NumReturns*s.curfn.NumDefers &gt; <span class="number">15</span> &#123;</span><br><span class="line">		<span class="comment">// Since we are generating defer calls at every exit for</span></span><br><span class="line">		<span class="comment">// open-coded defers, skip doing open-coded defers if there are</span></span><br><span class="line">		<span class="comment">// too many returns (especially if there are multiple defers).</span></span><br><span class="line">		<span class="comment">// Open-coded defers are most important for improving performance</span></span><br><span class="line">		<span class="comment">// for smaller functions (which don&#x27;t have many returns).</span></span><br><span class="line">		s.hasOpenDefers = <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">  ...</span><br><span class="line">	<span class="keyword">return</span> s.f</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>可以看到总共有 6 个条件，我已在注释中进行标注，我们来进行逐一分析：</p>
-<h3 id="①-base-Flag-N-0-s-hasdefer-s-curfn-OpenCodedDeferDisallowed">① base.Flag.N == 0 &amp;&amp; s.hasdefer &amp;&amp; !s.curfn.OpenCodedDeferDisallowed()</h3>
+<p>可以看到总共有 6
+个条件，我已在注释中进行标注，我们来进行逐一分析：</p>
+<h3 id="base.flag.n-0-s.hasdefer-s.curfn.opencodeddeferdisallowed">①
+base.Flag.N == 0 &amp;&amp; s.hasdefer &amp;&amp;
+!s.curfn.OpenCodedDeferDisallowed()</h3>
 <blockquote>
-<p>如果<code>base.Flag.N</code> 等于 0 且当前函数有延迟调用且没有禁止开放式延迟，那么设置<code>s.hasOpenDefers</code>为<code>true</code>。</p>
+<p>如果<code>base.Flag.N</code> 等于 0
+且当前函数有延迟调用且没有禁止开放式延迟，那么设置<code>s.hasOpenDefers</code>为<code>true</code>。</p>
 </blockquote>
-<p>在 Go 编译器中，<code>-N</code>标志通常用于禁用优化。在这段代码中，如果<code>base.Flag.N</code>等于 0，意味着没有禁用优化，因此编译器可能会尝试使用更高级的优化技术，比如开放式延迟（open-coded defers）。</p>
-<p><code>OpenCodedDeferDisallowed()</code> 即禁用开放编码，它的实现如下：</p>
+<p>在 Go
+编译器中，<code>-N</code>标志通常用于禁用优化。在这段代码中，如果<code>base.Flag.N</code>等于
+0，意味着没有禁用优化，因此编译器可能会尝试使用更高级的优化技术，比如开放式延迟（open-coded
+defers）。</p>
+<p><code>OpenCodedDeferDisallowed()</code>
+即禁用开放编码，它的实现如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> funcOpenCodedDeferDisallowed <span class="comment">// can&#x27;t do open-coded defers</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(f *Func)</span></span> OpenCodedDeferDisallowed() <span class="type">bool</span> &#123; <span class="keyword">return</span> f.flags&amp;funcOpenCodedDeferDisallowed != <span class="number">0</span> &#125;</span><br></pre></td></tr></table></figure>
-<p>按住 Command 后点击 <code>funcOpenCodedDeferDisallowed</code> 可以看到只有 <code>funcOpenCodedDeferDisallowed(b)</code> 可以修改它的值。</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240328140733594.png" alt="funcOpenCodedDeferDisallowed"></p>
-<p>我们来看看哪个地方会调用 <code>funcOpenCodedDeferDisallowed()</code>，并将 <code>funcOpenCodedDeferDisallowed</code> 设置为 <code>true</code>：</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240328140859879.png" alt="将 funcOpenCodedDeferDisallowed 设置为 true 的地方 "></p>
-<p>调用它的地方在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.22/src/cmd/compile/internal/walk/stmt.go">stmt.go</a> 文件中的 <code>walkStmt()</code> 函数，具体如下：</p>
+<p>按住 Command 后点击 <code>funcOpenCodedDeferDisallowed</code>
+可以看到只有 <code>funcOpenCodedDeferDisallowed(b)</code>
+可以修改它的值。</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240328140733594.png"
+alt="funcOpenCodedDeferDisallowed" />
+<figcaption aria-hidden="true">funcOpenCodedDeferDisallowed</figcaption>
+</figure>
+<p>我们来看看哪个地方会调用
+<code>funcOpenCodedDeferDisallowed()</code>，并将
+<code>funcOpenCodedDeferDisallowed</code> 设置为 <code>true</code>：</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240328140859879.png"
+alt="将 funcOpenCodedDeferDisallowed 设置为 true 的地方" />
+<figcaption aria-hidden="true">将 funcOpenCodedDeferDisallowed 设置为
+true 的地方</figcaption>
+</figure>
+<p>调用它的地方在 <a
+target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.22/src/cmd/compile/internal/walk/stmt.go">stmt.go</a>
+文件中的 <code>walkStmt()</code> 函数，具体如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// The max number of defers in a function using open-coded defers. We enforce this</span></span><br><span class="line"><span class="comment">// limit because the deferBits bitmask is currently a single byte (to minimize code size)</span></span><br><span class="line"><span class="keyword">const</span> maxOpenDefers = <span class="number">8</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// The result of walkStmt MUST be assigned back to n, e.g.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">//	n.Left = walkStmt(n.Left)</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">walkStmt</span><span class="params">(n ir.Node)</span></span> ir.Node &#123;</span><br><span class="line">  ...</span><br><span class="line">	<span class="keyword">switch</span> n.Op() &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">case</span> ir.ODEFER:</span><br><span class="line">      n := n.(*ir.GoDeferStmt)</span><br><span class="line">      ir.CurFunc.SetHasDefer(<span class="literal">true</span>)</span><br><span class="line">      ir.CurFunc.NumDefers++</span><br><span class="line">      <span class="keyword">if</span> ir.CurFunc.NumDefers &gt; maxOpenDefers &#123;</span><br><span class="line">        <span class="comment">// Don&#x27;t allow open-coded defers if there are more than</span></span><br><span class="line">        <span class="comment">// 8 defers in the function, since we use a single</span></span><br><span class="line">        <span class="comment">// byte to record active defers.</span></span><br><span class="line">        ir.CurFunc.SetOpenCodedDeferDisallowed(<span class="literal">true</span>)</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> n.Esc() != ir.EscNever &#123;</span><br><span class="line">        <span class="comment">// If n.Esc is not EscNever, then this defer occurs in a loop,</span></span><br><span class="line">        <span class="comment">// so open-coded defers cannot be used in this function.</span></span><br><span class="line">        ir.CurFunc.SetOpenCodedDeferDisallowed(<span class="literal">true</span>)</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">fallthrough</span></span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>第一点是：当前函数中 <code>defer</code> 个数超过 8 的话，则禁用开放编码。</p>
-<p>第二点是当 <code>n.Esc() != ir.EscNever</code> 使，就禁用开放编码。这个要求跟前面分析的“栈上分配”要求是一样的。</p>
-<p>这里再补充一点：什么时候 <code>n.Esc()</code> 会被设置为 <code>ir.EscNever</code> 呢？</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240328192005520.png" alt="n.SetEsc(ir.EscNever)"></p>
+<p>第一点是：当前函数中 <code>defer</code> 个数超过 8
+的话，则禁用开放编码。</p>
+<p>第二点是当 <code>n.Esc() != ir.EscNever</code>
+使，就禁用开放编码。这个要求跟前面分析的“栈上分配”要求是一样的。</p>
+<p>这里再补充一点：什么时候 <code>n.Esc()</code> 会被设置为
+<code>ir.EscNever</code> 呢？</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/imgimage-20240328192005520.png"
+alt="n.SetEsc(ir.EscNever)" />
+<figcaption aria-hidden="true">n.SetEsc(ir.EscNever)</figcaption>
+</figure>
 <p>这里面核心点是第一个，它对应的代码如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(e *escape)</span></span> goDeferStmt(n *ir.GoDeferStmt) &#123;</span><br><span class="line">	k := e.heapHole()</span><br><span class="line">	<span class="keyword">if</span> n.Op() == ir.ODEFER &amp;&amp; e.loopDepth == <span class="number">1</span> &#123;</span><br><span class="line">		...</span><br><span class="line">		n.SetEsc(ir.EscNever)</span><br><span class="line">	&#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><code>e.loopDepth == 1</code> 时就设置，换言之，<code>defer</code> 不在循环中的时候，才允许开放编码。</p>
-<p>总而言之，第 ① 个条件约束了要采用 <code>open-coded 开放编码</code>策略的 3 个条件：</p>
-<ol>
+<p><code>e.loopDepth == 1</code> 时就设置，换言之，<code>defer</code>
+不在循环中的时候，才允许开放编码。</p>
+<p>总而言之，第 ① 个条件约束了要采用
+<code>open-coded 开放编码</code>策略的 3 个条件：</p>
+<ol type="1">
 <li>函数中 <code>defer</code> 个数不能超过 <strong>8</strong>；</li>
 <li><code>defer</code> 不能在循环中；</li>
 <li><code>defer</code> 不能发生逃逸。</li>
 </ol>
-<h3 id="②-base-Debug-NoOpenDefer-0">② base.Debug.NoOpenDefer != 0</h3>
+<h3 id="base.debug.noopendefer-0">② base.Debug.NoOpenDefer != 0</h3>
 <blockquote>
-<p>如果<code>base.Debug.NoOpenDefer</code>不为 0，那么禁用开放式延迟。</p>
+<p>如果<code>base.Debug.NoOpenDefer</code>不为
+0，那么禁用开放式延迟。</p>
 </blockquote>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NoOpenDefer           <span class="type">int</span>    <span class="string">`help:&quot;disable open-coded defers&quot; concurrent:&quot;ok&quot;`</span></span><br></pre></td></tr></table></figure>
-<h3 id="③-base-Ctxt-Flag-shared-base-Ctxt-Flag-dynlink-base-Ctxt-Arch-Name-“386”">③ (base.Ctxt.Flag_shared || base.Ctxt.Flag_dynlink) &amp;&amp; <a target="_blank" rel="noopener" href="http://base.Ctxt.Arch.Name">base.Ctxt.Arch.Name</a> == “386”</h3>
+<h3
+id="base.ctxt.flag_shared-base.ctxt.flag_dynlink-base.ctxt.arch.name-386">③
+(base.Ctxt.Flag_shared || base.Ctxt.Flag_dynlink) &amp;&amp;
+base.Ctxt.Arch.Name == "386"</h3>
 <blockquote>
 <p>如果当前架构是<code>386</code>，并且使用共享库或动态链接，那么不支持开放式延迟，因为存在一些额外的代码（由<code>rewriteToUseGot()</code>添加）可能无法正确追踪。</p>
 </blockquote>
-<h3 id="④-len-s-curfn-Exit">④ len(s.curfn.Exit)</h3>
+<h3 id="lens.curfn.exit">④ len(s.curfn.Exit)</h3>
 <blockquote>
 <p>如果存在任何额外的退出代码（比如可能是竞态检测相关的代码），则跳过开放式延迟。</p>
 </blockquote>
-<h3 id="⑤-f-Nname-ir-Name-OnStack">⑤ !f.Nname.(*ir.Name).OnStack()</h3>
+<h3 id="f.nname.ir.name.onstack">⑤ !f.Nname.(*ir.Name).OnStack()</h3>
 <blockquote>
 <p>如果有任何堆分配的结果参数需要复制回它们的栈槽，也跳过开放式延迟。</p>
 </blockquote>
-<h3 id="⑥-s-curfn-NumReturns-s-curfn-NumDefers-15">⑥ s.curfn.NumReturns*s.curfn.NumDefers &gt; 15</h3>
+<h3 id="s.curfn.numreturnss.curfn.numdefers-15">⑥
+s.curfn.NumReturns*s.curfn.NumDefers &gt; 15</h3>
 <blockquote>
-<p>如果函数的返回数乘以延迟调用数大于 <strong>15</strong>，考虑到每个退出点都要生成延迟调用，并且开放式延迟对于小函数（没有多个返回）的性能提升最为重要，所以在这种情况下也不使用开放式延迟。</p>
+<p>如果函数的返回数乘以延迟调用数大于
+<strong>15</strong>，考虑到每个退出点都要生成延迟调用，并且开放式延迟对于小函数（没有多个返回）的性能提升最为重要，所以在这种情况下也不使用开放式延迟。</p>
 </blockquote>
 <h2 id="堆上分配">堆上分配</h2>
 <p>当不满足开放编码和栈上分配的时候，默认就是堆上分配（heap-allocated），性能最差，这里不做分析。</p>
-<hr>
-<p>以上就是本文关于 Go 语言中 <code>defer</code> 关键字的具体分析，Happy Coding! Peace~</p>
-<h1>参考</h1>
+<hr />
+<p>以上就是本文关于 Go 语言中 <code>defer</code> 关键字的具体分析，Happy
+Coding! Peace~</p>
+<h1 id="参考">参考</h1>
 <ul>
-<li><a target="_blank" rel="noopener" href="https://book.douban.com/subject/36403287/">深入理解 Go 语言</a></li>
-<li><a target="_blank" rel="noopener" href="https://book.douban.com/subject/35556889/">Go 语言底层原理剖析</a></li>
-<li><a target="_blank" rel="noopener" href="https://draveness.me/golang/docs/part2-foundation/ch05-keyword/golang-defer/">Go 语言设计与实现</a></li>
+<li><a target="_blank" rel="noopener" href="https://book.douban.com/subject/36403287/">深入理解 Go
+语言</a></li>
+<li><a target="_blank" rel="noopener" href="https://book.douban.com/subject/35556889/">Go
+语言底层原理剖析</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://draveness.me/golang/docs/part2-foundation/ch05-keyword/golang-defer/">Go
+语言设计与实现</a></li>
 <li>ChatGPT4</li>
 </ul>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -328,15 +497,23 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">版本声明</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">思维导图</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">核心要点</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">基本用法</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">执行顺序</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">参数求值与陷阱</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">环境变量捕获</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">错误处理与 defer</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">defer 放在哪</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%A7%E8%A1%8C%E6%9C%BA%E5%88%B6"><span class="toc-text">执行机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%88%E4%B8%8A%E5%88%86%E9%85%8D"><span class="toc-text">栈上分配</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%80%E6%94%BE%E7%BC%96%E7%A0%81"><span class="toc-text">开放编码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E2%91%A0-base-Flag-N-0-s-hasdefer-s-curfn-OpenCodedDeferDisallowed"><span class="toc-text">① base.Flag.N &#x3D;&#x3D; 0 &amp;&amp; s.hasdefer &amp;&amp; !s.curfn.OpenCodedDeferDisallowed()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E2%91%A1-base-Debug-NoOpenDefer-0"><span class="toc-text">② base.Debug.NoOpenDefer !&#x3D; 0</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E2%91%A2-base-Ctxt-Flag-shared-base-Ctxt-Flag-dynlink-base-Ctxt-Arch-Name-%E2%80%9C386%E2%80%9D"><span class="toc-text">③ (base.Ctxt.Flag_shared || base.Ctxt.Flag_dynlink) &amp;&amp; base.Ctxt.Arch.Name &#x3D;&#x3D; “386”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E2%91%A3-len-s-curfn-Exit"><span class="toc-text">④ len(s.curfn.Exit)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E2%91%A4-f-Nname-ir-Name-OnStack"><span class="toc-text">⑤ !f.Nname.(*ir.Name).OnStack()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E2%91%A5-s-curfn-NumReturns-s-curfn-NumDefers-15"><span class="toc-text">⑥ s.curfn.NumReturns*s.curfn.NumDefers &gt; 15</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A0%86%E4%B8%8A%E5%88%86%E9%85%8D"><span class="toc-text">堆上分配</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">参考</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%89%88%E6%9C%AC%E5%A3%B0%E6%98%8E"><span class="toc-text">版本声明</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%9D%E7%BB%B4%E5%AF%BC%E5%9B%BE"><span class="toc-text">思维导图</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E8%A6%81%E7%82%B9"><span class="toc-text">核心要点</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95"><span class="toc-text">基本用法</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F"><span class="toc-text">执行顺序</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%82%E6%95%B0%E6%B1%82%E5%80%BC%E4%B8%8E%E9%99%B7%E9%98%B1"><span class="toc-text">参数求值与陷阱</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E6%8D%95%E8%8E%B7"><span class="toc-text">环境变量捕获</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86%E4%B8%8E-defer"><span class="toc-text">错误处理与 defer</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#defer-%E6%94%BE%E5%9C%A8%E5%93%AA"><span class="toc-text">defer 放在哪</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%A7%E8%A1%8C%E6%9C%BA%E5%88%B6"><span class="toc-text">执行机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%88%E4%B8%8A%E5%88%86%E9%85%8D"><span class="toc-text">栈上分配</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%80%E6%94%BE%E7%BC%96%E7%A0%81"><span class="toc-text">开放编码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#base.flag.n-0-s.hasdefer-s.curfn.opencodeddeferdisallowed"><span class="toc-text">①
+base.Flag.N &#x3D;&#x3D; 0 &amp;&amp; s.hasdefer &amp;&amp;
+!s.curfn.OpenCodedDeferDisallowed()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#base.debug.noopendefer-0"><span class="toc-text">② base.Debug.NoOpenDefer !&#x3D; 0</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#base.ctxt.flag_shared-base.ctxt.flag_dynlink-base.ctxt.arch.name-386"><span class="toc-text">③
+(base.Ctxt.Flag_shared || base.Ctxt.Flag_dynlink) &amp;&amp;
+base.Ctxt.Arch.Name &#x3D;&#x3D; &quot;386&quot;</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#lens.curfn.exit"><span class="toc-text">④ len(s.curfn.Exit)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#f.nname.ir.name.onstack"><span class="toc-text">⑤ !f.Nname.(*ir.Name).OnStack()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#s.curfn.numreturnss.curfn.numdefers-15"><span class="toc-text">⑥
+s.curfn.NumReturns*s.curfn.NumDefers &gt; 15</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A0%86%E4%B8%8A%E5%88%86%E9%85%8D"><span class="toc-text">堆上分配</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
