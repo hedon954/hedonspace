@@ -28,7 +28,7 @@
 <meta property="og:description" content="本文通过一个令人困惑的例子开始，探讨 Go 语言中 map 和 slice 动态扩容机制与传参时需要注意的问题。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-02-14T07:34:05.000Z">
-<meta property="article:modified_time" content="2025-04-05T14:31:32.874Z">
+<meta property="article:modified_time" content="2025-06-04T17:29:01.129Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Go">
 <meta name="twitter:card" content="summary_large_image">
@@ -69,7 +69,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/04/08/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2024/01/20/go-gpm/"><span class="title">深入浅出 Go 语言的 GPM 模型（Go1.21）</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2024/03/09/go-struct/"><span class="title">深入 Go 语言核心：结构体的全方位解析</span></a><a class="item title" href="/2023/11/29/go-compilation/"><span class="title">Go1.21.0 程序编译过程</span></a><a class="item title" href="/2024/01/20/go-gpm/"><span class="title">深入浅出 Go 语言的 GPM 模型（Go1.21）</span></a><a class="item title" href="/2023/12/07/go-start/"><span class="title">Go1.21.0 程序启动过程</span></a><a class="item title" href="/2024/03/28/go-defer/"><span class="title">深入浅出 Go 语言的 defer 机制</span></a><a class="item title" href="/2025/02/15/go-action-jwt/"><span class="title">在 Go 项目中实现 JWT 用户认证与续期机制</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -81,8 +81,8 @@
 <div class="article banner top">
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
-<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/Go/">Go</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-02-14T07:34:05.000Z">2025-02-14</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-04-05T14:31:32.874Z">2025-04-05</time></span></div></div></div>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/go/">go</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-02-14T07:34:05.000Z">2025-02-14</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-04T17:29:01.129Z">2025-06-05</time></span></div></div></div>
     
     <div class="bottom only-title">
       
