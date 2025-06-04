@@ -28,7 +28,7 @@
 <meta property="og:description" content="本文手把手带你拆解并重构 Arc：从单线程引用计数，到跨线程 Weak 防环，再到剥离强&#x2F;弱引用与内存序优化，层层深入 Rust 并发与内存模型核心。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-06-03T05:00:00.000Z">
-<meta property="article:modified_time" content="2025-06-04T17:06:59.596Z">
+<meta property="article:modified_time" content="2025-06-04T17:19:55.530Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Rust">
 <meta property="article:tag" content="并发编程">
@@ -70,7 +70,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/04/08/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2024/01/20/go-gpm/"><span class="title">深入浅出 Go 语言的 GPM 模型（Go1.21）</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/04/08/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2024/01/20/go-gpm/"><span class="title">深入浅出 Go 语言的 GPM 模型（Go1.21）</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -83,7 +83,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/Rust/">Rust</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/Rust/Rust-%E5%AE%9E%E6%88%98/">Rust 实战</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-06-03T05:00:00.000Z">2025-06-03</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-04T17:06:59.596Z">2025-06-05</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-06-03T05:00:00.000Z">2025-06-03</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-04T17:19:55.530Z">2025-06-05</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -115,78 +115,29 @@ target="_blank" rel="noopener" href="https://marabos.nl/atomics/">Rust Atomics a
 <strong>在多个线程之间安全地共享只读数据</strong>。和只适用于单线程场景的
 <code>Rc&lt;T&gt;</code> 不同，<code>Arc&lt;T&gt;</code>
 的引用计数增减操作使用原子指令，从而保证跨线程的内存安全。</p>
-<p>我们举一个例子：</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">    age: <span class="type">u16</span>,</span><br><span class="line">    name: <span class="type">String</span>,</span><br><span class="line">    address: <span class="type">String</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[test]</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">without_arc_should_not_work</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">p</span> = Person &#123;</span><br><span class="line">        age: <span class="number">18</span>,</span><br><span class="line">        name: <span class="string">&quot;hedon&quot;</span>.<span class="title function_ invoke__">to_string</span>(),</span><br><span class="line">        address: <span class="string">&quot;China&quot;</span>.<span class="title function_ invoke__">to_string</span>(),</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="keyword">let</span> <span class="variable">p1</span> = &amp;p;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p1);</span><br><span class="line">        &#125;);</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="keyword">let</span> <span class="variable">p2</span> = &amp;p;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p2);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">p3</span> = &amp;p;  <span class="comment">// &lt;--------- 报错</span></span><br><span class="line">    thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p3);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>执行上面这个测试用例，我们会得到如下的报错信息：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">error[E0597]: `p` does not live long enough</span><br><span class="line"><span class="meta prompt_">  --&gt; </span><span class="language-bash">src/arc.rs:31:18</span></span><br><span class="line">   |</span><br><span class="line">14 |           let p = Person &#123;</span><br><span class="line">   |               - binding `p` declared here</span><br><span class="line">...</span><br><span class="line">31 |           let p3 = &amp;p;</span><br><span class="line">   |                    ^^ borrowed value does not live long enough</span><br><span class="line">32 | /         thread::spawn(move || &#123;</span><br><span class="line">33 | |             println!(&quot;&#123;:?&#125;&quot;, p3);</span><br><span class="line">34 | |         &#125;);</span><br><span class="line">   | |__________- argument requires that `p` is borrowed for `&#x27;static`</span><br><span class="line">35 |       &#125;</span><br><span class="line">   |       - `p` dropped here while still borrowed</span><br></pre></td></tr></table></figure>
-<p><strong><code>scope</code> 里的线程</strong>必须在闭包结束前
-join；因而可以捕获非 <code>'static</code>
-数据，所以这个时候我们使用引用，是没问题的。但是在
-<strong><code>thread::spawn</code></strong> 中，需要
-<code>'static</code>，这个时候，仅使用引用，就无法保证生命周期符合要求了。</p>
-<p>这个时候，我们可以使用 <code>Arc</code> 来将 <code>p</code>
-包起来，如下所示：</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Person</span> &#123;</span><br><span class="line">    age: <span class="type">u16</span>,</span><br><span class="line">    name: <span class="type">String</span>,</span><br><span class="line">    address: <span class="type">String</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[test]</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">arc_should_work</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">p</span> = Arc::<span class="title function_ invoke__">new</span>(Person &#123;  <span class="comment">// 使用 Arc</span></span><br><span class="line">        age: <span class="number">18</span>,</span><br><span class="line">        name: <span class="string">&quot;hedon&quot;</span>.<span class="title function_ invoke__">to_string</span>(),</span><br><span class="line">        address: <span class="string">&quot;China&quot;</span>.<span class="title function_ invoke__">to_string</span>(),</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="keyword">let</span> <span class="variable">p1</span> = Arc::<span class="title function_ invoke__">clone</span>(&amp;p); <span class="comment">// 等价于 p.clone()</span></span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p1);</span><br><span class="line">        &#125;);</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="keyword">let</span> <span class="variable">p2</span> = p.<span class="title function_ invoke__">clone</span>(); <span class="comment">// 等价于 Arc::clone(&amp;p)</span></span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p2);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">p3</span> = p.<span class="title function_ invoke__">clone</span>();  <span class="comment">// &lt;----- 编译通过</span></span><br><span class="line">    thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p3);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<table>
-<colgroup>
-<col style="width: 39%" />
-<col style="width: 23%" />
-<col style="width: 37%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>现象</th>
-<th>关键原因</th>
-<th><code>Arc</code> 怎么解决</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>thread::spawn</code> 要求闭包里的 <strong>所有捕获值都满足
-<code>'static</code></strong>；<code>&amp;p</code> 只是对栈上变量
-<code>p</code> 的借用，不具备 <code>'static</code> 生命周期。</td>
-<td>线程可能在父栈帧结束后仍继续运行，如果还持有对局部变量的引用就会悬垂。</td>
-<td><code>Arc::new(p)</code> 把数据移到堆上，返回的智能指针本身是
-<code>'static</code>；克隆 <code>Arc</code> 只是原子计数
-+1，任何线程都能安全持有。</td>
-</tr>
-<tr class="even">
-<td>想给 <strong>多个线程同时用同一份数据</strong>，但引用只有
-“临时借阅” 语义，生命周期无法跨线程。</td>
-<td>Rust 的借用规则禁止 “多所有权 + 并发”。</td>
-<td><code>Arc</code> 通过 <strong>原子引用计数</strong>
-实现多所有权，最后一个线程 <code>drop</code> 时才真正释放。</td>
-</tr>
-</tbody>
-</table>
-<p>OK，在简单回顾完 <code>Arc&lt;T&gt;</code>
-的作用后，我们正式开始来实现一个可以媲美标准库的
-<code>Arc&lt;T&gt;</code>。</p>
+<p><strong>为什么需要 Arc？</strong></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">p</span> = Person &#123; age: <span class="number">18</span>, name: <span class="string">&quot;hedon&quot;</span>.<span class="title function_ invoke__">to_string</span>(), address: <span class="string">&quot;China&quot;</span>.<span class="title function_ invoke__">to_string</span>() &#125;;</span><br><span class="line"></span><br><span class="line">thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">    s.<span class="title function_ invoke__">spawn</span>(|| <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, &amp;p)); <span class="comment">// ✅ scope 内的线程可以借用</span></span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, &amp;p)); <span class="comment">// ❌ 需要 &#x27;static 生命周期</span></span><br></pre></td></tr></table></figure>
+<p><strong>问题</strong>：<code>thread::spawn</code> 要求
+<code>'static</code> 生命周期，但 <code>&amp;p</code>
+只是栈上变量的借用。<br />
+<strong>解决</strong>：使用 <code>Arc::new(p)</code>
+把数据移到堆上，通过原子引用计数实现多所有权：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">p</span> = Arc::<span class="title function_ invoke__">new</span>(Person &#123; <span class="comment">/* ... */</span> &#125;);</span><br><span class="line"><span class="keyword">let</span> <span class="variable">p_clone</span> = p.<span class="title function_ invoke__">clone</span>(); <span class="comment">// 原子计数 +1</span></span><br><span class="line">thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, p_clone)); <span class="comment">// ✅ 编译通过</span></span><br></pre></td></tr></table></figure>
 <h2 id="读完本篇你能学到什么">读完本篇你能学到什么</h2>
 <ul>
-<li><strong>跨线程共享到底安全在哪？</strong> <code>Arc</code> 与
-<code>Rc</code>
-表面只差一个字母，背后却是原子与非原子的天壤之别。为什么把同一块数据交给多个线程会让
-Rust 借用检查器「原地罢工」？</li>
-<li><strong>原子操作的顺序，为啥总选不对？</strong>
-<code>Relaxed / Acquire / Release / fence</code>
-名字都懂，实战一落笔就心虚。本篇用 <em>引用计数</em>
-这个最小例子帮你彻底分清「读写依赖」与「可见性」的边界。</li>
-<li><strong>如何优雅地打破循环引用？</strong> 强引用 +
-弱引用的组合是图结构里的常见难题：一不小心就内存泄漏；动刀子又怕野指针。我们会解释
-<code>Weak&lt;T&gt;</code> 的设计动机和常见误区。</li>
-<li><strong>拿到 <code>&amp;mut T</code>
-的那一刻，真的没人跟你抢吗？</strong> <code>Arc::get_mut</code>
-的使用条件常被忽视：只有“此时此刻 <em>真的</em>
-只有你一个主人”才能成功，文中会揭秘它背后那段「非原子两步校验」为何仍然可靠。</li>
-<li><strong>为什么有人说 <code>UnsafeCell</code> +
-<code>ManuallyDrop</code> 是“零成本魔法”？</strong>
-<code>Option&lt;T&gt;</code> 明明能用，大家却苦口婆心推荐
-<code>ManuallyDrop&lt;T&gt;</code>。这到底省了什么、又要自己兜哪些安全底线？</li>
+<li><strong>原子操作的内存顺序选择</strong>：通过引用计数这个具体例子，理解
+<code>Relaxed / Acquire / Release / fence</code> 的使用场景。</li>
+<li><strong>弱引用解决循环引用</strong>：<code>Weak&lt;T&gt;</code>
+的设计原理和在图结构中的应用。</li>
+<li><strong>Arc::get_mut
+的安全性保证</strong>：理解「非原子两步校验」的巧妙设计。</li>
+<li><strong>零成本抽象的实现细节</strong>：<code>UnsafeCell</code> +
+<code>ManuallyDrop</code> 相比 <code>Option&lt;T&gt;</code>
+的优势。</li>
 </ul>
 <h2 id="v0-基础引用计数">v0: 基础引用计数</h2>
 <h3 id="数据结构">数据结构</h3>
-<p>我们先来分析一下基本的数据结构改如何定义，在之前的 <a
+<p>我们先来分析一下基本的数据结构该如何定义，在之前的 <a
 href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust
 实战丨手写一个 SpinLock</a>，我们讲到了 C++/Rust 常用的并发编程方式
 RAII（Resource Acquisition Is
@@ -285,7 +236,7 @@ trait，用于像指针一样无感操作 <code>data: T</code>：</p>
 并销毁对象之前，没有别的线程仍在使用这份数据；</li>
 <li><strong>要看得见别人写的东西</strong>：如果别的线程在它们各自的
 <code>drop</code>
-里面对共享对象做了写入，最后一个线程做析构时必须“看到”这些写入，否则就可能出现数据竞争或次序错误。</li>
+里面对共享对象做了写入，最后一个线程做析构时必须"看到"这些写入，否则就可能出现数据竞争或次序错误。</li>
 </ol>
 <p>换言之，我们需要最后一个 <code>fetch_sub</code> 跟前面其他每一个
 <code>fetch_sub</code> 都建立起 happens before 关系，也即我们需要一对
@@ -306,6 +257,15 @@ Acquire 操作之前。</li>
 关系：<strong>线程 A 中 Release 写入之前的所有内存写操作，对于线程 B 中
 Acquire 读取之后的所有内存读操作都是可见的</strong>。</li>
 </ul>
+<blockquote>
+<p><strong>Release-Sequence
+概念补充</strong>：当多个线程对同一个原子变量执行 Release
+操作时，这些操作会形成一个 "release-sequence"。后续任何一个 Acquire
+操作读取到这个序列中的任意值，都能与整个序列建立 happens-before
+关系。这正是为什么我们的 <code>fence(Acquire)</code>
+能够与之前<strong>所有线程</strong>的 <code>fetch_sub(Release)</code>
+形成同步的关键。</p>
+</blockquote>
 <p>我们当然可以使用 <code>Release</code> 和 <code>Acquire</code>
 的结合体 <code>AcqRel</code>
 来一步到位解决这个问题。不过考虑到只有最后一个 <code>drop</code>
@@ -317,14 +277,14 @@ happens-before。</strong></p>
 <ul>
 <li><strong>对于非最终 <code>drop</code></strong>：我们只需要使用
 <code>Release</code>，即
-<code>fetch_sub(1, Ordering::Release)</code>，它保证了别的线程如果最终做“最后一次
-drop”，只要它对相同原子执行一条 <em>Acquire</em>
+<code>fetch_sub(1, Ordering::Release)</code>，它保证了别的线程如果最终做"最后一次
+drop"，只要它对相同原子执行一条 <em>Acquire</em>
 操作，它就能同步到前面所有线程对数据做过的改动。</li>
 <li><strong>对于最终 <code>drop</code></strong>：在调用
 <code>fetch_sub</code> 的时候我们仍需要 <code>Release</code>
-语义，但是调用时，我们并不知道自己是不是“最后那个线程”。当
+语义，但是调用时，我们并不知道自己是不是"最后那个线程"。当
 <code>fetch_sub</code> 返回 <code>1</code>
-的时候，说明我们是“最后那个线程”。这个时候，我们需要建立一个
+的时候，说明我们是"最后那个线程"。这个时候，我们需要建立一个
 <code>fetch(Acquire)</code>，与之前的所有 <code>Release</code>
 形成配对，确保看到<strong>之前所有的历史写入</strong>，这个时候我们才能确定已经没有别的线程在使用数据了，我们才可以安全地销毁对象。</li>
 </ul>
@@ -358,50 +318,19 @@ drop”，只要它对相同原子执行一条 <em>Acquire</em>
     Note over C: fence (Acquire) 使 A/B<br/>对共享数据的写必定<br/>在析构前可见</pre>
 <p>经过这么一顿分析后，我们最终的 <code>Drop</code> 实现如下：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="comment">// ❶ 所有 `drop` 都执行：Release</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().ref_count.<span class="title function_ invoke__">fetch_sub</span>(<span class="number">1</span>, Ordering::Release) == <span class="number">1</span> &#123;</span><br><span class="line">            <span class="comment">// ❷ 只有最后一个引用才会进来</span></span><br><span class="line">            std::sync::atomic::<span class="title function_ invoke__">fence</span>(Ordering::Acquire); <span class="comment">// ❸ 补上 Acquire</span></span><br><span class="line">            <span class="keyword">unsafe</span> &#123;</span><br><span class="line">                <span class="comment">// ❹ 现在可以安全地回收并析构</span></span><br><span class="line">                <span class="title function_ invoke__">drop</span>(<span class="type">Box</span>::<span class="title function_ invoke__">from_raw</span>(<span class="keyword">self</span>.ptr.<span class="title function_ invoke__">as_ptr</span>()));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>步骤拆分如下：</p>
-<table>
-<colgroup>
-<col style="width: 23%" />
-<col style="width: 28%" />
-<col style="width: 48%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>步骤</th>
-<th>发生了什么</th>
-<th>语义 &amp; 作用</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><strong>① <code>val = fetch_sub(1, Release)</code></strong></td>
-<td>把引用计数原子减 1，并返回减前的旧值</td>
-<td>提供 <em>Release</em>，与之前所有 <code>Release</code> 或
-<code>AcqRel</code> 写入建立 release-sequence</td>
-</tr>
-<tr class="even">
-<td><strong>② 判断 <code>val == 1</code></strong></td>
-<td>若旧值是 1 → 现在减到 0，说明“我是最后一个”</td>
-<td><strong>只有这时才需要额外的 Acquire</strong></td>
-</tr>
-<tr class="odd">
-<td><strong>③ <code>fence(Acquire)</code></strong></td>
-<td>发出一条 Acquire 栅栏</td>
-<td>与那条 release-sequence
-对接，<em>同步至此</em>（拿到“所有历史写入”的可见性）</td>
-</tr>
-<tr class="even">
-<td><strong>④ <code>drop(Box::from_raw(ptr))</code></strong></td>
-<td>独占地回收堆内存并运行 <code>T</code> 的析构</td>
-<td>现在安全：① 没人再持有引用；② 我已看到所有之前线程对 <code>T</code>
-做的写入</td>
-</tr>
-</tbody>
-</table>
+<p>实现逻辑：</p>
+<ol type="1">
+<li><strong>所有 drop</strong> 都用 <code>Release</code>
+语义减引用计数，为可能的"最后一次 drop"做准备</li>
+<li><strong>只有最后一次 drop</strong>（返回值为 1）才需要额外的
+<code>fence(Acquire)</code> 与之前所有的 Release 建立
+happens-before</li>
+<li><strong>安全析构</strong>：现在可以确保看到所有历史写入，没人再持有引用</li>
+</ol>
 <h3 id="完整代码">完整代码</h3>
 <p>自此，我们第一个版本的 <code>Arc</code>
 就实现完毕了，我们来看一下最终完成的代码：</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">ArcData</span>&lt;T&gt; &#123;</span><br><span class="line">    ref_count: AtomicUsize,</span><br><span class="line">    data: T,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    ptr: NonNull&lt;ArcData&lt;T&gt;&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; Arc&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">new</span>(data: T) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        Arc &#123;</span><br><span class="line">            ptr: NonNull::<span class="title function_ invoke__">from</span>(<span class="type">Box</span>::<span class="title function_ invoke__">leak</span>(<span class="type">Box</span>::<span class="title function_ invoke__">new</span>(ArcData &#123;</span><br><span class="line">                ref_count: AtomicUsize::<span class="title function_ invoke__">new</span>(<span class="number">1</span>),</span><br><span class="line">                data,</span><br><span class="line">            &#125;))),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">data</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;ArcData&lt;T&gt; &#123;</span><br><span class="line">        <span class="keyword">unsafe</span> &#123; <span class="keyword">self</span>.ptr.<span class="title function_ invoke__">as_ref</span>() &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">unsafe</span> <span class="keyword">impl</span>&lt;T: <span class="built_in">Send</span> + <span class="built_in">Sync</span>&gt; <span class="built_in">Send</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;&#125;</span><br><span class="line"><span class="keyword">unsafe</span> <span class="keyword">impl</span>&lt;T: <span class="built_in">Send</span> + <span class="built_in">Sync</span>&gt; <span class="built_in">Sync</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; Deref <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">type</span> <span class="title class_">Target</span> = T;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">deref</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;<span class="keyword">Self</span>::Target &#123;</span><br><span class="line">        &amp;<span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().data</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Clone</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">clone</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        <span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().ref_count.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Ordering::Relaxed);</span><br><span class="line">        Arc &#123; ptr: <span class="keyword">self</span>.ptr &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().ref_count.<span class="title function_ invoke__">fetch_sub</span>(<span class="number">1</span>, Ordering::Release) == <span class="number">1</span> &#123;</span><br><span class="line">            <span class="title function_ invoke__">fence</span>(Ordering::Acquire);</span><br><span class="line">            <span class="keyword">unsafe</span> &#123;</span><br><span class="line">                <span class="title function_ invoke__">drop</span>(<span class="type">Box</span>::<span class="title function_ invoke__">from_raw</span>(<span class="keyword">self</span>.ptr.<span class="title function_ invoke__">as_ptr</span>()));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::sync::atomic::&#123;AtomicUsize, Ordering, fence&#125;;</span><br><span class="line"><span class="keyword">use</span> std::ptr::NonNull;</span><br><span class="line"><span class="keyword">use</span> std::ops::Deref;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">ArcData</span>&lt;T&gt; &#123;</span><br><span class="line">    ref_count: AtomicUsize,</span><br><span class="line">    data: T,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    ptr: NonNull&lt;ArcData&lt;T&gt;&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; Arc&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">new</span>(data: T) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        Arc &#123;</span><br><span class="line">            ptr: NonNull::<span class="title function_ invoke__">from</span>(<span class="type">Box</span>::<span class="title function_ invoke__">leak</span>(<span class="type">Box</span>::<span class="title function_ invoke__">new</span>(ArcData &#123;</span><br><span class="line">                ref_count: AtomicUsize::<span class="title function_ invoke__">new</span>(<span class="number">1</span>),</span><br><span class="line">                data,</span><br><span class="line">            &#125;))),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">data</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;ArcData&lt;T&gt; &#123;</span><br><span class="line">        <span class="keyword">unsafe</span> &#123; <span class="keyword">self</span>.ptr.<span class="title function_ invoke__">as_ref</span>() &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">unsafe</span> <span class="keyword">impl</span>&lt;T: <span class="built_in">Send</span> + <span class="built_in">Sync</span>&gt; <span class="built_in">Send</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;&#125;</span><br><span class="line"><span class="keyword">unsafe</span> <span class="keyword">impl</span>&lt;T: <span class="built_in">Send</span> + <span class="built_in">Sync</span>&gt; <span class="built_in">Sync</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; Deref <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">type</span> <span class="title class_">Target</span> = T;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">deref</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;<span class="keyword">Self</span>::Target &#123;</span><br><span class="line">        &amp;<span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().data</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Clone</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">clone</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        <span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().ref_count.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Ordering::Relaxed);</span><br><span class="line">        Arc &#123; ptr: <span class="keyword">self</span>.ptr &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">Arc</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span>.<span class="title function_ invoke__">data</span>().ref_count.<span class="title function_ invoke__">fetch_sub</span>(<span class="number">1</span>, Ordering::Release) == <span class="number">1</span> &#123;</span><br><span class="line">            <span class="title function_ invoke__">fence</span>(Ordering::Acquire);</span><br><span class="line">            <span class="keyword">unsafe</span> &#123;</span><br><span class="line">                <span class="title function_ invoke__">drop</span>(<span class="type">Box</span>::<span class="title function_ invoke__">from_raw</span>(<span class="keyword">self</span>.ptr.<span class="title function_ invoke__">as_ptr</span>()));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h3 id="单元测试">单元测试</h3>
 <p>写个单元测试验证一下：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[test]</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">arc_should_work</span>() &#123;</span><br><span class="line">    <span class="keyword">static</span> NUM_DROPS: AtomicUsize = AtomicUsize::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">DetectDrop</span>;</span><br><span class="line">    <span class="keyword">impl</span> <span class="title class_">Drop</span> <span class="keyword">for</span> <span class="title class_">DetectDrop</span> &#123;</span><br><span class="line">        <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">            NUM_DROPS.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Ordering::Relaxed);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建 2 个 Arc 共享一个元组，包含一个字符串和 DetectDrop 对象</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">x</span> = Arc::<span class="title function_ invoke__">new</span>((<span class="string">&quot;hedon&quot;</span>, DetectDrop));</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">y</span> = x.<span class="title function_ invoke__">clone</span>();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将 x 转移到另外一个线程并使用它</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">t</span> = thread::<span class="title function_ invoke__">spawn</span>(<span class="keyword">move</span> || &#123;</span><br><span class="line">        <span class="built_in">assert_eq!</span>(x.<span class="number">0</span>, <span class="string">&quot;hedon&quot;</span>); <span class="comment">// 可以正常使用</span></span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 这里，y 应该也是可以正常使用的</span></span><br><span class="line">    <span class="built_in">assert_eq!</span>(y.<span class="number">0</span>, <span class="string">&quot;hedon&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 等待 t 线程执行完毕</span></span><br><span class="line">    t.<span class="title function_ invoke__">join</span>().<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 这个时候 `x` 已经被释放了，但是`y` 还没有被释放，</span></span><br><span class="line">    <span class="comment">// 所以 `DetectDrop` 应该还没被释放。</span></span><br><span class="line">    <span class="built_in">assert_eq!</span>(NUM_DROPS.<span class="title function_ invoke__">load</span>(Ordering::Relaxed), <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 手动释放掉 `y`，这是最后一个 `Arc`，所以 `DetectDrop` 应该会被释放</span></span><br><span class="line">    <span class="title function_ invoke__">drop</span>(y);</span><br><span class="line">    <span class="built_in">assert_eq!</span>(NUM_DROPS.<span class="title function_ invoke__">load</span>(Ordering::Relaxed), <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -637,9 +566,9 @@ A 的时候，因为 B 和 C 不再被引用，所以也可以顺带释放了。
 <li><p><code>Arc&lt;T&gt;</code> 不再包含
 <code>Weak&lt;T&gt;</code>，而是各自独立，不过它们之前会共享底层的
 <code>ArcData&lt;T&gt;</code>。</p></li>
-<li><p><code>alloc_ref_count</code> 的语义，从<strong>”Arc + Weak
-的数量</strong>“，变成”<strong>Weak 的数量，当存在 Arc 时，额外加
-1</strong>“。</p>
+<li><p><code>alloc_ref_count</code> 的语义，从<strong>"Arc + Weak
+的数量</strong>"，变成"<strong>Weak 的数量，当存在 Arc 时，额外加
+1</strong>"。</p>
 <blockquote>
 <p>换言之，对于所有的 <code>Arc&lt;T&gt;</code>，都共有一个隐式的
 <code>Weak&lt;T&gt;</code> ，当释放最后一个 <code>Arc&lt;T&gt;</code>
@@ -1108,8 +1037,8 @@ target="_blank" rel="noopener" href="https://rustwiki.org/zh-CN/std/ptr/struct.N
 <code>Drop</code>
 实现，什么时候释放（或是否释放）由我手动决定。</strong></p>
 <ul>
-<li><code>ManuallyDrop&lt;T&gt;</code> 只是把 <strong>“是否自动
-drop”</strong> 这一语义从编译器搬到了程序员身上；</li>
+<li><code>ManuallyDrop&lt;T&gt;</code> 只是把 <strong>"是否自动
+drop"</strong> 这一语义从编译器搬到了程序员身上；</li>
 <li>它<strong>不改变</strong> <code>T</code>
 的布局，也不会产生额外的字节，因此是零开销；</li>
 <li><strong>unsafe
@@ -1145,7 +1074,7 @@ drop”</strong> 这一语义从编译器搬到了程序员身上；</li>
 <tr class="odd">
 <td><strong><code>ManuallyDrop::take(&amp;mut self)</code></strong>
 <em>(unsafe)</em></td>
-<td>从包装里“搬走”值（等价于 <code>ptr::read</code>）</td>
+<td>从包装里"搬走"值（等价于 <code>ptr::read</code>）</td>
 <td><code>v</code> 里留下未初始化内存，不能再用或再 drop</td>
 </tr>
 <tr class="even">
