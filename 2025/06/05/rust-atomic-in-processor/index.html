@@ -17,18 +17,18 @@
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
   <meta name="theme-color" content="#f9fafb">
   
-  <title>Rust 原理丨从汇编角度看原子操作 - HedonWang</title>
+  <title>Rust 原理丨从处理器角度看原子操作 - HedonWang</title>
 
   
-    <meta name="description" content="从汇编角度看原子操作">
+    <meta name="description" content="从处理器角度看原子操作">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Rust 原理丨从汇编角度看原子操作">
+<meta property="og:title" content="Rust 原理丨从处理器角度看原子操作">
 <meta property="og:url" content="https://hedon.top/2025/06/05/rust-atomic-in-processor/index.html">
 <meta property="og:site_name" content="HedonWang">
-<meta property="og:description" content="从汇编角度看原子操作">
+<meta property="og:description" content="从处理器角度看原子操作">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-06-05T00:36:03.000Z">
-<meta property="article:modified_time" content="2025-06-05T00:37:54.079Z">
+<meta property="article:modified_time" content="2025-06-05T01:25:50.035Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="rust">
 <meta property="article:tag" content="rust 原理">
@@ -73,7 +73,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a><a class="item title" href="/2023/11/18/raft/"><span class="title">Raft-Extended 论文翻译</span></a><a class="item title" href="/2025/03/11/note-ddd-awareness/"><span class="title">读书笔记丨《悟道领域驱动设计》</span></a><a class="item title" href="/2024/12/01/kcp/"><span class="title">KCP 源码分析与原理总结</span></a><a class="item title" href="/2024/04/28/epoll/"><span class="title">epoll</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/01/15/book-quic-http3/"><span class="title">读书笔记丨解密 QUIC/HTTP3：未来互联网的基石</span></a><a class="item title" href="/2023/11/22/kakfa-cluster-deploy/"><span class="title">Kafka 集群部署</span></a><a class="item title" href="/2024/05/20/kafka-load-balance/"><span class="title">Kafka 负载均衡挑战及解决思路</span></a><a class="item title" href="/2023/11/23/kafka-ordered-msg/"><span class="title">Kafka 顺序消息实现</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从处理器角度看原子操作</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a><a class="item title" href="/2023/11/18/raft/"><span class="title">Raft-Extended 论文翻译</span></a><a class="item title" href="/2025/03/11/note-ddd-awareness/"><span class="title">读书笔记丨《悟道领域驱动设计》</span></a><a class="item title" href="/2024/12/01/kcp/"><span class="title">KCP 源码分析与原理总结</span></a><a class="item title" href="/2024/04/28/epoll/"><span class="title">epoll</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/01/15/book-quic-http3/"><span class="title">读书笔记丨解密 QUIC/HTTP3：未来互联网的基石</span></a><a class="item title" href="/2023/11/22/kakfa-cluster-deploy/"><span class="title">Kafka 集群部署</span></a><a class="item title" href="/2024/05/20/kafka-load-balance/"><span class="title">Kafka 负载均衡挑战及解决思路</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -86,20 +86,174 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/rust/">rust</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/rust/rust-%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/">rust 底层原理</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-06-05T00:36:03.000Z">2025-06-05</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-05T00:37:54.079Z">2025-06-05</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-06-05T00:36:03.000Z">2025-06-05</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-05T01:25:50.035Z">2025-06-05</time></span></div></div></div>
     
     <div class="bottom only-title">
       
       <div class="text-area">
-        <h1 class="text title"><span>Rust 原理丨从汇编角度看原子操作</span></h1>
+        <h1 class="text title"><span>Rust 原理丨从处理器角度看原子操作</span></h1>
         
       </div>
     </div>
     
   </div>
-  </div><article class="md-text content">
+  </div><article class="md-text content"><h2 id="读完本篇你能学到什么">读完本篇你能学到什么</h2>
+<ol type="1">
+<li><strong>Rust 原子操作的底层实现差异</strong>：理解 x86-64 与 ARM64
+架构如何实现原子操作（如 x86 的<code>lock</code>前缀指令与 ARM
+的<code>load-exclusive/store-exclusive</code>机制），以及这些差异对并发性能的影响。</li>
+<li><strong>处理器缓存与并发性能的关联</strong>：掌握缓存行（Cache
+Line）的工作原理，学会通过内存对齐（如<code>#[repr(align(64))]</code>）避免伪共享（False
+Sharing），减少多线程竞争时的缓存失效开销。</li>
+<li><strong>指令重排序与内存模型的底层逻辑</strong>：理解处理器和编译器为何重排指令，以及<code>Release/Acquire</code>内存顺序如何通过硬件屏障（如
+x86 的<code>mfence</code>、ARM
+的<code>dmb</code>）建立跨线程的可见性保证。</li>
+<li><strong>跨平台并发编程的优化策略</strong>：针对 x86 强有序和 ARM
+弱有序架构的特点，掌握自旋锁、原子操作的平台适配技巧（如 ARM
+上优先使用<code>compare_exchange_weak</code>减少重试）。</li>
+<li><strong>用工具验证底层实现的方法</strong>：学会通过 Compiler
+Explorer 或本地汇编查看工具，验证 Rust 原子操作对应的处理器指令，建立
+“高级语言 - 汇编 - 硬件” 的映射认知。</li>
+<li><strong>并发代码的性能瓶颈定位</strong>：识别缓存一致性协议（如
+MESI）对多线程操作的影响，能够通过实验（如基准测试）量化不同架构下的性能差异。</li>
+<li><strong>Rust 标准库并发原语的底层原理</strong>：从处理器指令角度理解
+<code>Mutex</code>、<code>Arc</code>等类型如何利用原子操作和内存屏障保证线程安全，而非仅停留在
+API 使用层面。</li>
+</ol>
+<h2 id="指令集">指令集</h2>
+<p>两种指令集：</p>
+<ul>
+<li>CISC（Complex Instruction Set Computing，复杂指令集）</li>
+<li>RISC（Reduced Instruction Set Computing，精简指令集）</li>
+</ul>
+<p>二者对比：</p>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 45%" />
+<col style="width: 39%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">特征</th>
+<th style="text-align: left;">RISC</th>
+<th style="text-align: left;">CISC</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">指令集</td>
+<td style="text-align: left;">精简，指令数目少</td>
+<td style="text-align: left;">复杂，指令数目多</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">指令复杂性</td>
+<td style="text-align: left;">指令简单，每条指令执行单一功能</td>
+<td style="text-align: left;">指令复杂，可以执行多个功能</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">寻址方式</td>
+<td style="text-align: left;">简单寻址方式</td>
+<td style="text-align: left;">复杂寻址方式</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">硬件实现</td>
+<td style="text-align: left;">易于实现</td>
+<td style="text-align: left;">实现复杂</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">编译器</td>
+<td style="text-align: left;">高效编译器</td>
+<td style="text-align: left;">编译器效率相对较低</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">运算速度</td>
+<td style="text-align: left;">快速</td>
+<td style="text-align: left;">相对慢</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>具体可参考：<a
+target="_blank" rel="noopener" href="https://cs.stanford.edu/people/eroberts/courses/soco/projects/risc/risccisc/">risc
+vs. cisc</a>。</p>
+</blockquote>
+<p>两种指令集分别对应两种最典型的计算机架构：</p>
+<ul>
+<li><strong>x86-64</strong>：<strong>基于 CISC（复杂指令集）的 64
+位扩展架构</strong>，由 AMD 设计并主导，兼容 x86 32
+位生态，通过硬件复杂性换取高性能与广泛兼容性，主导桌面与服务器领域。</li>
+<li><strong>arm64</strong>：<strong>基于 RISC（精简指令集）的 64
+位架构</strong>，由 ARM
+设计，以精简指令、高能效为核心，原生支持低功耗场景，主导移动设备并逐步扩展至服务器与
+PC 领域。</li>
+</ul>
+<p>在本篇中，我们只涉及 2 个平台：</p>
+<ul>
+<li>aarch64-unknown-linux-musl</li>
+<li>x86_64-unknown-linux-musl</li>
+</ul>
+<p>要将 Rust 代码编译为指定平台的可执行文件：</p>
+<ol type="1">
+<li><p>安装对应的目标平台</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rustup target add x86_64-unknown-linux-musl  # x86_64</span><br><span class="line">rustup target add aarch64-unknown-linux-musl # ARM64</span><br></pre></td></tr></table></figure></li>
+<li><p>编译时使用 <code>--target</code> 标志</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cargo build --release --target x86_64-unknown-linux-musl</span><br><span class="line">cargo build --release --target aarch64-unknown-linux-musl</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="查看-rust-汇编代码">查看 Rust 汇编代码</h2>
+<ol type="1">
+<li>cargo rustc --release -- --emit asm</li>
+</ol>
+<p>推荐 <a target="_blank" rel="noopener" href="https://godbolt.org/">Compiler Explorer</a>。</p>
+<p>查看各种原子操作对应的汇编语言，与其非原子类操作进行比较</p>
+<ul>
+<li>Load/Store</li>
+<li>Read-Modify-Write
+<ul>
+<li>fetch_add</li>
+<li>fetch_or</li>
+<li>compare_exchange</li>
+<li>compare_exchange_weak</li>
+</ul></li>
+</ul>
+<p>处理器缓存机制</p>
+<p>重排序</p>
+<ul>
+<li>store buffers</li>
+<li>invalidation queues</li>
+<li>pipelining</li>
+</ul>
+<p>内存顺序</p>
+<ul>
+<li>x86-64 强制顺序</li>
+<li>arm64 弱顺序</li>
+<li>实验</li>
+<li>内存屏障</li>
+</ul>
+<p>总结</p>
 
 <div class="article-footer fs14">
+    <section id="references">
+      <div class="header"><span>参考资料</span></div>
+      <div class="body">
+        <ul>
+        <li class="post-title">
+          <p><a
+target="_blank" rel="noopener" href="https://cs.stanford.edu/people/eroberts/courses/soco/projects/risc/risccisc/">rics
+vs. cisc</a></p>
+
+        </li>
+        
+        <li class="post-title">
+          <p><a
+target="_blank" rel="noopener" href="https://www.asacomputers.com/blog/difference-between-x86-64-vs-arm-architecture/">difference
+between x86 and arm architecture</a></p>
+
+        </li>
+        </ul>
+      </div>
+    </section>
+    
     <section id="license">
       <div class="header"><span>许可协议</span></div>
       <div class="body"><p>本文采用 <a
@@ -112,7 +266,7 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
       <div class="header"><span>分享文章</span></div>
       <div class="body">
         <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://hedon.top/2025/06/05/rust-atomic-in-processor/" /></div>
-        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/06/05/rust-atomic-in-processor/&title=Rust 原理丨从汇编角度看原子操作 - HedonWang&pics=/banner/rust-atomic-in-processor.jpg&summary=从汇编角度看原子操作"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=Rust 原理丨从汇编角度看原子操作 - HedonWang&amp;body=https://hedon.top/2025/06/05/rust-atomic-in-processor/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
+        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/06/05/rust-atomic-in-processor/&title=Rust 原理丨从处理器角度看原子操作 - HedonWang&pics=/banner/rust-atomic-in-processor.jpg&summary=从处理器角度看原子操作"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=Rust 原理丨从处理器角度看原子操作 - HedonWang&amp;body=https://hedon.top/2025/06/05/rust-atomic-in-processor/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
         
         <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
           <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://hedon.top/2025/06/05/rust-atomic-in-processor/"/>
@@ -151,7 +305,14 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
-</aside><div class='float-panel blur'>
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%BB%E5%AE%8C%E6%9C%AC%E7%AF%87%E4%BD%A0%E8%83%BD%E5%AD%A6%E5%88%B0%E4%BB%80%E4%B9%88"><span class="toc-text">读完本篇你能学到什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8C%87%E4%BB%A4%E9%9B%86"><span class="toc-text">指令集</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9F%A5%E7%9C%8B-rust-%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81"><span class="toc-text">查看 Rust 汇编代码</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
   <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
   </button>
