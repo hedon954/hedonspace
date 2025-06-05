@@ -28,16 +28,16 @@
 <meta property="og:description" content="本文对 Raft-Extended 进行了一比一的翻译，其中有些地方加入了额外的注解，这些都是笔者在学习 Raft 算法时遇到的比较困惑的难点，希望这些注解能对其他读者有帮助。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-11-18T14:29:59.000Z">
-<meta property="article:modified_time" content="2025-04-05T14:31:32.877Z">
+<meta property="article:modified_time" content="2025-06-05T00:39:52.469Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="分布式">
-<meta property="article:tag" content="Raft">
+<meta property="article:tag" content="raft">
 <meta property="article:tag" content="原创">
 <meta name="twitter:card" content="summary_large_image">
   
   
   
-  <meta name="keywords" content="分布式,Raft,原创">
+  <meta name="keywords" content="分布式,raft,原创">
 
   <!-- feed -->
   
@@ -71,7 +71,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/02/15/go-action-jwt/"><span class="title">在 Go 项目中实现 JWT 用户认证与续期机制</span></a><a class="item title" href="/2024/05/12/monkey-language/"><span class="title">学习记录：用 Go 自制解释器 Monkey</span></a><a class="item title" href="/2024/11/28/rust-01-type-system/"><span class="title">Rust 入门丨01 类型系统概述</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2024/01/17/rust-action-mandelbrot/"><span class="title">Rust 实战丨绘制曼德博集</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2024/05/28/rust-action-macro-json/"><span class="title">Rust 实战丨通过实现 json! 掌握声明宏</span></a><a class="item title" href="/2024/04/23/rust-action-inverted-index-concurrency/"><span class="title">Rust 实战丨并发构建倒排索引</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a><a class="item title" href="/2023/11/18/raft/"><span class="title">Raft-Extended 论文翻译</span></a><a class="item title" href="/2025/03/11/note-ddd-awareness/"><span class="title">读书笔记丨《悟道领域驱动设计》</span></a><a class="item title" href="/2024/12/01/kcp/"><span class="title">KCP 源码分析与原理总结</span></a><a class="item title" href="/2024/04/28/epoll/"><span class="title">epoll</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/01/15/book-quic-http3/"><span class="title">读书笔记丨解密 QUIC/HTTP3：未来互联网的基石</span></a><a class="item title" href="/2023/11/22/kakfa-cluster-deploy/"><span class="title">Kafka 集群部署</span></a><a class="item title" href="/2024/05/20/kafka-load-balance/"><span class="title">Kafka 负载均衡挑战及解决思路</span></a><a class="item title" href="/2023/11/23/kafka-ordered-msg/"><span class="title">Kafka 顺序消息实现</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -84,7 +84,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E8%AE%BA%E6%96%87%E7%BF%BB%E8%AF%91/">论文翻译</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-11-18T14:29:59.000Z">2023-11-18</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-04-05T14:31:32.877Z">2025-04-05</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-11-18T14:29:59.000Z">2023-11-18</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-05T00:39:52.469Z">2025-06-05</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -217,8 +217,8 @@ leader 的大规模的系统，如 GFS [8]，HDFS [38] 和 RAMCloud [33]
 ，他们通常都使用单独的复制状态机来管理 leader election 和保存 leader
 崩溃后重新选举所需的配置信息。像 Chubby [2] 和 ZooKeeper [11]
 都是复制状态机。</p>
-<p>复制状态机通常都是使用日志复制（log
-replication）来实现。如图1：每个服务器都保存着一份拥有一系列命令的日志，然后服务器上的状态机会按顺序执行日志中的命令。每一份日志中命令相同并且顺序也相同，因此每个状态机可以处理相同的命令序列。所以状态机是可确定的，每个状态机都执行相同的状态和相同的输出序列。</p>
+<p>复制状态机通常都是使用日志复制（log replication）来实现。如图
+1：每个服务器都保存着一份拥有一系列命令的日志，然后服务器上的状态机会按顺序执行日志中的命令。每一份日志中命令相同并且顺序也相同，因此每个状态机可以处理相同的命令序列。所以状态机是可确定的，每个状态机都执行相同的状态和相同的输出序列。</p>
 <figure>
 <img
 src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/008i3skNly1gsmihlh9ptj322u0nsgpj.jpg"
@@ -433,7 +433,7 @@ RPCs 给集群中的其他服务器节点（企图得到它们的投票）。一
 获取集群中过半服务器节点针对同一任期的投票时，它就赢得了这次选举并成为新的
 leader。对于同一个任期，每一个服务器节点会按照
 <strong>先来先服务原则（first-come-first-served）</strong> 只投给一个
-candidate（在5.4
+candidate（在 5.4
 节会在投票上增加额外的限制）。这种要求获得过半投票才能成为 leader
 的规则确保了最多只有一个 candidate 赢得此次选举（图 3
 中的选举安全性）。只要有一个 candidate 赢得选举，它就会成为
@@ -550,7 +550,7 @@ follower。所有的这些操作都发生在 AppendEntries RPCs
 <strong>nextIndex</strong>，这个 nextIndex 代表的就是 leader 要发送给
 follower 的下一个日志条目的索引。<strong>当选出一个新的 leader 时，该
 leader 将所有的 nextIndex 的值都初始化为自己最后一个日志条目的 index 加
-1（图7 中的 11）</strong>。如果一个 follower 的日志跟 leader
+1（图 7 中的 11）</strong>。如果一个 follower 的日志跟 leader
 的是不一致的，那么下一次的 AppendEntries RPC
 的一致性检查就会失败。<strong>AppendEntries RPC 在被 follower
 拒绝之后，leader 对 nextIndex 进行减 1，然后重试 AppendEntries RPC。最终
@@ -573,7 +573,7 @@ RPC，而不是每一个日志条目都需要一次 AppendEntires RPC。</p>
 在当权之后就不需要任何特殊的操作来使日志恢复到一致状态。leader
 只需进行正常的操作，然后日志就能在回复 AppendEntries RPC
 一致性检查的时候自动趋于一致。leader
-从来不会重写或者删除自己的日志条目（图3 中的 Leader Append-Only
+从来不会重写或者删除自己的日志条目（图 3 中的 Leader Append-Only
 属性）。</p>
 <p>上述这种日志复制机制展现了第 2 节中描述的 Raft
 算法的共识特性：只要过半的节点能正常运行，Raft
@@ -602,7 +602,7 @@ follower 可能会进入不可用状态，在此期间，leader
 并且用新的日志条目去覆盖这些日志条目。这样就会造成不同的状态机执行不同的指令的情况。</p>
 <p>本节通过对 Leader Election 增加一个限制来完善 Raft
 算法。这个限制保证了对于给定的任意任期号，该任期号对应的 leader
-都包含了之前各个任期所有被提交的日志条目（图3 中的 Leader Completeness
+都包含了之前各个任期所有被提交的日志条目（图 3 中的 Leader Completeness
 性质）。有了这个限制，我们也可以使日志提交规则更加清晰。最后，我们会展示对于
 Leader Completeness
 性质的简要证明并且说该性质是如何保证状态机执行正确的行为的。</p>
@@ -686,8 +686,8 @@ leader，然后写了一个日志条目（index=2，term=3）；</li>
 <li>情况一：(d) S5 重启，因为 S5 最后的日志条目的任期号比 S2、S3
 大，所以 S5 可以赢得选举（currentTerm=5），S5
 将日志条目（index=2，item=3）复制给其他所有节点并提交， <strong>此时
-index=2 的日志条目被提交了两次！一次
-term=2，一次term=3，这是不被允许的，因为已经提交的日志条目是不能被覆盖的！</strong>
+index=2 的日志条目被提交了两次！一次 term=2，一次
+term=3，这是不被允许的，因为已经提交的日志条目是不能被覆盖的！</strong>
 ✖️</li>
 <li>情况二：(e) S1
 在崩溃之前将自己的日志条目（index=3，term=4）复制到了过半节点上，这种情况下，S5
@@ -1004,10 +1004,10 @@ C<sub>new</sub> 的。</p></li>
 <ol type="1">
 <li><p>C<sub>new</sub> 已经分发过半</p>
 <p>集群开始重新选举，此时在 C<sub>new</sub>
-的规则下，不存在新配置中的节点不会赢得选举（因为他们要在C<sub>old,new</sub>
-的情况下决定，但是拿不到 C<sub>new</sub> 的选票），只有拿到
-C<sub>new</sub> 的节点可能成为 leader 并继续下发 C<sub>new</sub>
-配置，流程恢复。</p></li>
+的规则下，不存在新配置中的节点不会赢得选举（因为他们要在
+C<sub>old,new</sub> 的情况下决定，但是拿不到 C<sub>new</sub>
+的选票），只有拿到 C<sub>new</sub> 的节点可能成为 leader 并继续下发
+C<sub>new</sub> 配置，流程恢复。</p></li>
 <li><p>C<sub>new</sub> 没有分发过半</p>
 <p>这种情况下，C<sub>old,new</sub> 和 C<sub>new</sub> 的节点都可以成为
 leader，但是无所谓，因为无论谁成为
@@ -1212,11 +1212,11 @@ Raft 算法。</p>
 <p>如表格 1
 总结的那样，我们采取了一些措施来减轻这种潜在的偏向。我们所有的材料都可供审查
 [28, 31]。</p>
-<table style="width:100%;">
+<table>
 <colgroup>
-<col style="width: 15%" />
-<col style="width: 68%" />
-<col style="width: 15%" />
+<col style="width: 10%" />
+<col style="width: 78%" />
+<col style="width: 10%" />
 </colgroup>
 <thead>
 <tr class="header">
