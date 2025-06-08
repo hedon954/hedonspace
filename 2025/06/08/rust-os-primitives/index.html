@@ -28,7 +28,7 @@
 <meta property="og:description" content="操作系统的并发原语是实现各种锁、条件变量和同步工具的核心基础。无论是 Linux 中被广泛使用的 futex、macOS 中的 pthread 和 os_unfair_lock，还是 Windows 系统上的重量级内核对象、轻量级原语及地址等待机制，本质上都是围绕着三个基本动作展开：wait、wake_one 和 wake_all。本文将通过对三大主流操作系统底层并发原语的梳理与对比，帮助你建立统">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-06-08T09:45:28.000Z">
-<meta property="article:modified_time" content="2025-06-08T15:31:10.866Z">
+<meta property="article:modified_time" content="2025-06-08T18:37:11.805Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="rust">
 <meta property="article:tag" content="并发编程">
@@ -71,7 +71,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">书籍摘抄丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a><a class="item title" href="/2023/11/18/raft/"><span class="title">Raft-Extended 论文翻译</span></a><a class="item title" href="/2025/03/11/note-ddd-awareness/"><span class="title">读书笔记丨《悟道领域驱动设计》</span></a><a class="item title" href="/2024/12/01/kcp/"><span class="title">KCP 源码分析与原理总结</span></a><a class="item title" href="/2024/04/28/epoll/"><span class="title">epoll</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/01/15/book-quic-http3/"><span class="title">读书笔记丨解密 QUIC/HTTP3：未来互联网的基石</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">书籍摘抄丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a><a class="item title" href="/2023/11/18/raft/"><span class="title">Raft-Extended 论文翻译</span></a><a class="item title" href="/2025/03/11/note-ddd-awareness/"><span class="title">读书笔记丨《悟道领域驱动设计》</span></a><a class="item title" href="/2024/12/01/kcp/"><span class="title">KCP 源码分析与原理总结</span></a><a class="item title" href="/2024/04/28/epoll/"><span class="title">epoll</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/01/15/book-quic-http3/"><span class="title">读书笔记丨解密 QUIC/HTTP3：未来互联网的基石</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -84,7 +84,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/rust/">rust</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/rust/rust-%E5%8E%9F%E7%90%86/">rust 原理</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-06-08T09:45:28.000Z">2025-06-08</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-08T15:31:10.866Z">2025-06-08</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-06-08T09:45:28.000Z">2025-06-08</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-08T18:37:11.805Z">2025-06-09</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -117,7 +117,7 @@ SpinLock，不过自旋锁是通过自旋来实现阻塞作用，本质上线程
 and Locks</a> 书中的后续篇章，继续手写几个阻塞类的并发工具，有
 Mutex（互斥锁）、RWMutex（读写锁）和
 CondVar（条件变量）。它们都有一个共同的特点：<strong>线程会陷入阻塞，让出
-CPU，在等待某个条件满足要求后，被会重新并重新调度执行</strong>。这就需要借助内核的能力了，我们需要内核支持：</p>
+CPU，在等待某个条件满足要求后，会被唤醒并重新调度执行</strong>。这就需要借助内核的能力了，我们需要内核支持：</p>
 <ol type="1">
 <li>记住那些陷入阻塞的线程；</li>
 <li>在满足条件后，能够唤醒对应的正确的线程。</li>
