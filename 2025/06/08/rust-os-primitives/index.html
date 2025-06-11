@@ -28,7 +28,7 @@
 <meta property="og:description" content="操作系统的并发原语是实现各种锁、条件变量和同步工具的核心基础。无论是 Linux 中被广泛使用的 futex、macOS 中的 pthread 和 os_unfair_lock，还是 Windows 系统上的重量级内核对象、轻量级原语及地址等待机制，本质上都是围绕着三个基本动作展开：wait、wake_one 和 wake_all。本文将通过对三大主流操作系统底层并发原语的梳理与对比，帮助你建立统">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-06-08T09:45:28.000Z">
-<meta property="article:modified_time" content="2025-06-11T01:07:12.065Z">
+<meta property="article:modified_time" content="2025-06-11T17:34:26.658Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="rust">
 <meta property="article:tag" content="并发编程">
@@ -71,7 +71,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">书籍摘抄丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">书籍摘抄丨《Unit Testing Principles, Practices, and Patterns》</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -84,7 +84,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/rust/">rust</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/rust/rust-%E5%8E%9F%E7%90%86/">rust 原理</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-06-08T09:45:28.000Z">2025-06-08</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-11T01:07:12.065Z">2025-06-11</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-06-08T09:45:28.000Z">2025-06-08</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-11T17:34:26.658Z">2025-06-12</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -109,6 +109,14 @@ href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust
 实战丨手写一个 oneshot channel</a></li>
 <li><a href="https://hedon.top/2025/06/03/rust-action-arc/">Rust
 实战丨手写一个 Arc</a></li>
+<li><a href="https://hedon.top/2025/06/08/rust-os-primitives/">Rust
+原理丨操作系统并发原语</a> 👈 本篇</li>
+<li><a href="https://hedon.top/2025/06/09/rust-action-mutex/">Rust
+实战丨手写一个 Mutex</a></li>
+<li><a href="https://hedon.top/2025/06/09/rust-action-condvar/">Rust
+实战丨手写一个 Condvar</a></li>
+<li><a href="https://hedon.top/2025/06/11/rust-action-rwlock/">Rust
+实战丨手写一个 RwLock</a></li>
 </ul>
 <hr />
 <p>在本系列的前面所有篇章中，我们对非阻塞类的并发操作进行了详细的阐述和实践（除了
