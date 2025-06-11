@@ -27,14 +27,12 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文以三段迭代示例演示如何在 Rust 中手写自旋锁：从最小化原子标志实现，到绑定受保护数据，再到借助 RAII 实现自动解锁。过程中深入讲解 Atomic 内存顺序、UnsafeCell 内部可变性、Send&#x2F;Sync 并发标记，以及 Drop&#x2F;Deref 零成本抽象，帮助读者理解自旋锁适用场景与潜在陷阱，并掌握将并发安全问题前移到编译期的工程思维。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250513131603680.png">
 <meta property="article:published_time" content="2025-05-13T04:58:25.000Z">
 <meta property="article:modified_time" content="2025-06-05T00:38:36.336Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="rust">
 <meta property="article:tag" content="并发编程">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250513131603680.png">
   
   
   
@@ -70,9 +68,9 @@
 <nav class="menu dis-select"><a class="nav-item" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="专栏" href="/topic/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="关于我" href="/about/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a><a class="nav-item" title="思维导图" href="/html/mindmap.html" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
 </div>
 <div class="widgets">
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">专栏：Rust 实战集合</span></div><div class="widget-body"><a class="item" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item active" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span><svg class="active-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11.098v4.993c0 3.096 0 4.645-.734 5.321c-.35.323-.792.526-1.263.58c-.987.113-2.14-.907-4.445-2.946c-1.02-.901-1.529-1.352-2.118-1.47a2.225 2.225 0 0 0-.88 0c-.59.118-1.099.569-2.118 1.47c-2.305 2.039-3.458 3.059-4.445 2.945a2.238 2.238 0 0 1-1.263-.579C3 20.736 3 19.188 3 16.091v-4.994C3 6.81 3 4.666 4.318 3.333C5.636 2 7.758 2 12 2c4.243 0 6.364 0 7.682 1.332C21 4.665 21 6.81 21 11.098" opacity=".5"/><path fill="currentColor" d="M9 5.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5z"/></svg></a><a class="item" href="/2024/06/06/rust-action-sse/"><span class="title">Rust 实战丨SSE(Server-Sent Events)</span></a><a class="item" href="/2024/05/28/rust-action-macro-json/"><span class="title">Rust 实战丨通过实现 json! 掌握声明宏</span></a><a class="item" href="/2024/04/23/rust-action-inverted-index-concurrency/"><span class="title">Rust 实战丨并发构建倒排索引</span></a><a class="item" href="/2024/04/15/rust-action-inverted-index-demo/"><span class="title">Rust 实战丨倒排索引</span></a><a class="item" href="/2024/03/06/rust-action-httpie/"><span class="title">Rust 实战丨HTTPie</span></a><a class="item" href="/2024/01/17/rust-action-mandelbrot/"><span class="title">Rust 实战丨绘制曼德博集</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">专栏：Rust 实战集合</span></div><div class="widget-body"><a class="item" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item active" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span><svg class="active-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11.098v4.993c0 3.096 0 4.645-.734 5.321c-.35.323-.792.526-1.263.58c-.987.113-2.14-.907-4.445-2.946c-1.02-.901-1.529-1.352-2.118-1.47a2.225 2.225 0 0 0-.88 0c-.59.118-1.099.569-2.118 1.47c-2.305 2.039-3.458 3.059-4.445 2.945a2.238 2.238 0 0 1-1.263-.579C3 20.736 3 19.188 3 16.091v-4.994C3 6.81 3 4.666 4.318 3.333C5.636 2 7.758 2 12 2c4.243 0 6.364 0 7.682 1.332C21 4.665 21 6.81 21 11.098" opacity=".5"/><path fill="currentColor" d="M9 5.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5z"/></svg></a><a class="item" href="/2024/06/06/rust-action-sse/"><span class="title">Rust 实战丨SSE(Server-Sent Events)</span></a><a class="item" href="/2024/05/28/rust-action-macro-json/"><span class="title">Rust 实战丨通过实现 json! 掌握声明宏</span></a><a class="item" href="/2024/04/23/rust-action-inverted-index-concurrency/"><span class="title">Rust 实战丨并发构建倒排索引</span></a><a class="item" href="/2024/04/15/rust-action-inverted-index-demo/"><span class="title">Rust 实战丨倒排索引</span></a><a class="item" href="/2024/03/06/rust-action-httpie/"><span class="title">Rust 实战丨HTTPie</span></a><a class="item" href="/2024/01/17/rust-action-mandelbrot/"><span class="title">Rust 实战丨绘制曼德博集</span></a></div></widget>
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">书籍摘抄丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a><a class="item title" href="/2023/11/18/raft/"><span class="title">Raft-Extended 论文翻译</span></a><a class="item title" href="/2025/03/11/note-ddd-awareness/"><span class="title">读书笔记丨《悟道领域驱动设计》</span></a><a class="item title" href="/2024/12/01/kcp/"><span class="title">KCP 源码分析与原理总结</span></a><a class="item title" href="/2024/04/28/epoll/"><span class="title">epoll</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">书籍摘抄丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/02/27/solution-push-ack/"><span class="title">解决方案丨游戏后端中的 Push-ACK 机制设计与内存优化</span></a><a class="item title" href="/2023/11/18/raft/"><span class="title">Raft-Extended 论文翻译</span></a><a class="item title" href="/2025/03/11/note-ddd-awareness/"><span class="title">读书笔记丨《悟道领域驱动设计》</span></a><a class="item title" href="/2024/12/01/kcp/"><span class="title">KCP 源码分析与原理总结</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -84,7 +82,7 @@
 <div class="article banner top"><img class="bg lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/banner/rust-action-spinlock.jpg">
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
-<span class="sep"></span><a class="cap breadcrumb" id="menu" href="/topic">专栏</a><span class="sep"></span><a class="cap breadcrumb" id="proj" href="/2025/06/09/rust-action-mutex/">Rust 实战集合</a></div>
+<span class="sep"></span><a class="cap breadcrumb" id="menu" href="/topic">专栏</a><span class="sep"></span><a class="cap breadcrumb" id="proj" href="/2025/06/11/rust-action-rwlock/">Rust 实战集合</a></div>
 <div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-05-13T04:58:25.000Z">2025-05-13</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-05T00:38:36.336Z">2025-06-05</time></span></div></div></div>
     
     <div class="bottom only-title">
@@ -98,123 +96,237 @@
   </div>
   </div><article class="md-text content"><p>系列文章：</p>
 <ul>
-<li><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</a></li>
+<li><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust
+原理丨聊一聊 Rust 的 Atomic 和内存顺序</a></li>
 </ul>
-<p>在并发编程中，<strong>锁</strong>（lock）是一种常用的同步机制，用于保护共享数据避免竞态条件。然而，在许多编程语言中，锁的使用往往需要手动“加锁”和“解锁”。<strong>手动解锁</strong>的时机很难控制——如果程序在临界区出现错误而跳出了正常流程，开发者可能会忘记解锁锁，从而导致其他线程永远无法取得该锁，发生死锁。另外，还可能发生<strong>重复解锁</strong>的问题：比如线程 A 解锁后，线程 B 很快加锁，这时如果线程 A 的异常处理代码再次执行了解锁操作，就会把线程 B 的锁过早释放，造成数据竞态。另外，大部分语言中<strong>锁和它所保护的数据缺乏关联</strong>：编译器并不知道某个数据必须在特定锁保护下访问，这样一来，程序员很容易犯“未加锁就访问数据”的错误。这些问题对于新手来说尤其常见，而且<strong>编译器无法帮助检查</strong>并发使用上的这些 Bug。</p>
-<p>为了解决上述问题，理想情况是让<strong>锁的管理和资源的生命周期绑定</strong>，由语言帮我们自动管理解锁。Rust 正是通过所有权和生命周期机制，实现了资源与作用域生命周期的绑定，即典型的 <strong>RAII</strong> 技术（<em>Resource Acquisition Is Initialization</em>，资源获取即初始化）。</p>
-<p>在 Rust 标准库中，像 <code>Mutex</code>（互斥锁）就利用了 RAII：获取锁会返回一个守卫对象（例如 <code>MutexGuard</code>），当守卫对象被丢弃（析构）时自动解锁，从而避免显式解锁的麻烦。Rust 标准库的 <code>Mutex</code> 底层利用了操作系统的锁机制，在线程争用时会使线程休眠挂起，以避免浪费 CPU。然而，在一些场景下，比如<strong>无操作系统环境（no_std）<strong>的内核开发、<strong>中断处理</strong>、或者</strong>临界区极短</strong>的场合，我们可能希望使用<strong>自旋锁</strong>（SpinLock）来忙等待锁，而不进入休眠。自旋锁在锁竞争短暂时能省去线程切换的开销，但如果锁被占用时间过长，会浪费大量 CPU 时间，因此需要慎重使用。</p>
-<p>接下来，我们将参考 <a target="_blank" rel="noopener" href="https://marabos.nl/atomics/">Rust Atomics and Locks</a> 一书，<strong>从零开始实现一个 Rust 版本的 SpinLock</strong>。我们会按三个版本逐步引入功能和概念：</p>
-<ol>
-<li>首先实现基本的 <strong>v0</strong> 版本（不保护具体数据，仅提供加锁/解锁机制）；</li>
+<p>在并发编程中，<strong>锁</strong>（lock）是一种常用的同步机制，用于保护共享数据避免竞态条件。然而，在许多编程语言中，锁的使用往往需要手动“加锁”和“解锁”。<strong>手动解锁</strong>的时机很难控制——如果程序在临界区出现错误而跳出了正常流程，开发者可能会忘记解锁锁，从而导致其他线程永远无法取得该锁，发生死锁。另外，还可能发生<strong>重复解锁</strong>的问题：比如线程
+A 解锁后，线程 B 很快加锁，这时如果线程 A
+的异常处理代码再次执行了解锁操作，就会把线程 B
+的锁过早释放，造成数据竞态。另外，大部分语言中<strong>锁和它所保护的数据缺乏关联</strong>：编译器并不知道某个数据必须在特定锁保护下访问，这样一来，程序员很容易犯“未加锁就访问数据”的错误。这些问题对于新手来说尤其常见，而且<strong>编译器无法帮助检查</strong>并发使用上的这些
+Bug。</p>
+<p>为了解决上述问题，理想情况是让<strong>锁的管理和资源的生命周期绑定</strong>，由语言帮我们自动管理解锁。Rust
+正是通过所有权和生命周期机制，实现了资源与作用域生命周期的绑定，即典型的
+<strong>RAII</strong> 技术（<em>Resource Acquisition Is
+Initialization</em>，资源获取即初始化）。</p>
+<p>在 Rust 标准库中，像 <code>Mutex</code>（互斥锁）就利用了
+RAII：获取锁会返回一个守卫对象（例如
+<code>MutexGuard</code>），当守卫对象被丢弃（析构）时自动解锁，从而避免显式解锁的麻烦。Rust
+标准库的 <code>Mutex</code>
+底层利用了操作系统的锁机制，在线程争用时会使线程休眠挂起，以避免浪费
+CPU。然而，在一些场景下，比如<strong>无操作系统环境（no_std）</strong>的内核开发、<strong>中断处理</strong>、或者<strong>临界区极短</strong>的场合，我们可能希望使用<strong>自旋锁</strong>（SpinLock）来忙等待锁，而不进入休眠。自旋锁在锁竞争短暂时能省去线程切换的开销，但如果锁被占用时间过长，会浪费大量
+CPU 时间，因此需要慎重使用。</p>
+<p>接下来，我们将参考 <a target="_blank" rel="noopener" href="https://marabos.nl/atomics/">Rust Atomics
+and Locks</a> 一书，<strong>从零开始实现一个 Rust 版本的
+SpinLock</strong>。我们会按三个版本逐步引入功能和概念：</p>
+<ol type="1">
+<li>首先实现基本的 <strong>v0</strong>
+版本（不保护具体数据，仅提供加锁/解锁机制）；</li>
 <li>然后扩展为能够保护数据的 <strong>v1</strong> 版本；</li>
 <li>最后加入 RAII 机制实现自动解锁的<strong>v2</strong>版本。</li>
 </ol>
-<p>过程中，我们会讨论相关的 Rust 并发概念，包括 <strong>Atomic</strong> 原子类型、<strong>Ordering</strong> 内存序、<strong>UnsafeCell</strong>、<strong>Send/Sync</strong> 并发安全标记、以及 RAII 中的 <strong>Deref/Drop</strong> trait 等。</p>
+<p>过程中，我们会讨论相关的 Rust 并发概念，包括 <strong>Atomic</strong>
+原子类型、<strong>Ordering</strong>
+内存序、<strong>UnsafeCell</strong>、<strong>Send/Sync</strong>
+并发安全标记、以及 RAII 中的 <strong>Deref/Drop</strong> trait 等。</p>
 <p>让我们一步步实现这个自旋锁吧！</p>
 <h2 id="读完本篇你能学到什么">读完本篇你能学到什么</h2>
-<ol>
-<li><strong>自旋锁与互斥锁的权衡</strong>：了解自旋锁适合的场景（极短临界区、内核/中断上下文、无 OS 环境），以及为何在锁竞争时间较长时应优先选择休眠式互斥锁。</li>
-<li><strong>原子操作 + 内存顺序的实战用法</strong>：学会使用 <code>AtomicBool</code>，并理解 <code>Acquire / Release</code> 在加锁、解锁时建立的 <em>happens-before</em> 关系；掌握 <code>swap</code> 与 <code>spin_loop</code> 的配合细节。</li>
+<ol type="1">
+<li><strong>自旋锁与互斥锁的权衡</strong>：了解自旋锁适合的场景（极短临界区、内核/中断上下文、无
+OS 环境），以及为何在锁竞争时间较长时应优先选择休眠式互斥锁。</li>
+<li><strong>原子操作 + 内存顺序的实战用法</strong>：学会使用
+<code>AtomicBool</code>，并理解 <code>Acquire / Release</code>
+在加锁、解锁时建立的 <em>happens-before</em> 关系；掌握
+<code>swap</code> 与 <code>spin_loop</code> 的配合细节。</li>
 <li><strong>内部可变性（UnsafeCell）</strong>：掌握如何在持有不可变引用的情况下对数据进行安全修改。</li>
-<li><strong>RAII + <code>Drop</code> 机制消除“忘记解锁”Bug</strong>：通过 <code>SpinLockGuard</code> + <code>Drop</code>，体验如何把“资源释放”交给作用域管理，彻底根除忘记/重复解锁的风险。</li>
-<li><strong><code>Deref</code> / <code>DerefMut</code> 的零成本抽象</strong>：掌握为守卫对象实现 <code>Deref</code>/<code>DerefMut</code>，让使用者像操作普通引用一样操作受保护数据，而不引入额外运行时开销。</li>
+<li><strong>RAII + <code>Drop</code>
+机制消除“忘记解锁”Bug</strong>：通过 <code>SpinLockGuard</code> +
+<code>Drop</code>，体验如何把“资源释放”交给作用域管理，彻底根除忘记/重复解锁的风险。</li>
+<li><strong><code>Deref</code> / <code>DerefMut</code>
+的零成本抽象</strong>：掌握为守卫对象实现
+<code>Deref</code>/<code>DerefMut</code>，让使用者像操作普通引用一样操作受保护数据，而不引入额外运行时开销。</li>
 </ol>
-<h2 id="基础版-v0：自旋锁的基本实现">基础版 v0：自旋锁的基本实现</h2>
-<p>我们先从最基础的版本开始，我们在 <code>lock</code> 的时候，如果失败了，就一直循环尝试，直到成功获取锁：</p>
+<h2 id="基础版-v0自旋锁的基本实现">基础版 v0：自旋锁的基本实现</h2>
+<p>我们先从最基础的版本开始，我们在 <code>lock</code>
+的时候，如果失败了，就一直循环尝试，直到成功获取锁：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">SpinLock</span> &#123;</span><br><span class="line">  	<span class="comment">// 原子布尔标志，表示锁是否被占用</span></span><br><span class="line">    locked: AtomicBool,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> <span class="title class_">SpinLock</span> &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">const</span> <span class="keyword">fn</span> <span class="title function_">new</span>() <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        <span class="keyword">Self</span> &#123;</span><br><span class="line">            locked: AtomicBool::<span class="title function_ invoke__">new</span>(<span class="literal">false</span>),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">lock</span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="comment">// 使用原子操作尝试将 flag 变为 true，并返回之前的值：</span></span><br><span class="line">      	<span class="comment">//   如果返回的是 true，则说明锁已经被其他线程抢走了。</span></span><br><span class="line">      	<span class="comment">//	 如果返回的是 false，则说明当前线程抢占锁成功。</span></span><br><span class="line">        <span class="comment">// 获取锁使用 Acquire 语义以确保后续对受保护数据的内存访问不会被重排到锁获取之前。</span></span><br><span class="line">        <span class="keyword">while</span> <span class="keyword">self</span>.locked.<span class="title function_ invoke__">swap</span>(<span class="literal">true</span>, Ordering::Acquire) &#123;</span><br><span class="line">            <span class="comment">// 向处理器发出一个提示，表示当前线程正忙等待。</span></span><br><span class="line">          	<span class="comment">// 这在某些架构上可以减少功耗或让处理器优化性能（比如 x86 上的 PAUSE 指令），避免无效地占用总线。</span></span><br><span class="line">            std::hint::<span class="title function_ invoke__">spin_loop</span>();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">unlock</span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="comment">// 将标志置回 false，释放锁。使用 Release 语义以确保之前临界区的修改对后续获取锁的线程可见。</span></span><br><span class="line">        <span class="keyword">self</span>.locked.<span class="title function_ invoke__">store</span>(<span class="literal">false</span>, Ordering::Release);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在上述实现中，我们定义了结构 <code>SpinLock</code>，它包含一个原子变量 <code>locked</code>。</p>
-<p>在 <code>lock</code> 方法中，我们尝试对 <code>locked</code> 原子变量进行 <code>swap</code> 为 <code>true</code> 的操作，<code>swap</code> 会返回交换之前的值，如果是 <code>false</code>，那就说明抢锁成功了，这个时候 <code>lock</code> 就成功返回，否则，则调用 <code>std::hint::spin_loop()</code> 进行自旋，在下一次 <code>while</code> 循环中再尝试获取锁。</p>
-<p>在 <code>unlock</code> 方法中，我们只需要将 <code>locked</code> 设置为 <code>false</code> 即可。</p>
+<p>在上述实现中，我们定义了结构
+<code>SpinLock</code>，它包含一个原子变量 <code>locked</code>。</p>
+<p>在 <code>lock</code> 方法中，我们尝试对 <code>locked</code>
+原子变量进行 <code>swap</code> 为 <code>true</code>
+的操作，<code>swap</code> 会返回交换之前的值，如果是
+<code>false</code>，那就说明抢锁成功了，这个时候 <code>lock</code>
+就成功返回，否则，则调用 <code>std::hint::spin_loop()</code>
+进行自旋，在下一次 <code>while</code> 循环中再尝试获取锁。</p>
+<p>在 <code>unlock</code> 方法中，我们只需要将 <code>locked</code>
+设置为 <code>false</code> 即可。</p>
 <p>示例图如下：</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250513131603680.png" alt=""></p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250513131603680.png" /></p>
 <p>这里有几个需要关注的点：</p>
-<ol>
-<li><code>std::hint::spin_loop()</code> 会向 CPU 发送特定指令（如 x86 的 pause 或 ARM 的 yield），提示当前处于忙等待状态。这允许 CPU 优化执行行为：
+<ol type="1">
+<li><code>std::hint::spin_loop()</code> 会向 CPU 发送特定指令（如 x86 的
+pause 或 ARM 的 yield），提示当前处于忙等待状态。这允许 CPU
+优化执行行为：
 <ul>
 <li><strong>降低功耗</strong>：减少自旋期间的计算资源消耗。</li>
 <li><strong>提升多线程效率</strong>：在超线程架构中，避免单个核心的忙等待阻塞其他线程的执行。</li>
-</ul>
-</li>
-<li><code>locked</code> 是一个原子变量，对其的操作称为原子操作（Atomic Operation）。<strong>原子操作是指在多线程情况下不可被中断的操作，能保证对变量的读/写要么完整完成要么不发生，因此不存在数据竞争</strong>。在 Rust 中，每个原子操作都需要指定内存顺序（Memory Ordering）参数，用于约束编译器和 CPU 对指令重排的规则。更详细的规则可参阅：<a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</a>。</li>
-<li>这里我们内存顺序使用了一对 <code>Acquire</code> 和 <code>Release</code>。其中：
+</ul></li>
+<li><code>locked</code> 是一个原子变量，对其的操作称为原子操作（Atomic
+Operation）。<strong>原子操作是指在多线程情况下不可被中断的操作，能保证对变量的读/写要么完整完成要么不发生，因此不存在数据竞争</strong>。在
+Rust 中，每个原子操作都需要指定内存顺序（Memory
+Ordering）参数，用于约束编译器和 CPU
+对指令重排的规则。更详细的规则可参阅：<a
+href="https://hedon.top/2024/11/11/rust-memory-order/">Rust 原理丨聊一聊
+Rust 的 Atomic 和内存顺序</a>。</li>
+<li>这里我们内存顺序使用了一对 <code>Acquire</code> 和
+<code>Release</code>。其中：
 <ul>
-<li>获取锁的时候使用 <code>Acquire</code> 确保后续对受保护数据的内存访问不会被重排到锁获取之前。</li>
-<li>释放锁的时候使用 <code>Release</code> 确保之前临界区内的所有修改都完成发布（对其他线程可见），再让其他线程获取锁。</li>
-</ul>
-</li>
+<li>获取锁的时候使用 <code>Acquire</code>
+确保后续对受保护数据的内存访问不会被重排到锁获取之前。</li>
+<li>释放锁的时候使用 <code>Release</code>
+确保之前临界区内的所有修改都完成发布（对其他线程可见），再让其他线程获取锁。</li>
+</ul></li>
 </ol>
 <p>我们来撰写单元测试：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[cfg(test)]</span></span><br><span class="line"><span class="keyword">mod</span> tests &#123;</span><br><span class="line">		<span class="meta">#[test]</span></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">one_thread_should_work</span>() &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">lock</span> = SpinLock::<span class="title function_ invoke__">new</span>();</span><br><span class="line">        <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">data</span> = <span class="built_in">vec!</span>[]; <span class="comment">// 临界区资源</span></span><br><span class="line"></span><br><span class="line">        lock.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">        data.<span class="title function_ invoke__">push</span>(<span class="number">1</span>); <span class="comment">// 临界区代码</span></span><br><span class="line">        lock.<span class="title function_ invoke__">unlock</span>();</span><br><span class="line"></span><br><span class="line">        lock.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">        <span class="built_in">print!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, data); <span class="comment">// 临界区代码</span></span><br><span class="line">        lock.<span class="title function_ invoke__">unlock</span>();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">#[test]</span></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">cross_thread_should_work</span>() &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">data</span> = <span class="built_in">vec!</span>[];  <span class="comment">// 临界区资源</span></span><br><span class="line">        <span class="keyword">let</span> <span class="variable">lock</span> = SpinLock::<span class="title function_ invoke__">new</span>();</span><br><span class="line">        thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">            s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">                lock.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">                <span class="keyword">unsafe</span> &#123;</span><br><span class="line">                    <span class="keyword">let</span> <span class="variable">data_ptr</span> = &amp;data <span class="keyword">as</span> *<span class="keyword">const</span> <span class="type">Vec</span>&lt;<span class="type">i32</span>&gt; <span class="keyword">as</span> *<span class="keyword">mut</span> <span class="type">Vec</span>&lt;<span class="type">i32</span>&gt;;</span><br><span class="line">                    (*data_ptr).<span class="title function_ invoke__">push</span>(<span class="number">1</span>);  <span class="comment">// 临界区代码</span></span><br><span class="line">                &#125;</span><br><span class="line">                lock.<span class="title function_ invoke__">unlock</span>();</span><br><span class="line">            &#125;);</span><br><span class="line">            <span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_millis</span>(<span class="number">100</span>));</span><br><span class="line">            lock.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">            <span class="keyword">unsafe</span> &#123;</span><br><span class="line">                <span class="keyword">let</span> <span class="variable">data_ptr</span> = &amp;data <span class="keyword">as</span> *<span class="keyword">const</span> <span class="type">Vec</span>&lt;<span class="type">i32</span>&gt; <span class="keyword">as</span> *<span class="keyword">mut</span> <span class="type">Vec</span>&lt;<span class="type">i32</span>&gt;;</span><br><span class="line">                (*data_ptr).<span class="title function_ invoke__">push</span>(<span class="number">2</span>); <span class="comment">// 临界区代码</span></span><br><span class="line">            &#125;</span><br><span class="line">            lock.<span class="title function_ invoke__">unlock</span>();</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        lock.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">        <span class="built_in">print!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, data);  <span class="comment">// 临界区代码</span></span><br><span class="line">        lock.<span class="title function_ invoke__">unlock</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在跨线程的测试用例 <code>cross_thread_should_work</code> 中，为了对 <code>data</code> 进行修改，我们只能在 <code>unsafe</code> 里面强行使用裸指针来进行操作，否则编译就会失败。</p>
-<h2 id="升级版-v1：将锁与数据关联">升级版 v1：将锁与数据关联</h2>
-<p>在上一个基础版本中，虽然这么做能起到互斥的作用，但是存在 2 个问题：</p>
-<ol>
-<li>我们会发现操作临界资源非常麻烦，因为临界资源的类型，可能是不满足 <code>Sync</code> 和 <code>Send</code> 的，所以它们无法在跨线程中进行传递或转移，所以即便我们能从逻辑上断定它们是并发安全的，但是编译器可没那么聪明，所以我们只能通过 <code>unsafe</code> 强行绕过编译期的检查。</li>
-<li>锁和被保护的数据是分离的。程序员必须小心确保每次访问共享数据都正确地调用了 <code>lock()</code> 和 <code>unlock()</code>。一旦忘记调用 <code>unlock()</code>，或者搞错了加锁解锁的配对关系，编译器都不会报错，但程序的并发行为就可能出问题。</li>
+<p>在跨线程的测试用例 <code>cross_thread_should_work</code> 中，为了对
+<code>data</code> 进行修改，我们只能在 <code>unsafe</code>
+里面强行使用裸指针来进行操作，否则编译就会失败。</p>
+<h2 id="升级版-v1将锁与数据关联">升级版 v1：将锁与数据关联</h2>
+<p>在上一个基础版本中，虽然这么做能起到互斥的作用，但是存在 2
+个问题：</p>
+<ol type="1">
+<li>我们会发现操作临界资源非常麻烦，因为临界资源的类型，可能是不满足
+<code>Sync</code> 和 <code>Send</code>
+的，所以它们无法在跨线程中进行传递或转移，所以即便我们能从逻辑上断定它们是并发安全的，但是编译器可没那么聪明，所以我们只能通过
+<code>unsafe</code> 强行绕过编译期的检查。</li>
+<li>锁和被保护的数据是分离的。程序员必须小心确保每次访问共享数据都正确地调用了
+<code>lock()</code> 和 <code>unlock()</code>。一旦忘记调用
+<code>unlock()</code>，或者搞错了加锁解锁的配对关系，编译器都不会报错，但程序的并发行为就可能出问题。</li>
 </ol>
-<p>显然，我们希望让<strong>锁与数据关联</strong>起来，从语法层面降低误用的可能，同时便于我们为临界资源的数据类型限定相关的 trait，提高资源访问的便捷性。这正是下一步要做的改进。</p>
+<p>显然，我们希望让<strong>锁与数据关联</strong>起来，从语法层面降低误用的可能，同时便于我们为临界资源的数据类型限定相关的
+trait，提高资源访问的便捷性。这正是下一步要做的改进。</p>
 <p>我们看看标准库的 <code>Mutex</code> 是怎么实现的：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">lock</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> LockResult&lt;MutexGuard&lt;<span class="symbol">&#x27;_</span>, T&gt;&gt; &#123;</span><br><span class="line">    <span class="keyword">unsafe</span> &#123;</span><br><span class="line">        <span class="keyword">self</span>.inner.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">        MutexGuard::<span class="title function_ invoke__">new</span>(<span class="keyword">self</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">MutexGuard</span>&lt;<span class="symbol">&#x27;a</span>, T: ?<span class="built_in">Sized</span> + <span class="symbol">&#x27;a</span>&gt; &#123;</span><br><span class="line">    lock: &amp;<span class="symbol">&#x27;a</span> Mutex&lt;T&gt;,</span><br><span class="line">    poison: poison::Guard,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>可以发现，标准的锁是将要保护的临界资源放在了锁里，在获取锁的时候，就返回这个临界资源的 <code>Guard</code>。</p>
-<p>OK，我们先不着急引入这个 <code>Guard</code>，我们就直接在获取锁的时候返回临界资源的可变引用即可。</p>
+<p>可以发现，标准的锁是将要保护的临界资源放在了锁里，在获取锁的时候，就返回这个临界资源的
+<code>Guard</code>。</p>
+<p>OK，我们先不着急引入这个
+<code>Guard</code>，我们就直接在获取锁的时候返回临界资源的可变引用即可。</p>
 <p>更新后的版本如下所示；</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">SpinLock</span>&lt;T&gt; &#123;</span><br><span class="line">    locked: AtomicBool,</span><br><span class="line">    value: UnsafeCell&lt;T&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; SpinLock&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">new</span>(value: T) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        <span class="keyword">Self</span> &#123;</span><br><span class="line">            locked: AtomicBool::<span class="title function_ invoke__">new</span>(<span class="literal">false</span>),</span><br><span class="line">            value: UnsafeCell::<span class="title function_ invoke__">new</span>(value),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">lock</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;<span class="keyword">mut</span> T &#123;</span><br><span class="line">        <span class="keyword">while</span> <span class="keyword">self</span>.locked.<span class="title function_ invoke__">swap</span>(<span class="literal">true</span>, Ordering::Acquire) &#123;</span><br><span class="line">            std::hint::<span class="title function_ invoke__">spin_loop</span>();</span><br><span class="line">        &#125;</span><br><span class="line">      	<span class="comment">// Safety: 我们知道这个时候同时只可能有一个线程能获取到 value，</span></span><br><span class="line">      	<span class="comment">// 也知道这个 value 一定存在，所以可以直接 unwrap()。</span></span><br><span class="line">        <span class="keyword">unsafe</span> &#123; <span class="keyword">self</span>.value.<span class="title function_ invoke__">get</span>().<span class="title function_ invoke__">as_mut</span>().<span class="title function_ invoke__">unwrap</span>() &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">unlock</span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">self</span>.locked.<span class="title function_ invoke__">store</span>(<span class="literal">false</span>, Ordering::Release);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">unsafe</span> <span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Send</span> <span class="keyword">for</span> <span class="title class_">SpinLock</span>&lt;T&gt; <span class="keyword">where</span> T: <span class="built_in">Send</span> &#123;&#125;</span><br><span class="line"><span class="keyword">unsafe</span> <span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Sync</span> <span class="keyword">for</span> <span class="title class_">SpinLock</span>&lt;T&gt; <span class="keyword">where</span> T: <span class="built_in">Send</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
-<p>可以看到，我们在 <code>SpinLock</code> 中加入了类型为 <code>UnsafeCell&lt;T&gt;</code> 的字段 <code>value</code>，然后在 <code>lock()</code> 抢到锁的时候，通过 <code>self.value.get().as_mut().unwrap()</code> 获取 <code>value</code> 的可变引用，我们知道这里是安全的，所以 <code>unsafe</code> 是安全的。</p>
-<p>在这个版本中，我们见到了一个新朋友 <code>UnsafeCell</code>，事实上它是 Rust 标准库中所有的并发工具的基石，它涉及到了一个概念：<strong>内部可变性</strong>。</p>
-<p>在 Rust 的类型系统中，如果我们只有一个对锁的不可变引用（<code>&amp;SpinLock&lt;T&gt;</code>），按正常规则是无法直接获得对内部数据的可变引用（<code>&amp;mut T</code>）的——<strong>毕竟 Rust 不允许在仅持有不可变引用的情况下修改数据</strong>。但对于实现锁这种特殊结构，我们清楚只有获取锁后才会独占数据的访问权，此时产生一个可变引用是安全的。为了突破编译器的限制，我们需要借助 <code>std::cell::UnsafeCell</code>。</p>
-<p><strong>UnsafeCell</strong> 是 Rust 提供的一个内部可变性工具类型，它包装一个数据，使得即使在只有不可变引用的情况下也可以进行修改（当然需要在 <code>unsafe</code> 块中操作）。很多线程同步原语（比如 <code>Mutex</code>、<code>AtomicBool</code> 自身等）内部都用 <code>UnsafeCell</code> 来允许内部数据的可变访问。</p>
-<p>标准库中，基于 <code>UnsafeCell&lt;T</code>&gt;，封装了一些满足<strong>内部可变性</strong>的类型：</p>
+<p>可以看到，我们在 <code>SpinLock</code> 中加入了类型为
+<code>UnsafeCell&lt;T&gt;</code> 的字段 <code>value</code>，然后在
+<code>lock()</code> 抢到锁的时候，通过
+<code>self.value.get().as_mut().unwrap()</code> 获取 <code>value</code>
+的可变引用，我们知道这里是安全的，所以 <code>unsafe</code>
+是安全的。</p>
+<p>在这个版本中，我们见到了一个新朋友
+<code>UnsafeCell</code>，事实上它是 Rust
+标准库中所有的并发工具的基石，它涉及到了一个概念：<strong>内部可变性</strong>。</p>
+<p>在 Rust
+的类型系统中，如果我们只有一个对锁的不可变引用（<code>&amp;SpinLock&lt;T&gt;</code>），按正常规则是无法直接获得对内部数据的可变引用（<code>&amp;mut T</code>）的——<strong>毕竟
+Rust
+不允许在仅持有不可变引用的情况下修改数据</strong>。但对于实现锁这种特殊结构，我们清楚只有获取锁后才会独占数据的访问权，此时产生一个可变引用是安全的。为了突破编译器的限制，我们需要借助
+<code>std::cell::UnsafeCell</code>。</p>
+<p><strong>UnsafeCell</strong> 是 Rust
+提供的一个内部可变性工具类型，它包装一个数据，使得即使在只有不可变引用的情况下也可以进行修改（当然需要在
+<code>unsafe</code> 块中操作）。很多线程同步原语（比如
+<code>Mutex</code>、<code>AtomicBool</code> 自身等）内部都用
+<code>UnsafeCell</code> 来允许内部数据的可变访问。</p>
+<p>标准库中，基于
+<code>UnsafeCell&lt;T</code>&gt;，封装了一些满足<strong>内部可变性</strong>的类型：</p>
 <ul>
-<li>
-<p><code>Cell&lt;T&gt;</code>: 只允许 Copy 类型，通过 get()/set() 操作。</p>
-</li>
-<li>
-<p><code>RefCell&lt;T&gt;</code>: 运行时借用检查，但不是 Sync。</p>
-</li>
-<li>
-<p><code>Mutex&lt;T&gt;</code>: 线程安全，但性能开销大。</p>
-</li>
+<li><p><code>Cell&lt;T&gt;</code>: 只允许 Copy 类型，通过 get()/set()
+操作。</p></li>
+<li><p><code>RefCell&lt;T&gt;</code>: 运行时借用检查，但不是
+Sync。</p></li>
+<li><p><code>Mutex&lt;T&gt;</code>: 线程安全，但性能开销大。</p></li>
 </ul>
-<p>同时也因为 <code>UnsafeCell&lt;T</code>&gt; 并不满足 <code>Send</code> 和 <code>Sync</code> trait，所以我们需要手动为其实现：</p>
+<p>同时也因为 <code>UnsafeCell&lt;T</code>&gt; 并不满足
+<code>Send</code> 和 <code>Sync</code>
+trait，所以我们需要手动为其实现：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">unsafe</span> <span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Send</span> <span class="keyword">for</span> <span class="title class_">SpinLock</span>&lt;T&gt; <span class="keyword">where</span> T: <span class="built_in">Send</span> &#123;&#125;</span><br><span class="line"><span class="keyword">unsafe</span> <span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Sync</span> <span class="keyword">for</span> <span class="title class_">SpinLock</span>&lt;T&gt; <span class="keyword">where</span> T: <span class="built_in">Send</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
 <p>我们修改我们的测试用例：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[cfg(test)]</span></span><br><span class="line"><span class="keyword">mod</span> tests &#123;</span><br><span class="line">		<span class="meta">#[test]</span></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">one_thread_should_work</span>() &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">lock</span> = SpinLock::<span class="title function_ invoke__">new</span>(<span class="built_in">vec!</span>[]); <span class="comment">// 临界资源包在锁里面了</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">let</span> <span class="variable">data</span> = lock.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">        data.<span class="title function_ invoke__">push</span>(<span class="number">1</span>); <span class="comment">// 临界区代码</span></span><br><span class="line">        lock.<span class="title function_ invoke__">unlock</span>();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">let</span> <span class="variable">data</span> = lock.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">        <span class="built_in">print!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, data); <span class="comment">// 临界区代码</span></span><br><span class="line">        lock.<span class="title function_ invoke__">unlock</span>();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">#[test]</span></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">cross_thread_should_work</span>() &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">lock</span> = SpinLock::<span class="title function_ invoke__">new</span>(<span class="built_in">vec!</span>[]); <span class="comment">// 临界资源包在锁里面了</span></span><br><span class="line">        thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">            s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">                <span class="keyword">let</span> <span class="variable">data1</span> = lock.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">                data1.<span class="title function_ invoke__">push</span>(<span class="number">1</span>); <span class="comment">// 临界区代码</span></span><br><span class="line">                lock.<span class="title function_ invoke__">unlock</span>();</span><br><span class="line">            &#125;);</span><br><span class="line">            <span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_millis</span>(<span class="number">100</span>));</span><br><span class="line">            <span class="keyword">let</span> <span class="variable">data2</span> = lock.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">            data2.<span class="title function_ invoke__">push</span>(<span class="number">2</span>); <span class="comment">// 临界区代码</span></span><br><span class="line">            lock.<span class="title function_ invoke__">unlock</span>();</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">let</span> <span class="variable">data</span> = lock.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">        <span class="built_in">print!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, data); <span class="comment">// 临界区代码</span></span><br><span class="line">        lock.<span class="title function_ invoke__">unlock</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这个版本的测试用例中，对于使用者来说，很明显就简洁很多了，再也不需要使用 <code>unsafe</code> 这种危险工具了。</p>
-<h2 id="最终版-v2：引入-RAII-的自旋锁守卫">最终版 v2：引入 RAII 的自旋锁守卫</h2>
-<p>v1 的实现仍然存在隐患，它要求调用者严格按照正确的顺序使用。我们可以想象一些误用场景：</p>
+<p>这个版本的测试用例中，对于使用者来说，很明显就简洁很多了，再也不需要使用
+<code>unsafe</code> 这种危险工具了。</p>
+<h2 id="最终版-v2引入-raii-的自旋锁守卫">最终版 v2：引入 RAII
+的自旋锁守卫</h2>
+<p>v1
+的实现仍然存在隐患，它要求调用者严格按照正确的顺序使用。我们可以想象一些误用场景：</p>
 <ul>
-<li><strong>忘记解锁：</strong> 如果线程获得了锁却没有调用 <code>unlock()</code> 就结束了，那么锁将一直保持锁定状态，导致其他线程永远自旋等待，无法前进。</li>
-<li><strong>重复解锁：</strong> 如果调用者不小心对同一个锁调用了两次 <code>unlock()</code>，第二次解锁会将另一个线程持有的锁误释放，造成数据同时被两个线程访问的风险。</li>
-<li><strong>未加锁访问：</strong> 由于我们提供了 <code>lock()</code> 返回 <code>&amp;mut T</code> 的接口，调用者理论上可以持有这个引用不放，然后调用 <code>unlock()</code> 解锁。这样一来，就出现了一个悬空引用——锁已经释放但仍持有先前的 <code>&amp;mut T</code>，如果此时另一线程加锁并修改数据，两个线程将同时持有对同一数据的可变引用，发生数据竞争！换言之，v1 的接口并不能防止调用者违反“先锁后用、用完解锁”的约定，Rust 编译器也无法帮我们检查这种逻辑错误。</li>
+<li><strong>忘记解锁：</strong> 如果线程获得了锁却没有调用
+<code>unlock()</code>
+就结束了，那么锁将一直保持锁定状态，导致其他线程永远自旋等待，无法前进。</li>
+<li><strong>重复解锁：</strong> 如果调用者不小心对同一个锁调用了两次
+<code>unlock()</code>，第二次解锁会将另一个线程持有的锁误释放，造成数据同时被两个线程访问的风险。</li>
+<li><strong>未加锁访问：</strong> 由于我们提供了 <code>lock()</code>
+返回 <code>&amp;mut T</code>
+的接口，调用者理论上可以持有这个引用不放，然后调用 <code>unlock()</code>
+解锁。这样一来，就出现了一个悬空引用——锁已经释放但仍持有先前的
+<code>&amp;mut T</code>，如果此时另一线程加锁并修改数据，两个线程将同时持有对同一数据的可变引用，发生数据竞争！换言之，v1
+的接口并不能防止调用者违反“先锁后用、用完解锁”的约定，Rust
+编译器也无法帮我们检查这种逻辑错误。</li>
 </ul>
-<p>综上，v1 尽管把数据和锁绑定在一起，但<strong>正确使用仍然完全依赖程序员自觉</strong>，稍有不慎就可能出错。这显然不符合 Rust 一贯的“编译期保证安全”的理念。有没有办法在<strong>编译阶段</strong>就防止上述误用呢？这就是我们下一步要做的：引入 <strong>RAII</strong> 机制，用 Rust 的所有权来管理锁的获取和释放。</p>
+<p>综上，v1
+尽管把数据和锁绑定在一起，但<strong>正确使用仍然完全依赖程序员自觉</strong>，稍有不慎就可能出错。这显然不符合
+Rust
+一贯的“编译期保证安全”的理念。有没有办法在<strong>编译阶段</strong>就防止上述误用呢？这就是我们下一步要做的：引入
+<strong>RAII</strong> 机制，用 Rust 的所有权来管理锁的获取和释放。</p>
 <blockquote>
-<p>RAII（Resource Acquisition Is Initialization，资源获取即初始化）是 C++/Rust 中的核心编程范式，通过将资源的生命周期与对象的生命周期绑定，实现资源的自动管理。其核心思想是：<strong>在对象构造函数中获取资源，在析构函数中释放资源</strong>，确保资源在任何情况下（包括异常）都能被正确释放。</p>
+<p>RAII（Resource Acquisition Is Initialization，资源获取即初始化）是
+C++/Rust
+中的核心编程范式，通过将资源的生命周期与对象的生命周期绑定，实现资源的自动管理。其核心思想是：<strong>在对象构造函数中获取资源，在析构函数中释放资源</strong>，确保资源在任何情况下（包括异常）都能被正确释放。</p>
 </blockquote>
-<p>这个时候，<code>Guard</code> 就可以登场了，我们可以参考标准库一样，在 <code>lock</code> 的时候返回一个 <code>Guard</code>，当这个 <code>Guard</code> 离开作用域的时候，它的 <code>drop</code> 就会被调用，我们可以在里面，执行 <code>unlock</code> 操作，这有 2 个好处：</p>
-<ol>
-<li><code>drop(guard)</code> 是要消耗所有权的，所以可以避免重复释放锁；</li>
-<li><code>drop(guard)</code> 在变量离开作用域后会被自动调用，所以可以避免忘记释放锁的情况发生。</li>
+<p>这个时候，<code>Guard</code> 就可以登场了，我们可以参考标准库一样，在
+<code>lock</code> 的时候返回一个 <code>Guard</code>，当这个
+<code>Guard</code> 离开作用域的时候，它的 <code>drop</code>
+就会被调用，我们可以在里面，执行 <code>unlock</code> 操作，这有 2
+个好处：</p>
+<ol type="1">
+<li><code>drop(guard)</code>
+是要消耗所有权的，所以可以避免重复释放锁；</li>
+<li><code>drop(guard)</code>
+在变量离开作用域后会被自动调用，所以可以避免忘记释放锁的情况发生。</li>
 </ol>
 <p>更新后的版本如下所示：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">SpinLock</span>&lt;T&gt; &#123;</span><br><span class="line">    locked: AtomicBool,</span><br><span class="line">    value: UnsafeCell&lt;T&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">SpinLockGuard</span>&lt;<span class="symbol">&#x27;a</span>, T&gt; &#123;</span><br><span class="line">    lock: &amp;<span class="symbol">&#x27;a</span> SpinLock&lt;T&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">unsafe</span> <span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Send</span> <span class="keyword">for</span> <span class="title class_">SpinLock</span>&lt;T&gt; <span class="keyword">where</span> T: <span class="built_in">Send</span> &#123;&#125;</span><br><span class="line"><span class="keyword">unsafe</span> <span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Sync</span> <span class="keyword">for</span> <span class="title class_">SpinLock</span>&lt;T&gt; <span class="keyword">where</span> T: <span class="built_in">Send</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; SpinLock&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">new</span>(value: T) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        <span class="keyword">Self</span> &#123;</span><br><span class="line">            locked: AtomicBool::<span class="title function_ invoke__">new</span>(<span class="literal">false</span>),</span><br><span class="line">            value: UnsafeCell::<span class="title function_ invoke__">new</span>(value),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">lock</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> SpinLockGuard&lt;T&gt; &#123;</span><br><span class="line">        <span class="keyword">while</span> <span class="keyword">self</span>.locked.<span class="title function_ invoke__">swap</span>(<span class="literal">true</span>, Ordering::Acquire) &#123;</span><br><span class="line">            std::hint::<span class="title function_ invoke__">spin_loop</span>();</span><br><span class="line">        &#125;</span><br><span class="line">        SpinLockGuard::<span class="title function_ invoke__">new</span>(&amp;<span class="keyword">self</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;<span class="symbol">&#x27;a</span>, T&gt; SpinLockGuard&lt;<span class="symbol">&#x27;a</span>, T&gt; &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">new</span>(lock: &amp;<span class="symbol">&#x27;a</span> SpinLock&lt;T&gt;) <span class="punctuation">-&gt;</span> SpinLockGuard&lt;<span class="symbol">&#x27;a</span>, T&gt; &#123;</span><br><span class="line">        <span class="keyword">Self</span> &#123; lock &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">SpinLockGuard</span>&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">      	<span class="comment">// 释放锁。</span></span><br><span class="line">        <span class="keyword">self</span>.lock.locked.<span class="title function_ invoke__">store</span>(<span class="literal">false</span>, Ordering::Release);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; Deref <span class="keyword">for</span> <span class="title class_">SpinLockGuard</span>&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">    <span class="keyword">type</span> <span class="title class_">Target</span> = T;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">deref</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;<span class="keyword">Self</span>::Target &#123;</span><br><span class="line">        <span class="comment">// Safety: 这里我们已经拿到锁（SpinLockGuard）了，</span></span><br><span class="line">        <span class="comment">// 所以可以确保数据的存在且独占的。</span></span><br><span class="line">        <span class="keyword">unsafe</span> &#123; &amp;*<span class="keyword">self</span>.lock.value.<span class="title function_ invoke__">get</span>() &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; DerefMut <span class="keyword">for</span> <span class="title class_">SpinLockGuard</span>&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">deref_mut</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;<span class="keyword">mut</span> <span class="keyword">Self</span>::Target &#123;</span><br><span class="line">        <span class="comment">// Safety: 这里我们已经拿到锁（SpinLockGuard）了，</span></span><br><span class="line">        <span class="comment">// 所以可以确保数据的存在且独占的。</span></span><br><span class="line">        <span class="keyword">unsafe</span> &#123; &amp;<span class="keyword">mut</span> *<span class="keyword">self</span>.lock.value.<span class="title function_ invoke__">get</span>() &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<ol>
-<li>我们引入了类型 <code>SpinLockGuard</code>，它包含了一个 <code>SpinLock</code> 的引用，所以我们需要用生命周期 <code>'a</code> 进行标注。</li>
-<li><code>SpinLock</code> 在 <code>lock()</code> 成功时，返回一个 <code>SpinLockGuard</code>。</li>
-<li>我们为 <code>SpinLockGuard</code> 实现 <code>drop</code> trait，让其在被 drop 时自动执行 <code>unlock</code>，这样就实现了离开作用域自动 unlock 的功能。</li>
-<li>同时为了操作数据的简单性，我们为 <code>SpinLockGuard</code> 实现了 <code>Deref</code> 和 <code>DerefMut</code> 这 2 个 trait。</li>
+<ol type="1">
+<li>我们引入了类型 <code>SpinLockGuard</code>，它包含了一个
+<code>SpinLock</code> 的引用，所以我们需要用生命周期 <code>'a</code>
+进行标注。</li>
+<li><code>SpinLock</code> 在 <code>lock()</code> 成功时，返回一个
+<code>SpinLockGuard</code>。</li>
+<li>我们为 <code>SpinLockGuard</code> 实现 <code>drop</code>
+trait，让其在被 drop 时自动执行
+<code>unlock</code>，这样就实现了离开作用域自动 unlock 的功能。</li>
+<li>同时为了操作数据的简单性，我们为 <code>SpinLockGuard</code> 实现了
+<code>Deref</code> 和 <code>DerefMut</code> 这 2 个 trait。</li>
 </ol>
 <p>修改一下我们的测试代码，可以发现更加简洁了，同时有编译器的保护，我们想犯错都难了！</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[cfg(test)]</span></span><br><span class="line"><span class="keyword">mod</span> tests &#123;</span><br><span class="line">    <span class="meta">#[test]</span></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">one_thread_should_work</span>() &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">lock</span> = SpinLock::<span class="title function_ invoke__">new</span>(<span class="built_in">vec!</span>[]);  <span class="comment">// 临界资源包在锁里面了</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">data</span> = lock.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">        data.<span class="title function_ invoke__">push</span>(<span class="number">1</span>); <span class="comment">// 临界代码区</span></span><br><span class="line">        <span class="title function_ invoke__">drop</span>(data); <span class="comment">// 主动调用 drop 释放锁。</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">let</span> <span class="variable">data</span> = lock.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">        <span class="built_in">print!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, *data);</span><br><span class="line">      	<span class="comment">// 离开作用域后，这里编译器会自动调用 drop(data) 释放锁。</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">#[test]</span></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">cross_thread_should_work</span>() &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">lock</span> = SpinLock::<span class="title function_ invoke__">new</span>(<span class="built_in">vec!</span>[]);  <span class="comment">// 临界资源包在锁里面了</span></span><br><span class="line">        thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">            s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">                <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">data1</span> = lock.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">                data1.<span class="title function_ invoke__">push</span>(<span class="number">1</span>); <span class="comment">// 临界代码区</span></span><br><span class="line">              	<span class="comment">// data1 离开作用域，自动调用 drop(data1)，释放锁。</span></span><br><span class="line">            &#125;);</span><br><span class="line">            <span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_millis</span>(<span class="number">100</span>));</span><br><span class="line">            <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">data2</span> = lock.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">            data2.<span class="title function_ invoke__">push</span>(<span class="number">2</span>);</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">let</span> <span class="variable">data</span> = lock.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">        <span class="built_in">print!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, *data);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h2 id="总结">总结</h2>
-<p>总结一下，在本实战篇中，我们从最初简单的原子标志锁出发，逐步演进，最终实现了一个拥有 RAII 机制的自旋锁 <code>SpinLock</code>。让我们回顾一下这个自旋锁的特点：</p>
+<p>总结一下，在本实战篇中，我们从最初简单的原子标志锁出发，逐步演进，最终实现了一个拥有
+RAII 机制的自旋锁
+<code>SpinLock</code>。让我们回顾一下这个自旋锁的特点：</p>
 <ul>
-<li><strong>忙等待实现：</strong> 使用原子变量和循环实现锁的争用等待，而不涉及线程休眠。这样做在临界区很短时可以省去线程切换的开销，但如果锁持有时间较长，会浪费大量 CPU 时间。因此，本实现适合在<strong>短临界区</strong>或者<strong>无操作系统</strong>环境（如内核/中断上下文）使用。</li>
-<li><strong>RAII 保证解锁：</strong> 通过引入 <code>SpinLockGuard</code> 守卫并实现 <code>Drop</code>，我们将解锁操作自动化。开发者无须显式调用解锁函数，避免了因遗忘或异常路径导致的死锁。同时也防止了双重解锁的发生——同一把锁只有一个守卫，Rust 不允许守卫被意外复制或重复释放。</li>
-<li><strong>锁与数据绑定：</strong> 自旋锁内部直接持有被保护的数据，并通过类型系统将两者关联。任何对数据的访问都必须经由自旋锁提供的方法，这使“未加锁就访问数据”在语法上变得不可能（否则无法拿到数据的引用）。</li>
-<li><strong>编译期并发检查：</strong> 利用 Rust 的所有权和借用规则，我们实现了<strong>一定程度的编译期并发安全检查</strong>。只要代码编译通过，就已经避免了绝大多数常见并发错误（数据竞争、未解锁等）。当然，这不意味着可以高枕无忧，我们仍需注意避免死锁等逻辑问题，但 Rust 会提供最大程度的帮助。</li>
+<li><strong>忙等待实现：</strong>
+使用原子变量和循环实现锁的争用等待，而不涉及线程休眠。这样做在临界区很短时可以省去线程切换的开销，但如果锁持有时间较长，会浪费大量
+CPU
+时间。因此，本实现适合在<strong>短临界区</strong>或者<strong>无操作系统</strong>环境（如内核/中断上下文）使用。</li>
+<li><strong>RAII 保证解锁：</strong> 通过引入 <code>SpinLockGuard</code>
+守卫并实现
+<code>Drop</code>，我们将解锁操作自动化。开发者无须显式调用解锁函数，避免了因遗忘或异常路径导致的死锁。同时也防止了双重解锁的发生——同一把锁只有一个守卫，Rust
+不允许守卫被意外复制或重复释放。</li>
+<li><strong>锁与数据绑定：</strong>
+自旋锁内部直接持有被保护的数据，并通过类型系统将两者关联。任何对数据的访问都必须经由自旋锁提供的方法，这使“未加锁就访问数据”在语法上变得不可能（否则无法拿到数据的引用）。</li>
+<li><strong>编译期并发检查：</strong> 利用 Rust
+的所有权和借用规则，我们实现了<strong>一定程度的编译期并发安全检查</strong>。只要代码编译通过，就已经避免了绝大多数常见并发错误（数据竞争、未解锁等）。当然，这不意味着可以高枕无忧，我们仍需注意避免死锁等逻辑问题，但
+Rust 会提供最大程度的帮助。</li>
 </ul>
-<p>同时，我们更进一步地理解原子变量和内存顺序的应用，也结识了一个新的朋友 <code>UnsafeCell</code>，它是 Rust 中同步原语的基础，后面我们还会经常见到。</p>
+<p>同时，我们更进一步地理解原子变量和内存顺序的应用，也结识了一个新的朋友
+<code>UnsafeCell</code>，它是 Rust
+中同步原语的基础，后面我们还会经常见到。</p>
 <p>下篇我们将尝试实现一个非常实用的工具：<code>oneshot-channel</code>（一次性通道），敬请期待！</p>
 <p>Happy Coding! Peace~</p>
 
@@ -229,7 +341,8 @@
         </li>
         
         <li class="post-title">
-          <p><a target="_blank" rel="noopener" href="https://doc.rust-lang.org/book/">Rust Programming Language</a></p>
+          <p><a target="_blank" rel="noopener" href="https://doc.rust-lang.org/book/">Rust Programming
+Language</a></p>
 
         </li>
         </ul>
@@ -238,7 +351,9 @@
     
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -278,15 +393,19 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%BB%E5%AE%8C%E6%9C%AC%E7%AF%87%E4%BD%A0%E8%83%BD%E5%AD%A6%E5%88%B0%E4%BB%80%E4%B9%88"><span class="toc-text">读完本篇你能学到什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E7%A1%80%E7%89%88-v0%EF%BC%9A%E8%87%AA%E6%97%8B%E9%94%81%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%AE%9E%E7%8E%B0"><span class="toc-text">基础版 v0：自旋锁的基本实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%87%E7%BA%A7%E7%89%88-v1%EF%BC%9A%E5%B0%86%E9%94%81%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%85%B3%E8%81%94"><span class="toc-text">升级版 v1：将锁与数据关联</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%80%E7%BB%88%E7%89%88-v2%EF%BC%9A%E5%BC%95%E5%85%A5-RAII-%E7%9A%84%E8%87%AA%E6%97%8B%E9%94%81%E5%AE%88%E5%8D%AB"><span class="toc-text">最终版 v2：引入 RAII 的自旋锁守卫</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%BB%E5%AE%8C%E6%9C%AC%E7%AF%87%E4%BD%A0%E8%83%BD%E5%AD%A6%E5%88%B0%E4%BB%80%E4%B9%88"><span class="toc-text">读完本篇你能学到什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E7%A1%80%E7%89%88-v0%E8%87%AA%E6%97%8B%E9%94%81%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%AE%9E%E7%8E%B0"><span class="toc-text">基础版 v0：自旋锁的基本实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%87%E7%BA%A7%E7%89%88-v1%E5%B0%86%E9%94%81%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%85%B3%E8%81%94"><span class="toc-text">升级版 v1：将锁与数据关联</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%80%E7%BB%88%E7%89%88-v2%E5%BC%95%E5%85%A5-raii-%E7%9A%84%E8%87%AA%E6%97%8B%E9%94%81%E5%AE%88%E5%8D%AB"><span class="toc-text">最终版 v2：引入 RAII
+的自旋锁守卫</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
