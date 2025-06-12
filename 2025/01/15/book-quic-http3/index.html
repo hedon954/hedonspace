@@ -29,17 +29,17 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250122195252117.png">
 <meta property="article:published_time" content="2025-01-15T11:17:20.000Z">
-<meta property="article:modified_time" content="2025-03-17T11:42:00.371Z">
+<meta property="article:modified_time" content="2025-06-09T06:08:04.303Z">
 <meta property="article:author" content="Hedon Wang">
-<meta property="article:tag" content="QUIC">
-<meta property="article:tag" content="HTTP3">
+<meta property="article:tag" content="quic">
+<meta property="article:tag" content="http3">
 <meta property="article:tag" content="计算机网络">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250122195252117.png">
   
   
   
-  <meta name="keywords" content="QUIC,HTTP3,计算机网络">
+  <meta name="keywords" content="quic,http3,计算机网络">
 
   <!-- feed -->
   
@@ -73,7 +73,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/04/09/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/08/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/03/17/mindmap-for-hexo/"><span class="title">在 Hexo 博客中优雅地集成 Markmap 思维导图</span></a><a class="item title" href="/2025/01/15/book-quic-http3/"><span class="title">读书笔记丨解密 QUIC/HTTP3：未来互联网的基石</span></a><a class="item title" href="/2025/03/13/opentelemetry-tail-sampler/"><span class="title">为什么 OpenTelemetry 的 SDK 中不支持尾采样 Hook？</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -86,7 +86,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-01-15T11:17:20.000Z">2025-01-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-03-17T11:42:00.371Z">2025-03-17</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-01-15T11:17:20.000Z">2025-01-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-09T06:08:04.303Z">2025-06-09</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -120,7 +120,7 @@
 <p><code>SSLv3</code>：分为握手阶段和数据传输阶段。</p>
 <ul>
 <li>握手阶段完成对端点的认证和确定保护数据传输的密钥。</li>
-<li>一旦确定了密钥，后面的数据传输和SSL协议过程都受到加密和完整性保护。</li>
+<li>一旦确定了密钥，后面的数据传输和 SSL 协议过程都受到加密和完整性保护。</li>
 </ul>
 </li>
 <li>
@@ -129,9 +129,9 @@
 <li>
 <p><code>TSL1.1</code>：修复了 TSL1.0 的一些关键安全问题：</p>
 <ul>
-<li>BC 加密使用每条记录一个的显式IV；</li>
+<li>BC 加密使用每条记录一个的显式 IV；</li>
 <li>为了防止 CBC 填充攻击，使用 bad_record_mac 错误码代替 decryption_failed 回复填充错误；</li>
-<li>支持传输参数的IANA（Internet Assigned Numbers Authority，互联网数字分配机构）注册，增加了传输参数的灵活性；</li>
+<li>支持传输参数的 IANA（Internet Assigned Numbers Authority，互联网数字分配机构）注册，增加了传输参数的灵活性；</li>
 <li>改进了连接关闭过早情况下的连接恢复问题。</li>
 </ul>
 <p>有些加密算法还是存在安全漏洞，使用的 MD5 也不安全。</p>
@@ -164,7 +164,7 @@
 <li>删除了所有被证明有问题的对称加密算法，只保留了 AEAD 的加密套件。密码套件的概念也已经改变，将认证和密钥交换机制与加密算法和散列（用于密钥导出函数和握手消息认证码）分离。</li>
 <li>删除 RSA 和静态 DH 密码套件，因为静态 RSA 加密预主密钥的方式和使用静态 DH 私钥都不能保证前向安全性，很容易泄露密钥。只保留能保证前向安全的密钥交换算法，如使用临时私钥的 ECDHE（Elliptic Curve Diffie-Hellman Ephemeral，椭圆曲线 DH 临时密钥交换算法）和 DHE（Diffie-Hellman Ephemeral, DH 临时密钥交换算法）。</li>
 <li>ServerHello 之后的消息都加密传输。</li>
-<li>删除了压缩功能。之前版本的压缩功能由于存在被攻击的风险实际上很少使用，而且现代的压缩基本都在应用层实现，比如HTTP 就自己实现的压缩。</li>
+<li>删除了压缩功能。之前版本的压缩功能由于存在被攻击的风险实际上很少使用，而且现代的压缩基本都在应用层实现，比如 HTTP 就自己实现的压缩。</li>
 </ul>
 </li>
 </ul>

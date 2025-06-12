@@ -42,16 +42,16 @@
 <meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/ddd-ruoyi.drawio.png">
 <meta property="article:published_time" content="2025-03-11T06:45:32.000Z">
-<meta property="article:modified_time" content="2025-03-12T11:15:35.890Z">
+<meta property="article:modified_time" content="2025-06-09T06:08:04.313Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="读书笔记">
-<meta property="article:tag" content="DDD">
+<meta property="article:tag" content="ddd">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
   
   
   
-  <meta name="keywords" content="读书笔记,DDD">
+  <meta name="keywords" content="读书笔记,ddd">
 
   <!-- feed -->
   
@@ -85,7 +85,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/04/09/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/04/09/note-unit-testing-excerpt/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/08/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/03/17/mindmap-for-hexo/"><span class="title">在 Hexo 博客中优雅地集成 Markmap 思维导图</span></a><a class="item title" href="/2025/01/15/book-quic-http3/"><span class="title">读书笔记丨解密 QUIC/HTTP3：未来互联网的基石</span></a><a class="item title" href="/2025/03/13/opentelemetry-tail-sampler/"><span class="title">为什么 OpenTelemetry 的 SDK 中不支持尾采样 Hook？</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -98,7 +98,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-03-11T06:45:32.000Z">2025-03-11</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-03-12T11:15:35.890Z">2025-03-12</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-03-11T06:45:32.000Z">2025-03-11</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-09T06:08:04.313Z">2025-06-09</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -119,7 +119,7 @@
 <li><strong>架构复杂性</strong>：通过分层架构实现业务逻辑与技术实现的解耦，采用防腐层处理系统集成问题。</li>
 <li><strong>演进复杂性</strong>：借助子域划分和上下文映射，为持续演进的业务提供可扩展的架构基础。</li>
 </ol>
-<p>对于实践者而言，DDD 的价值不在于提供完美无缺的终极方案，而是为 VUCA 环境下的系统建设提供基础性指引。其核心思想——无论是通过限界上下文实现的领域自治，还是通过聚合根维护的业务一致性——都为控制软件熵增提供了可落地的模式库。即便不完全采用DDD 完整体系，其领域建模思想、分层架构理念等核心要素，仍能显著提升复杂系统的可维护性和演进能力。这种开放包容的哲学，恰是 DDD 历经二十年仍保持生命力的关键所在。</p>
+<p>对于实践者而言，DDD 的价值不在于提供完美无缺的终极方案，而是为 VUCA 环境下的系统建设提供基础性指引。其核心思想——无论是通过限界上下文实现的领域自治，还是通过聚合根维护的业务一致性——都为控制软件熵增提供了可落地的模式库。即便不完全采用 DDD 完整体系，其领域建模思想、分层架构理念等核心要素，仍能显著提升复杂系统的可维护性和演进能力。这种开放包容的哲学，恰是 DDD 历经二十年仍保持生命力的关键所在。</p>
 <h3 id="贫血模型-vs-充血模型">贫血模型 vs. 充血模型</h3>
 <ul>
 <li>贫血模型：指的是只有属性而没有行为的模型。</li>
@@ -188,7 +188,7 @@
 <ul>
 <li>责任链模式的使用要点在于要将维护责任链的代码和业务代码分开。</li>
 <li>在 DDD 中使用责任链模式时，应创建一个领域服务，在领域服务中完成责任链的创建和执行。</li>
-<li>尽量不要在责任链的处理器中通过 <code>set</code>  修改领域对象（聚合根）的状态，责任链应仅用于某些值的计算，最终将计算结果交给聚合根完成业务操作。</li>
+<li>尽量不要在责任链的处理器中通过 <code>set</code> 修改领域对象（聚合根）的状态，责任链应仅用于某些值的计算，最终将计算结果交给聚合根完成业务操作。</li>
 </ul>
 <p>笔者实现了一个快速构建责任链的工具：</p>
 <div class="tag-plugin link dis-select"><a class="link-card plain" title="" href="https://github.com/hedon954/devkit-go/blob/main/designmode/responsibility/builder.go" target="_blank" rel="external nofollow noopener noreferrer" cardlink api="https://site-info-api-hedon.vercel.app/api/v1?url=https://github.com/hedon954/devkit-go/blob/main/designmode/responsibility/builder.go" autofill="title,icon"><div class="left"><span class="title">https://github.com/hedon954/devkit-go/blob/main/designmode/responsibility/builder.go</span><span class="cap link footnote">https://github.com/hedon954/devkit-go/blob/main/designmode/responsibility/builder.go</span></div><div class="right"><div class="lazy img" data-bg="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/link/8f277b4ee0ecd.svg"></div></div></a></div>
@@ -377,7 +377,7 @@
 </li>
 <li>
 <p><strong>定义策略与读模型</strong><br>
-添加业务规则（如“订单金额≥1000元需审核”）和数据展示需求（如“实时库存看板”）。</p>
+添加业务规则（如“订单金额 ≥1000 元需审核”）和数据展示需求（如“实时库存看板”）。</p>
 </li>
 <li>
 <p><strong>构建聚合与划分子域</strong><br>

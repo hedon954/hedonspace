@@ -1,0 +1,905 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1" theme-name="Stellar" theme-version="1.29.1">
+  
+  <meta name="generator" content="Hexo 7.0.0">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  <link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin><link rel="preconnect" href="https://unpkg.com" crossorigin><link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  
+  <title>Rust 实战丨手写一个 RwLock - HedonWang</title>
+
+  
+    <meta name="description" content="通过三个渐进式版本深入理解 RwLock 的实现原理，从基础功能到性能优化再到公平性保证，掌握原子操作、内存顺序、条件变量等并发编程核心技术，并学会解决写饥饿等实际问题。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust 实战丨手写一个 RwLock">
+<meta property="og:url" content="https://hedon.top/2025/06/11/rust-action-rwlock/index.html">
+<meta property="og:site_name" content="HedonWang">
+<meta property="og:description" content="通过三个渐进式版本深入理解 RwLock 的实现原理，从基础功能到性能优化再到公平性保证，掌握原子操作、内存顺序、条件变量等并发编程核心技术，并学会解决写饥饿等实际问题。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-06-11T00:56:08.000Z">
+<meta property="article:modified_time" content="2025-06-12T03:00:25.412Z">
+<meta property="article:author" content="Hedon Wang">
+<meta property="article:tag" content="rust">
+<meta property="article:tag" content="并发编程">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <meta name="keywords" content="rust,并发编程">
+
+  <!-- feed -->
+  
+    <link rel="alternate" href="/atom.xml" title="HedonWang" type="application/atom+xml">
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.29.1">
+
+
+  
+    <link rel="shortcut icon" href="/assets/favicon.png">
+  
+
+  
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon.png"><link rel="shortcut icon" href="/assets/favicon.png"><meta name="theme-color" content="#f8f8f8"><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC&display=swap" rel="stylesheet"><link rel="stylesheet" href="/css/markmap.css"><script src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.18"></script>
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><div class="icon"><img no-lazy class="icon" src="/assets/favicon.png" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></div><a class="title" href="/"><div class="main" ff="title">HedonWang</div><div class="sub cap">君子求诸己，律己则安。</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"><a class="nav-item" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="专栏" href="/topic/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="关于我" href="/about/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a><a class="nav-item" title="思维导图" href="/html/mindmap.html" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">专栏：Rust 实战集合</span></div><div class="widget-body"><a class="item active" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span><svg class="active-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11.098v4.993c0 3.096 0 4.645-.734 5.321c-.35.323-.792.526-1.263.58c-.987.113-2.14-.907-4.445-2.946c-1.02-.901-1.529-1.352-2.118-1.47a2.225 2.225 0 0 0-.88 0c-.59.118-1.099.569-2.118 1.47c-2.305 2.039-3.458 3.059-4.445 2.945a2.238 2.238 0 0 1-1.263-.579C3 20.736 3 19.188 3 16.091v-4.994C3 6.81 3 4.666 4.318 3.333C5.636 2 7.758 2 12 2c4.243 0 6.364 0 7.682 1.332C21 4.665 21 6.81 21 11.098" opacity=".5"/><path fill="currentColor" d="M9 5.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5z"/></svg></a><a class="item" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item" href="/2024/06/06/rust-action-sse/"><span class="title">Rust 实战丨SSE(Server-Sent Events)</span></a><a class="item" href="/2024/05/28/rust-action-macro-json/"><span class="title">Rust 实战丨通过实现 json! 掌握声明宏</span></a><a class="item" href="/2024/04/23/rust-action-inverted-index-concurrency/"><span class="title">Rust 实战丨并发构建倒排索引</span></a><a class="item" href="/2024/04/15/rust-action-inverted-index-demo/"><span class="title">Rust 实战丨倒排索引</span></a><a class="item" href="/2024/03/06/rust-action-httpie/"><span class="title">Rust 实战丨HTTPie</span></a><a class="item" href="/2024/01/17/rust-action-mandelbrot/"><span class="title">Rust 实战丨绘制曼德博集</span></a></div></widget>
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top"><img class="bg lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/banner/rust-action-rwlock.jpg">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" id="menu" href="/topic">专栏</a><span class="sep"></span><a class="cap breadcrumb" id="proj" href="/2025/06/11/rust-action-rwlock/">Rust 实战集合</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-06-11T00:56:08.000Z">2025-06-11</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-06-12T03:00:25.412Z">2025-06-12</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Rust 实战丨手写一个 RwLock</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p>系列文章：</p>
+<ul>
+<li><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</a></li>
+<li><a href="https://hedon.top/2025/06/05/rust-atomic-in-processor/">Rust 原理丨从汇编角度看原子操作</a></li>
+<li><a href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust 实战丨手写一个 SpinLock</a></li>
+<li><a href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust 实战丨手写一个 oneshot channel</a></li>
+<li><a href="https://hedon.top/2025/06/03/rust-action-arc/">Rust 实战丨手写一个 Arc</a></li>
+<li><a href="https://hedon.top/2025/06/08/rust-os-primitives/">Rust 原理丨操作系统并发原语</a></li>
+<li><a href="https://hedon.top/2025/06/09/rust-action-mutex/">Rust 实战丨手写一个 Mutex</a></li>
+<li><a href="https://hedon.top/2025/06/09/rust-action-condvar/">Rust 实战丨手写一个 Condvar</a></li>
+<li><a href="https://hedon.top/2025/06/11/rust-action-rwlock/">Rust 实战丨手写一个 RwLock</a> 👈 本篇</li>
+</ul>
+<hr>
+<p>本篇我们继续参考 <a target="_blank" rel="noopener" href="https://marabos.nl/atomics/building-locks.html#reader-writer-lock">Rust Atomics and Locks</a> 一书来手写一个读写锁：<em><em>RwLock</em></em>。这也是这本书中的最后一个实战案例了，很幸运我们能坚持到现在，为自己鼓掌 👏🏻 ！</p>
+<p>在本章开始之前，我们假设你已经：</p>
+<ol>
+<li>熟悉并理解 Rust 的各种原子操作。</li>
+<li>阅读过 <a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</a> 和 <a href="https://hedon.top/2025/06/05/rust-atomic-in-processor/">Rust 原理丨从汇编角度看原子操作</a>，并理解内存顺序和内存屏障的原理和使用方法。</li>
+<li>理解 Rust <code>UnsafeCell&lt;T&gt;</code> 提供的内部可变性允许我们在持有共享引用 <code>&amp;</code> 的时候可以对数据进行修改。</li>
+<li>阅读过 <a href="https://hedon.top/2025/06/08/rust-os-primitives/">Rust 原理丨操作系统并发原语</a> 并了解 <a target="_blank" rel="noopener" href="https://crates.io/crates/atomic-wait">atomic-wait</a> crate 中 <code>wait/wake_one/wake_all</code> 的适用场景和使用方法。</li>
+</ol>
+<h2 id="读完本篇你能学到什么">读完本篇你能学到什么</h2>
+<ol>
+<li>
+<p>掌握读写锁的核心语义和基本原理</p>
+<ul>
+<li>
+<p>理解读锁可共享、写锁需独占的设计哲学</p>
+</li>
+<li>
+<p>学会使用原子操作和 Guard 模式实现线程安全</p>
+</li>
+<li>
+<p>掌握 <code>UnsafeCell</code> 实现内部可变性的技巧</p>
+</li>
+</ul>
+</li>
+<li>
+<p>解决写线程无用循环问题</p>
+<ul>
+<li>
+<p>识别并发程序中的性能瓶颈</p>
+</li>
+<li>
+<p>学会通过独立原子变量避免竞争</p>
+</li>
+<li>
+<p>理解 <code>atomic-wait</code> 的高效使用方式</p>
+</li>
+</ul>
+</li>
+<li>
+<p>巧妙解决写饥饿难题</p>
+<ul>
+<li>
+<p>掌握奇偶数编码表达复杂状态的艺术</p>
+</li>
+<li>
+<p>理解并发系统中性能与公平性的权衡</p>
+</li>
+<li>
+<p>学会设计状态机解决复杂同步问题</p>
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="v1：基础实现">v1：基础实现</h2>
+<p>按照惯例，我们先来思考数据结构该如何定义。所谓读写锁，即读锁与读锁之间是可以共存，而读锁与写锁、写锁与写锁之间是互斥的。</p>
+<ol>
+<li>我们需要一个变量 <code>state</code> 来表示当前是否有读线程、有多少读线程、是否有写线程，这里可以用 <code>state</code> 的值来表示有多少读线程，当其为最大值时，表示有写线程。因为 <a target="_blank" rel="noopener" href="https://crates.io/crates/atomic-wait">atomic-wait</a> 仅支持 AtomicU32，所以这里我们的数据类型也定义为 AtomicU32.</li>
+<li>抢到写锁的时候，是可以对数据 <code>value</code> 进行修改的，但因我们只持有 <code>&amp;RwLock</code> 共享引用，为了修改数据，我们依旧需要依赖 <code>UnsafeCell</code> 提供内部可变性。</li>
+<li>我们需要 2 个守卫类型，分别作为读守卫和写守卫，它们都持有 RwLock 的引用。
+<ul>
+<li>读守卫只能获取共享引用，所以我们为其实现 <code>Deref</code> trait。</li>
+<li>写守卫可以获取独占引用，所以我们为其实现 <code>Deref</code> 和 <code>DerefMut</code> trait。</li>
+</ul>
+</li>
+<li>另外，因为读锁是共享，写锁是独占，所以我们在为 <code>RwLock&lt;T&gt;</code> 实现 <code>Sync</code> trait 的时候，要求 <code>T</code> 必须满足 <code>Sync+Send</code>。</li>
+</ol>
+<p>综上，我们可以定出以下的数据结构：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">RwLock</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="comment">/// The number of read locks, u32::MAX if write locked.</span></span><br><span class="line">    state: AtomicU32,</span><br><span class="line">    value: UnsafeCell&lt;T&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">ReadGuard</span>&lt;<span class="symbol">&#x27;a</span>, T&gt; &#123;</span><br><span class="line">    rwlock: &amp;<span class="symbol">&#x27;a</span> RwLock&lt;T&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">WriteGuard</span>&lt;<span class="symbol">&#x27;a</span>, T&gt; &#123;</span><br><span class="line">    rwlock: &amp;<span class="symbol">&#x27;a</span> RwLock&lt;T&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">unsafe</span> <span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Sync</span> <span class="keyword">for</span> <span class="title class_">RwLock</span>&lt;T&gt; <span class="keyword">where</span> T: <span class="built_in">Sync</span> + <span class="built_in">Send</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; Deref <span class="keyword">for</span> <span class="title class_">WriteGuard</span>&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">    <span class="keyword">type</span> <span class="title class_">Target</span> = T;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">deref</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;<span class="keyword">Self</span>::Target &#123;</span><br><span class="line">        <span class="keyword">unsafe</span> &#123; &amp;*<span class="keyword">self</span>.rwlock.value.<span class="title function_ invoke__">get</span>() &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; DerefMut <span class="keyword">for</span> <span class="title class_">WriteGuard</span>&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">deref_mut</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;<span class="keyword">mut</span> <span class="keyword">Self</span>::Target &#123;</span><br><span class="line">        <span class="keyword">unsafe</span> &#123; &amp;<span class="keyword">mut</span> *<span class="keyword">self</span>.rwlock.value.<span class="title function_ invoke__">get</span>() &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; Deref <span class="keyword">for</span> <span class="title class_">ReadGuard</span>&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">    <span class="keyword">type</span> <span class="title class_">Target</span> = T;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">deref</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> &amp;<span class="keyword">Self</span>::Target &#123;</span><br><span class="line">        <span class="keyword">unsafe</span> &#123; &amp;*<span class="keyword">self</span>.rwlock.value.<span class="title function_ invoke__">get</span>() &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; RwLock&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">new</span>(value: T) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        <span class="keyword">Self</span> &#123;</span><br><span class="line">            state: AtomicU32::<span class="title function_ invoke__">new</span>(<span class="number">0</span>),</span><br><span class="line">            value: UnsafeCell::<span class="title function_ invoke__">new</span>(value),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>OK，现在我们需要来实现最重要的功能：上锁和解锁。</p>
+<p>我们先来看上读锁和解锁：当 <code>state != u32::MAX</code> 的时候，我们就可以尝试对 <code>state</code> 进行加 1 抢占读锁，在销毁 <code>ReadGuard</code> 的时候，我们只需要对 <code>state</code> 进行减 1，当最后一个读锁释放的时候，还需要唤醒一个潜在的阻塞中的写线程。且这里，加 1 和减 1 需要用一对 Acquire 和 Release 建立 happens-before 关系。</p>
+<p>代码如下：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; RwLock&lt;T&gt; &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">read</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> ReadGuard&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">s</span> = <span class="keyword">self</span>.state.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line">        <span class="keyword">loop</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> s &lt; <span class="type">u32</span>::MAX &#123;</span><br><span class="line">                <span class="built_in">assert!</span>(s != <span class="type">u32</span>::MAX - <span class="number">1</span>, <span class="string">&quot;too many readers&quot;</span>);</span><br><span class="line">              	<span class="comment">// 尝试上读锁</span></span><br><span class="line">                <span class="keyword">match</span> <span class="keyword">self</span>.state.<span class="title function_ invoke__">compare_exchange_weak</span>(s, s + <span class="number">1</span>, Acquire, Relaxed) &#123;</span><br><span class="line">                    <span class="title function_ invoke__">Ok</span>(_) =&gt; <span class="keyword">return</span> ReadGuard &#123; rwlock: <span class="keyword">self</span> &#125;,</span><br><span class="line">                    <span class="title function_ invoke__">Err</span>(e) =&gt; s = e,</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> s == <span class="type">u32</span>::MAX &#123;	<span class="comment">// 如果已经上了写锁，就陷入等待</span></span><br><span class="line">                <span class="title function_ invoke__">wait</span>(&amp;<span class="keyword">self</span>.state, <span class="type">u32</span>::MAX);</span><br><span class="line">                s = <span class="keyword">self</span>.state.<span class="title function_ invoke__">load</span>(Relaxed)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">ReadGuard</span>&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span>.rwlock.state.<span class="title function_ invoke__">fetch_sub</span>(<span class="number">1</span>, Release) == <span class="number">1</span> &#123; <span class="comment">// 最后一个读锁释放</span></span><br><span class="line">            <span class="title function_ invoke__">wake_one</span>(&amp;<span class="keyword">self</span>.rwlock.state);		<span class="comment">// 唤醒一个潜在的写线程</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>现在来看上写锁和解锁：我们只需要尝试将 <code>state</code> 置为 <code>u32::MAX</code>，如果成功了，则说明上写锁成功，否则需要陷入等待。在解锁的时候，只需要将 <code>state</code> 置为 <code>0</code>，并唤醒所有潜在的阻塞的读线程和写线程。同样，这里也需要一对 Acquire 和 Release 建立 happens-before 关系。</p>
+<p>代码如下：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; RwLock&lt;T&gt; &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">write</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> WriteGuard&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">      	<span class="comment">// 尝试置为 u32::MAX</span></span><br><span class="line">        <span class="keyword">while</span> <span class="keyword">let</span> <span class="variable">Err</span>(s) = <span class="keyword">self</span>.state.<span class="title function_ invoke__">compare_exchange</span>(<span class="number">0</span>, <span class="type">u32</span>::MAX, Acquire, Relaxed) &#123;</span><br><span class="line">            <span class="title function_ invoke__">wait</span>(&amp;<span class="keyword">self</span>.state, s); <span class="comment">// 陷入阻塞</span></span><br><span class="line">        &#125;</span><br><span class="line">        WriteGuard &#123; rwlock: <span class="keyword">self</span> &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">WriteGuard</span>&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">self</span>.rwlock.state.<span class="title function_ invoke__">store</span>(<span class="number">0</span>, Release);</span><br><span class="line">        <span class="title function_ invoke__">wake_all</span>(&amp;<span class="keyword">self</span>.rwlock.state); <span class="comment">// 唤醒所有阻塞的写线程和读线程</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>到这里，我们一个基本可用的 <code>RwLock</code> 就实现完毕了，你可以参考下图进行辅助理解：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">    participant A as 线程A (读者)</span><br><span class="line">    participant B as 线程B (读者)</span><br><span class="line">    participant C as 线程C (写者)</span><br><span class="line">    participant State as RwLock State</span><br><span class="line">    participant Wait as Wait/Wake 机制</span><br><span class="line"></span><br><span class="line">    Note over State: state = 0 (未锁定)</span><br><span class="line"></span><br><span class="line">    A-&gt;&gt;State: read() - compare_exchange_weak(0, 1)</span><br><span class="line">    Note over State: state: 0 → 1</span><br><span class="line">    State--&gt;&gt;A: 成功，返回 ReadGuard</span><br><span class="line"></span><br><span class="line">    B-&gt;&gt;State: read() - compare_exchange_weak(1, 2)</span><br><span class="line">    Note over State: state: 1 → 2 (两个读锁)</span><br><span class="line">    State--&gt;&gt;B: 成功，返回 ReadGuard</span><br><span class="line"></span><br><span class="line">    Note over A, B: 💡 读锁可以并发持有</span><br><span class="line"></span><br><span class="line">    C-&gt;&gt;State: write() - compare_exchange(0, u32::MAX)</span><br><span class="line">    State--&gt;&gt;C: 失败 (state=2, 不等于0)</span><br><span class="line">    C-&gt;&gt;Wait: wait(&amp;state, 2)</span><br><span class="line">    Note over C: 🔒 写线程进入等待状态</span><br><span class="line"></span><br><span class="line">    Note over A: 线程A完成读操作</span><br><span class="line">    A-&gt;&gt;State: drop(ReadGuard) - fetch_sub(1)</span><br><span class="line">    Note over State: state: 2 → 1</span><br><span class="line">    Note over A: 不是最后一个读锁，不唤醒</span><br><span class="line"></span><br><span class="line">    Note over B: 线程B完成读操作</span><br><span class="line">    B-&gt;&gt;State: drop(ReadGuard) - fetch_sub(1)</span><br><span class="line">    Note over State: state: 1 → 0</span><br><span class="line">    Note over B: ✨ 最后一个读锁释放！</span><br><span class="line">    B-&gt;&gt;Wait: wake_one(&amp;state)</span><br><span class="line"></span><br><span class="line">    Note over C: 🎯 写线程被唤醒</span><br><span class="line">    C-&gt;&gt;State: write() - compare_exchange(0, u32::MAX)</span><br><span class="line">    Note over State: state: 0 → u32::MAX</span><br><span class="line">    State--&gt;&gt;C: 成功，返回 WriteGuard</span><br><span class="line"></span><br><span class="line">    Note over C: 线程C执行写操作...</span><br><span class="line"></span><br><span class="line">    C-&gt;&gt;State: drop(WriteGuard) - store(0)</span><br><span class="line">    Note over State: state: u32::MAX → 0</span><br><span class="line">    C-&gt;&gt;Wait: wake_all(&amp;state)</span><br><span class="line">    Note over Wait: 📢 唤醒所有等待的线程</span><br></pre></td></tr></table></figure>
+<p>我们来写下单元测试验证功能是否正确：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[cfg(test)]</span></span><br><span class="line"><span class="keyword">mod</span> tests &#123;</span><br><span class="line">    <span class="keyword">use</span> std::&#123;</span><br><span class="line">        thread::&#123;<span class="keyword">self</span>, sleep&#125;,</span><br><span class="line">        time::Duration,</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">use</span> super::*;</span><br><span class="line"></span><br><span class="line">    <span class="meta">#[test]</span></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">one_thread_should_work</span>() &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">rwl</span> = RwLock::<span class="title function_ invoke__">new</span>(<span class="built_in">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">let</span> <span class="variable">r1</span> = rwl.<span class="title function_ invoke__">read</span>();</span><br><span class="line">        <span class="built_in">assert_eq!</span>(r1.<span class="title function_ invoke__">len</span>(), <span class="number">3</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">let</span> <span class="variable">r2</span> = rwl.<span class="title function_ invoke__">read</span>();</span><br><span class="line">        <span class="built_in">assert_eq!</span>(r2.<span class="title function_ invoke__">len</span>(), <span class="number">3</span>);</span><br><span class="line"></span><br><span class="line">        <span class="title function_ invoke__">drop</span>(r1);</span><br><span class="line">        <span class="title function_ invoke__">drop</span>(r2);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">w</span> = rwl.<span class="title function_ invoke__">write</span>();</span><br><span class="line">        w.<span class="title function_ invoke__">push</span>(<span class="number">4</span>);</span><br><span class="line">        <span class="title function_ invoke__">drop</span>(w);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">let</span> <span class="variable">r3</span> = rwl.<span class="title function_ invoke__">read</span>();</span><br><span class="line">        <span class="built_in">assert_eq!</span>(r3.<span class="title function_ invoke__">len</span>(), <span class="number">4</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">#[test]</span></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">cross_thread_should_work</span>() &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">rwl</span> = RwLock::<span class="title function_ invoke__">new</span>(<span class="built_in">vec!</span>[]);</span><br><span class="line"></span><br><span class="line">        thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">            s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">                <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">w</span> = rwl.<span class="title function_ invoke__">write</span>();</span><br><span class="line">                w.<span class="title function_ invoke__">push</span>(<span class="number">1</span>);</span><br><span class="line">                w.<span class="title function_ invoke__">push</span>(<span class="number">2</span>);</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">            s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">                <span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_millis</span>(<span class="number">100</span>));</span><br><span class="line">                <span class="keyword">let</span> <span class="variable">r1</span> = rwl.<span class="title function_ invoke__">read</span>();</span><br><span class="line">                <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, *r1);</span><br><span class="line">                <span class="keyword">let</span> <span class="variable">r2</span> = rwl.<span class="title function_ invoke__">read</span>();</span><br><span class="line">                <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, *r2);</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>执行结果是通过的：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">running 2 tests</span><br><span class="line">test rwlock::tests::one_thread_should_work ... ok</span><br><span class="line">test rwlock::tests::cross_thread_should_work ... ok</span><br></pre></td></tr></table></figure>
+<h2 id="v2：避免写线程无用循环">v2：避免写线程无用循环</h2>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; RwLock&lt;T&gt; &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">write</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> WriteGuard&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">        <span class="keyword">while</span> <span class="keyword">let</span> <span class="variable">Err</span>(s) = <span class="keyword">self</span>.state.<span class="title function_ invoke__">compare_exchange</span>(<span class="number">0</span>, <span class="type">u32</span>::MAX, Acquire, Relaxed) &#123;</span><br><span class="line">            <span class="title function_ invoke__">wait</span>(&amp;<span class="keyword">self</span>.state, s);</span><br><span class="line">        &#125;</span><br><span class="line">        WriteGuard &#123; rwlock: <span class="keyword">self</span> &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>观察一下我们上个版本的 <code>write()</code> 实现，这里可能会出现一种情况：当上读锁非常频繁的时候，<code>state</code> 的值是一直在变化的，这个时候，<code>wait(&amp;self.state, s)</code> 就有可能因为 <code>state</code> 的值发生了变化，不等于 <code>s</code> 了，就不会陷入等待，而是继续循环尝试将 <code>state</code> 从 <code>0</code> 置为 <code>u32::MAX</code>。这时如果上读锁非常频繁的话，那这里会一直尝试获取，且是无意义的尝试。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">    participant W as 写线程</span><br><span class="line">    participant R1 as 读线程1</span><br><span class="line">    participant R2 as 读线程2</span><br><span class="line">    participant State as RwLock State</span><br><span class="line">    participant Wait as Wait 机制</span><br><span class="line"></span><br><span class="line">    Note over State: state = 1 (有一个读锁)</span><br><span class="line"></span><br><span class="line">    W-&gt;&gt;State: write() - compare_exchange(0, u32::MAX)</span><br><span class="line">    State--&gt;&gt;W: 失败，返回 s=1</span><br><span class="line"></span><br><span class="line">    Note over W: 准备调用 wait(&amp;state, 1)</span><br><span class="line"></span><br><span class="line">    R1-&gt;&gt;State: drop(ReadGuard) - fetch_sub(1)</span><br><span class="line">    Note over State: state: 1 → 0 ⚡️ (在 wait 调用前状态就变了！)</span><br><span class="line"></span><br><span class="line">    W-&gt;&gt;Wait: wait(&amp;state, 1)</span><br><span class="line">    Note over Wait: ❌ 当前 state=0，不等于期望值1，立即返回！</span><br><span class="line">    Wait--&gt;&gt;W: 立即返回，没有真正等待</span><br><span class="line"></span><br><span class="line">    Note over R2: 💨 新读线程抢在 compare_exchange 前获取锁！</span><br><span class="line">    R2-&gt;&gt;State: read() - compare_exchange_weak(0, 1)</span><br><span class="line">    Note over State: state: 0 → 1</span><br><span class="line"></span><br><span class="line">    Note over W: 🔄 进入下一轮循环</span><br><span class="line">    W-&gt;&gt;State: compare_exchange(0, u32::MAX)</span><br><span class="line"></span><br><span class="line">    State--&gt;&gt;W: 失败，返回 s=1 (锁又被抢了！)</span><br><span class="line"></span><br><span class="line">    Note over W: 又准备调用 wait(&amp;state, 1)</span><br><span class="line"></span><br><span class="line">    R2-&gt;&gt;State: drop(ReadGuard) - fetch_sub(1)</span><br><span class="line">    Note over State: state: 1 → 0 ⚡️ (又在 wait 前变化了！)</span><br><span class="line"></span><br><span class="line">    W-&gt;&gt;Wait: wait(&amp;state, 1)</span><br><span class="line">    Wait--&gt;&gt;W: 又是立即返回！</span><br><span class="line"></span><br><span class="line">    Note over W: 🔄 无用循环开始...</span><br><span class="line">    Note over W: ⚠️ 写线程永远无法真正进入等待状态！</span><br><span class="line">    Note over W: 💀 CPU 被白白消耗在无效的重试上</span><br><span class="line"></span><br><span class="line">    Note over State: 🎯 问题核心：wait 调用前 state 总是被读锁改变</span><br><span class="line">    Note over State: 💡 解决：独立的 writer_wake_counter 避免这种竞争</span><br></pre></td></tr></table></figure>
+<p>这里问题的根源在于 <strong><code>read()</code> 和 <code>write()</code> 监听的都是同一个原子变量 <code>state</code></strong>。</p>
+<p>解决这个问题的方案之一，就是可以另外加一个原子变量，专门给 <code>write()</code>，从而与 <code>read()</code> 区分开来，避免互相影响，从而造成 <code>write()</code> 时产生无用循环。</p>
+<p>我们在 <code>RwLock</code> 中新增一个属性：<code>writer_wake_counter</code>，用于唤醒抢占写锁的线程。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">RwLock</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="comment">/// The number of read locks, u32::MAX if write locked.</span></span><br><span class="line">    state: AtomicU32,</span><br><span class="line">    <span class="comment">/// Incremented to wake up waiters.</span></span><br><span class="line">    writer_wake_counter: AtomicU32,</span><br><span class="line">    value: UnsafeCell&lt;T&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; RwLock&lt;T&gt; &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">new</span>(value: T) <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        <span class="keyword">Self</span> &#123;</span><br><span class="line">            state: AtomicU32::<span class="title function_ invoke__">new</span>(<span class="number">0</span>),</span><br><span class="line">            writer_wake_counter: AtomicU32::<span class="title function_ invoke__">new</span>(<span class="number">0</span>),</span><br><span class="line">            value: UnsafeCell::<span class="title function_ invoke__">new</span>(value),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  	<span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个时候：</p>
+<ol>
+<li>我们在 <code>write()</code> 时没抢到锁，就不去 <code>wait(&amp;state)</code> 了，而是 <code>wait(&amp;writer_wake_counter)</code>。</li>
+<li>最后一个 <code>ReadGuard</code> 在 drop 的时候，我们修改 <code>writer_wake_counter</code> 的值，并唤醒一个潜在的阻塞的写线程。</li>
+<li><code>WriteGuard</code> 的时候，不仅要唤醒所有阻塞的读线程，还要唤醒一个潜在的阻塞的写线程。</li>
+</ol>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; RwLock&lt;T&gt; &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">write</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> WriteGuard&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">        <span class="keyword">while</span> <span class="keyword">self</span></span><br><span class="line">            .state</span><br><span class="line">            .<span class="title function_ invoke__">compare_exchange</span>(<span class="number">0</span>, <span class="type">u32</span>::MAX, Acquire, Relaxed) <span class="comment">// 尝试抢锁</span></span><br><span class="line">            .<span class="title function_ invoke__">is_err</span>()</span><br><span class="line">        &#123;</span><br><span class="line">          	<span class="comment">// 失败的话取出 writer_wake_counter，供待会 `wait` 使用。</span></span><br><span class="line">            <span class="keyword">let</span> <span class="variable">w</span> = <span class="keyword">self</span>.writer_wake_counter.<span class="title function_ invoke__">load</span>(Acquire);</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">self</span>.state.<span class="title function_ invoke__">load</span>(Relaxed) != <span class="number">0</span> &#123; <span class="comment">// 再次检查 state，如果为 0，就不阻塞了，再次尝试抢锁</span></span><br><span class="line">                <span class="title function_ invoke__">wait</span>(&amp;<span class="keyword">self</span>.writer_wake_counter, w); <span class="comment">// 否则陷入等待</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        WriteGuard &#123; rwlock: <span class="keyword">self</span> &#125; <span class="comment">// 抢锁成功，返回守卫对象</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">ReadGuard</span>&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span>.rwlock.state.<span class="title function_ invoke__">fetch_sub</span>(<span class="number">1</span>, Release) == <span class="number">1</span> &#123;</span><br><span class="line">            <span class="keyword">self</span>.rwlock.writer_wake_counter.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Release);</span><br><span class="line">            <span class="title function_ invoke__">wake_one</span>(&amp;<span class="keyword">self</span>.rwlock.writer_wake_counter);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">WriteGuard</span>&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">self</span>.rwlock.state.<span class="title function_ invoke__">store</span>(<span class="number">0</span>, Release);</span><br><span class="line">        <span class="keyword">self</span>.rwlock.writer_wake_counter.<span class="title function_ invoke__">fetch_sub</span>(<span class="number">1</span>, Release);</span><br><span class="line">        <span class="title function_ invoke__">wake_one</span>(&amp;<span class="keyword">self</span>.rwlock.writer_wake_counter);  <span class="comment">// 唤醒一个写线程</span></span><br><span class="line">        <span class="title function_ invoke__">wake_all</span>(&amp;<span class="keyword">self</span>.rwlock.state);	<span class="comment">// 唤醒所有的读线程</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过这个简单的优化，我们就可以避免写线程因为 <code>state</code> 的频繁变化而产生无用循环了。再次运行之前的测试用例，顺利通过的话就没有问题啦！</p>
+<h2 id="v3：避免写饥饿">v3：避免写饥饿</h2>
+<p>这个版本我们来做最后一个可尝试优化：<strong>避免写饥饿</strong>。</p>
+<p>在之前的实现中，只要没上锁，或者上的是读锁，那么就可以一直不断地上读锁。而只有当没有任何读线程和写线程存在的时候，才可以上写锁。这就非常容易造成写饥饿了，因为那些后来的读线程依旧可以成功上读锁，而写线程抢到锁的条件太苛刻了。</p>
+<p>为了解决这个问题，我们可以修改一下 <code>state</code> 的定义：</p>
+<ol>
+<li>当 <code>state</code> 为 <code>0</code> 的时候，说明没上锁。</li>
+<li>当 <code>state</code> 为 <code>u32::MAX</code> 的时候，说明上了写锁。</li>
+<li>当 <code>state</code> 为非 0 的偶数的时候，说明上了读锁，<strong>且没有阻塞中的写锁，这个时候可以继续上读锁</strong>。</li>
+<li>当 <code>state</code> 为其他奇数的时候，说明这个时候有阻塞中的写锁，<strong>后面来的读锁也需要阻塞</strong>。</li>
+</ol>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">RwLock</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="comment">/// 读线程的数量 *2，当有阻塞中的写线程的时候 +1</span></span><br><span class="line">  	<span class="comment">/// 如果 state=u32::MAX，说上了写锁。</span></span><br><span class="line">  	<span class="comment">///</span></span><br><span class="line">  	<span class="comment">/// 这意味着，当 state 是偶数的时候，可以继续上读锁，</span></span><br><span class="line">  	<span class="comment">/// 但是，如果 state 是奇数的话，上读锁会被阻塞。</span></span><br><span class="line">    state: AtomicU32,</span><br><span class="line">    <span class="comment">/// Incremented to wake up waiters.</span></span><br><span class="line">    writer_wake_counter: AtomicU32,</span><br><span class="line">    value: UnsafeCell&lt;T&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过这样的调整，我们就可以相对公平地去避免写饥饿的问题了。为此，我们需要调整读写锁的上锁和解锁的逻辑。</p>
+<p><code>read()</code>:</p>
+<ol>
+<li>当 <code>state</code> 为偶数的时候，我们可以尝试对其进行 <strong>+2</strong> 继续抢占读锁；</li>
+<li>当 <code>state</code> 为奇数的时候，我们需要调用 <code>wait</code> 陷入等待。</li>
+</ol>
+<p><code>ReadGuard.drop()</code>:</p>
+<ol>
+<li>解锁的时候对 <code>state</code> 进行 <strong>-2</strong>；</li>
+<li>如果之前的值是 <code>3</code> 的话，说明这是最后一个释放的读锁，且存在被阻塞的写线程，这个时候需要调用 <code>wake_one</code> 进行唤醒。</li>
+</ol>
+<p><code>write()</code>:</p>
+<ol>
+<li>如果 <code>state</code> 为 <code>0</code>，则说明此时没有上锁：可以尝试将其置为 <code>u32::MAX</code> 抢占锁：
+<ol>
+<li>如果成功，直接返回。</li>
+<li>如果抢锁失败，则重新读取 <code>state</code> 值进行重新判断。</li>
+</ol>
+</li>
+<li>如果 <code>state</code> 为非 0 偶数，则说明此时已经上了读锁了，我们需要将 <code>state</code> <strong>+1</strong> 设置为奇数，表示有写线程被阻塞着，阻止后面新来的读线程抢占读锁。</li>
+<li>如果 <code>state</code> 为非 0 奇数：
+<ol>
+<li>如果 <code>state</code> 等于 1，那说明既没有上写锁，也没有上读锁，但是有一个阻塞中的写线程，那有可能就是当前线程自己了！这个时候，我们依旧是可以尝试将其置为 <code>u32::MAX</code> 抢占锁，所以 <code>state</code> 为 <code>1</code> 的情况，可以跟 <code>state</code> 为 <code>0</code> 的情况进行合并处理。</li>
+<li>如果 <code>state</code> 大于 1，则说明已经上了读锁，这个时候，需要陷入等待，等前面的读锁都释放了，才能进入下一轮循环，重新尝试抢占写锁。</li>
+</ol>
+</li>
+</ol>
+<p><code>WriteGuard.drop()</code>:</p>
+<ol>
+<li>将 <code>state</code> 置为 <code>0</code>；</li>
+<li>唤醒潜在的所有阻塞的读线程和一个写线程。</li>
+</ol>
+<p>我画了个流程图，供你辅助理解：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">sequenceDiagram</span><br><span class="line">    participant R1 as 读线程1 (已持有)</span><br><span class="line">    participant R2 as 读线程2 (已持有)</span><br><span class="line">    participant W as 写线程 (等待)</span><br><span class="line">    participant R3 as 读线程3 (新来)</span><br><span class="line">    participant State as RwLock State</span><br><span class="line">    participant Wait as Wait/Wake 机制</span><br><span class="line"></span><br><span class="line">    Note over State: state = 4 (两个读锁，4 = 2×2)</span><br><span class="line">    Note over R1, R2: 💡 两个读线程正在工作...</span><br><span class="line"></span><br><span class="line">    W-&gt;&gt;State: write() - 尝试获取写锁</span><br><span class="line">    Note over W: 发现有读锁，无法获取</span><br><span class="line"></span><br><span class="line">    W-&gt;&gt;State: compare_exchange(4, 5) - 设置写等待标志</span><br><span class="line">    Note over State: state: 4 → 5 (奇数！有等待的写线程)</span><br><span class="line"></span><br><span class="line">    W-&gt;&gt;Wait: wait(&amp;writer_wake_counter, w)</span><br><span class="line">    Note over W: 🔒 写线程进入等待，但已设置奇数标志</span><br><span class="line"></span><br><span class="line">    Note over R3: 💨 新的读线程想要获取锁</span><br><span class="line">    R3-&gt;&gt;State: read() - 检查 state % 2</span><br><span class="line">    Note over R3: state=5 是奇数，发现有等待的写线程！</span><br><span class="line"></span><br><span class="line">    R3-&gt;&gt;Wait: wait(&amp;state, 5)</span><br><span class="line">    Note over R3: 🚫 读线程被阻塞，无法抢占！</span><br><span class="line"></span><br><span class="line">    Note over R1: 读线程1完成工作</span><br><span class="line">    R1-&gt;&gt;State: drop(ReadGuard) - fetch_sub(2)</span><br><span class="line">    Note over State: state: 5 → 3 (仍然是奇数)</span><br><span class="line">    Note over R1: 不是最后一个读锁，不唤醒</span><br><span class="line"></span><br><span class="line">    Note over R2: 读线程2完成工作</span><br><span class="line">    R2-&gt;&gt;State: drop(ReadGuard) - fetch_sub(2)</span><br><span class="line">    Note over State: state: 3 → 1</span><br><span class="line">    Note over R2: ✨ 检测到 state=3，是最后一个读锁！</span><br><span class="line"></span><br><span class="line">    R2-&gt;&gt;Wait: wake_one(&amp;writer_wake_counter)</span><br><span class="line"></span><br><span class="line">    Note over W: 🎯 写线程被唤醒</span><br><span class="line">    W-&gt;&gt;State: write() - compare_exchange(1, u32::MAX)</span><br><span class="line">    Note over State: state: 1 → u32::MAX</span><br><span class="line">    State--&gt;&gt;W: ✅ 成功获取写锁！</span><br><span class="line"></span><br><span class="line">    Note over W: 写线程执行关键操作...</span><br><span class="line">    Note over R3: 读线程3仍在等待，公平性得到保证！</span><br><span class="line"></span><br><span class="line">    W-&gt;&gt;State: drop(WriteGuard) - store(0)</span><br><span class="line">    Note over State: state: u32::MAX → 0</span><br><span class="line">    W-&gt;&gt;Wait: wake_all(&amp;state) - 唤醒所有等待的读线程</span><br><span class="line"></span><br><span class="line">    Note over R3: 🎯 读线程3被唤醒，现在可以获取锁了</span><br><span class="line">    R3-&gt;&gt;State: read() - compare_exchange_weak(0, 2)</span><br><span class="line">    Note over State: state: 0 → 2 (偶数，正常读锁)</span><br></pre></td></tr></table></figure>
+<p>综上分析，我们最新的代码如下：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; RwLock&lt;T&gt; &#123;</span><br><span class="line">   	<span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">read</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> ReadGuard&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">s</span> = <span class="keyword">self</span>.state.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line">        <span class="keyword">loop</span> &#123;</span><br><span class="line">          	<span class="comment">// 如果是 0，则说明现在没有上锁，</span></span><br><span class="line">          	<span class="comment">// 如果是偶数，则说明现在上的是读锁，写没有阻塞中的写线程，</span></span><br><span class="line">          	<span class="comment">// 这两种情况，都可以尝试将 state+2 进行抢占读锁。</span></span><br><span class="line">            <span class="keyword">if</span> s % <span class="number">2</span> == <span class="number">0</span> &#123;</span><br><span class="line">                <span class="built_in">assert!</span>(s != <span class="type">u32</span>::MAX - <span class="number">2</span>, <span class="string">&quot;too many readers&quot;</span>);</span><br><span class="line">                <span class="keyword">match</span> <span class="keyword">self</span>.state.<span class="title function_ invoke__">compare_exchange_weak</span>(s, s + <span class="number">2</span>, Acquire, Relaxed) &#123;</span><br><span class="line">                    <span class="title function_ invoke__">Ok</span>(_) =&gt; <span class="keyword">return</span> ReadGuard &#123; rwlock: <span class="keyword">self</span> &#125;,	<span class="comment">// 抢占成功，直接返回。</span></span><br><span class="line">                    <span class="title function_ invoke__">Err</span>(e) =&gt; s = e,</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">          	<span class="comment">// 如果 state 为奇数，说明有阻塞中的写线程。</span></span><br><span class="line">            <span class="keyword">if</span> s % <span class="number">2</span> == <span class="number">1</span> &#123;</span><br><span class="line">              	<span class="comment">// 这时候，后面来的读线程都需要阻塞，等待写锁的获取和释放。</span></span><br><span class="line">                <span class="title function_ invoke__">wait</span>(&amp;<span class="keyword">self</span>.state, s);</span><br><span class="line">                s = <span class="keyword">self</span>.state.<span class="title function_ invoke__">load</span>(Relaxed)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">write</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> WriteGuard&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">s</span> = <span class="keyword">self</span>.state.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line">        <span class="keyword">loop</span> &#123;</span><br><span class="line">          	<span class="comment">// 0: 没有上锁，可以尝试抢锁。</span></span><br><span class="line">          	<span class="comment">// 1: 没有上锁，但有阻塞的写线程，可能就是自己，依旧可以尝试抢锁。</span></span><br><span class="line">            <span class="keyword">if</span> s &lt;= <span class="number">1</span> &#123;</span><br><span class="line">              	<span class="comment">// 尝试将 state 置为 u32::MAX，成功则直接返回</span></span><br><span class="line">                <span class="keyword">match</span> <span class="keyword">self</span>.state.<span class="title function_ invoke__">compare_exchange</span>(s, <span class="type">u32</span>::MAX, Acquire, Relaxed) &#123;</span><br><span class="line">                    <span class="title function_ invoke__">Ok</span>(_) =&gt; <span class="keyword">return</span> WriteGuard &#123; rwlock: <span class="keyword">self</span> &#125;,</span><br><span class="line">                    <span class="title function_ invoke__">Err</span>(e) =&gt; &#123;</span><br><span class="line">                        s = e;</span><br><span class="line">                        <span class="keyword">continue</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">          	<span class="comment">// 非 0 的偶数，说明现在上的是读锁，且之前没有阻塞的写线程。</span></span><br><span class="line">            <span class="keyword">if</span> s % <span class="number">2</span> == <span class="number">0</span> &#123;</span><br><span class="line">              	<span class="comment">// 将 state+1 置为奇数，表示已经有阻塞的写线程了，阻止后来的读线程抢占读锁。</span></span><br><span class="line">                <span class="keyword">match</span> <span class="keyword">self</span>.state.<span class="title function_ invoke__">compare_exchange</span>(s, s + <span class="number">1</span>, Relaxed, Relaxed) &#123;</span><br><span class="line">                    <span class="title function_ invoke__">Ok</span>(_) =&gt; &#123;&#125;</span><br><span class="line">                    <span class="title function_ invoke__">Err</span>(e) =&gt; &#123;</span><br><span class="line">                        s = e;</span><br><span class="line">                        <span class="keyword">continue</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">let</span> <span class="variable">w</span> = <span class="keyword">self</span>.writer_wake_counter.<span class="title function_ invoke__">load</span>(Acquire);</span><br><span class="line">            s = <span class="keyword">self</span>.state.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line">            <span class="keyword">if</span> s &gt;= <span class="number">2</span> &#123;</span><br><span class="line">              	<span class="comment">// 如果已经上了读锁，则陷入等待，等待前面所有读锁的释放。</span></span><br><span class="line">                <span class="title function_ invoke__">wait</span>(&amp;<span class="keyword">self</span>.writer_wake_counter, w);</span><br><span class="line">                s = <span class="keyword">self</span>.state.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 释放读锁</span></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">ReadGuard</span>&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">      	<span class="comment">// 对 state -=2，如果之前的值是 3，则说明当前是最后一个释放的读锁，且存在阻塞中的写线程。</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span>.rwlock.state.<span class="title function_ invoke__">fetch_sub</span>(<span class="number">2</span>, Release) == <span class="number">3</span> &#123;</span><br><span class="line">          	<span class="comment">// 唤醒一个阻塞中的写线程。</span></span><br><span class="line">            <span class="keyword">self</span>.rwlock.writer_wake_counter.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Release);</span><br><span class="line">            <span class="title function_ invoke__">wake_one</span>(&amp;<span class="keyword">self</span>.rwlock.writer_wake_counter);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 释放写锁</span></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">WriteGuard</span>&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">      	<span class="comment">// 将 state 重置为 0。</span></span><br><span class="line">        <span class="keyword">self</span>.rwlock.state.<span class="title function_ invoke__">store</span>(<span class="number">0</span>, Release);</span><br><span class="line">      	<span class="comment">// 唤醒一个潜在的阻塞的写线程。</span></span><br><span class="line">        <span class="keyword">self</span>.rwlock.writer_wake_counter.<span class="title function_ invoke__">fetch_sub</span>(<span class="number">1</span>, Release);</span><br><span class="line">        <span class="title function_ invoke__">wake_one</span>(&amp;<span class="keyword">self</span>.rwlock.writer_wake_counter);</span><br><span class="line">      	<span class="comment">// 唤醒所有潜在的阻塞的读线程。</span></span><br><span class="line">        <span class="title function_ invoke__">wake_all</span>(&amp;<span class="keyword">self</span>.rwlock.state);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个时候，我们重新运行之前的测试用例，可以发现的顺利通过的！不过我们还需要加一个测试用例，来测试写饥饿是否被解决了！</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[test]</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">writer_starvation_should_resolved</span>() &#123;</span><br><span class="line">   <span class="keyword">for</span> <span class="variable">_</span> <span class="keyword">in</span> <span class="number">0</span>..<span class="number">100</span> &#123;	<span class="comment">// 跑 100 次，避免偶然</span></span><br><span class="line"></span><br><span class="line">      <span class="keyword">let</span> <span class="variable">rwl</span> = RwLock::<span class="title function_ invoke__">new</span>(<span class="built_in">vec!</span>[]);</span><br><span class="line">      thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">          s.<span class="title function_ invoke__">spawn</span>(|| &#123;	<span class="comment">// 线程 1</span></span><br><span class="line">              <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">w</span> = rwl.<span class="title function_ invoke__">write</span>();</span><br><span class="line">              w.<span class="title function_ invoke__">push</span>(<span class="number">1</span>);</span><br><span class="line">              w.<span class="title function_ invoke__">push</span>(<span class="number">2</span>);</span><br><span class="line">          &#125;);</span><br><span class="line"></span><br><span class="line">          s.<span class="title function_ invoke__">spawn</span>(|| &#123; <span class="comment">// 线程 2</span></span><br><span class="line">              <span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_millis</span>(<span class="number">10</span>));</span><br><span class="line">              <span class="keyword">let</span> <span class="variable">r1</span> = rwl.<span class="title function_ invoke__">read</span>();</span><br><span class="line">              <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, *r1);</span><br><span class="line">              <span class="keyword">let</span> <span class="variable">r2</span> = rwl.<span class="title function_ invoke__">read</span>();</span><br><span class="line">              <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, *r2);</span><br><span class="line">              <span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_millis</span>(<span class="number">50</span>)); <span class="comment">// stay locked to block after writers and readers</span></span><br><span class="line">          &#125;);</span><br><span class="line"></span><br><span class="line">          s.<span class="title function_ invoke__">spawn</span>(|| &#123; <span class="comment">// 线程 3</span></span><br><span class="line">              <span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_millis</span>(<span class="number">20</span>));</span><br><span class="line">              <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">w2</span> = rwl.<span class="title function_ invoke__">write</span>();</span><br><span class="line">              w2.<span class="title function_ invoke__">push</span>(<span class="number">3</span>);</span><br><span class="line">          &#125;);</span><br><span class="line"></span><br><span class="line">          s.<span class="title function_ invoke__">spawn</span>(|| &#123; <span class="comment">// 线程 4</span></span><br><span class="line">              <span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_millis</span>(<span class="number">30</span>));</span><br><span class="line">              <span class="keyword">let</span> <span class="variable">r</span> = rwl.<span class="title function_ invoke__">read</span>();</span><br><span class="line">              <span class="built_in">assert_eq!</span>(r.<span class="title function_ invoke__">len</span>(), <span class="number">3</span>); <span class="comment">// must get lock after w2</span></span><br><span class="line">          &#125;);</span><br><span class="line">      &#125;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在上面这个测试用例中，线程 2/3/4 在开始之前分别会睡眠 10/20/30ms，所以抢占锁的时间顺序是 <code>w-&gt;r1-&gt;r2-&gt;w2-&gt;r</code>。并且线程 2 在退出之前，还睡眠了 50ms，所以线程 3 和线程 4 在抢占锁的时候，<code>r1/r2</code> 都还没释放。</p>
+<p>如果我们成功解决了写饥饿问题的话，那这个时候，线程 3 应该会将 <code>state</code> 置为奇数，防止线程 4 抢占读锁。所以当线程 4 抢到读锁的时候，线程 3 一定已经释放写锁了，即 <code>vec</code> 里面一定有 3 条数据！通过运行 <code>writer_starvation_should_resolved</code> 测试用例，很幸运，我们已经成功解决了写饥饿的问题了！</p>
+<p>完整代码可以参考：<a target="_blank" rel="noopener" href="https://github.com/hedon-rust-road/conutils/blob/main/src/rwlock.rs">conutils/rwlock</a>。</p>
+<h2 id="总结">总结</h2>
+<p>本篇文章通过三个渐进式版本完整展示了如何从零开始手写一个功能完备的读写锁（RwLock）。</p>
+<p>我们的实现历程体现了系统编程中常见的优化思路：</p>
+<ul>
+<li>
+<p><strong>v1 基础实现</strong>：实现了核心的读写锁语义，确保功能正确性</p>
+</li>
+<li>
+<p><strong>v2 性能优化</strong>：通过独立的 <code>writer_wake_counter</code> 避免写线程无用循环，提升了性能</p>
+</li>
+<li>
+<p><strong>v3 公平性保证</strong>：巧妙使用奇偶数编码解决写饥饿问题，在性能与公平性间找到平衡</p>
+</li>
+</ul>
+<p>通过这次实战，我们不仅掌握了 RwLock 的实现细节，更重要的是学会了并发编程的系统性思维方式。这些经验将在后续的系统编程实践中发挥重要作用。</p>
+<p>这也是我们学习 <a target="_blank" rel="noopener" href="https://marabos.nl/atomics/">Rust Atomics and Locks</a> 这本优秀书籍的收官之战，笔者由衷地佩服 <a target="_blank" rel="noopener" href="https://github.com/m-ou-se">Mara Bos</a> 能在短短 200 多页的篇幅将 Rust 的并发编程阐述得如何透彻、清晰且足够深入细节，笔者在整理本系列笔记的过程中，也真的是获益颇丰，希望也能给你带来一些收获，那我们下篇文章见！</p>
+<p>Happy Coding! Peace~</p>
+
+<div class="article-footer fs14">
+    <section id="references">
+      <div class="header"><span>参考资料</span></div>
+      <div class="body">
+        <ul>
+        <li class="post-title">
+          <p><a target="_blank" rel="noopener" href="https://marabos.nl/atomics/">Rust Atomics and Locks</a></p>
+
+        </li>
+        
+        <li class="post-title">
+          <p><a target="_blank" rel="noopener" href="https://doc.rust-lang.org/book/">Rust Programming Language</a></p>
+
+        </li>
+        
+        <li class="post-title">
+          <p><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</a></p>
+
+        </li>
+        
+        <li class="post-title">
+          <p><a href="https://hedon.top/2025/06/05/rust-atomic-in-processor/">Rust 原理丨从汇编角度看原子操作</a></p>
+
+        </li>
+        
+        <li class="post-title">
+          <p><a href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust 实战丨手写一个 SpinLock</a></p>
+
+        </li>
+        
+        <li class="post-title">
+          <p><a href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust 实战丨手写一个 oneshot channel</a></p>
+
+        </li>
+        
+        <li class="post-title">
+          <p><a href="https://hedon.top/2025/06/03/rust-action-arc/">Rust 实战丨手写一个 Arc</a></p>
+
+        </li>
+        
+        <li class="post-title">
+          <p><a href="https://hedon.top/2025/06/08/rust-os-primitives/">Rust 原理丨操作系统并发原语</a></p>
+
+        </li>
+        
+        <li class="post-title">
+          <p><a href="https://hedon.top/2025/06/09/rust-action-mutex/">Rust 实战丨手写一个 Mutex</a></p>
+
+        </li>
+        
+        <li class="post-title">
+          <p><a href="https://hedon.top/2025/06/09/rust-action-condvar/">Rust 实战丨手写一个 Condvar</a></p>
+
+        </li>
+        </ul>
+      </div>
+    </section>
+    
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    
+    <section id="share">
+      <div class="header"><span>分享文章</span></div>
+      <div class="body">
+        <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://hedon.top/2025/06/11/rust-action-rwlock/" /></div>
+        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/06/11/rust-action-rwlock/&title=Rust 实战丨手写一个 RwLock - HedonWang&pics=/banner/rust-action-rwlock.jpg&summary=通过三个渐进式版本深入理解 RwLock 的实现原理，从基础功能到性能优化再到公平性保证，掌握原子操作、内存顺序、条件变量等并发编程核心技术，并学会解决写饥饿等实际问题。"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=Rust 实战丨手写一个 RwLock - HedonWang&amp;body=https://hedon.top/2025/06/11/rust-action-rwlock/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
+        
+        <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
+          <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://hedon.top/2025/06/11/rust-action-rwlock/"/>
+        </div>
+        
+      </div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2025/06/12/note-rust-atomics-and-locks/">读书笔记丨《Rust Atomics and Locks》</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/06/09/rust-action-condvar/">Rust 实战丨手写一个 Condvar</a></div></section></div>
+
+
+
+
+  <div class="related-wrap md-text" id="comments">
+    <section class='header cmt-title cap theme'>
+      <p>快来参与讨论吧~</p>
+
+    </section>
+    <section class='body cmt-body giscus'>
+      
+
+<svg class="loading" style="vertical-align:middle;fill:currentColor;overflow:hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2709"><path d="M832 512c0-176-144-320-320-320V128c211.2 0 384 172.8 384 384h-64zM192 512c0 176 144 320 320 320v64C300.8 896 128 723.2 128 512h64z" p-id="2710"></path></svg>
+
+<div id="giscus" src="https://giscus.app/client.js" data-repo="hedon954/hedonspace" data-repo-id="R_kgDOKt17sQ" data-category="Q&A" data-category-id="DIC_kwDOKt17sc4CbAt-" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="preferred_color_scheme" data-lang="zh-CN" data-loading="lazy" crossorigin="anonymous"></div>
+
+    </section>
+  </div>
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%BB%E5%AE%8C%E6%9C%AC%E7%AF%87%E4%BD%A0%E8%83%BD%E5%AD%A6%E5%88%B0%E4%BB%80%E4%B9%88"><span class="toc-text">读完本篇你能学到什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#v1%EF%BC%9A%E5%9F%BA%E7%A1%80%E5%AE%9E%E7%8E%B0"><span class="toc-text">v1：基础实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#v2%EF%BC%9A%E9%81%BF%E5%85%8D%E5%86%99%E7%BA%BF%E7%A8%8B%E6%97%A0%E7%94%A8%E5%BE%AA%E7%8E%AF"><span class="toc-text">v2：避免写线程无用循环</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#v3%EF%BC%9A%E9%81%BF%E5%85%8D%E5%86%99%E9%A5%A5%E9%A5%BF"><span class="toc-text">v3：避免写饥饿</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"skip_search":null,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js`,
+    marked: `https://cdn.jsdelivr.net/npm/marked@13.0.1/lib/marked.umd.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+
+<!-- required -->
+<script src="/js/main.js?v=1.29.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    applyThemeToGiscus(theme)
+  }
+
+  const applyThemeToGiscus = (theme) => {
+    theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    }
+  })()
+</script>
+
+
+<!-- optional -->
+
+  <script type="module">
+  const el = document.querySelector('#comments #giscus');
+  util.viewportLazyload(el, load_discus, false);
+
+  function load_discus() {
+    if (!el) return;
+    try {
+        el.innerHTML = '';
+      } catch (error) {
+        console.error(error);
+      }
+      const script = document.createElement('script');
+      script.async = true;
+      for (const key of Object.keys(el.attributes)) {
+        const attr = el.attributes[key];
+        if (['class', 'id'].includes(attr.name) === false) {
+          script.setAttribute(attr.name, attr.value);
+        }
+      }
+      el.appendChild(script);
+  }
+</script>
+
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":"https://site-info-api-hedon.vercel.app/api/v1?url={href}"},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"},"twikoo":{"js":"/js/services/twikoo_latest_comment.js"},"waline":{"js":"/js/services/waline_latest_comment.js"},"artalk":{"js":"/js/services/artalk_latest_comment.js"},"giscus":{"js":"/js/services/giscus_latest_comment.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img, .md-text img:not([class]), .md-text .image img`,
+    css: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script defer type="text/javascript" src="https://cdn.jsdelivr.net/npm/mermaid@v9/dist/mermaid.min.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    var mermaid_config = {
+      startOnLoad: true,
+      theme:
+        "" == "auto" &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "neutral",
+      logLevel: 3,
+      themeVariables: {
+        darkMode: true
+      },
+      flowchart: {
+        useMaxWidth: false,
+        htmlLabels: true,
+        curve: "linear"
+      },
+      gantt: {
+        axisFormat: "%Y/%m/%d"
+      },
+      sequence: {
+        actorMargin: 50
+      }
+    }
+    mermaid.initialize(mermaid_config);
+  });
+</script><script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
