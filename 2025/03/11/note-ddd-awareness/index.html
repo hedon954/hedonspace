@@ -76,7 +76,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/17/aq-should-learn-underlying-principles-in-ai-era/"><span class="title">Q&A丨在 AI 时代，还有必要学习底层技术吗？</span></a><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -353,52 +353,52 @@ alt="拉链法示意图" />
 <col style="width: 54%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>元素名称</th>
 <th>颜色标识</th>
 <th>说明</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><font color="#FFA500"><strong>领域事件（Domain
 Event）</strong></font></td>
 <td>橙色</td>
 <td>表示已发生的业务事实，以“动词过去式”命名（如“订单已提交”），是事件风暴的核心起点。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><font color="#00008B"><strong>命令（Command）</strong></font></td>
 <td>深蓝色</td>
 <td>触发领域事件的操作或意图（如“提交订单”），通常由用户或系统触发。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><font color="#FFFF00"><strong>参与者（Actor）</strong></font></td>
 <td>黄色</td>
 <td>执行命令的角色，包括用户、部门或外部系统（如“客户”触发支付命令）。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><font color="#FFC0CB"><strong>外部系统（External
 System）</strong></font></td>
 <td>粉色</td>
 <td>与当前系统交互的第三方服务（如支付网关回调生成事件）。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><font color="#800080"><strong>策略（Policy）</strong></font></td>
 <td>紫色</td>
 <td>业务规则或约束条件（如“库存不足时取消订单”），决定事件触发的逻辑。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><font color="#008000"><strong>读模型（Read
 Model）</strong></font></td>
 <td>绿色</td>
 <td>为查询优化的数据视图（如“用户订单列表”），支持决策展示。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><font color="#FFD700"><strong>聚合（Aggregate）</strong></font></td>
 <td>大黄色</td>
 <td>业务对象集合（如“订单聚合”包含订单项和状态），维护一致性和完整性。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><font color="#FF0000"><strong>问题（Question）</strong></font></td>
 <td>红色</td>
 <td>未达成共识的争议点（如事件定义分歧），需后续专项讨论。</td>
@@ -439,7 +439,7 @@ Sourcing）持久化事件流，或结合 CQRS 分离读写逻辑。</p></li>
 <col style="width: 46%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th><strong>层级</strong></th>
 <th><strong>核心目标</strong></th>
 <th><strong>受众</strong></th>
@@ -447,26 +447,26 @@ Sourcing）持久化事件流，或结合 CQRS 分离读写逻辑。</p></li>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Context（上下文）</strong></td>
 <td>描述系统与外部实体（用户、第三方系统）的交互关系</td>
 <td>非技术人员（如业务方、客户）</td>
 <td>系统边界、用户角色、外部依赖（如支付网关）</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Container（容器）</strong></td>
 <td>展示系统内部的高阶技术组件（进程级单元）</td>
 <td>技术管理者、架构师</td>
 <td>Web 应用、数据库、消息队列等独立进程单元，关注技术选型与通信协议（如
 REST API、gRPC）</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Component（组件）</strong></td>
 <td>细化容器内部的业务模块与交互逻辑</td>
 <td>开发团队</td>
 <td>服务、模块、接口（如订单服务、库存服务），强调职责划分与依赖关系</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Code（代码）</strong></td>
 <td>展示组件实现的代码结构</td>
 <td>开发者</td>

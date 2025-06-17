@@ -71,7 +71,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/17/aq-should-learn-underlying-principles-in-ai-era/"><span class="title">Q&A丨在 AI 时代，还有必要学习底层技术吗？</span></a><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -120,29 +120,29 @@ ACK 机制呢？</p>
 <p>实际游戏开发中，不同类型的消息有不同的可靠性需求：</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>消息类型</th>
 <th>示例</th>
 <th>可靠性需求</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>关键状态变更</td>
 <td>道具获取、货币变化</td>
 <td>极高（必须确认处理）</td>
 </tr>
-<tr class="even">
+<tr>
 <td>游戏进程通知</td>
 <td>任务更新、成就解锁</td>
 <td>高（需要确认）</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>实时位置同步</td>
 <td>玩家位置、NPC 移动</td>
 <td>中（新数据可覆盖旧数据）</td>
 </tr>
-<tr class="even">
+<tr>
 <td>环境信息</td>
 <td>天气变化、背景音乐</td>
 <td>低（可接受偶尔丢失）</td>

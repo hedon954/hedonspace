@@ -72,7 +72,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/17/aq-should-learn-underlying-principles-in-ai-era/"><span class="title">Q&A丨在 AI 时代，还有必要学习底层技术吗？</span></a><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -112,7 +112,7 @@
 <col style="width: 27%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th style="text-align: center;">操作系统</th>
 <th style="text-align: center;">ip</th>
 <th style="text-align: center;">域名</th>
@@ -121,21 +121,21 @@
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td style="text-align: center;">Ubuntu 18.04.6</td>
 <td style="text-align: center;">192.168.50.131</td>
 <td style="text-align: center;">kafka1.com</td>
 <td style="text-align: center;">9092</td>
 <td style="text-align: center;">9093</td>
 </tr>
-<tr class="even">
+<tr>
 <td style="text-align: center;">Ubuntu 18.04.6</td>
 <td style="text-align: center;">192.168.50.132</td>
 <td style="text-align: center;">kafka2.com</td>
 <td style="text-align: center;">9092</td>
 <td style="text-align: center;">9093</td>
 </tr>
-<tr class="odd">
+<tr>
 <td style="text-align: center;">Ubuntu 18.04.6</td>
 <td style="text-align: center;">192.168.50.133</td>
 <td style="text-align: center;">kafka3.com</td>
@@ -254,7 +254,7 @@ DNS，你可以在 <code>/etc/systemd/resolved.conf</code> 文件中进行 DNS
 </ol>
 <p>至此，Kafka 的 KRaft 版本集群就部署完毕了！</p>
 <details class="tag-plugin colorful folding" color="blue" open><summary><p>补充说明 - KRaft 配置文件</p>
-</summary><div class="body"><p>下面是 Kafka KRaft 版本配置文件每个配置项的解释：</p><table><colgroup><col style="width: 30%" /><col style="width: 69%" /></colgroup><thead><tr class="header"><th>配置项</th><th>说明</th></tr></thead><tbody><tr class="odd"><td>process.roles</td><td>Kafka 服务器的角色，设置此项将 Kafka 置于 KRaft 模式。可能的值包括"broker" 和 "controller"。</td></tr><tr class="even"><td>node.id</td><td>与此实例关联的节点 ID。</td></tr><tr class="odd"><td>controller.quorum.voters</td><td>控制器选举的投票节点，格式为 <code>node-id@host:port</code>。</td></tr><tr class="even"><td>listeners</td><td>服务器监听的地址，格式为<code>listener_name://host_name:port</code>。</td></tr><tr class="odd"><td>inter.broker.listener.name</td><td>用于 broker 之间通信的监听器名称。</td></tr><tr class="even"><td>advertised.listeners</td><td>服务器向客户端宣告的监听器名称、主机名和端口。</td></tr><tr class="odd"><td>controller.listener.names</td><td>控制器使用的监听器名称列表。</td></tr><tr class="even"><td>listener.security.protocol.map</td><td>监听器名称到安全协议的映射。默认情况下，它们是相同的。</td></tr><tr class="odd"><td>num.network.threads</td><td>服务器用于从网络接收请求和向网络发送响应的线程数。</td></tr><tr class="even"><td>num.io.threads</td><td>服务器用于处理请求（可能包括磁盘 I/O）的线程数。</td></tr><tr class="odd"><td>socket.send.buffer.bytes</td><td>服务器用于发送数据的缓冲区大小。</td></tr><tr class="even"><td>socket.receive.buffer.bytes</td><td>服务器用于接收数据的缓冲区大小。</td></tr><tr class="odd"><td>socket.request.max.bytes</td><td>服务器接受的请求的最大大小（用于防止内存溢出）。</td></tr><tr class="even"><td>log.dirs</td><td>用于存储日志文件的目录列表。</td></tr><tr class="odd"><td>num.partitions</td><td>每个主题的默认日志分区数。</td></tr><tr class="even"><td>num.recovery.threads.per.data.dir</td><td>每个数据目录在启动时用于日志恢复和关闭时用于刷新的线程数。</td></tr><tr class="odd"><td>offsets.topic.replication.factor</td><td>内部主题 "<strong>consumer_offsets" 和 "</strong>transaction_state"的复制因子。</td></tr><tr class="even"><td>transaction.state.log.replication.factor</td><td>事务状态日志的复制因子。</td></tr><tr class="odd"><td>transaction.state.log.min.isr</td><td>事务状态日志的最小同步副本数。</td></tr><tr class="even"><td>log.flush.interval.messages</td><td>强制将数据刷新到磁盘之前接受的消息数。</td></tr><tr class="odd"><td>log.flush.interval.ms</td><td>消息在日志中停留的最大时间，超过这个时间就会强制刷新到磁盘。</td></tr><tr class="even"><td>log.retention.hours</td><td>由于年龄而使日志文件有资格被删除的最小年龄。</td></tr><tr class="odd"><td>log.retention.bytes</td><td>基于大小的日志保留策略。</td></tr><tr class="even"><td>log.segment.bytes</td><td>日志段文件的最大大小。</td></tr><tr class="odd"><td>log.retention.check.interval.ms</td><td>检查日志段是否可以根据保留策略被删除的间隔。</td></tr></tbody></table><p>请注意，这只是 Kafka 配置的一部分，Kafka 配置的完整列表可以在 <ahref="https://kafka.apache.org/36/documentation.html#configuration">Kafka的官方文档</a>中找到。</p></div></details>
+</summary><div class="body"><p>下面是 Kafka KRaft 版本配置文件每个配置项的解释：</p><table><colgroup><col style="width: 30%" /><col style="width: 69%" /></colgroup><thead><tr><th>配置项</th><th>说明</th></tr></thead><tbody><tr><td>process.roles</td><td>Kafka 服务器的角色，设置此项将 Kafka 置于 KRaft 模式。可能的值包括"broker" 和 "controller"。</td></tr><tr><td>node.id</td><td>与此实例关联的节点 ID。</td></tr><tr><td>controller.quorum.voters</td><td>控制器选举的投票节点，格式为 <code>node-id@host:port</code>。</td></tr><tr><td>listeners</td><td>服务器监听的地址，格式为<code>listener_name://host_name:port</code>。</td></tr><tr><td>inter.broker.listener.name</td><td>用于 broker 之间通信的监听器名称。</td></tr><tr><td>advertised.listeners</td><td>服务器向客户端宣告的监听器名称、主机名和端口。</td></tr><tr><td>controller.listener.names</td><td>控制器使用的监听器名称列表。</td></tr><tr><td>listener.security.protocol.map</td><td>监听器名称到安全协议的映射。默认情况下，它们是相同的。</td></tr><tr><td>num.network.threads</td><td>服务器用于从网络接收请求和向网络发送响应的线程数。</td></tr><tr><td>num.io.threads</td><td>服务器用于处理请求（可能包括磁盘 I/O）的线程数。</td></tr><tr><td>socket.send.buffer.bytes</td><td>服务器用于发送数据的缓冲区大小。</td></tr><tr><td>socket.receive.buffer.bytes</td><td>服务器用于接收数据的缓冲区大小。</td></tr><tr><td>socket.request.max.bytes</td><td>服务器接受的请求的最大大小（用于防止内存溢出）。</td></tr><tr><td>log.dirs</td><td>用于存储日志文件的目录列表。</td></tr><tr><td>num.partitions</td><td>每个主题的默认日志分区数。</td></tr><tr><td>num.recovery.threads.per.data.dir</td><td>每个数据目录在启动时用于日志恢复和关闭时用于刷新的线程数。</td></tr><tr><td>offsets.topic.replication.factor</td><td>内部主题 "<strong>consumer_offsets" 和 "</strong>transaction_state"的复制因子。</td></tr><tr><td>transaction.state.log.replication.factor</td><td>事务状态日志的复制因子。</td></tr><tr><td>transaction.state.log.min.isr</td><td>事务状态日志的最小同步副本数。</td></tr><tr><td>log.flush.interval.messages</td><td>强制将数据刷新到磁盘之前接受的消息数。</td></tr><tr><td>log.flush.interval.ms</td><td>消息在日志中停留的最大时间，超过这个时间就会强制刷新到磁盘。</td></tr><tr><td>log.retention.hours</td><td>由于年龄而使日志文件有资格被删除的最小年龄。</td></tr><tr><td>log.retention.bytes</td><td>基于大小的日志保留策略。</td></tr><tr><td>log.segment.bytes</td><td>日志段文件的最大大小。</td></tr><tr><td>log.retention.check.interval.ms</td><td>检查日志段是否可以根据保留策略被删除的间隔。</td></tr></tbody></table><p>请注意，这只是 Kafka 配置的一部分，Kafka 配置的完整列表可以在 <ahref="https://kafka.apache.org/36/documentation.html#configuration">Kafka的官方文档</a>中找到。</p></div></details>
 
 <div class="article-footer fs14">
     <section id="license">

@@ -69,7 +69,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/17/aq-should-learn-underlying-principles-in-ai-era/"><span class="title">Q&A丨在 AI 时代，还有必要学习底层技术吗？</span></a><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -116,30 +116,30 @@ alt="chrono 各种时间类型转换图" />
 <col style="width: 88%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>概念</th>
 <th>理解</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>UNIX 时间戳（UNIX Timestamp）</td>
 <td>也称为 POSIX 时间或 Epoch 时间，是自 1970 年 1 月 1 日（UTC
 时区）以来经过的秒数，不计入闰秒。这是一种非常通用的时间表示方法，在编程中广泛使用，因为它可以简化时间差的计算。</td>
 </tr>
-<tr class="even">
+<tr>
 <td>UTC（协调世界时）</td>
 <td>全称为协调世界时（Coordinated Universal
 Time），是目前国际上广泛采用的时间标准。它基本上与格林威治平均时（GMT）相同，但在技术上更加精确，因为它使用原子钟来保持时间准确。世界各地的时间都是以
 UTC 为基础，加上或减去一定的小时数来定义的。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>时区（Time Zone）</td>
 <td>时区是地球上划分的标准时间区域。由于地球自西向东旋转，每向东移动一定角度，当地的太阳时间就会相应地提前。世界被分成了
 24
 个时区，每个时区通常相差一小时。时区允许地区内的人们能在大致相同的时间内，经历类似的日夜更替模式。</td>
 </tr>
-<tr class="even">
+<tr>
 <td>UTC+8</td>
 <td>UTC+8 是 UTC 时间加上 8
 小时的时间区。中国大陆就是位于这个时区。例如，当 UTC 时间为 00:00
@@ -155,14 +155,14 @@ UTC 为基础，加上或减去一定的小时数来定义的。</td>
 <col style="width: 34%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>类型</th>
 <th>含义</th>
 <th>适用场景</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>DateTime&lt;Tz&gt;</td>
 <td>一个带有时区的日期和时间类型，其中 <code>Tz</code> 是实现了
 <code>TimeZone</code> 特质的类型，如 <code>Utc</code> 和
@@ -170,17 +170,17 @@ UTC 为基础，加上或减去一定的小时数来定义的。</td>
 考虑了时区的影响，可以表示全球任意地点的精确时间。</td>
 <td>广泛用于需要考虑时区转换的场景，如存储用户的本地时间或在不同地区之间转换时间。</td>
 </tr>
-<tr class="even">
+<tr>
 <td>NaiveDateTime</td>
 <td>一个“天真的”日期和时间，即不包含任何时区信息的日期和时间。这种类型仅仅表示一个日历日期和一天中的时间，而没有任何关于地理或政治时区的数据。</td>
 <td>对于一些时区不重要的场景非常有用，比如记录电影的发行日期或历史事件的日期。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>NaiveDate</td>
 <td>仅表示一个日历日期，不包括时间或时区信息。</td>
 <td>它用于处理只需要日期而不关心具体时间的场景，如生日、节日等。</td>
 </tr>
-<tr class="even">
+<tr>
 <td>NaiveTime</td>
 <td>是一个只表示一天中时间的类型，它不包含日期或时区信息。</td>
 <td>这个类型适用于需要处理具体某个时间点（如开会时间、日常活动的开始时间）但不需要日期数据的情景。</td>

@@ -70,7 +70,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/17/aq-should-learn-underlying-principles-in-ai-era/"><span class="title">Q&A丨在 AI 时代，还有必要学习底层技术吗？</span></a><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -292,7 +292,7 @@ alt="#[command] 支持的元素" />
 <col style="width: 41%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>属性</th>
 <th>方法</th>
 <th>默认值/行为</th>
@@ -300,103 +300,103 @@ alt="#[command] 支持的元素" />
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>id</td>
 <td>Arg::id</td>
 <td>field’s name</td>
 <td>当属性不存在时，使用字段名</td>
 </tr>
-<tr class="even">
+<tr>
 <td>value_parser</td>
 <td>Arg::value_parser</td>
 <td>auto-select based on field type</td>
 <td>当属性不存在时，会基于字段类型自动选择实现</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>action</td>
 <td>Arg::action</td>
 <td>auto-select based on field type</td>
 <td>当属性不存在时，会基于字段类型自动选择动作</td>
 </tr>
-<tr class="even">
+<tr>
 <td>help</td>
 <td>Arg::help</td>
 <td>Doc comment summary</td>
 <td>当属性不存在时，使用文档注释摘要</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>long_help</td>
 <td>Arg::long_help</td>
 <td>Doc comment with blank line, else nothing</td>
 <td>当属性不存在时，使用文档注释，如果有空行</td>
 </tr>
-<tr class="even">
+<tr>
 <td>verbatim_doc_comment</td>
 <td>Minimizes preprocessing</td>
 <td>-</td>
 <td>将文档注释转换为 help/long_help 时最小化预处理</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>short</td>
 <td>Arg::short</td>
 <td>no short set</td>
 <td>当属性不存在时，没有短名称设置</td>
 </tr>
-<tr class="even">
+<tr>
 <td>long</td>
 <td>Arg::long</td>
 <td>no long set</td>
 <td>当属性不存在时，没有长名称设置</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>env</td>
 <td>Arg::env</td>
 <td>no env set</td>
 <td>当属性不存在时，没有环境变量设置</td>
 </tr>
-<tr class="even">
+<tr>
 <td>from_global</td>
 <td>Read Arg::global</td>
 <td>-</td>
 <td>无论在哪个子命令中，都读取 Arg::global 参数</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>value_enum</td>
 <td>Parse with ValueEnum</td>
 <td>-</td>
 <td>使用 ValueEnum 解析值</td>
 </tr>
-<tr class="even">
+<tr>
 <td>skip</td>
 <td>Ignore this field</td>
 <td>fills the field with Default::default()</td>
 <td>忽略此字段，用 &lt;expr&gt; 或 Default::default() 填充</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>default_value</td>
 <td>Arg::default_value</td>
 <td>Arg::required(false)</td>
 <td>设置默认值，并将 Arg 设置为非必须</td>
 </tr>
-<tr class="even">
+<tr>
 <td>default_value_t</td>
 <td>Arg::default_value</td>
 <td>Arg::required(false)</td>
 <td>要求 std::fmt::Display 与 Arg::value_parser 相匹配</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>default_values_t</td>
 <td>Arg::default_values</td>
 <td>Arg::required(false)</td>
 <td>要求字段类型为 Vec&lt;T&gt;，T 实现 std::fmt::Display</td>
 </tr>
-<tr class="even">
+<tr>
 <td>default_value_os_t</td>
 <td>Arg::default_value_os</td>
 <td>Arg::required(false)</td>
 <td>要求 std::convert::Into&lt;OsString&gt;</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>default_values_os_t</td>
 <td>Arg::default_values_os</td>
 <td>Arg::required(false)</td>

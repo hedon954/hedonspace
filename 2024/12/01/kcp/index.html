@@ -75,7 +75,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/17/aq-should-learn-underlying-principles-in-ai-era/"><span class="title">Q&A丨在 AI 时代，还有必要学习底层技术吗？</span></a><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -153,49 +153,49 @@ TCP 在某些情况下的灵活性和自适应性不如 KCP。</p>
 <col style="width: 79%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>特性类别</th>
 <th>协议</th>
 <th>描述</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>拥塞控制机制</td>
 <td>TCP</td>
 <td>固定算法（慢启动、拥塞避免等），保守的调整策略（指数和线性增长）</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>KCP</td>
 <td>灵活算法，动态调整策略，快速调整窗口大小</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>重传机制的延迟</td>
 <td>TCP</td>
 <td>固定重传间隔（RTO），多次确认触发重传，需要主动开启选择性重传（SACK）</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>KCP</td>
 <td>快速重传，选择性重传，减少重传延迟</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>流量控制</td>
 <td>TCP</td>
 <td>固定流量控制（依赖接收窗口和发送窗口），通用性设计</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>KCP</td>
 <td>自适应流量控制，应用层反馈调整发送窗口和重传策略</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>应用场景</td>
 <td>TCP</td>
 <td>广泛应用于各种网络环境，标准化要求高</td>
 </tr>
-<tr class="even">
+<tr>
 <td></td>
 <td>KCP</td>
 <td>优化特定场景（如高丢包率和高延迟网络），灵活实现</td>
@@ -498,207 +498,207 @@ target="_blank" rel="noopener" href="https://github.com/skywind3000/kcp/blob/mas
 <col style="width: 86%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>字段名</th>
 <th>含义</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>conv</code></td>
 <td>连接标识符，用于识别一个特定的会话。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>mtu</code></td>
 <td>最大传输单元（Maximum Transmission
 Unit），表示网络层传输数据包的最大字节数。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>mss</code></td>
 <td>最大报文段长度（Maximum Segment
 Size），表示应用层传输数据的最大字节数。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>state</code></td>
 <td>连接状态，标识当前的传输状态。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>snd_una</code></td>
 <td>未确认的发送序号，表示最早未确认的包的序号。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>snd_nxt</code></td>
 <td>下一个发送序号，表示即将发送的包的序号。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rcv_nxt</code></td>
 <td>下一个接收序号，表示期望接收的下一个包的序号。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ts_recent</code></td>
 <td>最近的时间戳，用于延迟测量。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ts_lastack</code></td>
 <td>最近的确认时间戳，用于 RTT 计算。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ssthresh</code></td>
 <td>拥塞避免的慢启动阈值。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rx_rttval</code></td>
 <td>RTT 的偏差，用于计算 RTT 的波动。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rx_srtt</code></td>
 <td>平滑的 RTT 值，用于计算平均 RTT。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rx_rto</code></td>
 <td>重新传输超时时间，根据 RTT 动态调整。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rx_minrto</code></td>
 <td>最小的重新传输超时时间。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>snd_wnd</code></td>
 <td>发送窗口大小，控制发送流量的窗口。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>rcv_wnd</code></td>
 <td>接收窗口大小，控制接收流量的窗口。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rmt_wnd</code></td>
 <td>远端窗口大小，表示对方接收窗口的大小。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>cwnd</code></td>
 <td>拥塞窗口大小，控制发送流量的窗口，用于拥塞控制。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>probe</code></td>
 <td>探测标志，表示是否需要进行窗口探测。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>current</code></td>
 <td>当前的时间戳。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>interval</code></td>
 <td>刷新间隔时间，表示定期刷新 KCP 状态的间隔。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ts_flush</code></td>
 <td>下次刷新时间戳，用于确定何时执行下一次状态刷新。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>xmit</code></td>
 <td>发送次数，表示数据包重传的次数。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>nrcv_buf</code></td>
 <td>接收缓冲区的数据包数量。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>nsnd_buf</code></td>
 <td>发送缓冲区的数据包数量。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>nrcv_que</code></td>
 <td>接收队列中的数据包数量。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>nsnd_que</code></td>
 <td>发送队列中的数据包数量。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>nodelay</code></td>
 <td>延迟模式标志，表示是否启用无延迟模式。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>updated</code></td>
 <td>更新标志，表示是否需要更新 KCP 状态。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ts_probe</code></td>
 <td>下次探测时间戳，用于窗口探测。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>probe_wait</code></td>
 <td>探测等待时间，表示等待多长时间后进行下一次窗口探测。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>dead_link</code></td>
 <td>死链标志，表示连接是否已经失效。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>incr</code></td>
 <td>增量，用于控制流量的增加速率。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>snd_queue</code></td>
 <td>发送队列，用于存储待发送的数据包。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rcv_queue</code></td>
 <td>接收队列，用于存储待处理的数据包。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>snd_buf</code></td>
 <td>发送缓冲区，用于存储已经发送但未确认的数据包。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>rcv_buf</code></td>
 <td>接收缓冲区，用于存储已经接收到但未处理的数据包。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>acklist</code></td>
 <td>确认列表，用于存储待发送的确认序号。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ackcount</code></td>
 <td>确认计数，表示确认列表中的条目数量。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ackblock</code></td>
 <td>确认块大小，表示确认列表的内存分配大小。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>user</code></td>
 <td>用户数据指针，用于存储用户自定义的数据。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>buffer</code></td>
 <td>缓冲区，用于临时存储发送的数据。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>fastresend</code></td>
 <td>快速重传标志，表示启用快速重传功能。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>fastlimit</code></td>
 <td>快速重传限制，表示在一个 RTT 内允许的最大重传次数。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>nocwnd</code></td>
 <td>无拥塞窗口控制标志，表示是否禁用拥塞窗口控制。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>stream</code></td>
 <td>流模式标志，表示是否启用流模式。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>logmask</code></td>
 <td>日志掩码，用于控制日志输出的级别。</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>output</code></td>
 <td>发送数据回调函数，用于发送数据。</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>writelog</code></td>
 <td>日志回调函数，用于输出日志。</td>
 </tr>
@@ -971,49 +971,49 @@ RTO。</p></li>
 <col style="width: 42%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>特性</th>
 <th>KCP</th>
 <th>TCP</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>RTT 估算</strong></td>
 <td>基于加权移动平均，较为简单</td>
 <td>使用 Jacobson/Karels 算法，复杂但精确</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>RTO 计算</strong></td>
 <td>简化的计算公式</td>
 <td>基于 RTT 的复杂计算</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>重传机制</strong></td>
 <td>超时重传和快速重传</td>
 <td>超时重传和快速重传</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>拥塞控制</strong></td>
 <td>简单的拥塞控制，适合低延迟应用</td>
 <td>复杂的拥塞控制，适合广泛的传输场景</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>适用场景</strong></td>
 <td>实时应用，如游戏、视频会议</td>
 <td>通用应用，如文件传输、HTTP</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>实现复杂度</strong></td>
 <td>较为简单，易于理解和实现</td>
 <td>复杂，需处理更多的网络状态和控制</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>可靠性</strong></td>
 <td>依赖于用户自定义的重传和控制策略</td>
 <td>内置可靠性和流控制机制</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>响应速度</strong></td>
 <td>高效快速，适用于低延迟和高吞吐量场景</td>
 <td>可靠但响应速度较慢，适合稳定传输场景</td>
@@ -1141,66 +1141,66 @@ MSS，这种增长方式较为保守，旨在防止过度发送导致的拥塞�
 <col style="width: 42%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>特性</th>
 <th>TCP</th>
 <th>KCP</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>实现复杂度</strong></td>
 <td>复杂，包含多个阶段和算法</td>
 <td>简单，主要通过窗口大小控制</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>拥塞检测</strong></td>
 <td>通过 RTT 估算和 ACK 检测丢包</td>
 <td>主要通过 ACK 和窗口大小检测丢包</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>响应速度</strong></td>
 <td>响应相对较慢，适合稳定传输</td>
 <td>响应较快，适合实时性高的传输</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>适应性</strong></td>
 <td>能适应广泛的网络条件</td>
 <td>适应性较好，但更适合低延迟网络</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>配置灵活性</strong></td>
 <td>较为固定，依赖于系统配置和优化</td>
 <td>提供更多的配置选项，用户可根据需求调整</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>应用场景</strong></td>
 <td>适用于各种需要可靠传输的应用</td>
 <td>适用于实时性要求高的应用，如游戏和视频会议</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>窗口调整</strong></td>
 <td>慢启动、拥塞避免、快速重传、快速恢复等机制</td>
 <td>主要通过发送窗口和拥塞窗口调整</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>丢包响应</strong></td>
 <td>丢包时通过减小 <code>cwnd</code> 和 <code>ssthresh</code>
 来调整</td>
 <td>丢包时迅速调整 <code>cwnd</code> 和重传</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>拥塞控制策略</strong></td>
 <td>慢启动、拥塞避免、快速重传、快速恢复等多种策略</td>
 <td>主要通过调整 <code>cwnd</code> 和 <code>ssthresh</code>
 进行简单控制</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>优点</strong></td>
 <td>稳定可靠、机制全面、应用广泛</td>
 <td>实现简单、响应快、灵活性高、适合实时应用</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>缺点</strong></td>
 <td>复杂、响应慢、初始阶段保守</td>
 <td>无法应对更加复杂的网络状况、应用场景有限</td>

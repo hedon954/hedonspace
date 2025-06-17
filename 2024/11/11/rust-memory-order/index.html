@@ -81,7 +81,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/17/aq-should-learn-underlying-principles-in-ai-era/"><span class="title">Q&A丨在 AI 时代，还有必要学习底层技术吗？</span></a><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -346,7 +346,7 @@ X</strong> 之间的顺序是不确定的，但是可以肯定的是，它一定
 <col style="width: 16%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>内存顺序</th>
 <th>说明</th>
 <th>保证</th>
@@ -355,7 +355,7 @@ X</strong> 之间的顺序是不确定的，但是可以肯定的是，它一定
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Relaxed</td>
 <td>最宽松的内存顺序</td>
 <td>- 仅保证操作的原子性<br>- 不提供任何同步保证<br>- 不建立
@@ -364,7 +364,7 @@ happens-before 关系</td>
 已通过其他方式确保同步</td>
 <td><code>counter.fetch_add(1, Ordering::Relaxed)</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Release</td>
 <td>用于存储操作</td>
 <td>- 之前的内存访问不会被重排到此操作之后<br>- 与 Acquire
@@ -372,7 +372,7 @@ happens-before 关系</td>
 <td>- 生产者-消费者模式<br>- 发布共享数据<br>- 初始化完成标志</td>
 <td><code>data.store(42, Ordering::Release)</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Acquire</td>
 <td>用于加载操作</td>
 <td>- 之后的内存访问不会被重排到此操作之前<br>- 与 Release
@@ -380,14 +380,14 @@ happens-before 关系</td>
 <td>- 生产者-消费者模式<br>- 获取共享数据<br>- 检查初始化标志</td>
 <td><code>data.load(Ordering::Acquire)</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>AcqRel</td>
 <td>同时包含 Acquire 和 Release 语义</td>
 <td>- 结合了 Acquire 和 Release 的所有保证<br>- 用于读改写操作</td>
 <td>- 需要双向同步的原子操作<br>- 锁的实现<br>- 复杂的同步原语</td>
 <td><code>value.fetch_add(1, Ordering::AcqRel)</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>SeqCst</td>
 <td>最严格的内存顺序</td>
 <td>- 包含 AcqRel 的所有保证<br>- 所有线程看到的所有 SeqCst

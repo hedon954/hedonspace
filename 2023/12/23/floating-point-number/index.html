@@ -70,7 +70,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/06/17/aq-should-learn-underlying-principles-in-ai-era/"><span class="title">Q&A丨在 AI 时代，还有必要学习底层技术吗？</span></a><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a><a class="item title" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item title" href="/2025/06/05/rust-atomic-in-processor/"><span class="title">Rust 原理丨从汇编角度看原子操作</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item title" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item title" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -204,34 +204,34 @@ alt="双精度浮点数" />
 <p>具体如下表所示：</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th style="text-align: center;">exp</th>
 <th style="text-align: center;">frac</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>规格化的</td>
 <td style="text-align: center;">≠0 &amp; ≠ 255</td>
 <td style="text-align: center;">f</td>
 </tr>
-<tr class="even">
+<tr>
 <td>非规格化的</td>
 <td style="text-align: center;">0</td>
 <td style="text-align: center;">f</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>特殊的</td>
 <td style="text-align: center;">1</td>
 <td style="text-align: center;">f</td>
 </tr>
-<tr class="even">
+<tr>
 <td>- 无穷大</td>
 <td style="text-align: center;">1</td>
 <td style="text-align: center;">0</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>- NaN</td>
 <td style="text-align: center;">1</td>
 <td style="text-align: center;">≠0</td>
@@ -559,7 +559,7 @@ s = 0_{(2)}
 <h3 id="实例">实例</h3>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Mode</th>
 <th style="text-align: center;">1.40</th>
 <th style="text-align: center;">1.60</th>
@@ -569,7 +569,7 @@ s = 0_{(2)}
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>最近舍入</td>
 <td style="text-align: center;">1</td>
 <td style="text-align: center;">2</td>
@@ -577,7 +577,7 @@ s = 0_{(2)}
 <td style="text-align: center;">2</td>
 <td style="text-align: center;">-2</td>
 </tr>
-<tr class="even">
+<tr>
 <td>向零舍入</td>
 <td style="text-align: center;">1</td>
 <td style="text-align: center;">1</td>
@@ -585,7 +585,7 @@ s = 0_{(2)}
 <td style="text-align: center;">2</td>
 <td style="text-align: center;">-1</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>向上舍入</td>
 <td style="text-align: center;">2</td>
 <td style="text-align: center;">2</td>
@@ -593,7 +593,7 @@ s = 0_{(2)}
 <td style="text-align: center;">3</td>
 <td style="text-align: center;">-1</td>
 </tr>
-<tr class="even">
+<tr>
 <td>向下舍入</td>
 <td style="text-align: center;">1</td>
 <td style="text-align: center;">1</td>
