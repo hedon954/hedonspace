@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1" theme-name="Stellar" theme-version="1.29.1">
   
-  <meta name="generator" content="Hexo 7.0.0">
+  <meta name="generator" content="Hexo 6.3.0">
   <meta http-equiv='x-dns-prefetch-control' content='on' />
   <link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin><link rel="preconnect" href="https://unpkg.com" crossorigin><link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
   <meta name="renderer" content="webkit">
@@ -126,7 +126,7 @@ HTTP
 <p>要进一步了解网络数据包的细节，我们可以通过抓包工具进行分析。你可以使用
 <code>tcpdump</code> 抓取与 example.com 的通信数据包。</p>
 <p>运行如下命令：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo tcpdump host example.com -w example.com.pcap</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> tcpdump host example.com -w example.com.pcap</span><br></pre></td></tr></table></figure>
 <p>然后再另外一个命令行窗口再次发送请求：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -o /dev/null -v https://example.com</span><br></pre></td></tr></table></figure>
 <p>回到 <code>tcpdump</code> 的窗口并结束监听，我们就会得到
