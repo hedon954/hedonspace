@@ -27,11 +27,14 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文从编程语言的角度介绍了类型系统的基本概念，并详细阐述了 Rust 类型系统的特点，包括静态类型、强类型、所有权系统等核心特性。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241128183852984.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241128185615522.png">
 <meta property="article:published_time" content="2024-11-28T09:52:47.000Z">
 <meta property="article:modified_time" content="2025-06-05T00:38:36.831Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="rust">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241128183852984.png">
   
   
   
@@ -69,7 +72,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a><a class="item title" href="/2025/07/03/fosa-ch4/"><span class="title">FOSA丨04丨架构特征定义</span></a><a class="item title" href="/2025/06/30/go-gin/"><span class="title">Go 底层原理丨深度剖析 Gin 框架核心机制：从 HTTP 请求生命周期到高性能设计哲学</span></a><a class="item title" href="/2025/07/01/fosa-ch2/"><span class="title">FOSA丨02丨架构思维</span></a><a class="item title" href="/2025/07/02/fosa-ch3/"><span class="title">FOSA丨03丨模块化</span></a><a class="item title" href="/2025/06/26/fosa-ch1/"><span class="title">FOSA丨01丨软件架构概述</span></a><a class="item title" href="/2025/06/21/qa-how-to-deal-with-tech-anxiety-in-ai-era/"><span class="title">Q&A丨在 AI 时代，如何应对技术焦虑？</span></a><a class="item title" href="/2025/06/17/qa-should-learn-underlying-principles-in-ai-era/"><span class="title">Q&A丨在 AI 时代，还有必要学习底层技术吗？</span></a><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a><a class="item title" href="/2025/07/04/fosa-ch5/"><span class="title">FOSA丨05丨识别架构特征</span></a><a class="item title" href="/2025/07/03/fosa-ch4/"><span class="title">FOSA丨04丨架构特性定义</span></a><a class="item title" href="/2025/06/30/go-gin/"><span class="title">Go 底层原理丨深度剖析 Gin 框架核心机制：从 HTTP 请求生命周期到高性能设计哲学</span></a><a class="item title" href="/2025/07/01/fosa-ch2/"><span class="title">FOSA丨02丨架构思维</span></a><a class="item title" href="/2025/07/02/fosa-ch3/"><span class="title">FOSA丨03丨模块化</span></a><a class="item title" href="/2025/06/26/fosa-ch1/"><span class="title">FOSA丨01丨软件架构概述</span></a><a class="item title" href="/2025/06/21/qa-how-to-deal-with-tech-anxiety-in-ai-era/"><span class="title">Q&A丨在 AI 时代，如何应对技术焦虑？</span></a><a class="item title" href="/2025/06/17/qa-should-learn-underlying-principles-in-ai-era/"><span class="title">Q&A丨在 AI 时代，还有必要学习底层技术吗？</span></a><a class="item title" href="/2025/06/12/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -93,155 +96,135 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>在 Rust 编程世界中，绝大部分的特性和能力都离不开 Rust
-强大的类型系统，所以在这个系列的第 1 篇我们先来对 Rust
-的类型系统做一个全局概述，希望可以帮助你建立起对 Rust
-的基本印象。在后续的实践过程中，我推荐你可以经常回来思考下为什么 Rust
-要构建这样的类型系统，在每一个分支点是如何做出决策的，这些决策又体现在代码的哪些地方。相信这样可以帮助你更好地入门
-Rust。</p>
+  </div><article class="md-text content"><p>在 Rust 编程世界中，绝大部分的特性和能力都离不开 Rust 强大的类型系统，所以在这个系列的第 1 篇我们先来对 Rust 的类型系统做一个全局概述，希望可以帮助你建立起对 Rust 的基本印象。在后续的实践过程中，我推荐你可以经常回来思考下为什么 Rust 要构建这样的类型系统，在每一个分支点是如何做出决策的，这些决策又体现在代码的哪些地方。相信这样可以帮助你更好地入门 Rust。</p>
 <p>废话不多说，进入正文。</p>
-<h1 id="什么是类型系统">什么是类型系统？</h1>
-<p>在进入 Rust
-类型系统讨论之前，我们先尝试占在更高的角度，即整个编程语言界的角度去思考，<font color="red">什么是类型系统？</font></p>
+<h1>什么是类型系统？</h1>
+<p>在进入 Rust 类型系统讨论之前，我们先尝试占在更高的角度，即整个编程语言界的角度去思考，<font color="red">什么是类型系统？</font></p>
 <blockquote>
 <p>编程语言的类型系统是指一套规则，用于定义和管理程序中数据的类型。类型系统的主要目的是帮助捕获程序中的错误，提高代码的可靠性和可读性。</p>
 </blockquote>
 <p>类型系统可以根据多种特性进行分类，主要包括以下几个方面：</p>
-<ol type="1">
-<li><p><strong>静态类型和动态类型</strong>：</p>
+<ol>
+<li>
+<p><strong>静态类型和动态类型</strong>：</p>
 <ul>
-<li><strong>静态类型</strong>：在编译时检查变量类型。例如，Java、C++ 和
-Haskell
-都是静态类型语言。在这些语言中，变量的类型必须在编译时确定，这样可以在编译阶段捕获许多类型错误。</li>
-<li><strong>动态类型</strong>：在运行时检查变量类型。例如，Python、Ruby
-和 JavaScript
-是动态类型语言。在这些语言中，变量的类型是在程序运行时确定的，这提供了更大的灵活性，但也可能导致运行时错误。</li>
-</ul></li>
-<li><p><strong>强类型和弱类型</strong>：</p>
+<li><strong>静态类型</strong>：在编译时检查变量类型。例如，Java、C++ 和 Haskell 都是静态类型语言。在这些语言中，变量的类型必须在编译时确定，这样可以在编译阶段捕获许多类型错误。</li>
+<li><strong>动态类型</strong>：在运行时检查变量类型。例如，Python、Ruby 和 JavaScript 是动态类型语言。在这些语言中，变量的类型是在程序运行时确定的，这提供了更大的灵活性，但也可能导致运行时错误。</li>
+</ul>
+</li>
+<li>
+<p><strong>强类型和弱类型</strong>：</p>
 <ul>
-<li><strong>强类型</strong>：严格限制不同类型之间的操作。例如，Python 和
-Java
-是强类型语言。强类型系统通常不允许隐式类型转换，这意味着在进行不同类型之间的操作时，必须显式地进行类型转换。</li>
-<li><strong>弱类型</strong>：允许更多隐式类型转换。例如，JavaScript 和
-Perl
-是弱类型语言。在这些语言中，编译器或解释器会在需要时自动进行类型转换，这可能导致难以预料的行为。</li>
-</ul></li>
-<li><p><strong>显式类型和隐式类型</strong>：</p>
+<li><strong>强类型</strong>：严格限制不同类型之间的操作。例如，Python 和 Java 是强类型语言。强类型系统通常不允许隐式类型转换，这意味着在进行不同类型之间的操作时，必须显式地进行类型转换。</li>
+<li><strong>弱类型</strong>：允许更多隐式类型转换。例如，JavaScript 和 Perl 是弱类型语言。在这些语言中，编译器或解释器会在需要时自动进行类型转换，这可能导致难以预料的行为。</li>
+</ul>
+</li>
+<li>
+<p><strong>显式类型和隐式类型</strong>：</p>
 <ul>
-<li><strong>显式类型</strong>：程序员必须明确声明每个变量的类型。例如，Java
-和 C++ 要求在声明变量时指定其类型。</li>
-<li><strong>隐式类型</strong>：编译器或解释器会根据上下文自动推断变量的类型。例如，Python
-和 JavaScript 使用隐式类型，程序员不需要显式声明变量类型。</li>
-</ul></li>
-<li><p><strong>子类型和多态</strong>：</p>
+<li><strong>显式类型</strong>：程序员必须明确声明每个变量的类型。例如，Java 和 C++ 要求在声明变量时指定其类型。</li>
+<li><strong>隐式类型</strong>：编译器或解释器会根据上下文自动推断变量的类型。例如，Python 和 JavaScript 使用隐式类型，程序员不需要显式声明变量类型。</li>
+</ul>
+</li>
+<li>
+<p><strong>子类型和多态</strong>：</p>
 <ul>
 <li><strong>子类型</strong>：一种类型系统允许一种类型作为另一种类型的子集。例如，在面向对象编程中，子类是父类的子类型。</li>
 <li><strong>多态</strong>：允许一个接口被多种不同类型实现。多态性有多种形式，包括参数多态（如泛型）和子类型多态（如继承）。</li>
-</ul></li>
-<li><p><strong>类型推断</strong>：</p>
+</ul>
+</li>
+<li>
+<p><strong>类型推断</strong>：</p>
 <ul>
-<li>类型推断是指编译器自动确定表达式的类型，而无需明确的类型注释。例如，Haskell
-和 Scala 使用类型推断来减少程序员的负担，同时保持静态类型的安全性。</li>
-</ul></li>
-<li><p><strong>代数数据类型和类型构造</strong>：</p>
+<li>类型推断是指编译器自动确定表达式的类型，而无需明确的类型注释。例如，Haskell 和 Scala 使用类型推断来减少程序员的负担，同时保持静态类型的安全性。</li>
+</ul>
+</li>
+<li>
+<p><strong>代数数据类型和类型构造</strong>：</p>
 <ul>
-<li>代数数据类型（ADT）是通过组合其他类型来构造新类型的机制，常见于函数式编程语言，如
-Haskell 和 OCaml。ADT 包括产品类型（如元组）和和类型（如枚举）。</li>
-</ul></li>
-<li><p><strong>结构类型和名义类型</strong>：</p>
+<li>代数数据类型（ADT）是通过组合其他类型来构造新类型的机制，常见于函数式编程语言，如 Haskell 和 OCaml。ADT 包括产品类型（如元组）和和类型（如枚举）。</li>
+</ul>
+</li>
+<li>
+<p><strong>结构类型和名义类型</strong>：</p>
 <ul>
-<li><strong>结构类型</strong>：基于对象的结构来确定类型的兼容性。例如，TypeScript
-和 Go 使用结构类型系统。</li>
-<li><strong>名义类型</strong>：基于名称来确定类型的兼容性。例如，Java 和
-C++ 使用名义类型系统。</li>
-</ul></li>
+<li><strong>结构类型</strong>：基于对象的结构来确定类型的兼容性。例如，TypeScript 和 Go 使用结构类型系统。</li>
+<li><strong>名义类型</strong>：基于名称来确定类型的兼容性。例如，Java 和 C++ 使用名义类型系统。</li>
+</ul>
+</li>
 </ol>
 <p>这里我梳理了一张图，供你参考：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241128183852984.png"
-alt="编程语言类型系统" />
-<figcaption aria-hidden="true">编程语言类型系统</figcaption>
-</figure>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241128183852984.png" alt="编程语言类型系统"></p>
 <blockquote>
-<p>注：本图参考了陈天老师在 Rust
-训练营课程上提供的教案并进行了增改。</p>
+<p>注：本图参考了陈天老师在 Rust 训练营课程上提供的教案并进行了增改。</p>
 </blockquote>
-<h1 id="rust-类型系统">Rust 类型系统</h1>
-<p>Rust
-为了在提供高性能的同时保证内存安全和线程安全，花了大量力气构建了一个强大的类型系统。</p>
+<h1>Rust 类型系统</h1>
+<p>Rust 为了在提供高性能的同时保证内存安全和线程安全，花了大量力气构建了一个强大的类型系统。</p>
 <p>基于之前提到的七个方面，我们来梳理下 Rust 的类型系统：</p>
-<ol type="1">
-<li><p><strong>静态类型</strong>：Rust
-是静态类型语言，这意味着变量的类型在编译时就被确定。这种设计使得 Rust
-在编译阶段就可以捕获许多类型错误，从而提高代码的安全性和性能。</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">x</span>: <span class="type">i32</span> = <span class="number">10</span>; <span class="comment">// 明确指定类型</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-<li><p><strong>强类型</strong>：Rust
-是强类型语言，它严格限制不同类型之间的操作。Rust
-不允许隐式类型转换（例如，不能自动将整数转换为浮点数），需要显式地使用
-as 进行类型转换。这种严格性有助于避免许多常见的编程错误。</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">x</span>: <span class="type">i32</span> = <span class="number">5</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">y</span>: <span class="type">f64</span> = <span class="number">10.0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 错误：不能将 i32 隐式转换为 f64</span></span><br><span class="line">    <span class="comment">// let sum = x + y;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 正确：需要显式转换</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">sum</span> = x <span class="keyword">as</span> <span class="type">f64</span> + y;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Sum = &#123;&#125;&quot;</span>, sum);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-<li><p><strong>显式类型和类型推断</strong>：虽然 Rust
-是显式类型语言，要求在某些情况下声明变量类型，但它也具有强大的类型推断能力。编译器可以根据上下文推断出大多数变量的类型，减少了程序员的负担。例如：</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">v</span> = <span class="built_in">vec!</span>[];</span><br><span class="line">v.<span class="title function_ invoke__">push</span>(<span class="number">5u8</span>);  <span class="comment">// 结合这里，Rust 编译器可以推断出 v 的类型是 Vec&lt;u8&gt;</span></span><br></pre></td></tr></table></figure></li>
-<li><p><strong>子类型和多态</strong>：Rust 支持泛型和
-trait，这是一种多态性的实现方式。trait
-类似于接口，允许定义类型可以实现的一组方法。泛型允许定义函数、结构体和枚举时使用占位类型，从而实现代码的重用和灵活性。</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这里 std::fmt::Display 就是一个 trait，目前，你可以先简单理解为 trait 就是接口</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">print_value</span>&lt;T: std::fmt::Display&gt;(value: T) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, value);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="title function_ invoke__">print_value</span>(<span class="number">42</span>);  <span class="comment">// 42 默认为 i32，标准库为其是实现了 Display trait</span></span><br><span class="line">    <span class="title function_ invoke__">print_value</span>(<span class="string">&quot;Hello, world!&quot;</span>); <span class="comment">// &amp;str 也实现了 Display trait</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-<li><p><strong>类型推断</strong>：Rust
-的类型推断系统非常强大，能够根据代码上下文自动推断变量和表达式的类型。这使得代码更简洁，同时保持了类型安全性。</p></li>
-<li><p><strong>代数数据类型和类型构造</strong>：Rust
-支持代数数据类型，通过枚举（enum）和结构体（struct）来实现。枚举允许定义一个类型，该类型可以是几种不同的变体之一，每个变体可以携带不同的数据。</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> <span class="title class_">Option</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="title function_ invoke__">Some</span>(T),</span><br><span class="line">    <span class="literal">None</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-<li><p><strong>结构类型和名义类型</strong>：Rust
-使用名义类型系统。每个类型都有一个显式的名称，类型的兼容性基于名称而不是结构。这意味着即使两个结构体有相同的字段，它们也被视为不同的类型，除非通过特征或显式转换来实现兼容性。</p></li>
+<ol>
+<li>
+<p><strong>静态类型</strong>：Rust 是静态类型语言，这意味着变量的类型在编译时就被确定。这种设计使得 Rust 在编译阶段就可以捕获许多类型错误，从而提高代码的安全性和性能。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">x</span>: <span class="type">i32</span> = <span class="number">10</span>; <span class="comment">// 明确指定类型</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>强类型</strong>：Rust 是强类型语言，它严格限制不同类型之间的操作。Rust 不允许隐式类型转换（例如，不能自动将整数转换为浮点数），需要显式地使用 as 进行类型转换。这种严格性有助于避免许多常见的编程错误。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">x</span>: <span class="type">i32</span> = <span class="number">5</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">y</span>: <span class="type">f64</span> = <span class="number">10.0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 错误：不能将 i32 隐式转换为 f64</span></span><br><span class="line">    <span class="comment">// let sum = x + y;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 正确：需要显式转换</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">sum</span> = x <span class="keyword">as</span> <span class="type">f64</span> + y;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Sum = &#123;&#125;&quot;</span>, sum);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>显式类型和类型推断</strong>：虽然 Rust 是显式类型语言，要求在某些情况下声明变量类型，但它也具有强大的类型推断能力。编译器可以根据上下文推断出大多数变量的类型，减少了程序员的负担。例如：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">v</span> = <span class="built_in">vec!</span>[];</span><br><span class="line">v.<span class="title function_ invoke__">push</span>(<span class="number">5u8</span>);  <span class="comment">// 结合这里，Rust 编译器可以推断出 v 的类型是 Vec&lt;u8&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>子类型和多态</strong>：Rust 支持泛型和 trait，这是一种多态性的实现方式。trait 类似于接口，允许定义类型可以实现的一组方法。泛型允许定义函数、结构体和枚举时使用占位类型，从而实现代码的重用和灵活性。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这里 std::fmt::Display 就是一个 trait，目前，你可以先简单理解为 trait 就是接口</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">print_value</span>&lt;T: std::fmt::Display&gt;(value: T) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, value);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="title function_ invoke__">print_value</span>(<span class="number">42</span>);  <span class="comment">// 42 默认为 i32，标准库为其是实现了 Display trait</span></span><br><span class="line">    <span class="title function_ invoke__">print_value</span>(<span class="string">&quot;Hello, world!&quot;</span>); <span class="comment">// &amp;str 也实现了 Display trait</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>类型推断</strong>：Rust 的类型推断系统非常强大，能够根据代码上下文自动推断变量和表达式的类型。这使得代码更简洁，同时保持了类型安全性。</p>
+</li>
+<li>
+<p><strong>代数数据类型和类型构造</strong>：Rust 支持代数数据类型，通过枚举（enum）和结构体（struct）来实现。枚举允许定义一个类型，该类型可以是几种不同的变体之一，每个变体可以携带不同的数据。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> <span class="title class_">Option</span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="title function_ invoke__">Some</span>(T),</span><br><span class="line">    <span class="literal">None</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>结构类型和名义类型</strong>：Rust 使用名义类型系统。每个类型都有一个显式的名称，类型的兼容性基于名称而不是结构。这意味着即使两个结构体有相同的字段，它们也被视为不同的类型，除非通过特征或显式转换来实现兼容性。</p>
+</li>
 </ol>
-<p>除此之外，Rust
-的类型系统还提供了其他非常强大且有用的特效，如所有权和借用、生命周期以及模式匹配。</p>
+<p>除此之外，Rust 的类型系统还提供了其他非常强大且有用的特效，如所有权和借用、生命周期以及模式匹配。</p>
 <ul>
-<li><p><strong>所有权和借用（Ownership and Borrowing）</strong>：</p>
+<li>
+<p><strong>所有权和借用（Ownership and Borrowing）</strong>：</p>
 <ul>
-<li>Rust
-的类型系统与其所有权模型紧密结合。所有权模型通过所有权、借用和生命周期的概念来管理内存，从而在无垃圾回收器的情况下确保内存安全。</li>
+<li>Rust 的类型系统与其所有权模型紧密结合。所有权模型通过所有权、借用和生命周期的概念来管理内存，从而在无垃圾回收器的情况下确保内存安全。</li>
 </ul>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">s</span> = <span class="type">String</span>::<span class="title function_ invoke__">from</span>(<span class="string">&quot;Hello&quot;</span>);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">len</span> = <span class="title function_ invoke__">calculate_length</span>(&amp;s); <span class="comment">// 借用</span></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The length of &#x27;&#123;&#125;&#x27; is &#123;&#125;.&quot;</span>, s, len);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">calculate_length</span>(s: &amp;<span class="type">String</span>) <span class="punctuation">-&gt;</span> <span class="type">usize</span> &#123;</span><br><span class="line">    s.<span class="title function_ invoke__">len</span>()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-<li><p><strong>生命周期（Lifetimes）</strong>：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">s</span> = <span class="type">String</span>::<span class="title function_ invoke__">from</span>(<span class="string">&quot;Hello&quot;</span>);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">len</span> = <span class="title function_ invoke__">calculate_length</span>(&amp;s); <span class="comment">// 借用</span></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The length of &#x27;&#123;&#125;&#x27; is &#123;&#125;.&quot;</span>, s, len);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">calculate_length</span>(s: &amp;<span class="type">String</span>) <span class="punctuation">-&gt;</span> <span class="type">usize</span> &#123;</span><br><span class="line">    s.<span class="title function_ invoke__">len</span>()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>生命周期（Lifetimes）</strong>：</p>
 <ul>
-<li>Rust
-使用生命周期标注来跟踪引用的有效范围，确保引用在使用时始终有效。这是
-Rust 类型系统中一个独特的特性，帮助防止悬空引用和数据竞争。</li>
+<li>Rust 使用生命周期标注来跟踪引用的有效范围，确保引用在使用时始终有效。这是 Rust 类型系统中一个独特的特性，帮助防止悬空引用和数据竞争。</li>
 </ul>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">longest</span>&lt;<span class="symbol">&#x27;a</span>&gt;(x: &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span>, y: &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span>) <span class="punctuation">-&gt;</span> &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> x.<span class="title function_ invoke__">len</span>() &gt; y.<span class="title function_ invoke__">len</span>() &#123;</span><br><span class="line">        x</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        y</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">string1</span> = <span class="type">String</span>::<span class="title function_ invoke__">from</span>(<span class="string">&quot;long string is long&quot;</span>);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">string2</span> = <span class="string">&quot;xyz&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">result</span> = <span class="title function_ invoke__">longest</span>(string1.<span class="title function_ invoke__">as_str</span>(), string2);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The longest string is &#x27;&#123;&#125;&#x27;&quot;</span>, result);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-<li><p><strong>模式匹配</strong>：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">longest</span>&lt;<span class="symbol">&#x27;a</span>&gt;(x: &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span>, y: &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span>) <span class="punctuation">-&gt;</span> &amp;<span class="symbol">&#x27;a</span> <span class="type">str</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> x.<span class="title function_ invoke__">len</span>() &gt; y.<span class="title function_ invoke__">len</span>() &#123;</span><br><span class="line">        x</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        y</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">string1</span> = <span class="type">String</span>::<span class="title function_ invoke__">from</span>(<span class="string">&quot;long string is long&quot;</span>);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">string2</span> = <span class="string">&quot;xyz&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">result</span> = <span class="title function_ invoke__">longest</span>(string1.<span class="title function_ invoke__">as_str</span>(), string2);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;The longest string is &#x27;&#123;&#125;&#x27;&quot;</span>, result);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>模式匹配</strong>：</p>
 <ul>
-<li>Rust
-提供强大的模式匹配功能，尤其是在处理枚举和复杂数据结构时，使得代码更具表达力和安全性。</li>
+<li>Rust 提供强大的模式匹配功能，尤其是在处理枚举和复杂数据结构时，使得代码更具表达力和安全性。</li>
 </ul>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> <span class="title class_">Message</span> &#123;</span><br><span class="line">    Quit,</span><br><span class="line">    Move &#123; x: <span class="type">i32</span>, y: <span class="type">i32</span> &#125;,</span><br><span class="line">    <span class="title function_ invoke__">Write</span>(<span class="type">String</span>),</span><br><span class="line">    <span class="title function_ invoke__">ChangeColor</span>(<span class="type">i32</span>, <span class="type">i32</span>, <span class="type">i32</span>),</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">process_message</span>(msg: Message) &#123;</span><br><span class="line">    <span class="keyword">match</span> msg &#123;</span><br><span class="line">        Message::Quit =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;Quit the application&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        Message::Move &#123; x, y &#125; =&gt; &#123;  <span class="comment">// 模式匹配能根据数据类型直接拆解出来，使用起来非常方便</span></span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;Move to coordinates: (&#123;&#125;, &#123;&#125;)&quot;</span>, x, y);</span><br><span class="line">        &#125;</span><br><span class="line">        Message::<span class="title function_ invoke__">Write</span>(text) =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;Text message: &#123;&#125;&quot;</span>, text);</span><br><span class="line">        &#125;</span><br><span class="line">        Message::<span class="title function_ invoke__">ChangeColor</span>(r, g, b) =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;Change color to RGB(&#123;&#125;, &#123;&#125;, &#123;&#125;)&quot;</span>, r, g, b);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> <span class="title class_">Message</span> &#123;</span><br><span class="line">    Quit,</span><br><span class="line">    Move &#123; x: <span class="type">i32</span>, y: <span class="type">i32</span> &#125;,</span><br><span class="line">    <span class="title function_ invoke__">Write</span>(<span class="type">String</span>),</span><br><span class="line">    <span class="title function_ invoke__">ChangeColor</span>(<span class="type">i32</span>, <span class="type">i32</span>, <span class="type">i32</span>),</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">process_message</span>(msg: Message) &#123;</span><br><span class="line">    <span class="keyword">match</span> msg &#123;</span><br><span class="line">        Message::Quit =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;Quit the application&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        Message::Move &#123; x, y &#125; =&gt; &#123;  <span class="comment">// 模式匹配能根据数据类型直接拆解出来，使用起来非常方便</span></span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;Move to coordinates: (&#123;&#125;, &#123;&#125;)&quot;</span>, x, y);</span><br><span class="line">        &#125;</span><br><span class="line">        Message::<span class="title function_ invoke__">Write</span>(text) =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;Text message: &#123;&#125;&quot;</span>, text);</span><br><span class="line">        &#125;</span><br><span class="line">        Message::<span class="title function_ invoke__">ChangeColor</span>(r, g, b) =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;Change color to RGB(&#123;&#125;, &#123;&#125;, &#123;&#125;)&quot;</span>, r, g, b);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
 </ul>
-<p>Rust
-的类型系统通过上述特性实现了高效、安全和灵活的编程模型，适合系统编程和高性能应用。它在编译期捕获许多潜在错误，使得运行时更为安全可靠。</p>
-<p>当然，如果你之前没有学习过
-Rust，那这些概念和代码对你来说大概率是云里雾里，不要着急，我们先建立起一个大概的印象就行了。这里我针对
-Rust 类型系统梳理了一张图，你可以在以后的学习中时常回来看看：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241128185615522.png"
-alt="Rust 类型系统" />
-<figcaption aria-hidden="true">Rust 类型系统</figcaption>
-</figure>
+<p>Rust 的类型系统通过上述特性实现了高效、安全和灵活的编程模型，适合系统编程和高性能应用。它在编译期捕获许多潜在错误，使得运行时更为安全可靠。</p>
+<p>当然，如果你之前没有学习过 Rust，那这些概念和代码对你来说大概率是云里雾里，不要着急，我们先建立起一个大概的印象就行了。这里我针对 Rust 类型系统梳理了一张图，你可以在以后的学习中时常回来看看：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241128185615522.png" alt="Rust 类型系统"></p>
 <blockquote>
-<p>注：本图参考了陈天老师在 Rust
-训练营课程上提供的教案并进行了增改。</p>
+<p>注：本图参考了陈天老师在 Rust 训练营课程上提供的教案并进行了增改。</p>
 </blockquote>
 <p>本篇就到这里，下篇我们将介绍 Rust 的数据类型，enjoy coding~</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -281,18 +264,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E7%B1%BB%E5%9E%8B%E7%B3%BB%E7%BB%9F"><span class="toc-text">什么是类型系统？</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#rust-%E7%B1%BB%E5%9E%8B%E7%B3%BB%E7%BB%9F"><span class="toc-text">Rust 类型系统</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">什么是类型系统？</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">Rust 类型系统</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
