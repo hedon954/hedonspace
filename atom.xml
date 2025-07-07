@@ -6,7 +6,7 @@
   <link href="https://hedon.top/atom.xml" rel="self"/>
   
   <link href="https://hedon.top/"/>
-  <updated>2025-07-07T05:28:13.432Z</updated>
+  <updated>2025-07-07T08:27:51.404Z</updated>
   <id>https://hedon.top/</id>
   
   <author>
@@ -17,11 +17,11 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>FOSA丨06丨衡量和管理架构特性</title>
+    <title>FOSA丨06丨评估和管理架构特性</title>
     <link href="https://hedon.top/2025/07/07/fosa-ch6/"/>
     <id>https://hedon.top/2025/07/07/fosa-ch6/</id>
     <published>2025-07-07T03:00:00.000Z</published>
-    <updated>2025-07-07T05:28:13.432Z</updated>
+    <updated>2025-07-07T08:27:51.404Z</updated>
     
     <content type="html"><![CDATA[<p>本系列文章通过逐章回答<ahref="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals ofSoftware Architecture》</a>（下文简称FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第六章</u>内容。</p><p>本章的课后题是：</p><ol type="1"><li><p>Why is cyclomatic complexity such an important metric to analyzefor architecture?</p><p>为什么圈复杂度是架构分析的重要指标？</p></li><li><p>What is an architecture fitness function? How can they be used toanalyze an architecture?</p><p>什么是架构适应度函数？它们如何用于分析架构？</p></li><li><p>Provide an example of an architecture fitness function to measurethe scalability of an architecture.</p><p>提供一个衡量架构可伸缩性的架构适应度函数示例。</p></li><li><p>What is the most important criteria for an architecturecharacteristic to allow architects and developers to create fitnessfunctions?</p><p>允许架构师和开发人员创建适应度函数的最重要标准是什么？</p></li></ol><hr /><h1 id="评估架构特性">评估架构特性</h1><p>评估架构特性一般可以从 3 个方面入手：</p><ul><li>运维性指标 (operationalmeasures)：主要关注系统在运维层面的能力，涵盖性能、可扩展性、弹性、可用性、可靠性等能力。</li><li>结构性指标 (structuralmeasures)：关注代码结构，如模块化、组件间受控的耦合、可读代码以及其他内部质量评估。常用工具有：<ul><li><strong>圈复杂度 (CyclomaticComplexity，CC)</strong>：一个代码层面的度量标准，由 Thomas McCabe, Sr.于 1976 年开发，通过分析代码的决策点（如 if语句）来量化代码的复杂性。高圈复杂度可能表明代码难以理解和测试。公式为<code>CC = E - N + 2</code>（针对单个函数），或<code>CC = E - N + 2P</code>（针对扇出调用）。行业普遍认为 CC 值低于 10是可接受的，但更倾向于低于 5。</li><li><strong>距主序列距离 (Distance from the MainSequence，D)</strong>：一个基于抽象性（A）和不稳定性（I）的综合指标，公式为<code>D = |A + I - 1|</code>。它反映了抽象性和不稳定性之间的理想关系。远离理想线的类可能落入"无用区"（过于抽象难以使用）或"痛苦区"（过于具体且难以维护）</li></ul></li><li>流程性指标 (processmeasures)：关注软件开发过程中的特性，如敏捷性、可测试性和可部署性。常用工具有：<ul><li><strong>代码覆盖率（code coverage）</strong></li></ul></li></ul><h1 id="管理架构特性">管理架构特性</h1><p>管理架构特性主要通过 4 个方面：</p><ul><li><strong>架构适应性函数 (Architecture FitnessFunctions)</strong>：这是评估系统输出质量的客观函数，用于衡量架构特性。它们将重要的架构原则编码到软件基础中，并自动验证这些原则是否得到遵守。例如：<ul><li>检测组件之间的循环依赖 (Cyclic Dependencies)</li><li>验证分层架构中的层间依赖关系</li><li>衡量距主序列的距离</li><li>混沌工程</li></ul></li><li><strong>架构决策记录 (Architecture Decision Records,ADRs)</strong>：ADR是一种有效的文档化架构决策的方式，通常是一到两页的短文本文件。每个 ADR应包含标题、状态（例如“已接受”、“已取代”）、上下文、决策（使用肯定性语言）和结果（包括决策的正面和负面影响，以及权衡分析）。ADR使得架构师能够清晰记录决策的技术和业务理由，避免重复讨论和误解。ADR中的“合规性(Compliance)”部分可以强制架构师思考如何衡量和管理决策的合规性，无论是手动还是通过适应性函数自动化。</li><li><strong>风险风暴 (RiskStorming)</strong>：这是一种协作活动，用于识别、达成共识并减轻架构风险。它包括识别（个体非协作活动）、共识（协作活动，讨论并统一风险评估）和缓解（协作活动，寻找减少或消除风险的方法）三个主要阶段。风险风暴通常使用风险矩阵(RiskMatrix)，通过“影响”和“可能性”两个维度来量化风险。风险评估报告还可以显示特定风险类别或领域随时间的改进或恶化，使用加号(+) 和减号 (-) 表示方向。</li><li><strong>持续沟通与协作</strong>：有效的沟通对于知识共享和项目成功至关重要。架构师应与产品负责人、项目经理、业务干系人以及开发人员进行谈判和协商，以获得架构决策的批准。倡导通用语言(UbiquitousLanguage)，确保所有项目相关方使用相同的业务领域术语，从而减少信息丢失和误解。</li></ul><h1 id="回答问题">回答问题</h1><p>基于上述对本章的概括回顾，回到本章的 4个课后题，笔者梳理了一下自己的理解，供读者们参考。</p><p>圈复杂度：</p><ol type="1"><li>圈复杂度是一种评估代码复杂性的工具。</li><li>如果一个函数（方法）中，条件分支和语句越多，则说明越复杂，一方面可能是业务逻辑本身就足够复杂，另外一方面，也很可能是代码的模块拆分没有做好，逻辑没有梳理清晰，写成了一坨。</li><li>这背后体现了模块化、可测试性、可部署性、可扩展性、可迭代性等多种代码结构层面的架构特性。</li></ol><p>架构适应度函数：</p><ol type="1"><li>架构适应度函数是一种用于持续评估当前架构是否满足需求的机制，可以理解为"架构的单元测试"。</li><li>不同的组织、不同的团队、不同的职责对同一个架构特性的理解、定义和需求都是不尽相同的。通过协商、建立其符合具体需求的架构适应度函数，在达成共识的基础上，可以持续对某些架构特性进行达标检测，避免偏离。比如代码测试覆盖率可以用来检测架构的可测试性、部署耗时可以用来横向架构的可部署性、可迭代性等。</li><li>要编写 fitnessfunction，最重要也是唯一最重要的标准是<strong>架构特性必须能够被客观地衡量和定义</strong>。通过鼓励客观定义，团队可以拆解复合特性，从而发现可以被客观衡量的功能。一旦特性被具体定义，就可以更容易地建立相应的适应度函数来验证其完整性。</li></ol><p>衡量系统的可伸缩性：</p><ol type="1"><li>可伸缩性，指的是系统在用户或请求数量增加时，仍然能够维持性能和运行的能力。</li><li>假如说我们现在有一个订单服务，如果我们希望它具备良好的可伸缩性，当我们将服务实例从2 个增加到 4个时，系统在相同响应时间基准下，应用能处理接近翻倍的请求吞吐量。</li></ol>]]></content>
     
