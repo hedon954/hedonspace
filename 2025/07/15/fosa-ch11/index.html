@@ -17,18 +17,18 @@
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
   <meta name="theme-color" content="#f9fafb">
   
-  <title>FOSA丨11丨领域驱动设计 - HedonWang</title>
+  <title>FOSA丨11丨管道架构 - HedonWang</title>
 
   
     <meta name="description" content="本篇通过回答《Fundamentals of Software Architecture》第十一章的课后思考题，深入探讨管道架构中管道双向性的可能性与限制、过滤器类型的分类与作用机制、数据流向的设计原则，以及管道架构的分区特性、模块化支持方式和典型应用场景分析，帮助理解管道与过滤器架构的核心概念和设计模式，提升架构师在处理数据流应用时的架构选择能力和系统设计水平。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="FOSA丨11丨领域驱动设计">
+<meta property="og:title" content="FOSA丨11丨管道架构">
 <meta property="og:url" content="https://hedon.top/2025/07/15/fosa-ch11/index.html">
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本篇通过回答《Fundamentals of Software Architecture》第十一章的课后思考题，深入探讨管道架构中管道双向性的可能性与限制、过滤器类型的分类与作用机制、数据流向的设计原则，以及管道架构的分区特性、模块化支持方式和典型应用场景分析，帮助理解管道与过滤器架构的核心概念和设计模式，提升架构师在处理数据流应用时的架构选择能力和系统设计水平。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-07-15T02:20:00.000Z">
-<meta property="article:modified_time" content="2025-07-15T03:15:18.201Z">
+<meta property="article:modified_time" content="2025-07-15T03:18:25.911Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="读书笔记">
 <meta property="article:tag" content="软件架构">
@@ -71,7 +71,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/07/15/fosa-ch11/"><span class="title">FOSA丨11丨领域驱动设计</span></a><a class="item title" href="/2025/07/14/fosa-ch10/"><span class="title">FOSA丨10丨分层架构</span></a><a class="item title" href="/2025/07/10/fosa-ch9/"><span class="title">FOSA丨09丨架构风格基础</span></a><a class="item title" href="/2025/07/09/fosa-ch8/"><span class="title">FOSA丨08丨组件思维</span></a><a class="item title" href="/2025/07/08/fosa-ch7/"><span class="title">FOSA丨07丨架构特性范围</span></a><a class="item title" href="/2025/07/07/fosa-ch6/"><span class="title">FOSA丨06丨评估和管理架构特性</span></a><a class="item title" href="/2025/07/04/fosa-ch5/"><span class="title">FOSA丨05丨识别架构特征</span></a><a class="item title" href="/2025/07/03/fosa-ch4/"><span class="title">FOSA丨04丨架构特性定义</span></a><a class="item title" href="/2025/07/02/fosa-ch3/"><span class="title">FOSA丨03丨模块化</span></a><a class="item title" href="/2025/07/01/fosa-ch2/"><span class="title">FOSA丨02丨架构思维</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/07/15/fosa-ch11/"><span class="title">FOSA丨11丨管道架构</span></a><a class="item title" href="/2025/07/14/fosa-ch10/"><span class="title">FOSA丨10丨分层架构</span></a><a class="item title" href="/2025/07/10/fosa-ch9/"><span class="title">FOSA丨09丨架构风格基础</span></a><a class="item title" href="/2025/07/09/fosa-ch8/"><span class="title">FOSA丨08丨组件思维</span></a><a class="item title" href="/2025/07/08/fosa-ch7/"><span class="title">FOSA丨07丨架构特性范围</span></a><a class="item title" href="/2025/07/07/fosa-ch6/"><span class="title">FOSA丨06丨评估和管理架构特性</span></a><a class="item title" href="/2025/07/04/fosa-ch5/"><span class="title">FOSA丨05丨识别架构特征</span></a><a class="item title" href="/2025/07/03/fosa-ch4/"><span class="title">FOSA丨04丨架构特性定义</span></a><a class="item title" href="/2025/07/02/fosa-ch3/"><span class="title">FOSA丨03丨模块化</span></a><a class="item title" href="/2025/07/01/fosa-ch2/"><span class="title">FOSA丨02丨架构思维</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -84,12 +84,12 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/">架构设计</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-07-15T02:20:00.000Z">2025-07-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-07-15T03:15:18.201Z">2025-07-15</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-07-15T02:20:00.000Z">2025-07-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-07-15T03:18:25.911Z">2025-07-15</time></span></div></div></div>
     
     <div class="bottom only-title">
       
       <div class="text-area">
-        <h1 class="text title"><span>FOSA丨11丨领域驱动设计</span></h1>
+        <h1 class="text title"><span>FOSA丨11丨管道架构</span></h1>
         
       </div>
     </div>
@@ -194,7 +194,7 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
       <div class="header"><span>分享文章</span></div>
       <div class="body">
         <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://hedon.top/2025/07/15/fosa-ch11/" /></div>
-        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/07/15/fosa-ch11/&title=FOSA丨11丨领域驱动设计 - HedonWang&summary=本篇通过回答《Fundamentals of Software Architecture》第十一章的课后思考题，深入探讨管道架构中管道双向性的可能性与限制、过滤器类型的分类与作用机制、数据流向的设计原则，以及管道架构的分区特性、模块化..."><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=FOSA丨11丨领域驱动设计 - HedonWang&amp;body=https://hedon.top/2025/07/15/fosa-ch11/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
+        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/07/15/fosa-ch11/&title=FOSA丨11丨管道架构 - HedonWang&summary=本篇通过回答《Fundamentals of Software Architecture》第十一章的课后思考题，深入探讨管道架构中管道双向性的可能性与限制、过滤器类型的分类与作用机制、数据流向的设计原则，以及管道架构的分区特性、模块化..."><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=FOSA丨11丨管道架构 - HedonWang&amp;body=https://hedon.top/2025/07/15/fosa-ch11/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
         
         <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
           <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://hedon.top/2025/07/15/fosa-ch11/"/>
