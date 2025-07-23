@@ -17,25 +17,27 @@
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
   <meta name="theme-color" content="#f9fafb">
   
-  <title>Rust anyhow 简明教程 - HedonWang</title>
+  <title>FOSA丨17丨微服务架构 - HedonWang</title>
 
   
-    <meta name="description" content="探索 Rust 的 anyhow 库，它提供了一个简单而强大的方式来处理错误。本教程将引导你了解 anyhow 的核心特性，包括易用性、错误链、调试便利性，以及如何在不同场景下利用 anyhow 来简化错误处理。无论是快速原型开发还是应用程序顶层错误处理，anyhow 都是 Rust 开发者的得力助手。">
+    <meta name="description" content="本篇通过回答《Fundamentals of Software Architecture》第十七章的课后思考题，深入探讨微服务架构中限界上下文的核心作用、服务粒度划分的三大原则、sidecar模式的功能特性，以及编排与编舞的通信机制差异、saga分布式事务模式、微服务的敏捷性优势与性能挑战，帮助理解微服务架构的领域驱动设计理念和分布式系统复杂性，提升架构师在构建现代分布式系统时的微服务拆分能力和架">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Rust anyhow 简明教程">
-<meta property="og:url" content="https://hedon.top/2024/03/05/rust-crate-anyhow/index.html">
+<meta property="og:title" content="FOSA丨17丨微服务架构">
+<meta property="og:url" content="https://hedon.top/2025/07/23/fosa-ch17/index.html">
 <meta property="og:site_name" content="HedonWang">
-<meta property="og:description" content="探索 Rust 的 anyhow 库，它提供了一个简单而强大的方式来处理错误。本教程将引导你了解 anyhow 的核心特性，包括易用性、错误链、调试便利性，以及如何在不同场景下利用 anyhow 来简化错误处理。无论是快速原型开发还是应用程序顶层错误处理，anyhow 都是 Rust 开发者的得力助手。">
+<meta property="og:description" content="本篇通过回答《Fundamentals of Software Architecture》第十七章的课后思考题，深入探讨微服务架构中限界上下文的核心作用、服务粒度划分的三大原则、sidecar模式的功能特性，以及编排与编舞的通信机制差异、saga分布式事务模式、微服务的敏捷性优势与性能挑战，帮助理解微服务架构的领域驱动设计理念和分布式系统复杂性，提升架构师在构建现代分布式系统时的微服务拆分能力和架">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2024-03-05T15:44:00.000Z">
-<meta property="article:modified_time" content="2025-07-08T05:37:03.504Z">
+<meta property="article:published_time" content="2025-07-23T03:02:00.000Z">
+<meta property="article:modified_time" content="2025-07-23T03:33:33.309Z">
 <meta property="article:author" content="Hedon Wang">
-<meta property="article:tag" content="rust">
-<meta name="twitter:card" content="summary_large_image">
+<meta property="article:tag" content="读书笔记">
+<meta property="article:tag" content="软件架构">
+<meta property="article:tag" content="fosa">
+<meta name="twitter:card" content="summary">
   
   
   
-  <meta name="keywords" content="rust">
+  <meta name="keywords" content="读书笔记,软件架构,fosa">
 
   <!-- feed -->
   
@@ -78,94 +80,234 @@
 
 
 
-<div class="article banner top"><img class="bg lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/banner/rust-crate-anyhow.jpg">
+<div class="article banner top">
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
-<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/rust/">rust</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/rust/Rust-%E5%B8%B8%E7%94%A8%E5%BA%93/">Rust 常用库</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-03-05T15:44:00.000Z">2024-03-05</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-07-08T05:37:03.504Z">2025-07-08</time></span></div></div></div>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/">架构设计</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-07-23T03:02:00.000Z">2025-07-23</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-07-23T03:33:33.309Z">2025-07-23</time></span></div></div></div>
     
     <div class="bottom only-title">
       
       <div class="text-area">
-        <h1 class="text title"><span>Rust anyhow 简明教程</span></h1>
+        <h1 class="text title"><span>FOSA丨17丨微服务架构</span></h1>
         
       </div>
     </div>
     
   </div>
-  </div><article class="md-text content"><p><a target="_blank" rel="noopener" href="https://docs.rs/anyhow/latest/anyhow/index.html">anyhow</a>
-是 Rust 中的一个库，旨在提供灵活的、具体的错误处理能力，建立在
-<code>std::error::Error</code>
-基础上。它主要用于那些需要简单错误处理的应用程序和原型开发中，尤其是在错误类型不需要被严格区分的场景下。</p>
-<p>以下是 <code>anyhow</code> 的几个关键特性：</p>
+  </div><article class="md-text content"><p>本系列文章通过逐章回答<a
+target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of
+Software Architecture》</a>（下文简称
+FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第十七章</u>内容。</p>
+<p>本章的课后题是：</p>
+<ol type="1">
+<li><p>Why is the bounded context concept so critical for microservices
+architecture?</p>
+<p>为什么限界上下文的概念对于微服务来说如此重要？</p></li>
+<li><p>What are three ways of determining if you have the right level of
+granularity in a microservice?</p>
+<p>在划分微服务粒度的时候，哪三个方面是你需要重点考虑的？</p></li>
+<li><p>What functionality might be contained within a sidecar?</p>
+<p>sidecar 有哪些功能？</p></li>
+<li><p>What is the difference between orchestration and choreography?
+Which does microservices support? Is one communication style easier in
+microservices?</p>
+<p>编舞（orchestration）和编排（choreography）的区别是什么？微服务支持哪种模式？在微服务中，哪种通信方式更简便？</p></li>
+<li><p>What is a saga in microservices?</p>
+<p>在微服务中，saga 是什么?</p></li>
+<li><p>Why are agility, testability, and deployability so well supported
+in microservices?</p>
+<p>为什么敏捷性、可测试性和可部署性在微服务架构中表现良好？</p></li>
+<li><p>What are two reasons performance is usually an issue in
+microservices?</p>
+<p>在微服务中，性能问题的两个核心因素是什么？</p></li>
+<li><p>Is microservices a domain-partitioned architecture or a
+technically partitioned one?</p>
+<p>微服务架构是领域分区还是技术分区？</p></li>
+<li><p>Describe a topology where a microservices ecosystem might be only
+a single quantum.</p>
+<p>描述一种拓扑结构，其中微服务生态系统可能仅有一个架构量子。</p></li>
+<li><p>How was domain reuse addressed in microservices? How was
+operational reuse addressed?</p>
+<p>微服务中是如何解决领域复用问题的？又是如何解决运维复用问题的呢？</p></li>
+</ol>
+<hr />
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250723111539943.png"
+alt="FOSA Figure 17-1. The topologu of the microservices architecture style" />
+<figcaption aria-hidden="true">FOSA Figure 17-1. The topologu of the
+microservices architecture style</figcaption>
+</figure>
+<h2 id="业务边界">业务边界</h2>
+<blockquote>
+<ol type="1">
+<li><p>Why is the bounded context concept so critical for microservices
+architecture?</p>
+<p>为什么限界上下文的概念对于微服务来说如此重要？</p></li>
+<li><p>Is microservices a domain-partitioned architecture or a
+technically partitioned one?</p>
+<p>微服务架构是领域分区还是技术分区？</p></li>
+</ol>
+</blockquote>
+<p>限界上下文（Bounded
+Context）是微服务设计理念的核心驱动力。微服务架构与领域驱动设计（DDD）紧密相关，尤其是受限界上下文概念的深刻影响。限界上下文代表了一种<strong>解耦</strong>风格。在限界上下文内，与特定领域相关的所有内部组件（如代码和数据库模式）都是紧密耦合的，但它们与外部限界上下文的任何内容（如其他数据库或类定义）是<strong>解耦</strong>的。</p>
+<p>微服务架构的首要目标是<strong>高度解耦</strong>。它通过物理地建模限界上下文的逻辑概念来实现这一目标。这意味着，微服务架构鼓励将系统分解为<strong>独立的、自包含的服务</strong>，每个服务都对应一个特定的限界上下文。</p>
+<p>这种隔离使得每个服务可以<strong>独立演进</strong>，定义其自身所需的一切，而不必适应其他部分的约束。它<strong>避免了传统单体架构中常见的共享类和数据库作为集成点导致的紧密耦合问题</strong>。</p>
+<p>所以微服务也是一个典型的领域分区架构，并且它倾向于将领域分区推到极致。</p>
+<h2 id="服务粒度">服务粒度</h2>
+<blockquote>
+<ol start="2" type="1">
+<li><p>What are three ways of determining if you have the right level of
+granularity in a microservice?</p>
+<p>在划分微服务粒度的时候，哪三个方面是你需要重点考虑的？</p></li>
+</ol>
+</blockquote>
+<p>在划分微服务粒度时，以下三个方面是需要重点考虑的：</p>
+<ol type="1">
+<li><strong>目的（Purpose）</strong>：微服务的首要目的应该是<strong>捕获一个领域或工作流</strong>。理想情况下，每个微服务都应该具有<strong>极高的功能内聚性</strong>，为整个应用程序贡献一个<strong>重要的行为</strong>。这意味着，服务应该专注于一个单一的、明确的业务功能。</li>
+<li><strong>事务（Transactions）</strong>：限界上下文是业务工作流，通常需要<strong>在事务中协作的实体</strong>可以为服务边界提供良好的指示。由于分布式事务在分布式架构中会带来复杂性，架构师应尽量设计系统以<strong>避免跨服务的事务</strong>。如果需要跨服务事务，这可能表明服务粒度过细。事务边界通常是服务粒度的常见指标。</li>
+<li><strong>通信（Communication）</strong>：如果一组服务为了完成功能而需要<strong>大量通信</strong>，那么将这些服务捆绑成一个更大的服务可能有助于<strong>避免过度的通信开销</strong>。换句话说，如果服务变得过于“多话”（chatty），频繁地相互调用，那么它们的边界可能需要重新评估，以减少不必要的<strong>全局复杂性</strong>。</li>
+</ol>
+<p>书中还强调，<strong>迭代</strong>是确保良好服务设计的唯一途径，架构师很少能在第一次尝试时就发现完美的粒度、数据依赖和通信风格，只有不断适配业务发展、不断思考改善，才能设计出良好的架构。</p>
+<p>此外，业界也有一些其他的常用的判断方法：</p>
+<ol type="1">
+<li><strong>变更与部署频率一致性</strong>：把一起变更/部署的东西放在一个服务，频率不同的拆开。</li>
+<li><strong>耦合/通信“积分器 vs.
+解耦器”指标</strong>：如果拆分后跨服务调用暴增（“chattiness”），说明拆太细；反之，如果内部复杂度过高且团队协作困难，可能太粗。</li>
+<li><strong>团队/认知负荷</strong>：一个团队能完全理解并独立维护的范围通常就是一个合理服务边界。</li>
+</ol>
+<h2 id="基础设施">基础设施</h2>
+<blockquote>
+<ol start="3" type="1">
+<li><p>What functionality might be contained within a sidecar?</p>
+<p>sidecar 有哪些功能？</p></li>
+<li><p>How was domain reuse addressed in microservices? How was
+operational reuse addressed?</p>
+<p>微服务中是如何解决领域复用问题的？又是如何解决运维复用问题的呢？</p></li>
+</ol>
+</blockquote>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250723111700037.png"
+alt="FOSA Figure 17-3. The service plane connects the sidecars in a service mesh" />
+<figcaption aria-hidden="true">FOSA Figure 17-3. The service plane
+connects the sidecars in a service mesh</figcaption>
+</figure>
+<p>Sidecar 模式用于处理微服务中的<strong>通用运维关注点（operational
+concerns）</strong>，包括但不限于：<strong>监控（Monitoring）</strong>、<strong>日志记录（Logging）</strong>、<strong>断路器（Circuit
+Breakers）</strong>和<strong>服务发现（Service
+Discovery）</strong>。这些功能由一个独立的组件处理，该组件可以由单个团队拥有，也可以由共享的基础设施团队拥有，从而实现了运维方面的复用。</p>
+<p>而在领域复用中，由于微服务架构的主要目标是<strong>高度解耦</strong>。为了实现这一目标，微服务<strong>倾向于复制（duplication）而不是传统意义上的复用（reuse）</strong>。这意味着，对于通用实体（如
+<code>Address</code>
+类），微服务会<strong>避免共享公共类或数据库模式</strong>。相反，每个服务会在其自己的限界上下文内定义和管理其所需的数据和行为，即使这意味着某些概念的重复实现。这种策略牺牲了代码级别的复用，以换取服务之间更高的解耦度和独立演进的能力。</p>
+<h2 id="服务协作">服务协作</h2>
+<blockquote>
+<ol start="4" type="1">
+<li><p>What is the difference between orchestration and choreography?
+Which does microservices support? Is one communication style easier in
+microservices?</p>
+<p>编舞（orchestration）和编排（choreography）的区别是什么？微服务支持哪种模式？在微服务中，哪种通信方式更简便？</p></li>
+</ol>
+</blockquote>
 <ul>
-<li><strong>易用性</strong>: <code>anyhow</code> 提供了一个
-<code>Error</code> 类型，这个类型可以包含任何实现了
-<code>std::error::Error</code> 的错误。这意味着你可以使用
-<code>anyhow::Error</code>
-来包装几乎所有类型的错误，无需担心具体的错误类型。</li>
-<li><strong>简洁的错误链</strong>: <code>anyhow</code> 支持通过
-<code>?</code>
-操作符来传播错误，同时保留错误发生的上下文。这让错误处理更加直观，同时还能保留错误链，便于调试。</li>
-<li><strong>便于调试</strong>: <code>anyhow</code> 支持通过
-<code>&#123;:#&#125;</code>
-格式化指示符来打印错误及其所有相关的上下文和原因，这使得调试复杂的错误链变得更加简单。</li>
-<li><strong>无需关心错误类型</strong>:
-在很多情况下，特别是在应用程序的顶层，你可能不需要关心错误的具体类型，只需要知道出错了并且能够将错误信息传递给用户或日志。<code>anyhow</code>
-让这一过程变得简单，因为它可以包装任何错误，而不需要显式地指定错误类型。</li>
+<li><p><strong>编舞（Choreography）</strong>：是指多个服务<strong>相互之间直接通信</strong>，而<strong>没有中央协调器</strong>。服务（如同舞者）根据彼此发出的事件或信息自主响应和行动。</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250723112521618.png"
+alt="FOSA Figure 17-7. Using choreography in microservices to manage coordination" />
+<figcaption aria-hidden="true">FOSA Figure 17-7. Using choreography in
+microservices to manage coordination</figcaption>
+</figure></li>
+<li><p><strong>编排（Orchestration）</strong>：是指通过一个<strong>单独的协调器服务</strong>来管理和控制工作流中多个服务的协调。协调器（如同乐队指挥）负责指导每个服务的执行顺序，并处理整个业务流程的状态和错误。在微服务中，架构师可以创建<strong>局部化的协调器服务</strong>来处理复杂的业务流程。</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250723112551443.png"
+alt="FOSA Figure 17-8. Using orchestration in microservices" />
+<figcaption aria-hidden="true">FOSA Figure 17-8. Using orchestration in
+microservices</figcaption>
+</figure></li>
 </ul>
-<p>使用 <code>anyhow</code>
-的典型场景包括快速原型开发、应用程序顶层的错误处理，或者在库中作为返回错误类型的一个简便选择，尤其是在库的使用者不需要关心具体错误类型的时候。</p>
-<h2 id="anyhowerror">anyhow::Error</h2>
-<p><code>anyhow::Error</code> 是 <code>anyhow</code>
-库定义的一个错误类型。它是一个包装器（wrapper）类型，可以包含任何实现了
-<code>std::error::Error</code> trait
-的错误类型。这意味着你可以将几乎所有的错误转换为
-<code>anyhow::Error</code>
-类型，从而在函数之间传递，而不需要在意具体的错误类型。这在快速原型开发或应用程序顶层错误处理中特别有用，因为它简化了错误处理的逻辑。</p>
-<p>它的定义如下：</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[cfg_attr(not(doc), repr(transparent))]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">Error</span> &#123;</span><br><span class="line">    inner: Own&lt;ErrorImpl&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>其中核心是 <code>ErrorImpl</code>：</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[repr(C)]</span></span><br><span class="line"><span class="title function_ invoke__">pub</span>(<span class="keyword">crate</span>) <span class="keyword">struct</span> <span class="title class_">ErrorImpl</span>&lt;E = ()&gt; &#123;</span><br><span class="line">    vtable: &amp;<span class="symbol">&#x27;static</span> ErrorVTable,</span><br><span class="line">    backtrace: <span class="type">Option</span>&lt;Backtrace&gt;,</span><br><span class="line">    <span class="comment">// <span class="doctag">NOTE:</span> Don&#x27;t use directly. Use only through vtable. Erased type may have</span></span><br><span class="line">    <span class="comment">// different alignment.</span></span><br><span class="line">    _object: E,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><code>ErrorImpl</code> 是一个内部结构体，用于实现
-<code>anyhow::Error</code> 类型的具体功能。它包含了三个主要字段：</p>
+<p>微服务两者都支持。
+不过编舞方式更符合微服务的高度解耦哲学，因为它不依赖于中央协调器，而是通过解耦的事件来实现通信，使用起来更简便。当然，在复杂的业务流程中，<strong>编舞环境下的错误处理和协调会变得更加复杂</strong>。如果业务流程<strong>本质上是耦合的</strong>，此时编排可能更为适合。</p>
+<h2 id="一致性">一致性</h2>
+<blockquote>
+<ol start="5" type="1">
+<li><p>What is a saga in microservices?</p>
+<p>在微服务中，saga 是什么?</p></li>
+</ol>
+</blockquote>
+<p>在微服务中，<strong>Saga</strong>
+是一种<strong>分布式事务模式</strong>，用于管理跨多个服务的业务事务，因为在微服务中，跨服务边界的传统
+ACID 事务是不推荐的（甚至不可能的）。</p>
+<p>Saga
+模式通过将一个业务流程分解为一系列<strong>本地事务</strong>来实现，每个本地事务由一个服务执行。</p>
 <ul>
-<li><code>vtable</code>
-是一个指向静态虚拟表的指针，用于动态派发错误相关的方法。</li>
-<li><code>backtrace</code>
-是一个可选的回溯（Backtrace）类型，用于存储错误发生时的调用栈信息。</li>
-<li><code>_object</code>
-字段用于存储具体的错误对象，其类型在编译时被擦除以提供类型安全的动态错误处理。</li>
+<li>如果某个本地事务失败，Saga 会通过执行<strong>补偿事务（compensating
+transactions）</strong>来撤销之前已成功的本地事务所做的更改，从而确保数据的一致性。</li>
+<li>Saga 可以通过<strong>事件溯源（event
+sourcing）</strong>或<strong>有限状态机（finite state
+machines）</strong>来管理事务的状态。</li>
 </ul>
-<p>这种设计允许 <code>anyhow</code>
-错误封装并表示各种不同的错误类型，同时提供了方法动态派发和回溯功能，以便于错误调试。</p>
-<p><code>anyhow::Error</code> 可以包含任何实现了
-<code>std::error::Error</code> trait 的错误类型，这里因为下面的
-<code>impl</code>：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">impl&lt;E&gt; StdError <span class="keyword">for</span> ErrorImpl&lt;E&gt;</span><br><span class="line">where</span><br><span class="line">    E: StdError,</span><br><span class="line">&#123;</span><br><span class="line">    fn source(&amp;self) -&gt; Option&lt;&amp;(dyn StdError + <span class="string">&#x27;static)&gt; &#123;</span></span><br><span class="line"><span class="string">        unsafe &#123; ErrorImpl::error(self.erase()).source() &#125;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    #[cfg(error_generic_member_access)]</span></span><br><span class="line"><span class="string">    fn provide&lt;&#x27;</span>a&gt;(&amp;<span class="string">&#x27;a self, request: &amp;mut Request&lt;&#x27;</span>a&gt;) &#123;</span><br><span class="line">        unsafe &#123; ErrorImpl::provide(self.erase(), request) &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="anyhowresult">anyhow::Result</h2>
-<p><code>anyhow::Result</code> 是一个别名（type alias），它是
-<code>std::result::Result&lt;T, anyhow::Error&gt;</code> 的简写。在使用
-<code>anyhow</code>
-库进行错误处理时，你会频繁地看到这个类型。它基本上是标准的
-<code>Result</code> 类型，但错误类型被固定为
-<code>anyhow::Error</code>。这使得你可以很容易地在函数之间传递错误，而不需要声明具体的错误类型。</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">type</span> <span class="title class_">Result</span>&lt;T, E = Error&gt; = core::result::<span class="type">Result</span>&lt;T, E&gt;;</span><br></pre></td></tr></table></figure>
-<p>使用 <code>anyhow::Result</code>
-的好处在于它提供了一种统一的方式来处理错误。你可以使用 <code>?</code>
-操作符来传播错误，同时保留错误的上下文信息和回溯。这极大地简化了错误处理代码，尤其是在多个可能产生不同错误类型的操作链中。</p>
-<h2 id="个核心使用技巧">3 个核心使用技巧</h2>
+<p>虽然 Saga 可以用于解决分布式事务问题，但也应<strong>谨慎使用 Saga
+模式</strong>，因为它会增加系统的复杂性，并且如果它成为架构中的主导特性，则可能表明服务粒度划分不当，违反了微服务解耦的核心原则。</p>
+<h2 id="优点">优点</h2>
+<blockquote>
+<ol start="6" type="1">
+<li><p>Why are agility, testability, and deployability so well supported
+in microservices?</p>
+<p>为什么敏捷性、可测试性和可部署性在微服务架构中表现良好？</p></li>
+</ol>
+</blockquote>
+<p>敏捷性（Agility）、可测试性（Testability）和可部署性（Deployability）在微服务架构中得到良好支持的原因主要有以下几点：</p>
 <ul>
-<li>使用 <code>Result&lt;T, anyhow::Error&gt;</code> 或者
-<code>anyhow::Result&lt;T&gt;</code> 作为返回值，然后利用 <code>?</code>
-语法糖无脑传播报错。</li>
-<li>使用 with_context(f) 来附加错误信息。</li>
-<li>使用 downcast 反解具体的错误类型。</li>
+<li><strong>高度解耦与小部署单元</strong>：微服务架构极力推崇<strong>高度解耦</strong>。每个服务都是<strong>极小的部署单元</strong>，且具备<strong>高度的独立性</strong>。这种解耦使得团队可以独立地开发、测试和部署服务，大大减少了对其他服务的依赖，从而提高了敏捷性。</li>
+<li><strong>DevOps 革命与自动化</strong>：微服务架构的成功离不开
+<strong>DevOps
+革命和对操作关注点的自动化</strong>。自动化部署、自动化测试等现代工程实践是微服务存在的基础，它们极大地提高了部署频率、降低了部署风险，并保证了测试的完整性。</li>
+<li><strong>更快的变更响应速度</strong>：由于服务范围小且高度解耦，当业务需求发生变化时，团队只需修改受影响的少量服务，而不是整个大型单体。这种<strong>增量式的演进</strong>能力使得组织能够<strong>更快地响应市场变化，提高时间到市场（time-to-market）的速度</strong>。</li>
+<li><strong>单一职责与清晰边界</strong>：每个微服务都专注于一个<strong>单一的业务功能或领域</strong>。这种清晰的职责边界使得开发人员更容易理解、测试和维护代码，因为他们不必处理与服务无关的复杂性</li>
 </ul>
-<h2 id="实战案例">实战案例</h2>
-<p>下面我们用一个案例来体会 <code>anyhow</code> 的使用方式：</p>
-<p>我们的需求是：打开一个文件，解析文件中的数据并进行大写化，然后输出处理后的数据。</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> anyhow::&#123;<span class="type">Result</span>, Context&#125;;</span><br><span class="line"><span class="keyword">use</span> std::&#123;fs, io&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 1. 读取文件、解析数据和执行数据操作都可能出现错误，</span></span><br><span class="line"><span class="comment">// 所以我们需要返回 Result 来兼容异常情况。</span></span><br><span class="line"><span class="comment">// 这里我们使用 anyhow::Result 来简化和传播错误。</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">read_and_process_file</span>(file_path: &amp;<span class="type">str</span>) <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;()&gt; &#123;</span><br><span class="line">    <span class="comment">// 尝试读取文件</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">data</span> = fs::<span class="title function_ invoke__">read_to_string</span>(file_path)</span><br><span class="line">        <span class="comment">// 2. 使用 with_context 来附加错误信息，然后利用 ? 语法糖传播错误。</span></span><br><span class="line">        .<span class="title function_ invoke__">with_context</span>(||<span class="built_in">format!</span>(<span class="string">&quot;failed to read file `&#123;&#125;`&quot;</span>, file_path))?;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 解析数据</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">processed_data</span> = <span class="title function_ invoke__">parse_data</span>(&amp;data)</span><br><span class="line">        .<span class="title function_ invoke__">with_context</span>(||<span class="built_in">format!</span>(<span class="string">&quot;failed to parse data from file `&#123;&#125;`&quot;</span>, file_path))?;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 执行数据操作</span></span><br><span class="line">    <span class="title function_ invoke__">perform_some_operation</span>(processed_data)</span><br><span class="line">        .<span class="title function_ invoke__">with_context</span>(|| <span class="string">&quot;failed to perform operation based on file data&quot;</span>)?;</span><br><span class="line"></span><br><span class="line">    <span class="title function_ invoke__">Ok</span>(())</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">parse_data</span>(data: &amp;<span class="type">str</span>) <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;<span class="type">String</span>&gt; &#123;</span><br><span class="line">    <span class="title function_ invoke__">Ok</span>(data.<span class="title function_ invoke__">to_uppercase</span>())</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">perform_some_operation</span>(data: <span class="type">String</span>) <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;()&gt; &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;processed data: &#123;&#125;&quot;</span>, data);</span><br><span class="line">    <span class="title function_ invoke__">Ok</span>(())</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">file_path</span> = <span class="string">&quot;./anyhow.txt&quot;</span>;</span><br><span class="line">  	<span class="comment">// 执行处理逻辑</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">res</span> =  <span class="title function_ invoke__">read_and_process_file</span>(file_path);</span><br><span class="line">  	<span class="comment">// 处理结果</span></span><br><span class="line">    <span class="keyword">match</span> res &#123;</span><br><span class="line">        <span class="title function_ invoke__">Ok</span>(_) =&gt; <span class="built_in">println!</span>(<span class="string">&quot;successfully!&quot;</span>),</span><br><span class="line">        <span class="title function_ invoke__">Err</span>(e) =&gt; &#123;</span><br><span class="line">            <span class="comment">// 3. 使用 downcast 来反解出实际的错误实例，本案例中可能出现的异常是 io::Error。</span></span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">let</span> <span class="variable">Some</span>(my_error) = e.downcast_ref::&lt;io::Error&gt;() &#123;</span><br><span class="line">                <span class="built_in">println!</span>(<span class="string">&quot;has io error: &#123;:#&#125;&quot;</span>, my_error);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="built_in">println!</span>(<span class="string">&quot;unknown error: &#123;:?&#125;&quot;</span>, e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="缺点">缺点</h2>
+<blockquote>
+<ol start="7" type="1">
+<li><p>What are two reasons performance is usually an issue in
+microservices?</p>
+<p>在微服务中，性能问题的两个核心因素是什么？</p></li>
+</ol>
+</blockquote>
+<p>在微服务中，性能问题通常由以下两个核心因素导致：</p>
+<ol type="1">
+<li><strong>网络调用开销（Network Call
+Overhead）</strong>：微服务是分布式架构。这意味着服务之间（乃至用户界面与服务之间）的通信需要通过网络进行。网络调用比本地方法调用耗时更长。当一个业务请求需要链式调用多个微服务时，累积的网络延迟会显著影响整体响应时间。</li>
+<li><strong>安全验证开销（Security Verification
+Overhead）</strong>：在微服务架构中，由于每个服务都是独立的部署单元，因此每个服务端点都需要进行安全验证。这增加了额外的处理时间。这种“在每个入口处进行安全检查”的模式进一步降低了同步、高度分布式架构（如微服务）的性能。</li>
+</ol>
+<p>尽管性能是微服务常见的问题，但可以通过<strong>数据缓存（caching）和数据复制（replication）</strong>等模式来减少不必要的网络调用，从而提高性能。</p>
+<h2 id="架构量子">架构量子</h2>
+<blockquote>
+<ol start="9" type="1">
+<li><p>Describe a topology where a microservices ecosystem might be only
+a single quantum.</p>
+<p>描述一种拓扑结构，其中微服务生态系统可能仅有一个架构量子。</p></li>
+</ol>
+</blockquote>
+<p>通常来讲，微服务架构都意味着存在多个架构量子。但如果其部署或通信模型导致了上述的紧密耦合，例如<strong>共享数据库</strong>或<strong>中央同步协调器</strong>，那么整个微服务生态系统仍可能被归类为一个单一量子。</p>
+<p><strong>1. 共享单一数据库</strong>：</p>
+<ul>
+<li>如果<strong>所有微服务都共享一个单一的、中央化的数据库实例</strong>，那么整个系统很可能构成一个单一量子。在这种情况下，尽管服务是独立的部署单元，但数据库模式的任何更改都可能影响所有服务，导致它们<strong>无法独立演进和部署</strong>。这使得系统在部署和数据一致性方面表现得像一个整体。</li>
+<li>例如，传统的<strong>分层单体（layered
+monolith）</strong>即使有多个逻辑层，但由于共享一个数据库，它也是一个单一量子。</li>
+</ul>
+<p><strong>2. 强制同步通信与中央协调器</strong>：</p>
+<ul>
+<li>在某些情况下，即使服务是分离的，如果它们之间存在<strong>大量强制的同步通信依赖（synchronous
+connascence）</strong>，或者存在一个<strong>中央编排引擎（orchestration
+engine）</strong>作为所有行为的巨大耦合点，那么整个系统也可能被视为一个单一量子。在这种拓扑中，如果一个服务调用另一个服务是同步的，那么这些服务的操作架构特性（例如，性能和可用性）必须在调用期间保持一致。中央协调器会限制架构中任何部分具有不同架构特性的能力。</li>
+<li>例如，<strong>编排驱动的服务导向架构（Orchestration-Driven
+Service-Oriented Architecture,
+SOA）</strong>，即使是分布式架构，也通常只有一个量子，因为它普遍使用单一或少量数据库，并且其编排引擎作为巨大的耦合点，阻止了各个部分独立拥有不同的架构特性。</li>
+</ul>
 
 <div class="article-footer fs14">
     <section id="license">
@@ -179,18 +321,18 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
     <section id="share">
       <div class="header"><span>分享文章</span></div>
       <div class="body">
-        <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://hedon.top/2024/03/05/rust-crate-anyhow/" /></div>
-        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2024/03/05/rust-crate-anyhow/&title=Rust anyhow 简明教程 - HedonWang&pics=/banner/rust-crate-anyhow.jpg&summary=探索 Rust 的 anyhow 库，它提供了一个简单而强大的方式来处理错误。本教程将引导你了解 anyhow 的核心特性，包括易用性、错误链、调试便利性，以及如何在不同场景下利用 anyhow 来简化错误处理。无论是快速原型开发还是..."><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=Rust anyhow 简明教程 - HedonWang&amp;body=https://hedon.top/2024/03/05/rust-crate-anyhow/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
+        <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://hedon.top/2025/07/23/fosa-ch17/" /></div>
+        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/07/23/fosa-ch17/&title=FOSA丨17丨微服务架构 - HedonWang&summary=本篇通过回答《Fundamentals of Software Architecture》第十七章的课后思考题，深入探讨微服务架构中限界上下文的核心作用、服务粒度划分的三大原则、sidecar模式的功能特性，以及编排与编舞的通信机制差..."><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=FOSA丨17丨微服务架构 - HedonWang&amp;body=https://hedon.top/2025/07/23/fosa-ch17/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
         
         <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
-          <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://hedon.top/2024/03/05/rust-crate-anyhow/"/>
+          <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://hedon.top/2025/07/23/fosa-ch17/"/>
         </div>
         
       </div>
     </section>
     </div>
 </article>
-<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2024/03/06/rust-action-httpie/">Rust 实战丨HTTPie</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2024/03/02/rust-crate-clap/">深入探索 Rust 的 clap 库：命令行解析的艺术</a></div></section></div>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/07/22/fosa-ch16/">FOSA丨16丨面向服务架构</a></div></section></div>
 
 
 
@@ -223,7 +365,7 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#anyhowerror"><span class="toc-text">anyhow::Error</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#anyhowresult"><span class="toc-text">anyhow::Result</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%AA%E6%A0%B8%E5%BF%83%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7"><span class="toc-text">3 个核心使用技巧</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%E6%A1%88%E4%BE%8B"><span class="toc-text">实战案例</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%9A%E5%8A%A1%E8%BE%B9%E7%95%8C"><span class="toc-text">业务边界</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E7%B2%92%E5%BA%A6"><span class="toc-text">服务粒度</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD"><span class="toc-text">基础设施</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E5%8D%8F%E4%BD%9C"><span class="toc-text">服务协作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">一致性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BC%98%E7%82%B9"><span class="toc-text">优点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%BA%E7%82%B9"><span class="toc-text">缺点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E9%87%8F%E5%AD%90"><span class="toc-text">架构量子</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
