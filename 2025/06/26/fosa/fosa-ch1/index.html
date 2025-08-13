@@ -27,6 +27,7 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本篇通过回答《Fundamentals of Software Architecture》第一章的课后思考题，深入探讨软件架构的四个定义维度、架构决策与设计原则的区别、软件架构师的核心职责，以及软件架构的第一定律，帮助建立对软件架构的全面认识。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250626114830268.png">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image.png">
 <meta property="article:published_time" content="2025-06-26T03:00:26.000Z">
 <meta property="article:modified_time" content="2025-07-27T04:29:14.327Z">
@@ -35,7 +36,7 @@
 <meta property="article:tag" content="fosa">
 <meta property="article:tag" content="软件架构">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image.png">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250626114830268.png">
   
   
   
@@ -73,7 +74,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a><a class="item title" href="/2025/08/13/llm/weight-typing/"><span class="title">大白话解释 GPT 架构中的权重共享</span></a><a class="item title" href="/2025/08/05/rust/rust-polymorphism/"><span class="title">Rust 多态的两种实现：Trait Bound 与 Trait Object 深度解析</span></a><a class="item title" href="/2025/07/27/llm/back-propagation/"><span class="title">大白话解释反向传播算法</span></a><a class="item title" href="/2025/07/24/note-fosa/"><span class="title">读书笔记丨《Fundamentals of Software Architecture》</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/03/02/rust-crate-reqwest/"><span class="title">Rust reqwest 简明教程</span></a><a class="item title" href="/2024/03/02/rust-crate-clap/"><span class="title">深入探索 Rust 的 clap 库：命令行解析的艺术</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2024/06/06/rust-action-sse/"><span class="title">Rust 实战丨SSE(Server-Sent Events)</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a><a class="item title" href="/2025/08/13/llm/weight-typing/"><span class="title">大白话解释 GPT 架构中的权重共享</span></a><a class="item title" href="/2025/08/05/rust/rust-polymorphism/"><span class="title">Rust 多态的两种实现：Trait Bound 与 Trait Object 深度解析</span></a><a class="item title" href="/2025/07/27/llm/back-propagation/"><span class="title">大白话解释反向传播算法</span></a><a class="item title" href="/2025/07/24/note-fosa/"><span class="title">读书笔记丨《Fundamentals of Software Architecture》</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/03/02/rust-crate-clap/"><span class="title">深入探索 Rust 的 clap 库：命令行解析的艺术</span></a><a class="item title" href="/2024/03/02/rust-crate-reqwest/"><span class="title">Rust reqwest 简明教程</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2024/06/06/rust-action-sse/"><span class="title">Rust 实战丨SSE(Server-Sent Events)</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -97,175 +98,154 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>本系列文章通过逐章回答<a
-target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of
-Software Architecture》</a>（下文简称
-FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第一章</u>内容。</p>
+  </div><article class="md-text content"><p>本系列文章通过逐章回答<a target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of Software Architecture》</a>（下文简称 FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第一章</u>内容。</p>
 <p>本章的课后题是：</p>
-<ol type="1">
-<li>What are the four dimensions that define software architecture?
+<ol>
+<li>What are the four dimensions that define software architecture?<br>
 软件架构定义的四个维度是什么？</li>
-<li>What is the difference between an architecture decision and a design
-principle? 架构决策和设计原则有什么区别？</li>
-<li>List the eight core expectations of a software architect.
+<li>What is the difference between an architecture decision and a design principle?<br>
+架构决策和设计原则有什么区别？</li>
+<li>List the eight core expectations of a software architect.<br>
 软件架构师的核心期望有哪些？</li>
-<li>What is the First Law of Software Architecture?
+<li>What is the First Law of Software Architecture?<br>
 软件架构的第一定律是什么？</li>
 </ol>
-<hr />
-<h1 id="软件架构定义的四个维度">1. 软件架构定义的四个维度</h1>
+<hr>
+<h1>1. 软件架构定义的四个维度</h1>
 <ul>
-<li><strong>structure of the system</strong>: refres to the type of
-architecture style (or styles) the system is implemented in (such as
-microservices, layered, or microkernel).</li>
-<li><strong>architecture characteristics</strong>: define the success
-criteria of a system, which is generally orthogonal to the functionality
-of the system.</li>
-<li><strong>architecture decisions</strong>: define the rules for how a
-system should be constructed.</li>
-<li><strong>design principles</strong>: differ from architecture
-decisions in that a design principle is a guideline rather than a
-hard-and-fast rule.</li>
+<li><strong>structure of the system</strong>: refres to the type of architecture style (or styles) the system is implemented in (such as microservices, layered, or microkernel).</li>
+<li><strong>architecture characteristics</strong>: define the success criteria of a system, which is generally orthogonal to the functionality of the system.</li>
+<li><strong>architecture decisions</strong>: define the rules for how a system should be constructed.</li>
+<li><strong>design principles</strong>: differ from architecture decisions in that a design principle is a guideline rather than a hard-and-fast rule.</li>
 </ul>
-<p>FOSA
-中强调，软件架构不单单是"架构"本身，因为它无法揭示系统为何如此构建（why
-is more important than how），所以书中用了 4
-个维度来定义软件架构的方方面面。</p>
-<h2 id="系统结构">1.1 系统结构</h2>
-<p>系统结构可能就是我们最常谈到的"架构"，指的的整个软件的架构风格（Architecture
-Style），例如微服务（Microservices）、分层架构（Layered）或微内核（Microkernel）。</p>
+<p>FOSA 中强调，软件架构不单单是&quot;架构&quot;本身，因为它无法揭示系统为何如此构建（why is more important than how），所以书中用了 4 个维度来定义软件架构的方方面面。</p>
+<h2 id="1-1-系统结构">1.1 系统结构</h2>
+<p>系统结构可能就是我们最常谈到的&quot;架构&quot;，指的的整个软件的架构风格（Architecture Style），例如微服务（Microservices）、分层架构（Layered）或微内核（Microkernel）。</p>
 <p>书中后续篇章详细介绍了以下 8 种架构风格：</p>
-<ol type="1">
+<ol>
 <li>分层架构（Layered Architecture）</li>
 <li>流水线架构（Pipeline Architecture）</li>
 <li>微内核架构（Microkernel Architecture）</li>
 <li>基于服务的架构（Service-Based Architecture）</li>
 <li>事件驱动架构（Event-Driven Architecture）</li>
 <li>基于空间的架构（Space-Based Architecture）</li>
-<li>编排驱动的服务导向架构（Orchestration-Driven Service-Oriented
-Architecture）</li>
+<li>编排驱动的服务导向架构（Orchestration-Driven Service-Oriented Architecture）</li>
 <li>微服务架构（Microservices Architecture）</li>
 </ol>
-<p>FOSA
-强调，只用结构来描述架构是不够的，因为它无法揭示系统为何如此构建。因此我们在设计之初，明确选择和识别现有系统的架构风格是基础，但必须超越这一层去理解其背后的驱动因素。</p>
-<h2 id="架构特性">1.2 架构特性</h2>
-<p>架构特性就是一堆的
-<code>-ilities</code>，书中偏爱"架构特性"这个描述，而非"非功能性需求"或"质量属性"，因为这二者带有负面或事后评估的含义，而架构特性，应当是在架构设计之初，就被纳入深入思考。</p>
+<p>FOSA 强调，只用结构来描述架构是不够的，因为它无法揭示系统为何如此构建。因此我们在设计之初，明确选择和识别现有系统的架构风格是基础，但必须超越这一层去理解其背后的驱动因素。</p>
+<h2 id="1-2-架构特性">1.2 架构特性</h2>
+<p>架构特性就是一堆的 <code>-ilities</code>，书中偏爱&quot;架构特性&quot;这个描述，而非&quot;非功能性需求&quot;或&quot;质量属性&quot;，因为这二者带有负面或事后评估的含义，而架构特性，应当是在架构设计之初，就被纳入深入思考。</p>
 <p>架构特性有 3 个标准：</p>
-<ol type="1">
-<li><strong>指定非领域设计考虑</strong>：更关注"如何"实现需求和"为什么"做出某些选择，而不是应用程序"应该做什么"的功能需求。</li>
+<ol>
+<li><strong>指定非领域设计考虑</strong>：更关注&quot;如何&quot;实现需求和&quot;为什么&quot;做出某些选择，而不是应用程序&quot;应该做什么&quot;的功能需求。</li>
 <li><strong>影响设计的某种结构方面</strong>：架构特性要求在设计中进行特殊的结构考虑。</li>
 <li><strong>对应用程序成功其重要作用</strong>：每个架构特性都会带来架构的复杂度，所以要尽可能选择最少的、但对成功至关重要的架构特性予以实施。</li>
 </ol>
 <p>架构特性可以分为 3 大类：</p>
-<ol type="1">
+<ol>
 <li>操作型架构特性</li>
 <li>结构型架构特性</li>
 <li>交叉切面架构特性</li>
 </ol>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250626114830268.png"
-alt="架构特性分类" />
-<figcaption aria-hidden="true">架构特性分类</figcaption>
-</figure>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250626114830268.png" alt="架构特性分类"></p>
 <p>将任意一个架构特性实现到极致的代价都是极大的，相应也会带来更复杂的架构设计，所以在项目早期，我们需要与领域专家和业务干系人紧密合作，识别和明确最重要的架构特性，用最少的努力，达到最大的产品效果。</p>
-<h2 id="架构决策">1.3 架构决策</h2>
+<h2 id="1-3-架构决策">1.3 架构决策</h2>
 <p>架构决策定义了系统如何构建的规则。它们构成了系统的约束，并指导开发团队哪些是被允许的，哪些是不允许的。比如在分层架构中，架构师可能会规定只有业务层额和服务层可以访问数据库，从而限制了表示层直接调用数据库。</p>
-<p>架构决策应当被文档化，例如使用架构决策记录（Architecture Decision
-Records，ADRs），这有助于解释决策的背景、理由和后果，避免重复讨论。</p>
-<figure>
-<img src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image.png"
-alt="架构决策记录 ADR" />
-<figcaption aria-hidden="true">架构决策记录 ADR</figcaption>
-</figure>
-<h2 id="设计原则">1.4 设计原则</h2>
-<p>设计原则是指导方针（Guideline）而非硬性规则（hard-and-fast
-rule），用于提供指引和建议，帮助开发团队在面对特定情景时做出最佳选择。</p>
-<h1 id="架构决策和设计原则的区别">2. 架构决策和设计原则的区别</h1>
+<p>架构决策应当被文档化，例如使用架构决策记录（Architecture Decision Records，ADRs），这有助于解释决策的背景、理由和后果，避免重复讨论。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image.png" alt="架构决策记录 ADR"></p>
+<h2 id="1-4-设计原则">1.4 设计原则</h2>
+<p>设计原则是指导方针（Guideline）而非硬性规则（hard-and-fast rule），用于提供指引和建议，帮助开发团队在面对特定情景时做出最佳选择。</p>
+<h1>2. 架构决策和设计原则的区别</h1>
 <ul>
 <li>架构决策：硬性规则</li>
 <li>设计原则：指导方针</li>
 </ul>
-<h1 id="软件架构师的核心期望">3. 软件架构师的核心期望</h1>
-<h2 id="八大期望">3.1 八大期望</h2>
-<ol type="1">
-<li><p>Make Architecture Decisions</p>
-<p>架构师应定义指导团队技术决策的架构决策和设计原则。核心是"指导（guide）"而非"指定（specify"。</p></li>
-<li><p>Continually Analyze the Architecture</p>
-<p>架构师必须持续、全面地分析技术和问题域的变化，以确保架构的健壮性和业务相关性。</p></li>
-<li><p>Keep Current with Latest Trends</p>
-<p>架构师需要不断跟踪和保持对最新技术、框架、平台和环境的了解。</p></li>
-<li><p>Ensure Compliance with Decisions</p>
-<p>架构师需要持续验证开发团队是否遵循已定义、文档化和沟通的架构决策和设计原则。</p></li>
-<li><p>Diverse Exposure and Experience</p>
-<p>架构师应接触并体验多种多样的技术、框架、平台和环境，从而帮助架构师在面对新问题时，可以从更广阔的技术栈中选择最佳解决方案。</p></li>
-<li><p>Have Business Domain Knowledge</p>
-<p>优秀的软件架构师不仅理解技术，还理解问题空间的业务领域，从而设计出贴合业务发展的有效架构。</p></li>
-<li><p>Possess Interpersonal Skills</p>
-<p>成为一名有效架构师，人际交往能力至少占一半。架构师需要积极与团队协作、进行双向沟通，提供指导和辅导，避免成为象牙塔架构师（Ivory
-Tower Architecture）。</p></li>
-<li><p>Understand and Navigate Politics</p>
-<p>架构师需要理解企业内部的政治环境，并能驾驭其复杂性。在架构决策受到挑战时，沟通过程中需要始终提供技术和业务上的双重理由，学习将强硬要求转化为请求，并利用同理心和影响力而非头衔来推动决策。</p></li>
+<h1>3. 软件架构师的核心期望</h1>
+<h2 id="3-1-八大期望">3.1 八大期望</h2>
+<ol>
+<li>
+<p>Make Architecture Decisions</p>
+<p>架构师应定义指导团队技术决策的架构决策和设计原则。核心是&quot;指导（guide）“而非&quot;指定（specify”。</p>
+</li>
+<li>
+<p>Continually Analyze the Architecture</p>
+<p>架构师必须持续、全面地分析技术和问题域的变化，以确保架构的健壮性和业务相关性。</p>
+</li>
+<li>
+<p>Keep Current with Latest Trends</p>
+<p>架构师需要不断跟踪和保持对最新技术、框架、平台和环境的了解。</p>
+</li>
+<li>
+<p>Ensure Compliance with Decisions</p>
+<p>架构师需要持续验证开发团队是否遵循已定义、文档化和沟通的架构决策和设计原则。</p>
+</li>
+<li>
+<p>Diverse Exposure and Experience</p>
+<p>架构师应接触并体验多种多样的技术、框架、平台和环境，从而帮助架构师在面对新问题时，可以从更广阔的技术栈中选择最佳解决方案。</p>
+</li>
+<li>
+<p>Have Business Domain Knowledge</p>
+<p>优秀的软件架构师不仅理解技术，还理解问题空间的业务领域，从而设计出贴合业务发展的有效架构。</p>
+</li>
+<li>
+<p>Possess Interpersonal Skills</p>
+<p>成为一名有效架构师，人际交往能力至少占一半。架构师需要积极与团队协作、进行双向沟通，提供指导和辅导，避免成为象牙塔架构师（Ivory Tower Architecture）。</p>
+</li>
+<li>
+<p>Understand and Navigate Politics</p>
+<p>架构师需要理解企业内部的政治环境，并能驾驭其复杂性。在架构决策受到挑战时，沟通过程中需要始终提供技术和业务上的双重理由，学习将强硬要求转化为请求，并利用同理心和影响力而非头衔来推动决策。</p>
+</li>
 </ol>
-<h2 id="成长指南">3.2 成长指南</h2>
-<p>成长为一名合格的软件架构师是一个持续学习和实践的过程，涵盖技术、沟通和领导力等多个方面，这里笔者结合
-FOSA 书中的 19~24 章内容进行梳理总结：</p>
+<h2 id="3-2-成长指南">3.2 成长指南</h2>
+<p>成长为一名合格的软件架构师是一个持续学习和实践的过程，涵盖技术、沟通和领导力等多个方面，这里笔者结合 FOSA 书中的 19~24 章内容进行梳理总结：</p>
 <ul>
 <li><strong>持续学习和扩展技术广度</strong>
 <ul>
-<li>20 分钟法则：每天至少投入 20
-分钟学习新知识或深入研究特定主题，这里笔者推荐可以每天（或每周）跟 LLM
-深入探讨一个技术话题或前沿技术概念。</li>
-<li>技术雷达：利用如 ThoughtWorks
-技术雷达的方法来组织和评估新技术，识别值得投入时间深入研究的"试用"技术，并根据趋势更新知识库。</li>
-<li>社交媒体：积极利用社交媒体发现新趋势和技术，将其放入个人技术雷达的"评估"环中。</li>
-</ul></li>
+<li>20 分钟法则：每天至少投入 20 分钟学习新知识或深入研究特定主题，这里笔者推荐可以每天（或每周）跟 LLM 深入探讨一个技术话题或前沿技术概念。</li>
+<li>技术雷达：利用如 ThoughtWorks 技术雷达的方法来组织和评估新技术，识别值得投入时间深入研究的&quot;试用&quot;技术，并根据趋势更新知识库。</li>
+<li>社交媒体：积极利用社交媒体发现新趋势和技术，将其放入个人技术雷达的&quot;评估&quot;环中。</li>
+</ul>
+</li>
 <li><strong>实践权衡分析</strong>
 <ul>
 <li>失败乃成功之母，实践是检验真理的唯一标准。只有在实践中不断的进行架构设计、权衡抉择、推翻重建，才能不断深化对理论知识、业务领域和现实世界的理解。</li>
-<li>培养批判性思维，避免过度设计和"黄金镀层"现象，专注于解决实际问题，而不是为了技术而技术。软件架构中没有错误的答案，只有昂贵的答案。</li>
-</ul></li>
+<li>培养批判性思维，避免过度设计和&quot;黄金镀层&quot;现象，专注于解决实际问题，而不是为了技术而技术。软件架构中没有错误的答案，只有昂贵的答案。</li>
+</ul>
+</li>
 <li><strong>培养沟通和协作能力</strong>
 <ul>
-<li>通用语言：参考
-DDD（领域驱动设计）思想，在所有项目相关沟通中（包括代码和文档）都使用通用语言，避免沟通歧义，减少沟通成本。</li>
-<li>4C
-原则：在沟通中始终关注沟通（Communication）、协作（Collaboration）、清晰（Clarity）和简洁（Concisensess）这
-4 个要素。</li>
+<li>通用语言：参考 DDD（领域驱动设计）思想，在所有项目相关沟通中（包括代码和文档）都使用通用语言，避免沟通歧义，减少沟通成本。</li>
+<li>4C 原则：在沟通中始终关注沟通（Communication）、协作（Collaboration）、清晰（Clarity）和简洁（Concisensess）这 4 个要素。</li>
 <li>主动倾听：认真倾听利益相关者的声音，理解他们的业务需求和痛点，并寻求澄清。</li>
-</ul></li>
+</ul>
+</li>
 <li><strong>通过榜样领导团队</strong>
 <ul>
 <li>赢得尊重</li>
 <li>辅导和引导</li>
 <li>化请求为帮助</li>
 <li>使用清单</li>
-</ul></li>
+</ul>
+</li>
 <li><strong>深入业务领域</strong>
 <ul>
 <li>分析业务领域和子域，识别公司的主要活动领域、竞争策略。</li>
 <li>学习领域驱动设计，始终让业务驱动软件设计决策，而不是为了应用最新的技术而技术。</li>
-</ul></li>
 </ul>
-<h1 id="软件架构的第一定律">4. 软件架构的第一定律</h1>
-<ol type="1">
+</li>
+</ul>
+<h1>4. 软件架构的第一定律</h1>
+<ol>
 <li>Everything in software architecture is a trade-off.</li>
-<li>If an architecture thinks they have discovered something that isn't
-a trade-off, more likely they just haven't identified the trade-off
-yet.</li>
+<li>If an architecture thinks they have discovered something that isn’t a trade-off, more likely they just haven’t identified the trade-off yet.</li>
 <li>Why is more important than how.</li>
 </ol>
-<p>软件架构中的一切都是<strong><font color="red">权衡</font></strong>。一个解决方案是否是"最佳"的，取决于部署环境、业务驱动因素、公司文化、预算、时间限制、开发人员技能集以及其他数多种因素。架构师应追求"<strong>最不差架构</strong>（least
-worst
-architecture）"，而非"最佳架构"。试图支持过多的架构特性往往会导致过于通用且笨重的设计，使其难以成功。</p>
+<p>软件架构中的一切都是**<font color="red">权衡</font>**。一个解决方案是否是&quot;最佳&quot;的，取决于部署环境、业务驱动因素、公司文化、预算、时间限制、开发人员技能集以及其他数多种因素。架构师应追求&quot;<strong>最不差架构</strong>（least worst architecture）“，而非&quot;最佳架构”。试图支持过多的架构特性往往会导致过于通用且笨重的设计，使其难以成功。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -305,18 +285,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BD%AF%E4%BB%B6%E6%9E%B6%E6%9E%84%E5%AE%9A%E4%B9%89%E7%9A%84%E5%9B%9B%E4%B8%AA%E7%BB%B4%E5%BA%A6"><span class="toc-text">1. 软件架构定义的四个维度</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%B3%BB%E7%BB%9F%E7%BB%93%E6%9E%84"><span class="toc-text">1.1 系统结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E7%89%B9%E6%80%A7"><span class="toc-text">1.2 架构特性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E5%86%B3%E7%AD%96"><span class="toc-text">1.3 架构决策</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99"><span class="toc-text">1.4 设计原则</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E5%86%B3%E7%AD%96%E5%92%8C%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-text">2. 架构决策和设计原则的区别</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BD%AF%E4%BB%B6%E6%9E%B6%E6%9E%84%E5%B8%88%E7%9A%84%E6%A0%B8%E5%BF%83%E6%9C%9F%E6%9C%9B"><span class="toc-text">3. 软件架构师的核心期望</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E5%A4%A7%E6%9C%9F%E6%9C%9B"><span class="toc-text">3.1 八大期望</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%88%90%E9%95%BF%E6%8C%87%E5%8D%97"><span class="toc-text">3.2 成长指南</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BD%AF%E4%BB%B6%E6%9E%B6%E6%9E%84%E7%9A%84%E7%AC%AC%E4%B8%80%E5%AE%9A%E5%BE%8B"><span class="toc-text">4. 软件架构的第一定律</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">1. 软件架构定义的四个维度</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-%E7%B3%BB%E7%BB%9F%E7%BB%93%E6%9E%84"><span class="toc-text">1.1 系统结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-%E6%9E%B6%E6%9E%84%E7%89%B9%E6%80%A7"><span class="toc-text">1.2 架构特性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-3-%E6%9E%B6%E6%9E%84%E5%86%B3%E7%AD%96"><span class="toc-text">1.3 架构决策</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-4-%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99"><span class="toc-text">1.4 设计原则</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">2. 架构决策和设计原则的区别</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">3. 软件架构师的核心期望</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#3-1-%E5%85%AB%E5%A4%A7%E6%9C%9F%E6%9C%9B"><span class="toc-text">3.1 八大期望</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-2-%E6%88%90%E9%95%BF%E6%8C%87%E5%8D%97"><span class="toc-text">3.2 成长指南</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">4. 软件架构的第一定律</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

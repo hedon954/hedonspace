@@ -27,11 +27,14 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="极客时间《手把手带你写一个 Web 框架》课程笔记。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Patricia_trie_var.svg/350px-Patricia_trie_var.svg.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250707232209688.png">
 <meta property="article:published_time" content="2025-07-07T15:02:00.000Z">
 <meta property="article:modified_time" content="2025-07-07T15:51:47.418Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="课程笔记">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Patricia_trie_var.svg/350px-Patricia_trie_var.svg.png">
   
   
   
@@ -69,7 +72,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a><a class="item title" href="/2025/08/13/llm/weight-typing/"><span class="title">大白话解释 GPT 架构中的权重共享</span></a><a class="item title" href="/2025/08/05/rust/rust-polymorphism/"><span class="title">Rust 多态的两种实现：Trait Bound 与 Trait Object 深度解析</span></a><a class="item title" href="/2025/07/27/llm/back-propagation/"><span class="title">大白话解释反向传播算法</span></a><a class="item title" href="/2025/07/24/note-fosa/"><span class="title">读书笔记丨《Fundamentals of Software Architecture》</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/03/02/rust-crate-reqwest/"><span class="title">Rust reqwest 简明教程</span></a><a class="item title" href="/2024/03/02/rust-crate-clap/"><span class="title">深入探索 Rust 的 clap 库：命令行解析的艺术</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2024/06/06/rust-action-sse/"><span class="title">Rust 实战丨SSE(Server-Sent Events)</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a><a class="item title" href="/2025/08/13/llm/weight-typing/"><span class="title">大白话解释 GPT 架构中的权重共享</span></a><a class="item title" href="/2025/08/05/rust/rust-polymorphism/"><span class="title">Rust 多态的两种实现：Trait Bound 与 Trait Object 深度解析</span></a><a class="item title" href="/2025/07/27/llm/back-propagation/"><span class="title">大白话解释反向传播算法</span></a><a class="item title" href="/2025/07/24/note-fosa/"><span class="title">读书笔记丨《Fundamentals of Software Architecture》</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/03/02/rust-crate-clap/"><span class="title">深入探索 Rust 的 clap 库：命令行解析的艺术</span></a><a class="item title" href="/2024/03/02/rust-crate-reqwest/"><span class="title">Rust reqwest 简明教程</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2024/06/06/rust-action-sse/"><span class="title">Rust 实战丨SSE(Server-Sent Events)</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -93,50 +96,31 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><h2 id="框架零件">框架"零件"</h2>
+  </div><article class="md-text content"><h2 id="框架-零件">框架&quot;零件&quot;</h2>
 <h3 id="context">context</h3>
-<ol type="1">
-<li>框架级 Context：可以组合优秀框架（如
-gin.Context）的基础上，扩展自己常用的功能函数。</li>
-<li>业务级 Context：针对具体的业务，组合框架
-Context，封装更多的业务工具函数，进一步提升效率。</li>
-<li>如果有必要进步提升性能的话，可以使用 sync.Pool 对 Context
-进行管理，避免 Context 频繁创建销毁带来的性能损耗。</li>
+<ol>
+<li>框架级 Context：可以组合优秀框架（如 gin.Context）的基础上，扩展自己常用的功能函数。</li>
+<li>业务级 Context：针对具体的业务，组合框架 Context，封装更多的业务工具函数，进一步提升效率。</li>
+<li>如果有必要进步提升性能的话，可以使用 sync.Pool 对 Context 进行管理，避免 Context 频繁创建销毁带来的性能损耗。</li>
 <li>灵活使用链路调用，有助于提升代码的清晰度和可扩展性。</li>
 </ol>
 <h3 id="路由匹配">路由匹配</h3>
-<p>Gin 使用 <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Radix_tree">radix
-tree</a>，尽可能压缩路由的公共前缀，同时使用 indices
-加速路由的检索。</p>
-<figure>
-<img
-src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Patricia_trie_var.svg/350px-Patricia_trie_var.svg.png"
-alt="radix tree" />
-<figcaption aria-hidden="true">radix tree</figcaption>
-</figure>
+<p>Gin 使用 <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Radix_tree">radix tree</a>，尽可能压缩路由的公共前缀，同时使用 indices 加速路由的检索。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Patricia_trie_var.svg/350px-Patricia_trie_var.svg.png" alt="radix tree"></p>
 <h3 id="中间件">中间件</h3>
 <p>使用洋葱型中间件，可以很方便地进行 AOP 编程，有很大的扩展性。</p>
 <p>如 Gin 框架中：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// HandlersChain defines a HandlerFunc slice.</span></span><br><span class="line"><span class="keyword">type</span> HandlersChain []HandlerFunc</span><br><span class="line"></span><br><span class="line"><span class="comment">// HandlerFunc defines the handler used by gin middleware as return value.</span></span><br><span class="line"><span class="keyword">type</span> HandlerFunc <span class="function"><span class="keyword">func</span><span class="params">(*Context)</span></span></span><br></pre></td></tr></table></figure>
-<p>同时为 <code>IRouter</code> 接口也定义 <code>Group</code>
-函数，这样可以进一步提升聚合类的逻辑复用：</p>
+<p>同时为 <code>IRouter</code> 接口也定义 <code>Group</code> 函数，这样可以进一步提升聚合类的逻辑复用：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// IRouter defines all router handle interface includes single and group router.</span></span><br><span class="line"><span class="keyword">type</span> IRouter <span class="keyword">interface</span> &#123;</span><br><span class="line">	IRoutes</span><br><span class="line">	Group(<span class="type">string</span>, ...HandlerFunc) *RouterGroup</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在执行过程中，使用 <code>c.Next()</code> 和 <code>c.Abort()</code>
-来进行处理器调用或提前退出等逻辑控制：</p>
+<p>在执行过程中，使用 <code>c.Next()</code> 和 <code>c.Abort()</code> 来进行处理器调用或提前退出等逻辑控制：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> abortIndex <span class="type">int8</span> = math.MaxInt8 &gt;&gt; <span class="number">1</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Context)</span></span> Next() &#123;</span><br><span class="line">	c.index++   <span class="comment">// 初始化 c.index = -1</span></span><br><span class="line">	<span class="keyword">for</span> c.index &lt; <span class="type">int8</span>(<span class="built_in">len</span>(c.handlers)) &#123;</span><br><span class="line">		<span class="keyword">if</span> c.handlers[c.index] != <span class="literal">nil</span> &#123;</span><br><span class="line">			c.handlers[c.index](c)</span><br><span class="line">		&#125;</span><br><span class="line">		c.index++</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Context)</span></span> Abort() &#123;</span><br><span class="line">	c.index = abortIndex  <span class="comment">// 设置为最大值，后面的 next 就会直接返回</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h3 id="扩展现有框架">扩展现有框架</h3>
-<p>相比于自己从零开始写一个 Web
-框架，完全可以站在前人的肩膀上，将流行的、好用的、开源协议允许的框架代码拷贝到自己的仓库中，进行改造升级，从而快速搭建一个功能完善、经过验证、贴合团队需要的强悍
-Web 框架。</p>
+<p>相比于自己从零开始写一个 Web 框架，完全可以站在前人的肩膀上，将流行的、好用的、开源协议允许的框架代码拷贝到自己的仓库中，进行改造升级，从而快速搭建一个功能完善、经过验证、贴合团队需要的强悍 Web 框架。</p>
 <h2 id="一切皆服务">一切皆服务</h2>
 <p>按照面向接口编程的理念，将每个模块看成是一个服务，服务的具体实现我们其实并不关心，我们关心的是服务提供的能力，即接口协议。那么框架主体真正要做的事情是什么呢？其实是：<strong>定义好每个模块服务的接口协议，规范服务与服务之间的调用，并且管理每个服务的具体实现</strong>。</p>
 <p>所有的服务都去框架主体中注册自身的模块接口协议，其他的服务调用功能模块的时候，并不是直接去这个服务获取实例，而是从框架主体中获取有这个接口协议的服务实例。</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250707232209688.png"
-alt="一切皆服务" />
-<figcaption aria-hidden="true">一切皆服务</figcaption>
-</figure>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250707232209688.png" alt="一切皆服务"></p>
 <h3 id="容器-container">容器 container</h3>
 <p>服务提供接口定义可参考：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// NewInstance is a function that creates a new instance of a service</span></span><br><span class="line"><span class="keyword">type</span> NewInstance <span class="function"><span class="keyword">func</span><span class="params">(...any)</span></span> (any, <span class="type">error</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// ServiceProvider is an interface that defines a service provider</span></span><br><span class="line"><span class="keyword">type</span> ServiceProvider <span class="keyword">interface</span> &#123;</span><br><span class="line">	<span class="comment">// Register a service provider into the container,</span></span><br><span class="line">	<span class="comment">// whether to initialize the service or not determined by the IsDefer method</span></span><br><span class="line">	Register(Container) NewInstance</span><br><span class="line">	<span class="comment">// Boot the service provider, this method will be called after the container is initialized.</span></span><br><span class="line">	<span class="comment">// Is id recommend to do some initialization work in this method.</span></span><br><span class="line">	<span class="comment">// If returns error, the service initialization will be failed.</span></span><br><span class="line">	Boot(Container) <span class="type">error</span></span><br><span class="line">	<span class="comment">// IsDefer determines whether the service provider should be deferred.</span></span><br><span class="line">	<span class="comment">// If true, the service provider will be deferred until the first time the service is used.</span></span><br><span class="line">	IsDefer() <span class="type">bool</span></span><br><span class="line">	<span class="comment">// Params are the parameters which would be passed to the NewInstance function.</span></span><br><span class="line">	Params(Container) []any</span><br><span class="line">	<span class="comment">// Name is a method that returns the unique name of the service provider.</span></span><br><span class="line">	Name() <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -154,14 +138,11 @@ alt="一切皆服务" />
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="string">contract</span>  <span class="comment"># 服务接口定义</span></span><br><span class="line">	<span class="bullet">-</span> <span class="string">app.go</span></span><br><span class="line">	<span class="bullet">-</span> <span class="string">kernel.go</span></span><br><span class="line">	<span class="bullet">-</span> <span class="string">env.go</span></span><br><span class="line">	<span class="bullet">-</span> <span class="string">config.go</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">provider</span>  <span class="comment"># 服务实现</span></span><br><span class="line">	<span class="bullet">-</span> <span class="string">app</span> <span class="comment"># app 服务</span></span><br><span class="line">		<span class="bullet">-</span> <span class="string">provider.go</span> <span class="comment"># 实现 Service Provider</span></span><br><span class="line">		<span class="bullet">-</span> <span class="string">service.go</span>  <span class="comment"># 实现服务接口</span></span><br><span class="line">	<span class="bullet">-</span> <span class="string">kernel</span></span><br><span class="line">		<span class="bullet">-</span> <span class="string">provider.go</span></span><br><span class="line">		<span class="bullet">-</span> <span class="string">service.go</span></span><br></pre></td></tr></table></figure>
 <h4 id="业务级服务">业务级服务</h4>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> &#123;<span class="string">root</span>&#125;  <span class="comment"># 根目录</span></span><br><span class="line">	<span class="bullet">-</span> <span class="string">app</span> <span class="comment"># app 目录</span></span><br><span class="line">	<span class="bullet">-</span> <span class="string">provider</span> <span class="comment"># 通用业务服务</span></span><br><span class="line">		<span class="bullet">-</span> <span class="string">user</span>  <span class="comment"># user 服务</span></span><br><span class="line">			<span class="bullet">-</span> <span class="string">contract.go</span> <span class="comment"># user 服务接口定义</span></span><br><span class="line">			<span class="bullet">-</span> <span class="string">service.go</span>  <span class="comment"># user 服务接口实现</span></span><br><span class="line">			<span class="bullet">-</span> <span class="string">provider.go</span> <span class="comment"># 为 user 服务实现 Service Provider</span></span><br><span class="line">		<span class="bullet">-</span> <span class="string">mail</span></span><br><span class="line">			<span class="bullet">-</span> <span class="string">contract.go</span></span><br><span class="line">			<span class="bullet">-</span> <span class="string">service.go</span></span><br><span class="line">			<span class="bullet">-</span> <span class="string">provider.go</span></span><br></pre></td></tr></table></figure>
-<h2 id="自动化-dry">自动化 DRY</h2>
-<p>在业务开发过程中，对于那些重复性的类模板劳动，可以使用 CLI
-命令行工具，或其他自动化工具，来简化这些劳动输出。</p>
-<p>这里有 2 个思路，一个是使用 Makefile，一个是使用 CLI（Go 里面可以使用
-<code>cobra</code> 框架）。选择的时候可以考虑以下几个点：</p>
-<ol type="1">
-<li>命令变动的频率（二者在这一点区别不大，不过如果变动频率比较低，那 CLI
-的劣势就相对可以忽略了）</li>
+<h2 id="自动化-DRY">自动化 DRY</h2>
+<p>在业务开发过程中，对于那些重复性的类模板劳动，可以使用 CLI 命令行工具，或其他自动化工具，来简化这些劳动输出。</p>
+<p>这里有 2 个思路，一个是使用 Makefile，一个是使用 CLI（Go 里面可以使用 <code>cobra</code> 框架）。选择的时候可以考虑以下几个点：</p>
+<ol>
+<li>命令变动的频率（二者在这一点区别不大，不过如果变动频率比较低，那 CLI 的劣势就相对可以忽略了）</li>
 <li>命令使用的复杂性（参数越多，则需要越详尽的帮助说明）</li>
 <li>业务逻辑相关性（越相关，则逻辑越复杂，使用代码越好管控）</li>
 </ol>
@@ -169,8 +150,7 @@ alt="一切皆服务" />
 <ul>
 <li>生成项目脚手架（init）</li>
 <li>项目启动管理（build、start、stop、restart、update）</li>
-<li>服务模版生成（provider list/new）—— 可以结合 <code>survey</code>
-做命令行渐进式输入，<code>template</code> 生成模板代码</li>
+<li>服务模版生成（provider list/new）—— 可以结合  <code>survey</code> 做命令行渐进式输入，<code>template</code> 生成模板代码</li>
 <li>命令行系列生成（command list/new）</li>
 <li>定时任务（cron list/run）</li>
 <li>swagger 生成（swagger gen）</li>
@@ -179,9 +159,7 @@ alt="一切皆服务" />
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -221,18 +199,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A1%86%E6%9E%B6%E9%9B%B6%E4%BB%B6"><span class="toc-text">框架&quot;零件&quot;</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#context"><span class="toc-text">context</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B7%AF%E7%94%B1%E5%8C%B9%E9%85%8D"><span class="toc-text">路由匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%AD%E9%97%B4%E4%BB%B6"><span class="toc-text">中间件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%89%A9%E5%B1%95%E7%8E%B0%E6%9C%89%E6%A1%86%E6%9E%B6"><span class="toc-text">扩展现有框架</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E5%88%87%E7%9A%86%E6%9C%8D%E5%8A%A1"><span class="toc-text">一切皆服务</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%B9%E5%99%A8-container"><span class="toc-text">容器 container</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1-service-provider"><span class="toc-text">服务 service provider</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A1%86%E6%9E%B6%E7%BA%A7%E6%9C%8D%E5%8A%A1"><span class="toc-text">框架级服务</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%9A%E5%8A%A1%E7%BA%A7%E6%9C%8D%E5%8A%A1"><span class="toc-text">业务级服务</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E5%8A%A8%E5%8C%96-dry"><span class="toc-text">自动化 DRY</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A1%86%E6%9E%B6-%E9%9B%B6%E4%BB%B6"><span class="toc-text">框架&quot;零件&quot;</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#context"><span class="toc-text">context</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B7%AF%E7%94%B1%E5%8C%B9%E9%85%8D"><span class="toc-text">路由匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%AD%E9%97%B4%E4%BB%B6"><span class="toc-text">中间件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%89%A9%E5%B1%95%E7%8E%B0%E6%9C%89%E6%A1%86%E6%9E%B6"><span class="toc-text">扩展现有框架</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E5%88%87%E7%9A%86%E6%9C%8D%E5%8A%A1"><span class="toc-text">一切皆服务</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%B9%E5%99%A8-container"><span class="toc-text">容器 container</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1-service-provider"><span class="toc-text">服务 service provider</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A1%86%E6%9E%B6%E7%BA%A7%E6%9C%8D%E5%8A%A1"><span class="toc-text">框架级服务</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%9A%E5%8A%A1%E7%BA%A7%E6%9C%8D%E5%8A%A1"><span class="toc-text">业务级服务</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E5%8A%A8%E5%8C%96-DRY"><span class="toc-text">自动化 DRY</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
