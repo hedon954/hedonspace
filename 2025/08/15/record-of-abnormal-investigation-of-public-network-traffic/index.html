@@ -28,7 +28,7 @@
 <meta property="og:description" content="本文详细记录了一次由公网流出带宽飙升引发的服务器性能故障排查。我们从监控图表入手，利用 iftop 实时追踪流量去向，并最终通过 nethogs 锁定应用。该案例揭示了新功能配置对网络资源的巨大影响，为解决类似问题提供了宝贵经验。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-08-15T07:30:20.000Z">
-<meta property="article:modified_time" content="2025-08-15T07:57:35.499Z">
+<meta property="article:modified_time" content="2025-08-15T08:04:49.686Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="网络">
 <meta property="article:tag" content="服务器">
@@ -72,7 +72,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/15/record-of-abnormal-investigation-of-public-network-traffic/"><span class="title">一次由公网流出带宽飙升引发的服务器性能排查实录</span></a><a class="item title" href="/2024/01/17/rust-action-mandelbrot/"><span class="title">Rust 实战丨绘制曼德博集</span></a><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a><a class="item title" href="/2025/08/13/llm/weight-typing/"><span class="title">大白话解释 GPT 架构中的权重共享</span></a><a class="item title" href="/2025/07/27/llm/back-propagation/"><span class="title">大白话解释反向传播算法</span></a><a class="item title" href="/2023/12/23/floating-point-number/"><span class="title">一文彻底掌握浮点数</span></a><a class="item title" href="/2025/08/05/rust/rust-polymorphism/"><span class="title">Rust 多态的两种实现：Trait Bound 与 Trait Object 深度解析</span></a><a class="item title" href="/2025/07/24/note-fosa/"><span class="title">读书笔记丨《Fundamentals of Software Architecture》</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a><a class="item title" href="/2025/07/23/fosa/fosa-ch17/"><span class="title">FOSA丨17丨微服务架构</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/15/record-of-abnormal-investigation-of-public-network-traffic/"><span class="title">一次由公网流出带宽飙升引发的服务器性能排查实录</span></a><a class="item title" href="/2024/01/17/rust-action-mandelbrot/"><span class="title">Rust 实战丨绘制曼德博集</span></a><a class="item title" href="/2025/08/13/llm/weight-typing/"><span class="title">大白话解释 GPT 架构中的权重共享</span></a><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a><a class="item title" href="/2025/07/27/llm/back-propagation/"><span class="title">大白话解释反向传播算法</span></a><a class="item title" href="/2023/12/23/floating-point-number/"><span class="title">一文彻底掌握浮点数</span></a><a class="item title" href="/2025/08/05/rust/rust-polymorphism/"><span class="title">Rust 多态的两种实现：Trait Bound 与 Trait Object 深度解析</span></a><a class="item title" href="/2025/07/24/note-fosa/"><span class="title">读书笔记丨《Fundamentals of Software Architecture》</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a><a class="item title" href="/2025/07/23/fosa/fosa-ch17/"><span class="title">FOSA丨17丨微服务架构</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -85,7 +85,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E6%95%85%E9%9A%9C%E6%8E%92%E6%9F%A5/">故障排查</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-08-15T07:30:20.000Z">2025-08-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-08-15T07:57:35.499Z">2025-08-15</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-08-15T07:30:20.000Z">2025-08-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-08-15T08:04:49.686Z">2025-08-15</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -170,7 +170,7 @@ alt="nethogs" />
 </figure>
 <p><strong>排查原理</strong>：<code>nethogs</code> 将流量与具体的进程
 ID（PID）和程序路径关联起来，为我们提供了最终的、无可辩驳的证据。至此，我们已经完整地锁定了问题：<code>snakeweb_</code>
-应用向 <code>101.132.192.233</code> 发送大量数据。</p>
+应用向 IP <code>xxx</code> 发送大量数据。</p>
 <h4 id="第四步发现-time_wait-堆积理解行为模式"><strong>第四步：发现
 <code>TIME_WAIT</code> 堆积，理解行为模式</strong></h4>
 <p>在确认了应用和流量去向后，我们回过头来审视最初的一些异常现象。网络连接数的监控图显示，<code>NON_ESTABLISHED</code>（非活跃）连接数在
