@@ -28,7 +28,7 @@
 <meta property="og:description" content="本文从一个经典问题 0.1+0.2 !&#x3D; 0.3 出发，详细介绍了 IEEE-754 标准下的浮点数表示方法，细致阐述了 3 种浮点数类型的表示逻辑，包括规格化值、非规格化值和特殊值。还介绍了浮点数舍入的 4 种模式，以及浮点数的基本运算。最后，本文结合 Go 语言给出了浮点数不同的输出方式的例子，以及简单介绍了 Go 语言中的 math&#x2F;big 库在大数运算和精度更高的运算场景中的应用。本文包含">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-12-23T13:51:52.000Z">
-<meta property="article:modified_time" content="2025-08-13T16:45:22.245Z">
+<meta property="article:modified_time" content="2025-08-25T15:15:59.965Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="计算机原理">
 <meta property="article:tag" content="浮点数">
@@ -70,7 +70,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a><a class="item title" href="/2024/01/17/rust-action-mandelbrot/"><span class="title">Rust 实战丨绘制曼德博集</span></a><a class="item title" href="/2025/07/27/llm/back-propagation/"><span class="title">大白话解释反向传播算法</span></a><a class="item title" href="/2025/08/13/llm/weight-typing/"><span class="title">大白话解释 GPT 架构中的权重共享</span></a><a class="item title" href="/2023/12/23/floating-point-number/"><span class="title">一文彻底掌握浮点数</span></a><a class="item title" href="/2025/08/05/rust/rust-polymorphism/"><span class="title">Rust 多态的两种实现：Trait Bound 与 Trait Object 深度解析</span></a><a class="item title" href="/2025/07/24/note-fosa/"><span class="title">读书笔记丨《Fundamentals of Software Architecture》</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/03/02/rust-crate-reqwest/"><span class="title">Rust reqwest 简明教程</span></a><a class="item title" href="/2024/03/02/rust-crate-clap/"><span class="title">深入探索 Rust 的 clap 库：命令行解析的艺术</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/25/redis/redis-datatype-string/"><span class="title">Redis 数据类型丨String丨从第一性原理看 Redis 字符串的设计哲学 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2023/12/23/floating-point-number/"><span class="title">一文彻底掌握浮点数</span></a><a class="item title" href="/2025/08/15/record-of-abnormal-investigation-of-public-network-traffic/"><span class="title">一次由公网流出带宽飙升引发的服务器性能排查实录</span></a><a class="item title" href="/2025/08/18/llm/pytorch/"><span class="title">告别死记硬背：一份真正理解 PyTorch 核心设计的指南</span></a><a class="item title" href="/2025/08/21/llm/guide-to-lr-warmup-cosine-annealing-gradient-clipping/"><span class="title">模型训练核心技巧：学习率预热、余弦衰减与梯度裁剪</span></a><a class="item title" href="/2025/08/20/redis/redis-datatype-list/"><span class="title">Redis 数据类型丨List丨从双向链表到 Listpack 的演进之路 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2025/08/15/encryption-mode/"><span class="title">从 ECB 到 GCM：理解加密模式的演进</span></a><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a><a class="item title" href="/2024/01/17/rust-action-mandelbrot/"><span class="title">Rust 实战丨绘制曼德博集</span></a><a class="item title" href="/2025/07/27/llm/back-propagation/"><span class="title">大白话解释反向传播算法</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -83,7 +83,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-12-23T13:51:52.000Z">2023-12-23</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-08-13T16:45:22.245Z">2025-08-14</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-12-23T13:51:52.000Z">2023-12-23</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-08-25T15:15:59.965Z">2025-08-25</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -542,13 +542,13 @@ s = 0_{(2)}
 </ul>
 <p><strong>向上舍入（Round Up）</strong>:</p>
 <ul>
-<li>无论正负，都向远离零的方向舍入。</li>
-<li>对于正数，舍入后的值不小于原值；对于负数，舍入后的值不大于原值。</li>
+<li>无论正负，总是向<strong>正无穷大</strong>的方向舍入。</li>
+<li>对于任何数值，舍入结果都是<strong>不小于</strong>原值的最小整数。</li>
 </ul>
 <p><strong>向下舍入（Round Down）</strong>:</p>
 <ul>
-<li>无论正负，都向接近零的方向舍入。</li>
-<li>对于正数，舍入后的值不大于原值；对于负数，舍入后的值不小于原值。</li>
+<li>无论正负，总是向<strong>负无穷大</strong>的方向舍入。</li>
+<li>对于任何数值，舍入结果都是<strong>不大于</strong>原值的最大整数。</li>
 </ul>
 <h3 id="舍入的影响">舍入的影响</h3>
 <ul>
