@@ -71,7 +71,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/30/llm/note-llm-from-scratch/"><span class="title">读书笔记丨从零构建大语言模型</span></a><a class="item title" href="/2025/08/30/graceful-restart-from-tableflip-to-k8s/"><span class="title">优雅重启的范式转移：从 tableflip 到 Kubernetes 的 Go 服务升级终极指南</span></a><a class="item title" href="/2025/08/25/redis/redis-datatype-string/"><span class="title">Redis 数据类型丨String丨从第一性原理看 Redis 字符串的设计哲学 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2023/12/23/floating-point-number/"><span class="title">一文彻底掌握浮点数</span></a><a class="item title" href="/2025/08/15/record-of-abnormal-investigation-of-public-network-traffic/"><span class="title">一次由公网流出带宽飙升引发的服务器性能排查实录</span></a><a class="item title" href="/2025/08/21/llm/guide-to-lr-warmup-cosine-annealing-gradient-clipping/"><span class="title">模型训练核心技巧：学习率预热、余弦衰减与梯度裁剪</span></a><a class="item title" href="/2025/08/20/redis/redis-datatype-list/"><span class="title">Redis 数据类型丨List丨从双向链表到 Listpack 的演进之路 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2025/08/18/llm/pytorch/"><span class="title">告别死记硬背：一份真正理解 PyTorch 核心设计的指南</span></a><a class="item title" href="/2025/08/15/encryption-mode/"><span class="title">从 ECB 到 GCM：理解加密模式的演进</span></a><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/30/llm/note-llm-from-scratch/"><span class="title">读书笔记丨从零构建大语言模型</span></a><a class="item title" href="/2025/08/30/graceful-restart-from-tableflip-to-k8s/"><span class="title">优雅重启的范式转移：从 tableflip 到 Kubernetes 的 Go 服务升级终极指南</span></a><a class="item title" href="/2025/08/25/redis/redis-datatype-string/"><span class="title">Redis 数据类型丨String丨从第一性原理看 Redis 字符串的设计哲学 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2023/12/23/floating-point-number/"><span class="title">一文彻底掌握浮点数</span></a><a class="item title" href="/2025/08/15/record-of-abnormal-investigation-of-public-network-traffic/"><span class="title">一次由公网流出带宽飙升引发的服务器性能排查实录</span></a><a class="item title" href="/2025/08/21/llm/guide-to-lr-warmup-cosine-annealing-gradient-clipping/"><span class="title">模型训练核心技巧：学习率预热、余弦衰减与梯度裁剪</span></a><a class="item title" href="/2025/08/18/llm/pytorch/"><span class="title">告别死记硬背：一份真正理解 PyTorch 核心设计的指南</span></a><a class="item title" href="/2025/08/20/redis/redis-datatype-list/"><span class="title">Redis 数据类型丨List丨从双向链表到 Listpack 的演进之路 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2025/08/15/encryption-mode/"><span class="title">从 ECB 到 GCM：理解加密模式的演进</span></a><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -95,98 +95,63 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>本系列文章通过逐章回答<a
-target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of
-Software Architecture》</a>（下文简称
-FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第七章</u>内容。</p>
+  </div><article class="md-text content"><p>本系列文章通过逐章回答<a target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of Software Architecture》</a>（下文简称 FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第七章</u>内容。</p>
 <p>本章的课后题是：</p>
-<ol type="1">
-<li><p>What is an architectural quantum, and why is it important to
-architecture?</p>
-<p>为什么是架构量子？它为什么对架构很重要？</p></li>
-<li><p>Assume a system consisting of a single user interface with four
-independently deployed services, each containing its own separate
-database. Would this system have a single quantum or four quanta?
-Why?</p>
-<p>假设一个系统包含一个单一的用户界面，以及四个独立部署的服务，每个服务都包含自己的独立数据库。这个系统会有一个量子还是四个量子？为什么？</p></li>
-<li><p>Assume a system with an administration portion managing static
-reference data (such as the product catalog, and warehouse information)
-and a customer-facing portion managing the placement of orders. How many
-quanta should this system be and why? If you envision multiple quanta,
-could the admin quantum and customer-facing quantum share a database? If
-so, in which quantum would the database need to reside?</p>
+<ol>
+<li>
+<p>What is an architectural quantum, and why is it important to architecture?</p>
+<p>为什么是架构量子？它为什么对架构很重要？</p>
+</li>
+<li>
+<p>Assume a system consisting of a single user interface with four independently deployed services, each containing its own separate database. Would this system have a single quantum or four quanta? Why?</p>
+<p>假设一个系统包含一个单一的用户界面，以及四个独立部署的服务，每个服务都包含自己的独立数据库。这个系统会有一个量子还是四个量子？为什么？</p>
+</li>
+<li>
+<p>Assume a system with an administration portion managing static reference data (such as the product catalog, and warehouse information) and a customer-facing portion managing the placement of orders. How many quanta should this system be and why? If you envision multiple quanta, could the admin quantum and customer-facing quantum share a database? If so, in which quantum would the database need to reside?</p>
 <p>假设一个系统包含两个部分：</p>
-<ol type="1">
+<ol>
 <li><strong>管理后台</strong>：负责管理静态参考数据（例如产品目录、仓库信息）。</li>
 <li><strong>用户端</strong>：负责处理客户订单的下达。</li>
 </ol>
-<p>这个系统应该被划分为多少个
-<strong>量子</strong>？为什么？如果您设想这是多个量子，那二者可以共享同一个数据库吗？如果可以，该数据库需要驻留在哪个量子中？</p></li>
+<p>这个系统应该被划分为多少个 <strong>量子</strong>？为什么？如果您设想这是多个量子，那二者可以共享同一个数据库吗？如果可以，该数据库需要驻留在哪个量子中？</p>
+</li>
 </ol>
-<hr />
-<h2 id="什么是架构量子">什么是架构量子？</h2>
-<p><strong>架构量子 (Architectural Quantum)</strong> 这个概念源于 Neal
-Ford、Mark Richards 等人在《软件架构：艰难的部分》(Software
-Architecture: The Hard Parts) 一书中提出的。它的核心定义是：</p>
+<hr>
+<h2 id="什么是架构量子？">什么是架构量子？</h2>
+<p><strong>架构量子 (Architectural Quantum)</strong> 这个概念源于 Neal Ford、Mark Richards 等人在《软件架构：艰难的部分》(Software Architecture: The Hard Parts) 一书中提出的。它的核心定义是：</p>
 <blockquote>
-<p>一个<strong>架构量子</strong>是指一个系统中，具有<strong>高功能内聚性
-(High Functional Cohesion)</strong> 和<strong>同步部署依赖性
-(Synchronous Deployable Dependency)</strong>
-的、可独立部署的组件的最小集合。</p>
+<p>一个<strong>架构量子</strong>是指一个系统中，具有<strong>高功能内聚性 (High Functional Cohesion)</strong> 和<strong>同步部署依赖性 (Synchronous Deployable Dependency)</strong> 的、可独立部署的组件的最小集合。</p>
 </blockquote>
 <p>为了更好地理解这个定义，我们需要拆解其中的关键术语：</p>
 <ul>
-<li><strong>可独立部署的组件 (Independently Deployable
-Component)</strong>：这是现代架构（尤其是微服务架构）的基本单元。它可以是一个服务、一个应用或者任何可以独立于系统其他部分进行部署的模块。</li>
-<li><strong>高功能内聚性 (High Functional
-Cohesion)</strong>：这个概念借鉴了软件工程中的“内聚性”，指的是一个组件内部的各个部分为了一个共同、明确的目标而紧密协作。例如，一个“订单处理服务”应该只包含与创建、更新、查询订单相关的逻辑，而不应该包含用户认证或产品推荐的逻辑。一个架构量子内的所有组件，共同构成了一个完整且内聚的业务功能。</li>
-<li><strong>同步部署依赖性 (Synchronous Deployable
-Dependency)</strong>：这是定义中最关键也最“硬核”的部分。它指的是组件之间的行为调用必须是同步的，以保证系统正常工作。如果服务
-A 调用服务 B，并且必须等待 B 的响应才能继续执行，那么 A 和 B
-之间就存在同步依赖。这种依赖关系会将不同的独立部署组件“捆绑”在一起，形成一个不可分割的整体，也就是一个量子。如果为了让某个功能正常工作，你必须同时部署或更新服务
-A 和服务 B，那它们就属于同一个量子。</li>
+<li><strong>可独立部署的组件 (Independently Deployable Component)</strong>：这是现代架构（尤其是微服务架构）的基本单元。它可以是一个服务、一个应用或者任何可以独立于系统其他部分进行部署的模块。</li>
+<li><strong>高功能内聚性 (High Functional Cohesion)</strong>：这个概念借鉴了软件工程中的“内聚性”，指的是一个组件内部的各个部分为了一个共同、明确的目标而紧密协作。例如，一个“订单处理服务”应该只包含与创建、更新、查询订单相关的逻辑，而不应该包含用户认证或产品推荐的逻辑。一个架构量子内的所有组件，共同构成了一个完整且内聚的业务功能。</li>
+<li><strong>同步部署依赖性 (Synchronous Deployable Dependency)</strong>：这是定义中最关键也最“硬核”的部分。它指的是组件之间的行为调用必须是同步的，以保证系统正常工作。如果服务 A 调用服务 B，并且必须等待 B 的响应才能继续执行，那么 A 和 B 之间就存在同步依赖。这种依赖关系会将不同的独立部署组件“捆绑”在一起，形成一个不可分割的整体，也就是一个量子。如果为了让某个功能正常工作，你必须同时部署或更新服务 A 和服务 B，那它们就属于同一个量子。</li>
 </ul>
-<h2 id="为什么架构量子很重要">为什么架构量子很重要？</h2>
+<h2 id="为什么架构量子很重要？">为什么架构量子很重要？</h2>
 <p>理解了定义后，我们来看看它在实践中的重要性。架构量子的概念为我们提供了一个强大的分析工具，帮助我们衡量和决策架构中的关键架构特性，例如：</p>
-<ol type="1">
-<li><strong>可部署性
-(Deployability)</strong>：一个架构量子是<strong>最小的独立部署单元</strong>。整个量子可以作为一个单元进行部署、回滚和发布，而不会破坏系统的其他部分。这极大地简化了
-CI/CD
-流程。如果你错误地将一个量子拆分成多个，可能会导致部署时的级联失败。</li>
-<li><strong>可测试性
-(Testability)</strong>：由于量子内部的组件功能高度内聚且存在同步依赖，因此它也成为了一个理想的<strong>测试边界</strong>。你可以对整个量子进行端到端的功能测试和集成测试，而无需启动整个庞大的系统。</li>
-<li><strong>可伸缩性
-(Scalability)</strong>：不同的量子承载不同的业务功能，其负载模式也可能完全不同。例如，浏览产品目录的量子和处理支付的量子对资源的需求天差地别。将它们划分为不同的量子，使得我们可以<strong>独立地扩展</strong>每一个量子，从而更高效地利用资源。</li>
-<li><strong>容错性 (Fault
-Tolerance)</strong>：一个设计良好的量子边界可以形成一道“防火墙”。一个量子的失败（例如，由于代码缺陷或流量激增）不应该导致其他量子的同步崩溃。这种隔离性是构建高可用系统的基础。</li>
-<li><strong>组织结构对齐 (Alignment with Team
-Structure)</strong>：根据康威定律 (Conway's
-Law)，系统架构往往会反映出开发它的团队的沟通结构。一个清晰的量子可以由一个独立的、自治的团队负责，从而减少跨团队沟通的开销，提升开发效率。</li>
+<ol>
+<li><strong>可部署性 (Deployability)</strong>：一个架构量子是<strong>最小的独立部署单元</strong>。整个量子可以作为一个单元进行部署、回滚和发布，而不会破坏系统的其他部分。这极大地简化了 CI/CD 流程。如果你错误地将一个量子拆分成多个，可能会导致部署时的级联失败。</li>
+<li><strong>可测试性 (Testability)</strong>：由于量子内部的组件功能高度内聚且存在同步依赖，因此它也成为了一个理想的<strong>测试边界</strong>。你可以对整个量子进行端到端的功能测试和集成测试，而无需启动整个庞大的系统。</li>
+<li><strong>可伸缩性 (Scalability)</strong>：不同的量子承载不同的业务功能，其负载模式也可能完全不同。例如，浏览产品目录的量子和处理支付的量子对资源的需求天差地别。将它们划分为不同的量子，使得我们可以<strong>独立地扩展</strong>每一个量子，从而更高效地利用资源。</li>
+<li><strong>容错性 (Fault Tolerance)</strong>：一个设计良好的量子边界可以形成一道“防火墙”。一个量子的失败（例如，由于代码缺陷或流量激增）不应该导致其他量子的同步崩溃。这种隔离性是构建高可用系统的基础。</li>
+<li><strong>组织结构对齐 (Alignment with Team Structure)</strong>：根据康威定律 (Conway’s Law)，系统架构往往会反映出开发它的团队的沟通结构。一个清晰的量子可以由一个独立的、自治的团队负责，从而减少跨团队沟通的开销，提升开发效率。</li>
 </ol>
 <p>简而言之，架构量子帮助我们识别出系统中<strong>真正的、不可再分的架构单元</strong>。它提供了一个明确的边界，指导我们如何合理地拆分系统，从而在可部署性、可伸缩性、容错性和团队效率之间取得平衡。</p>
-<h2 id="场景分析一单一-ui-四个独立服务">场景分析一：单一 UI +
-四个独立服务</h2>
+<h2 id="场景分析一：单一-UI-四个独立服务">场景分析一：单一 UI + 四个独立服务</h2>
 <blockquote>
 <p>假设一个系统包含一个单一的用户界面，以及四个独立部署的服务，每个服务都包含自己的独立数据库。这个系统会有一个量子还是四个量子？为什么？</p>
 </blockquote>
-<p>答案是：<strong>这个系统最有可能包含四个量子 (Four
-Quanta)</strong>。</p>
+<p>答案是：<strong>这个系统最有可能包含四个量子 (Four Quanta)</strong>。</p>
 <p><strong>分析如下：</strong></p>
 <p>这里的关键信息是“四个<strong>独立部署</strong>的服务，每个服务都包含<strong>自己的独立数据库</strong>”。</p>
-<ol type="1">
+<ol>
 <li><strong>独立部署与自有数据库</strong>：这个设定强烈暗示了服务之间的高度解耦。在现代架构中，服务独占自己的数据库是实现真正自治和独立部署的黄金法则。如果服务间共享数据库，它们的部署就会产生耦合（例如，一个服务修改了表结构，可能会影响到所有依赖该表的其他服务），也就无法做到真正的独立部署。</li>
-<li><strong>同步依赖的缺失</strong>：虽然这四个服务最终都服务于同一个用户界面
-(UI)，但题目并未描述它们之间存在<strong>同步调用</strong>的强依赖关系。UI
-很可能是通过异步的方式或者直接独立地与这四个服务进行通信。例如，UI
-的一个页面可能需要同时展示来自服务 A 的用户信息和服务 B 的产品列表，但
-UI 可以分别向 A 和 B 发起两个独立的 API
-请求，这两个服务之间并不需要直接对话。</li>
-<li><strong>功能内聚性</strong>：每个服务和它自己的数据库共同构成了一个高度内聚的功能单元。例如，服务
-A 和它的数据库负责“用户管理”，服务 B
-和它的数据库负责“订单管理”，等等。它们各自完成了闭环的业务能力。</li>
+<li><strong>同步依赖的缺失</strong>：虽然这四个服务最终都服务于同一个用户界面 (UI)，但题目并未描述它们之间存在<strong>同步调用</strong>的强依赖关系。UI 很可能是通过异步的方式或者直接独立地与这四个服务进行通信。例如，UI 的一个页面可能需要同时展示来自服务 A 的用户信息和服务 B 的产品列表，但 UI 可以分别向 A 和 B 发起两个独立的 API 请求，这两个服务之间并不需要直接对话。</li>
+<li><strong>功能内聚性</strong>：每个服务和它自己的数据库共同构成了一个高度内聚的功能单元。例如，服务 A 和它的数据库负责“用户管理”，服务 B 和它的数据库负责“订单管理”，等等。它们各自完成了闭环的业务能力。</li>
 </ol>
 <p><strong>结论</strong>：由于这四个服务（连同其数据库）可以独立部署，并且它们之间大概率不存在必须同步成功的强依赖，因此它们构成了四个独立的架构量子。单一的用户界面在这里扮演的是一个“集成层”或“客户端”的角色，它本身通常不被视为一个量子，而是作为这些量子的消费者。将系统划分为四个量子，使得每个服务都可以被独立地开发、测试、部署和扩展，从而获得了极大的架构灵活性。</p>
-<h2 id="场景分析二管理后台-用户端">场景分析二：管理后台 + 用户端</h2>
+<h2 id="场景分析二：管理后台-用户端">场景分析二：管理后台 + 用户端</h2>
 <blockquote>
 <p>假设一个系统包含两个部分：</p>
 <ul>
@@ -195,62 +160,43 @@ A 和它的数据库负责“用户管理”，服务 B
 </ul>
 <p>这个系统应该被划分为多少个量子？为什么？如果您设想这是多个量子，那二者可以共享同一个数据库吗？如果可以，该数据库需要驻留在哪个量子中？</p>
 </blockquote>
-<h3
-id="这个系统应该被划分为多少个量子为什么">这个系统应该被划分为多少个量子？为什么？</h3>
-<p>答案是：<strong>这个系统应该被划分为两个量子 (Two
-Quanta)</strong>。</p>
+<h3 id="这个系统应该被划分为多少个量子？为什么？">这个系统应该被划分为多少个量子？为什么？</h3>
+<p>答案是：<strong>这个系统应该被划分为两个量子 (Two Quanta)</strong>。</p>
 <p><strong>分析如下：</strong></p>
-<ol type="1">
+<ol>
 <li><strong>不同的架构特性需求</strong>：
 <ul>
-<li><strong>用户端 (Customer-facing
-Portion)</strong>：这是系统的核心交易部分。它需要<strong>高可用性 (High
-Availability)</strong>、<strong>高可伸缩性 (High
-Scalability)</strong>（因为用户流量波动大，尤其在促销期间）、以及<strong>低延迟
-(Low Latency)</strong>。</li>
-<li><strong>管理后台 (Administration
-Portion)</strong>：这部分主要由内部员工使用。它对可伸缩性的要求远低于用户端，但可能对<strong>数据一致性
-(Consistency)</strong> 和安全性有更高的要求。其使用模式也更可预测。</li>
-</ul></li>
+<li><strong>用户端 (Customer-facing Portion)</strong>：这是系统的核心交易部分。它需要<strong>高可用性 (High Availability)</strong>、<strong>高可伸缩性 (High Scalability)</strong>（因为用户流量波动大，尤其在促销期间）、以及<strong>低延迟 (Low Latency)</strong>。</li>
+<li><strong>管理后台 (Administration Portion)</strong>：这部分主要由内部员工使用。它对可伸缩性的要求远低于用户端，但可能对<strong>数据一致性 (Consistency)</strong> 和安全性有更高的要求。其使用模式也更可预测。</li>
+</ul>
+</li>
 <li><strong>功能内聚性与关注点分离</strong>：管理后台的功能（管理产品目录、仓库信息）和用户端的功能（浏览商品、下单、支付）在业务上是完全不同的。将它们分开，符合单一职责原则，也使得各自的逻辑更清晰。</li>
 <li><strong>部署和生命周期的独立性</strong>：用户端的功能可能需要频繁迭代和快速发布（例如，上线一个新的促销活动），而管理后台的功能则相对稳定，更新频率较低。将它们划分为两个量子，可以实现独立的部署和发布节奏，用户端的紧急修复或更新不会被后台的发布流程所拖累。</li>
 </ol>
 <p><strong>结论</strong>：基于截然不同的架构特性需求、功能内聚性以及部署独立性的考量，将这个系统划分为一个“管理后台量子”和一个“用户端量子”是最佳实践。</p>
-<h3 id="二者可以共享同一个数据库吗">二者可以共享同一个数据库吗？</h3>
-<p>答案是：<strong>技术上可以，但强烈不推荐 (Technically possible, but
-highly
-discouraged)</strong>。共享数据库会引入我们之前提到的问题，即<strong>耦合
-(Coupling)</strong>。</p>
+<h3 id="二者可以共享同一个数据库吗？">二者可以共享同一个数据库吗？</h3>
+<p>答案是：<strong>技术上可以，但强烈不推荐 (Technically possible, but highly discouraged)</strong>。共享数据库会引入我们之前提到的问题，即<strong>耦合 (Coupling)</strong>。</p>
 <ul>
 <li><strong>性能耦合</strong>：管理后台的一个慢查询或数据批量导入操作，可能会锁住表，从而严重影响用户端的性能，甚至导致用户无法下单。</li>
 <li><strong>部署耦合</strong>：如果用户端需要修改某个表的结构来支持新功能，这个修改可能会破坏管理后台的正常工作，反之亦然。这使得两个本应独立的量子在部署上产生了依赖。</li>
 <li><strong>安全耦合</strong>：用户端和管理后台的数据库访问权限需求是不同的。共享数据库会增加权限管理的复杂性，可能导致安全漏洞。</li>
 </ul>
-<h3
-id="如果一定要共享数据库需要驻留在哪个量子中">如果一定要共享，数据库需要驻留在哪个量子中？</h3>
-<p>这是一个权衡和妥协的问题。如果因为历史原因、成本限制或其他因素<strong>不得不</strong>共享数据库，那么决策的关键在于<strong>数据的所有权
-(Data Ownership)</strong> 和<strong>服务的关键性 (Service
-Criticality)</strong>。</p>
+<h3 id="如果一定要共享，数据库需要驻留在哪个量子中？">如果一定要共享，数据库需要驻留在哪个量子中？</h3>
+<p>这是一个权衡和妥协的问题。如果因为历史原因、成本限制或其他因素<strong>不得不</strong>共享数据库，那么决策的关键在于<strong>数据的所有权 (Data Ownership)</strong> 和<strong>服务的关键性 (Service Criticality)</strong>。</p>
 <p>在这个场景中，“产品目录”和“仓库信息”这些数据，虽然由管理后台进行维护，但它们的最终消费者和价值实现者是<strong>用户端</strong>。用户下单的逻辑严重依赖于这些数据的可用性和准确性。</p>
 <p>因此，如果必须共享，该数据库在逻辑上应该<strong>驻留在用户端量子中</strong>。</p>
 <p><strong>原因如下：</strong></p>
-<ol type="1">
+<ol>
 <li><strong>业务关键性</strong>：用户端是直接产生商业价值的部分，其可用性是第一位的。将数据库置于此量子内，意味着所有架构决策（如扩展、备份、容灾）都将优先保障用户端的需求。</li>
-<li><strong>数据所有权</strong>：虽然管理后台是数据的“生产者”，但用户端是数据的核心“消费者”。在领域驱动设计
-(Domain-Driven Design) 的思想中，数据应该属于它所支持的核心业务领域
-(Core Domain)，在这里显然是用户交易领域。</li>
+<li><strong>数据所有权</strong>：虽然管理后台是数据的“生产者”，但用户端是数据的核心“消费者”。在领域驱动设计 (Domain-Driven Design) 的思想中，数据应该属于它所支持的核心业务领域 (Core Domain)，在这里显然是用户交易领域。</li>
 <li><strong>架构上的清晰性</strong>：这样做可以建立一个清晰的依赖关系：管理后台量子依赖于用户端量子中的数据。这虽然不是最理想的解耦状态，但至少依赖关系是单向且明确的。</li>
 </ol>
-<p>在这种共享模式下，更好的实践是通过<strong>定义稳定的 API</strong>
-来缓解耦合。管理后台不应直接操作数据库，而是应该通过用户端量子提供的 API
-来修改产品目录等数据。这样做可以隐藏数据库的物理实现，为未来的数据库拆分创造可能性。</p>
+<p>在这种共享模式下，更好的实践是通过<strong>定义稳定的 API</strong> 来缓解耦合。管理后台不应直接操作数据库，而是应该通过用户端量子提供的 API 来修改产品目录等数据。这样做可以隐藏数据库的物理实现，为未来的数据库拆分创造可能性。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -290,19 +236,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%9E%B6%E6%9E%84%E9%87%8F%E5%AD%90"><span class="toc-text">什么是架构量子？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E6%9E%B6%E6%9E%84%E9%87%8F%E5%AD%90%E5%BE%88%E9%87%8D%E8%A6%81"><span class="toc-text">为什么架构量子很重要？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%80%E5%8D%95%E4%B8%80-ui-%E5%9B%9B%E4%B8%AA%E7%8B%AC%E7%AB%8B%E6%9C%8D%E5%8A%A1"><span class="toc-text">场景分析一：单一 UI +
-四个独立服务</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%BA%8C%E7%AE%A1%E7%90%86%E5%90%8E%E5%8F%B0-%E7%94%A8%E6%88%B7%E7%AB%AF"><span class="toc-text">场景分析二：管理后台 + 用户端</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%99%E4%B8%AA%E7%B3%BB%E7%BB%9F%E5%BA%94%E8%AF%A5%E8%A2%AB%E5%88%92%E5%88%86%E4%B8%BA%E5%A4%9A%E5%B0%91%E4%B8%AA%E9%87%8F%E5%AD%90%E4%B8%BA%E4%BB%80%E4%B9%88"><span class="toc-text">这个系统应该被划分为多少个量子？为什么？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E8%80%85%E5%8F%AF%E4%BB%A5%E5%85%B1%E4%BA%AB%E5%90%8C%E4%B8%80%E4%B8%AA%E6%95%B0%E6%8D%AE%E5%BA%93%E5%90%97"><span class="toc-text">二者可以共享同一个数据库吗？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A6%82%E6%9E%9C%E4%B8%80%E5%AE%9A%E8%A6%81%E5%85%B1%E4%BA%AB%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9C%80%E8%A6%81%E9%A9%BB%E7%95%99%E5%9C%A8%E5%93%AA%E4%B8%AA%E9%87%8F%E5%AD%90%E4%B8%AD"><span class="toc-text">如果一定要共享，数据库需要驻留在哪个量子中？</span></a></li></ol></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%9E%B6%E6%9E%84%E9%87%8F%E5%AD%90%EF%BC%9F"><span class="toc-text">什么是架构量子？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E6%9E%B6%E6%9E%84%E9%87%8F%E5%AD%90%E5%BE%88%E9%87%8D%E8%A6%81%EF%BC%9F"><span class="toc-text">为什么架构量子很重要？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%80%EF%BC%9A%E5%8D%95%E4%B8%80-UI-%E5%9B%9B%E4%B8%AA%E7%8B%AC%E7%AB%8B%E6%9C%8D%E5%8A%A1"><span class="toc-text">场景分析一：单一 UI + 四个独立服务</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%BA%8C%EF%BC%9A%E7%AE%A1%E7%90%86%E5%90%8E%E5%8F%B0-%E7%94%A8%E6%88%B7%E7%AB%AF"><span class="toc-text">场景分析二：管理后台 + 用户端</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%99%E4%B8%AA%E7%B3%BB%E7%BB%9F%E5%BA%94%E8%AF%A5%E8%A2%AB%E5%88%92%E5%88%86%E4%B8%BA%E5%A4%9A%E5%B0%91%E4%B8%AA%E9%87%8F%E5%AD%90%EF%BC%9F%E4%B8%BA%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-text">这个系统应该被划分为多少个量子？为什么？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E8%80%85%E5%8F%AF%E4%BB%A5%E5%85%B1%E4%BA%AB%E5%90%8C%E4%B8%80%E4%B8%AA%E6%95%B0%E6%8D%AE%E5%BA%93%E5%90%97%EF%BC%9F"><span class="toc-text">二者可以共享同一个数据库吗？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A6%82%E6%9E%9C%E4%B8%80%E5%AE%9A%E8%A6%81%E5%85%B1%E4%BA%AB%EF%BC%8C%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9C%80%E8%A6%81%E9%A9%BB%E7%95%99%E5%9C%A8%E5%93%AA%E4%B8%AA%E9%87%8F%E5%AD%90%E4%B8%AD%EF%BC%9F"><span class="toc-text">如果一定要共享，数据库需要驻留在哪个量子中？</span></a></li></ol></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

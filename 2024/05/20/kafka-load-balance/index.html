@@ -27,6 +27,15 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文转载自 Agoda Enginnering, 介绍了 Kafka 负载均衡的实际应用过程中的负载均衡挑战及解决思路。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/Kafka%20%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*ixosAmhBDsyBBhoS.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/1*B6svY0ZjYVy-uJ7ZA18Jtg.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*VwPda5gNsHRL2tJV.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*P-Qa3gyPgXtIeZMx.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*Mg1lxKzMTy7LRAXT.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*zp-S1Y_GbIzbjCX4.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*pjkj5kF6aFcWwBwU.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*68P7QtdFGeIzwZSs.png">
 <meta property="article:published_time" content="2024-05-20T02:37:10.000Z">
 <meta property="article:modified_time" content="2025-07-27T04:29:14.332Z">
 <meta property="article:author" content="Hedon Wang">
@@ -34,6 +43,7 @@
 <meta property="article:tag" content="中间件">
 <meta property="article:tag" content="消息队列">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/Kafka%20%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88.png">
   
   
   
@@ -71,7 +81,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/30/llm/note-llm-from-scratch/"><span class="title">读书笔记丨从零构建大语言模型</span></a><a class="item title" href="/2025/08/30/graceful-restart-from-tableflip-to-k8s/"><span class="title">优雅重启的范式转移：从 tableflip 到 Kubernetes 的 Go 服务升级终极指南</span></a><a class="item title" href="/2025/08/25/redis/redis-datatype-string/"><span class="title">Redis 数据类型丨String丨从第一性原理看 Redis 字符串的设计哲学 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2023/12/23/floating-point-number/"><span class="title">一文彻底掌握浮点数</span></a><a class="item title" href="/2025/08/15/record-of-abnormal-investigation-of-public-network-traffic/"><span class="title">一次由公网流出带宽飙升引发的服务器性能排查实录</span></a><a class="item title" href="/2025/08/21/llm/guide-to-lr-warmup-cosine-annealing-gradient-clipping/"><span class="title">模型训练核心技巧：学习率预热、余弦衰减与梯度裁剪</span></a><a class="item title" href="/2025/08/20/redis/redis-datatype-list/"><span class="title">Redis 数据类型丨List丨从双向链表到 Listpack 的演进之路 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2025/08/18/llm/pytorch/"><span class="title">告别死记硬背：一份真正理解 PyTorch 核心设计的指南</span></a><a class="item title" href="/2025/08/15/encryption-mode/"><span class="title">从 ECB 到 GCM：理解加密模式的演进</span></a><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/30/llm/note-llm-from-scratch/"><span class="title">读书笔记丨从零构建大语言模型</span></a><a class="item title" href="/2025/08/30/graceful-restart-from-tableflip-to-k8s/"><span class="title">优雅重启的范式转移：从 tableflip 到 Kubernetes 的 Go 服务升级终极指南</span></a><a class="item title" href="/2025/08/25/redis/redis-datatype-string/"><span class="title">Redis 数据类型丨String丨从第一性原理看 Redis 字符串的设计哲学 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2023/12/23/floating-point-number/"><span class="title">一文彻底掌握浮点数</span></a><a class="item title" href="/2025/08/15/record-of-abnormal-investigation-of-public-network-traffic/"><span class="title">一次由公网流出带宽飙升引发的服务器性能排查实录</span></a><a class="item title" href="/2025/08/21/llm/guide-to-lr-warmup-cosine-annealing-gradient-clipping/"><span class="title">模型训练核心技巧：学习率预热、余弦衰减与梯度裁剪</span></a><a class="item title" href="/2025/08/18/llm/pytorch/"><span class="title">告别死记硬背：一份真正理解 PyTorch 核心设计的指南</span></a><a class="item title" href="/2025/08/20/redis/redis-datatype-list/"><span class="title">Redis 数据类型丨List丨从双向链表到 Listpack 的演进之路 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2025/08/15/encryption-mode/"><span class="title">从 ECB 到 GCM：理解加密模式的演进</span></a><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -95,101 +105,47 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>本文转载自 Agoda Engineering，介绍了在实际应用中，如何应对 Kafka
-负载均衡所遇到的各种挑战，并提出相应的解决思路。本文简要阐述了 Kafka
-的并行性机制、常用的分区策略以及在实际操作中遇到的异构硬件、不均匀工作负载等问题。通过深入分析这些挑战，并提供具体的解决方案，本文旨在帮助读者更好地理解和应用
-Kafka 的负载均衡技术，从而提高系统的整体性能和稳定性。</p>
-<p>以下大部分内容翻译自原文 <a
-target="_blank" rel="noopener" href="https://medium.com/agoda-engineering/how-we-solve-load-balancing-challenges-in-apache-kafka-8cd88fdad02b">how-we-solve-load-balancing-challenges-in-apache-kafka</a>，并已获得原作者同意。</p>
-<h1 id="思维导图">思维导图</h1>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/Kafka%20%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88.png"
-alt="Kafka 负载均衡解决方案" />
-<figcaption aria-hidden="true">Kafka 负载均衡解决方案</figcaption>
-</figure>
-<h1 id="kafka-并行性">Kafka 并行性</h1>
-<p>Kafka
-通过分区来实现并行性，如下图所示，生产者（Producer）产生的消息会按照一定的分区策略分配到多个分区（Partition）中，消费组中的每个消费者会分别负责消费其中的若干个分区。</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*ixosAmhBDsyBBhoS.png"
-alt="Kafka 分区演示" />
-<figcaption aria-hidden="true">Kafka 分区演示</figcaption>
-</figure>
+  </div><article class="md-text content"><p>本文转载自 Agoda Engineering，介绍了在实际应用中，如何应对 Kafka 负载均衡所遇到的各种挑战，并提出相应的解决思路。本文简要阐述了 Kafka 的并行性机制、常用的分区策略以及在实际操作中遇到的异构硬件、不均匀工作负载等问题。通过深入分析这些挑战，并提供具体的解决方案，本文旨在帮助读者更好地理解和应用 Kafka 的负载均衡技术，从而提高系统的整体性能和稳定性。</p>
+<p>以下大部分内容翻译自原文 <a target="_blank" rel="noopener" href="https://medium.com/agoda-engineering/how-we-solve-load-balancing-challenges-in-apache-kafka-8cd88fdad02b">how-we-solve-load-balancing-challenges-in-apache-kafka</a>，并已获得原作者同意。</p>
+<h1>思维导图</h1>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/Kafka%20%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88.png" alt="Kafka 负载均衡解决方案"></p>
+<h1>Kafka 并行性</h1>
+<p>Kafka 通过分区来实现并行性，如下图所示，生产者（Producer）产生的消息会按照一定的分区策略分配到多个分区（Partition）中，消费组中的每个消费者会分别负责消费其中的若干个分区。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*ixosAmhBDsyBBhoS.png" alt="Kafka 分区演示"></p>
 <p>分区策略：</p>
 <ul>
-<li>轮询（Round Robin）：默认情况下，Kafka
-使用轮询策略将消息均匀地分配到所有分区。</li>
-<li>哈希（Key Hashing）：如果消息有分区键，Kafka
-会对键进行哈希计算，将消息分配到特定的分区。</li>
+<li>轮询（Round Robin）：默认情况下，Kafka 使用轮询策略将消息均匀地分配到所有分区。</li>
+<li>哈希（Key Hashing）：如果消息有分区键，Kafka 会对键进行哈希计算，将消息分配到特定的分区。</li>
 <li>自定义分区策略：开发者可以实现自定义的分区器（Partitioner）逻辑，以满足特定需求。</li>
 </ul>
-<p>如果要使用轮询或者哈希策略来达到“负载均衡”的目的，那么需要满足以下 2
-个假设：</p>
-<ol type="1">
+<p>如果要使用轮询或者哈希策略来达到“负载均衡”的目的，那么需要满足以下 2 个假设：</p>
+<ol>
 <li>消费者拥有相同的处理能力，</li>
 <li>消息的工作量相等。</li>
 </ol>
 <p>然而，在实践中，这些假设往往不成立。</p>
-<h1 id="现实挑战">现实挑战</h1>
-<h2 id="异构硬件">1. 异构硬件</h2>
+<h1>现实挑战</h1>
+<h2 id="1-异构硬件">1. 异构硬件</h2>
 <p>不同代的服务器硬件性能不同，导致处理速率存在差异。例如，使用不同代硬件进行处理的基准显示性能存在显着差异：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/1*B6svY0ZjYVy-uJ7ZA18Jtg.png"
-alt="不同服务器处理速率差异举例" />
-<figcaption aria-hidden="true">不同服务器处理速率差异举例</figcaption>
-</figure>
-<h2 id="每条-kafka-消息的工作负载不均匀">2. 每条 Kafka
-消息的工作负载不均匀</h2>
-<p>下图显示了在一个时间窗口内到达的 12
-条消息。在这里，生产者向该主题中的六个分区中的每一个发布两条消息。因此，每个
-worker 消耗来自 2 个分区的数据，这意味着每个 worker 需要处理 4
-条消息。</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*VwPda5gNsHRL2tJV.png"
-alt="使用循环分区器和循环分配器来分发消息的先前供应系统的演示。每个 worker 都分配有相同数量的消息。" />
-<figcaption
-aria-hidden="true">使用循环分区器和循环分配器来分发消息的先前供应系统的演示。每个
-worker 都分配有相同数量的消息。</figcaption>
-</figure>
-<p>不同的消息可能需要不同的处理步骤集。例如，处理消息可能涉及调用第三方
-HTTP
-端点，并且不同的响应大小或延迟可能会影响处理速率。此外，对于涉及数据库操作的应用程序，其数据库查询的延迟可能会根据查询参数而波动，从而导致处理速率发生变化。</p>
-<h2 id="过度配置问题">3. 过度配置问题</h2>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/1*B6svY0ZjYVy-uJ7ZA18Jtg.png" alt="不同服务器处理速率差异举例"></p>
+<h2 id="2-每条-Kafka-消息的工作负载不均匀">2. 每条 Kafka 消息的工作负载不均匀</h2>
+<p>下图显示了在一个时间窗口内到达的 12 条消息。在这里，生产者向该主题中的六个分区中的每一个发布两条消息。因此，每个 worker 消耗来自 2 个分区的数据，这意味着每个 worker 需要处理 4 条消息。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*VwPda5gNsHRL2tJV.png" alt="使用循环分区器和循环分配器来分发消息的先前供应系统的演示。每个 worker 都分配有相同数量的消息。"></p>
+<p>不同的消息可能需要不同的处理步骤集。例如，处理消息可能涉及调用第三方 HTTP 端点，并且不同的响应大小或延迟可能会影响处理速率。此外，对于涉及数据库操作的应用程序，其数据库查询的延迟可能会根据查询参数而波动，从而导致处理速率发生变化。</p>
+<h2 id="3-过度配置问题">3. 过度配置问题</h2>
 <p>由于工作负载和处理效率不同，为了达到系统吞吐量的需求，可能会出现过度配置问题，从而导致资源浪费。</p>
-<p>假设我们的高吞吐量和低吞吐量的处理速率分别为 20 msg/s 和 10
-msg/s（根据表 1
-中的数据进行简化）。使用两个较快的处理器和一个较慢的处理器，我们预计总容量为
-20+20+10 = 50
-条消息/秒。但是，当保持消息的循环分配时，我们无法达到此容量。下图显示了如果流量持续达到每秒
-50 条消息时会发生什么情况。</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*P-Qa3gyPgXtIeZMx.png"
-alt="如果传入流量保持在 50 条消息/秒，则慢速处理器无法处理总体消息 1/3 的负载，从而导致累积延迟。为了避免高延迟，向该系统添加了额外的资源以维持处理。" />
-<figcaption aria-hidden="true">如果传入流量保持在 50
-条消息/秒，则慢速处理器无法处理总体消息 1/3
-的负载，从而导致累积延迟。为了避免高延迟，向该系统添加了额外的资源以维持处理。</figcaption>
-</figure>
-<p>从这个例子中我们可以看到，我们的处理器服务一次最多只能接受 30
-条消息，以防止滞后并确保及时传递更新。</p>
-<p>在这种情况下，要实际每秒处理 50 条消息，我们必须总共扩展到 5
-台机器，以保证及时处理所有消息。由于这种不适当的分配逻辑（66.7％的过度配置），我们会向该系统过度配置额外的两台机器。</p>
-<p>为了每秒处理 50
-条消息，我们需要扩展到五台机器以确保及时处理所有消息。由于这种不适当的分配逻辑（66.7%
-的过度配置），这会导致向该系统过度配置两台额外的机器。</p>
-<h1 id="静态解决方案">静态解决方案</h1>
-<h2 id="在相同的-pod机器上部署">1. 在相同的 Pod（机器）上部署</h2>
+<p>假设我们的高吞吐量和低吞吐量的处理速率分别为 20 msg/s 和 10 msg/s（根据表 1 中的数据进行简化）。使用两个较快的处理器和一个较慢的处理器，我们预计总容量为 20+20+10 = 50 条消息/秒。但是，当保持消息的循环分配时，我们无法达到此容量。下图显示了如果流量持续达到每秒 50 条消息时会发生什么情况。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*P-Qa3gyPgXtIeZMx.png" alt="如果传入流量保持在 50 条消息/秒，则慢速处理器无法处理总体消息 1/3 的负载，从而导致累积延迟。为了避免高延迟，向该系统添加了额外的资源以维持处理。"></p>
+<p>从这个例子中我们可以看到，我们的处理器服务一次最多只能接受 30 条消息，以防止滞后并确保及时传递更新。</p>
+<p>在这种情况下，要实际每秒处理 50 条消息，我们必须总共扩展到 5 台机器，以保证及时处理所有消息。由于这种不适当的分配逻辑（66.7％的过度配置），我们会向该系统过度配置额外的两台机器。</p>
+<p>为了每秒处理 50 条消息，我们需要扩展到五台机器以确保及时处理所有消息。由于这种不适当的分配逻辑（66.7% 的过度配置），这会导致向该系统过度配置两台额外的机器。</p>
+<h1>静态解决方案</h1>
+<h2 id="1-在相同的-Pod（机器）上部署">1. 在相同的 Pod（机器）上部署</h2>
 <p>考虑控制服务部署中使用的硬件类型以缓解问题。如果您在虚拟机上部署服务并拥有充足的资源和性能相同的硬件，则此方法是可行的。</p>
-<p>然而，由于成本效益和灵活性下降，在私有云环境中通常不建议采用这种策略，主要是因为同时升级所有现有硬件可能具有挑战性。如果它非常适合您的情况，则可以使用<a
-target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/">Kubernetes
-关联性将 Pod 分配给某些类型的节点。</a></p>
-<h2 id="加权负载均衡">2. 加权负载均衡</h2>
+<p>然而，由于成本效益和灵活性下降，在私有云环境中通常不建议采用这种策略，主要是因为同时升级所有现有硬件可能具有挑战性。如果它非常适合您的情况，则可以使用<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/">Kubernetes 关联性将 Pod 分配给某些类型的节点。</a></p>
+<h2 id="2-加权负载均衡">2. 加权负载均衡</h2>
 <p>如果容量是可预测的并且大部分时间保持静态，则为不同的消费者分配不同的权重可以帮助最大限度地利用可用资源。例如，在为表现较好的消费者赋予更高的权重后，我们可以将更多流量路由给这些消费者。</p>
-<h1 id="动态解决方案">动态解决方案</h1>
+<h1>动态解决方案</h1>
 <p>虽然我们可以估计消息的容量和工作负载来设计静态规则来确定加权负载平衡策略，但由于以下几个因素，这种方法在实际生产环境中可能并不总是可行：</p>
 <ul>
 <li>消息的工作负载并不统一，这使得估计机器容量变得困难。</li>
@@ -198,85 +154,43 @@ target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/schedul
 </ul>
 <p>为了解决这些问题，我们可以动态监控每个分区中的当前滞后并根据当前流量状况做出相应响应。</p>
 <p>有 2 种思路：</p>
-<ol type="1">
-<li><strong>生产者角度</strong>：使用自定义算法根据滞后的消息数量来确定每个分区的流量，这种生产者称为滞后感知生产者（Lag-aware
-Producer）。</li>
-<li><strong>消费者角度</strong>：这些消费者旨在监控当前滞后的消息数量，并可以在必要时取消订阅以触发负载重新平衡。通常，可以采用自定义的重新平衡策略来调整分区分配。这种消费者称为滞后感知消费者（Lag-aware
-Comsumer）。</li>
+<ol>
+<li><strong>生产者角度</strong>：使用自定义算法根据滞后的消息数量来确定每个分区的流量，这种生产者称为滞后感知生产者（Lag-aware Producer）。</li>
+<li><strong>消费者角度</strong>：这些消费者旨在监控当前滞后的消息数量，并可以在必要时取消订阅以触发负载重新平衡。通常，可以采用自定义的重新平衡策略来调整分区分配。这种消费者称为滞后感知消费者（Lag-aware Comsumer）。</li>
 </ol>
-<h2 id="从生产者角度出发">1. 从生产者角度出发</h2>
-<p>如此图所示，生产者可以使用自定义算法根据滞后确定每个分区的流量。为了减少对
-Kafka
-代理的调用次数，系统可以维护一个内部延迟缓存，而不是在发布每条消息之前调用
-Kafka 代理。</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*Mg1lxKzMTy7LRAXT.png"
-alt="在此示例中，分区 4 和 6 的延迟比其他分区高得多。应减少从内部生产者发送到这些分区的流量。" />
-<figcaption aria-hidden="true">在此示例中，分区 4 和 6
-的延迟比其他分区高得多。应减少从内部生产者发送到这些分区的流量。</figcaption>
-</figure>
+<h2 id="1-从生产者角度出发">1. 从生产者角度出发</h2>
+<p>如此图所示，生产者可以使用自定义算法根据滞后确定每个分区的流量。为了减少对 Kafka 代理的调用次数，系统可以维护一个内部延迟缓存，而不是在发布每条消息之前调用 Kafka 代理。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*Mg1lxKzMTy7LRAXT.png" alt="在此示例中，分区 4 和 6 的延迟比其他分区高得多。应减少从内部生产者发送到这些分区的流量。"></p>
 <p>使用滞后数据，定制的算法被设计为向经历高滞后的分区发布更少的流量，向低滞后的分区发布更多流量，以平衡每个分区上的工作负载。当滞后平衡且稳定时，此方法应确保消息的均匀分布。</p>
 <p>不适用情况：</p>
-<ol type="1">
+<ol>
 <li><strong>纯消费者应用程序</strong>：您的应用程序不控制消息生成。</li>
-<li><strong>多个消费者组：</strong>当生成的消息被多个消费者组消费时，生产者可能会为其他消费者组产生不必要的倾斜负载，因为滞后只是特定于一个消费者组的信息。</li>
+<li>**多个消费者组：**当生成的消息被多个消费者组消费时，生产者可能会为其他消费者组产生不必要的倾斜负载，因为滞后只是特定于一个消费者组的信息。</li>
 </ol>
 <h3 id="相同队列长度算法">相同队列长度算法</h3>
-<p>该算法将每个分区滞后视为处理的队列大小。获取滞后信息后，它会发布适当数量的消息以填充短队列。此方法更适合由于异构硬件而导致的倾斜滞后分布，其中高性能
-Pod（机器）在大多数情况下能够更快地处理。</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*zp-S1Y_GbIzbjCX4.png"
-alt="相同队列长度算法的演示。最初，不同队列的长度不同。该算法尝试生成不同数量的消息，以在所有队列中实现相同的队列长度。这里，队列长度和 Kafka lag 是同一个概念，代表尚未处理的消息数量" />
-<figcaption
-aria-hidden="true">相同队列长度算法的演示。最初，不同队列的长度不同。该算法尝试生成不同数量的消息，以在所有队列中实现相同的队列长度。这里，队列长度和
-Kafka lag 是同一个概念，代表尚未处理的消息数量</figcaption>
-</figure>
+<p>该算法将每个分区滞后视为处理的队列大小。获取滞后信息后，它会发布适当数量的消息以填充短队列。此方法更适合由于异构硬件而导致的倾斜滞后分布，其中高性能 Pod（机器）在大多数情况下能够更快地处理。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*zp-S1Y_GbIzbjCX4.png" alt="相同队列长度算法的演示。最初，不同队列的长度不同。该算法尝试生成不同数量的消息，以在所有队列中实现相同的队列长度。这里，队列长度和 Kafka lag 是同一个概念，代表尚未处理的消息数量"></p>
 <h3 id="异常值检测算法">异常值检测算法</h3>
-<p>该算法利用统计方法来确定所有分区的上离群值，并暂时停止那些慢速离群值的发布过程。在原文章中，针对
-Agoda 的特定需求，他们提出了 IQR（四分位距）和
-STD（标准差）异常值检测算法。算法流程图如下所示。</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*pjkj5kF6aFcWwBwU.png"
-alt="异常值检查算法流程" />
-<figcaption aria-hidden="true">异常值检查算法流程</figcaption>
-</figure>
+<p>该算法利用统计方法来确定所有分区的上离群值，并暂时停止那些慢速离群值的发布过程。在原文章中，针对 Agoda 的特定需求，他们提出了 IQR（四分位距）和 STD（标准差）异常值检测算法。算法流程图如下所示。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*pjkj5kF6aFcWwBwU.png" alt="异常值检查算法流程"></p>
 <ul>
 <li><strong>慢速分区：</strong>（已关闭）由于存在延迟，这些分区的消息生成已停止。</li>
 <li><strong>好的分区</strong>：（打开）照常发布并均匀分发到所有好的分区。</li>
-<li><strong>OK
-分区：</strong>（观察/半开放）为了提高性能不佳的机器的性能，当系统尝试将慢速分区提升为良好分区时，会添加一个观察期。通过仅生成一小部分消息并进行观察，可以将该观察阶段优化为“半开放”状态。当滞后获取间隔相对较长时，半开放是有益的，因为它可以防止消费者延迟等待传入消息而更新的滞后数据尚未查询的情况。</li>
+<li><strong>OK 分区：</strong>（观察/半开放）为了提高性能不佳的机器的性能，当系统尝试将慢速分区提升为良好分区时，会添加一个观察期。通过仅生成一小部分消息并进行观察，可以将该观察阶段优化为“半开放”状态。当滞后获取间隔相对较长时，半开放是有益的，因为它可以防止消费者延迟等待传入消息而更新的滞后数据尚未查询的情况。</li>
 </ul>
-<h2 id="从消费者角度出发">2. 从消费者角度出发</h2>
-<p>这里 Adoga
-提出的思路是：<strong>遇到高延迟的实例可以主动取消订阅主题以触发重新平衡。在重新平衡期间，可以使用自定义的分配器来平衡所有消费者实例之间的分区。</strong></p>
-<p>触发重新平衡的成本非常昂贵，因为急切的重新平衡会停止消费者组中的所有处理。Kafka
-2.4 中引入的<a
-target="_blank" rel="noopener" href="https://www.confluent.io/blog/incremental-cooperative-rebalancing-in-kafka/">增量协作再平衡协议</a>已经最大限度地减少了性能影响，允许更频繁的再平衡以更好地分配每个分区上的负载。</p>
-<p>为了增强重新分配的灵活性，分区的数量应该大于 worker
-的数量。这一比率应根据应用程序而有所不同，并假设一个工作线程至少可以处理来自一个分区的负载以避免饥饿。</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*68P7QtdFGeIzwZSs.png"
-alt="在此示例中，工作程序 3 在速度较慢的硬件上运行，导致分区 5 和 6 出现更高的延迟。因此，工作程序 3 可能会主动取消订阅主题以触发重新平衡并更有效地重新分配分区。在此示例中，应实现自定义分配器以根据机器指标和滞后信息重新分配分区。" />
-<figcaption aria-hidden="true">在此示例中，工作程序 3
-在速度较慢的硬件上运行，导致分区 5 和 6 出现更高的延迟。因此，工作程序 3
-可能会主动取消订阅主题以触发重新平衡并更有效地重新分配分区。在此示例中，应实现自定义分配器以根据机器指标和滞后信息重新分配分区。</figcaption>
-</figure>
-<h1 id="总结">总结</h1>
-<p>本文从 Kafka 并行性的一般实现出发，探讨了 Kafka
-实现负载均衡在现实实践中可能遇到的各种挑战，并从静态调整和动态调整两个方面给出了解决思路，特别注重讨论了动态调整策略，并分别从生产者和消费者的角度提出了解决方案。</p>
-<p>总之，通过在 Kafka
-中实现负载均衡，可以有效地将工作负载分配到可用资源之间，从而显著提高服务性能。具体的算法和策略需要根据实际情况进行选择和调整。</p>
+<h2 id="2-从消费者角度出发">2. 从消费者角度出发</h2>
+<p>这里 Adoga 提出的思路是：<strong>遇到高延迟的实例可以主动取消订阅主题以触发重新平衡。在重新平衡期间，可以使用自定义的分配器来平衡所有消费者实例之间的分区。</strong></p>
+<p>触发重新平衡的成本非常昂贵，因为急切的重新平衡会停止消费者组中的所有处理。Kafka 2.4 中引入的<a target="_blank" rel="noopener" href="https://www.confluent.io/blog/incremental-cooperative-rebalancing-in-kafka/">增量协作再平衡协议</a>已经最大限度地减少了性能影响，允许更频繁的再平衡以更好地分配每个分区上的负载。</p>
+<p>为了增强重新分配的灵活性，分区的数量应该大于 worker 的数量。这一比率应根据应用程序而有所不同，并假设一个工作线程至少可以处理来自一个分区的负载以避免饥饿。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/0*68P7QtdFGeIzwZSs.png" alt="在此示例中，工作程序 3 在速度较慢的硬件上运行，导致分区 5 和 6 出现更高的延迟。因此，工作程序 3 可能会主动取消订阅主题以触发重新平衡并更有效地重新分配分区。在此示例中，应实现自定义分配器以根据机器指标和滞后信息重新分配分区。"></p>
+<h1>总结</h1>
+<p>本文从 Kafka 并行性的一般实现出发，探讨了 Kafka 实现负载均衡在现实实践中可能遇到的各种挑战，并从静态调整和动态调整两个方面给出了解决思路，特别注重讨论了动态调整策略，并分别从生产者和消费者的角度提出了解决方案。</p>
+<p>总之，通过在 Kafka 中实现负载均衡，可以有效地将工作负载分配到可用资源之间，从而显著提高服务性能。具体的算法和策略需要根据实际情况进行选择和调整。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -316,19 +230,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%9D%E7%BB%B4%E5%AF%BC%E5%9B%BE"><span class="toc-text">思维导图</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#kafka-%E5%B9%B6%E8%A1%8C%E6%80%A7"><span class="toc-text">Kafka 并行性</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%8E%B0%E5%AE%9E%E6%8C%91%E6%88%98"><span class="toc-text">现实挑战</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%82%E6%9E%84%E7%A1%AC%E4%BB%B6"><span class="toc-text">1. 异构硬件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%AF%8F%E6%9D%A1-kafka-%E6%B6%88%E6%81%AF%E7%9A%84%E5%B7%A5%E4%BD%9C%E8%B4%9F%E8%BD%BD%E4%B8%8D%E5%9D%87%E5%8C%80"><span class="toc-text">2. 每条 Kafka
-消息的工作负载不均匀</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%87%E5%BA%A6%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98"><span class="toc-text">3. 过度配置问题</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="toc-text">静态解决方案</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9C%A8%E7%9B%B8%E5%90%8C%E7%9A%84-pod%E6%9C%BA%E5%99%A8%E4%B8%8A%E9%83%A8%E7%BD%B2"><span class="toc-text">1. 在相同的 Pod（机器）上部署</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8A%A0%E6%9D%83%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1"><span class="toc-text">2. 加权负载均衡</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8A%A8%E6%80%81%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="toc-text">动态解决方案</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8E%E7%94%9F%E4%BA%A7%E8%80%85%E8%A7%92%E5%BA%A6%E5%87%BA%E5%8F%91"><span class="toc-text">1. 从生产者角度出发</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%9B%B8%E5%90%8C%E9%98%9F%E5%88%97%E9%95%BF%E5%BA%A6%E7%AE%97%E6%B3%95"><span class="toc-text">相同队列长度算法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%82%E5%B8%B8%E5%80%BC%E6%A3%80%E6%B5%8B%E7%AE%97%E6%B3%95"><span class="toc-text">异常值检测算法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8E%E6%B6%88%E8%B4%B9%E8%80%85%E8%A7%92%E5%BA%A6%E5%87%BA%E5%8F%91"><span class="toc-text">2. 从消费者角度出发</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">思维导图</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">Kafka 并行性</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">现实挑战</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%BC%82%E6%9E%84%E7%A1%AC%E4%BB%B6"><span class="toc-text">1. 异构硬件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E6%AF%8F%E6%9D%A1-Kafka-%E6%B6%88%E6%81%AF%E7%9A%84%E5%B7%A5%E4%BD%9C%E8%B4%9F%E8%BD%BD%E4%B8%8D%E5%9D%87%E5%8C%80"><span class="toc-text">2. 每条 Kafka 消息的工作负载不均匀</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E8%BF%87%E5%BA%A6%E9%85%8D%E7%BD%AE%E9%97%AE%E9%A2%98"><span class="toc-text">3. 过度配置问题</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">静态解决方案</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%9C%A8%E7%9B%B8%E5%90%8C%E7%9A%84-Pod%EF%BC%88%E6%9C%BA%E5%99%A8%EF%BC%89%E4%B8%8A%E9%83%A8%E7%BD%B2"><span class="toc-text">1. 在相同的 Pod（机器）上部署</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%8A%A0%E6%9D%83%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1"><span class="toc-text">2. 加权负载均衡</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">动态解决方案</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E4%BB%8E%E7%94%9F%E4%BA%A7%E8%80%85%E8%A7%92%E5%BA%A6%E5%87%BA%E5%8F%91"><span class="toc-text">1. 从生产者角度出发</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%9B%B8%E5%90%8C%E9%98%9F%E5%88%97%E9%95%BF%E5%BA%A6%E7%AE%97%E6%B3%95"><span class="toc-text">相同队列长度算法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%82%E5%B8%B8%E5%80%BC%E6%A3%80%E6%B5%8B%E7%AE%97%E6%B3%95"><span class="toc-text">异常值检测算法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%BB%8E%E6%B6%88%E8%B4%B9%E8%80%85%E8%A7%92%E5%BA%A6%E5%87%BA%E5%8F%91"><span class="toc-text">2. 从消费者角度出发</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

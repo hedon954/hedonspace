@@ -71,7 +71,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/30/llm/note-llm-from-scratch/"><span class="title">读书笔记丨从零构建大语言模型</span></a><a class="item title" href="/2025/08/30/graceful-restart-from-tableflip-to-k8s/"><span class="title">优雅重启的范式转移：从 tableflip 到 Kubernetes 的 Go 服务升级终极指南</span></a><a class="item title" href="/2025/08/25/redis/redis-datatype-string/"><span class="title">Redis 数据类型丨String丨从第一性原理看 Redis 字符串的设计哲学 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2023/12/23/floating-point-number/"><span class="title">一文彻底掌握浮点数</span></a><a class="item title" href="/2025/08/15/record-of-abnormal-investigation-of-public-network-traffic/"><span class="title">一次由公网流出带宽飙升引发的服务器性能排查实录</span></a><a class="item title" href="/2025/08/21/llm/guide-to-lr-warmup-cosine-annealing-gradient-clipping/"><span class="title">模型训练核心技巧：学习率预热、余弦衰减与梯度裁剪</span></a><a class="item title" href="/2025/08/20/redis/redis-datatype-list/"><span class="title">Redis 数据类型丨List丨从双向链表到 Listpack 的演进之路 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2025/08/18/llm/pytorch/"><span class="title">告别死记硬背：一份真正理解 PyTorch 核心设计的指南</span></a><a class="item title" href="/2025/08/15/encryption-mode/"><span class="title">从 ECB 到 GCM：理解加密模式的演进</span></a><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/30/llm/note-llm-from-scratch/"><span class="title">读书笔记丨从零构建大语言模型</span></a><a class="item title" href="/2025/08/30/graceful-restart-from-tableflip-to-k8s/"><span class="title">优雅重启的范式转移：从 tableflip 到 Kubernetes 的 Go 服务升级终极指南</span></a><a class="item title" href="/2025/08/25/redis/redis-datatype-string/"><span class="title">Redis 数据类型丨String丨从第一性原理看 Redis 字符串的设计哲学 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2023/12/23/floating-point-number/"><span class="title">一文彻底掌握浮点数</span></a><a class="item title" href="/2025/08/15/record-of-abnormal-investigation-of-public-network-traffic/"><span class="title">一次由公网流出带宽飙升引发的服务器性能排查实录</span></a><a class="item title" href="/2025/08/21/llm/guide-to-lr-warmup-cosine-annealing-gradient-clipping/"><span class="title">模型训练核心技巧：学习率预热、余弦衰减与梯度裁剪</span></a><a class="item title" href="/2025/08/18/llm/pytorch/"><span class="title">告别死记硬背：一份真正理解 PyTorch 核心设计的指南</span></a><a class="item title" href="/2025/08/20/redis/redis-datatype-list/"><span class="title">Redis 数据类型丨List丨从双向链表到 Listpack 的演进之路 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2025/08/15/encryption-mode/"><span class="title">从 ECB 到 GCM：理解加密模式的演进</span></a><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -95,15 +95,10 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>在网络世界中，我们的数据需要被小心保护。对称加密算法，如
-AES，就是我们最常用的"保险箱"。但这个保险箱怎么用，却大有讲究。这就引出了我们今天讨论的主题：<strong>加密模式（Encryption
-Mode）</strong>。</p>
-<p>本文将由浅入深地带你理解三种经典的分组加密模式：<strong>ECB、CBC</strong>
-和 <strong>GCM</strong>，并解释它们各自的优缺点和演进过程。</p>
-<h3 id="简单的致命弱点ecbelectronic-codebook模式">1.
-简单的致命弱点：ECB（Electronic Codebook）模式</h3>
-<p><strong>ECB
-模式</strong>是最简单的一种分组加密模式。它的工作原理非常直接：把明文数据切分成一个个固定大小的块，然后用同一个密钥，独立地加密每一个块。</p>
+  </div><article class="md-text content"><p>在网络世界中，我们的数据需要被小心保护。对称加密算法，如 AES，就是我们最常用的&quot;保险箱&quot;。但这个保险箱怎么用，却大有讲究。这就引出了我们今天讨论的主题：<strong>加密模式（Encryption Mode）</strong>。</p>
+<p>本文将由浅入深地带你理解三种经典的分组加密模式：<strong>ECB、CBC</strong> 和 <strong>GCM</strong>，并解释它们各自的优缺点和演进过程。</p>
+<h3 id="1-简单的致命弱点：ECB（Electronic-Codebook）模式">1. 简单的致命弱点：ECB（Electronic Codebook）模式</h3>
+<p><strong>ECB 模式</strong>是最简单的一种分组加密模式。它的工作原理非常直接：把明文数据切分成一个个固定大小的块，然后用同一个密钥，独立地加密每一个块。</p>
 <p><strong>优点</strong>：</p>
 <ul>
 <li><strong>简单</strong>：原理清晰，易于实现。</li>
@@ -112,102 +107,81 @@ Mode）</strong>。</p>
 </ul>
 <p><strong>缺点</strong>：</p>
 <ul>
-<li><strong>不安全</strong>：这是 ECB
-模式的致命弱点。因为相同的明文块会产生相同的密文块，这使得攻击者可以通过分析密文中的重复模式来推断出原始数据的结构和内容。著名的“ECB
-企鹅”图片就是最好的例证。</li>
+<li><strong>不安全</strong>：这是 ECB 模式的致命弱点。因为相同的明文块会产生相同的密文块，这使得攻击者可以通过分析密文中的重复模式来推断出原始数据的结构和内容。著名的“ECB 企鹅”图片就是最好的例证。</li>
 </ul>
-<p>正是因为这个巨大的安全漏洞，ECB
-模式在大多数情况下都不被推荐使用。</p>
-<hr />
-<h3 id="链式反应cbccipher-block-chaining模式">2. 链式反应：CBC（Cipher
-Block Chaining）模式</h3>
-<p>为了解决 ECB 模式的重复性问题，工程师们设计了 <strong>CBC
-模式</strong>。它的核心思想是<strong>“链接”</strong>。</p>
-<p>在 CBC
-模式中，每个明文块在加密前，都会先和<strong>前一个密文块</strong>进行异或运算。而第一个明文块则会和一个随机的<strong>初始化向量（IV）</strong>进行异或运算。</p>
+<p>正是因为这个巨大的安全漏洞，ECB 模式在大多数情况下都不被推荐使用。</p>
+<hr>
+<h3 id="2-链式反应：CBC（Cipher-Block-Chaining）模式">2. 链式反应：CBC（Cipher Block Chaining）模式</h3>
+<p>为了解决 ECB 模式的重复性问题，工程师们设计了 <strong>CBC 模式</strong>。它的核心思想是**“链接”**。</p>
+<p>在 CBC 模式中，每个明文块在加密前，都会先和<strong>前一个密文块</strong>进行异或运算。而第一个明文块则会和一个随机的**初始化向量（IV）**进行异或运算。</p>
 <p><strong>优点</strong>：</p>
 <ul>
-<li><strong>更安全</strong>：由于引入了链式依赖和
-IV，即使有相同的明文块，它们加密后也会产生不同的密文，有效隐藏了数据模式，解决了
-ECB 的安全问题。</li>
+<li><strong>更安全</strong>：由于引入了链式依赖和 IV，即使有相同的明文块，它们加密后也会产生不同的密文，有效隐藏了数据模式，解决了 ECB 的安全问题。</li>
 </ul>
 <p><strong>缺点</strong>：</p>
 <ul>
 <li><strong>无法并行</strong>：由于加密过程是链式的，每个块的加密都依赖于前一个块的结果，因此无法并行处理。</li>
 <li><strong>错误传播</strong>：如果某个密文块在传输过程中损坏，它不仅会导致自身解密失败，还会影响后续所有块的解密，产生“多米诺骨牌效应”。</li>
 </ul>
-<p>CBC
-模式大大提高了安全性，在很长一段时间里都是行业标准。但是，它无法并行加密的缺点在面对海量数据时，成为了性能瓶颈。</p>
-<hr />
-<h3 id="高性能与高安全gcmgaloiscounter-mode模式">3.
-高性能与高安全：GCM（Galois/Counter Mode）模式</h3>
-<p>为了兼顾安全性和性能，<strong>GCM
-模式</strong>应运而生。它是一种<strong>认证加密（Authenticated
-Encryption）</strong>模式，完美结合了加密和数据完整性校验。</p>
-<p>GCM 模式的核心思想是 <strong>CTR（Counter
-Mode）</strong>。它不依赖于前面的密文块，而是通过一个<strong>不断递增的计数器</strong>，生成一个加密用的随机流，再将这个流和明文数据进行异或运算得到密文。</p>
+<p>CBC 模式大大提高了安全性，在很长一段时间里都是行业标准。但是，它无法并行加密的缺点在面对海量数据时，成为了性能瓶颈。</p>
+<hr>
+<h3 id="3-高性能与高安全：GCM（Galois-Counter-Mode）模式">3. 高性能与高安全：GCM（Galois/Counter Mode）模式</h3>
+<p>为了兼顾安全性和性能，<strong>GCM 模式</strong>应运而生。它是一种**认证加密（Authenticated Encryption）**模式，完美结合了加密和数据完整性校验。</p>
+<p>GCM 模式的核心思想是 <strong>CTR（Counter Mode）</strong>。它不依赖于前面的密文块，而是通过一个<strong>不断递增的计数器</strong>，生成一个加密用的随机流，再将这个流和明文数据进行异或运算得到密文。</p>
 <p><strong>优点</strong>：</p>
 <ul>
 <li><strong>可并行</strong>：每个加密块都是独立的，可以并行处理，极大地提高了加解密性能。</li>
-<li><strong>认证加密</strong>：GCM
-模式除了加密，还内置了<strong>认证功能</strong>。它能生成一个<strong>认证标签（Authentication
-Tag）</strong>，可以验证数据的完整性，确保数据在传输过程中没有被篡改。</li>
+<li><strong>认证加密</strong>：GCM 模式除了加密，还内置了<strong>认证功能</strong>。它能生成一个<strong>认证标签（Authentication Tag）</strong>，可以验证数据的完整性，确保数据在传输过程中没有被篡改。</li>
 </ul>
 <p><strong>缺点</strong>：</p>
 <ul>
-<li><strong>复杂度高</strong>：相对于 ECB 和 CBC，GCM
-的实现更复杂。</li>
+<li><strong>复杂度高</strong>：相对于 ECB 和 CBC，GCM 的实现更复杂。</li>
 </ul>
-<hr />
+<hr>
 <h3 id="总结与展望">总结与展望</h3>
-<p>从 ECB 的简单但危险，到 CBC 的安全但串行，再到 GCM
-的安全、高性能和认证，我们可以清晰地看到加密模式的演进。</p>
+<p>从 ECB 的简单但危险，到 CBC 的安全但串行，再到 GCM 的安全、高性能和认证，我们可以清晰地看到加密模式的演进。</p>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">特性</th>
-<th style="text-align: left;">ECB</th>
-<th style="text-align: left;">CBC</th>
-<th style="text-align: left;">GCM</th>
+<th style="text-align:left">特性</th>
+<th style="text-align:left">ECB</th>
+<th style="text-align:left">CBC</th>
+<th style="text-align:left">GCM</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><strong>工作模式</strong></td>
-<td style="text-align: left;">独立</td>
-<td style="text-align: left;">链接</td>
-<td style="text-align: left;">计数器</td>
+<td style="text-align:left"><strong>工作模式</strong></td>
+<td style="text-align:left">独立</td>
+<td style="text-align:left">链接</td>
+<td style="text-align:left">计数器</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>安全性</strong></td>
-<td style="text-align: left;">极低</td>
-<td style="text-align: left;">较高</td>
-<td style="text-align: left;">极高</td>
+<td style="text-align:left"><strong>安全性</strong></td>
+<td style="text-align:left">极低</td>
+<td style="text-align:left">较高</td>
+<td style="text-align:left">极高</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>并行处理</strong></td>
-<td style="text-align: left;">支持</td>
-<td style="text-align: left;">不支持</td>
-<td style="text-align: left;">支持</td>
+<td style="text-align:left"><strong>并行处理</strong></td>
+<td style="text-align:left">支持</td>
+<td style="text-align:left">不支持</td>
+<td style="text-align:left">支持</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>数据完整性</strong></td>
-<td style="text-align: left;">不支持</td>
-<td style="text-align: left;">不支持</td>
-<td style="text-align: left;">支持</td>
+<td style="text-align:left"><strong>数据完整性</strong></td>
+<td style="text-align:left">不支持</td>
+<td style="text-align:left">不支持</td>
+<td style="text-align:left">支持</td>
 </tr>
 </tbody>
 </table>
-<p>在今天的网络世界中，<strong>GCM
-模式</strong>因其卓越的性能和安全性，已经成为最推荐使用的加密模式，广泛应用于
-TLS/SSL 等主流安全协议中。</p>
+<p>在今天的网络世界中，<strong>GCM 模式</strong>因其卓越的性能和安全性，已经成为最推荐使用的加密模式，广泛应用于 TLS/SSL 等主流安全协议中。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -247,21 +221,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AE%80%E5%8D%95%E7%9A%84%E8%87%B4%E5%91%BD%E5%BC%B1%E7%82%B9ecbelectronic-codebook%E6%A8%A1%E5%BC%8F"><span class="toc-text">1.
-简单的致命弱点：ECB（Electronic Codebook）模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%93%BE%E5%BC%8F%E5%8F%8D%E5%BA%94cbccipher-block-chaining%E6%A8%A1%E5%BC%8F"><span class="toc-text">2. 链式反应：CBC（Cipher
-Block Chaining）模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%AB%98%E6%80%A7%E8%83%BD%E4%B8%8E%E9%AB%98%E5%AE%89%E5%85%A8gcmgaloiscounter-mode%E6%A8%A1%E5%BC%8F"><span class="toc-text">3.
-高性能与高安全：GCM（Galois&#x2F;Counter Mode）模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%B1%95%E6%9C%9B"><span class="toc-text">总结与展望</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E7%AE%80%E5%8D%95%E7%9A%84%E8%87%B4%E5%91%BD%E5%BC%B1%E7%82%B9%EF%BC%9AECB%EF%BC%88Electronic-Codebook%EF%BC%89%E6%A8%A1%E5%BC%8F"><span class="toc-text">1. 简单的致命弱点：ECB（Electronic Codebook）模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E9%93%BE%E5%BC%8F%E5%8F%8D%E5%BA%94%EF%BC%9ACBC%EF%BC%88Cipher-Block-Chaining%EF%BC%89%E6%A8%A1%E5%BC%8F"><span class="toc-text">2. 链式反应：CBC（Cipher Block Chaining）模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E9%AB%98%E6%80%A7%E8%83%BD%E4%B8%8E%E9%AB%98%E5%AE%89%E5%85%A8%EF%BC%9AGCM%EF%BC%88Galois-Counter-Mode%EF%BC%89%E6%A8%A1%E5%BC%8F"><span class="toc-text">3. 高性能与高安全：GCM（Galois&#x2F;Counter Mode）模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%B1%95%E6%9C%9B"><span class="toc-text">总结与展望</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

@@ -70,7 +70,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/30/llm/note-llm-from-scratch/"><span class="title">读书笔记丨从零构建大语言模型</span></a><a class="item title" href="/2025/08/30/graceful-restart-from-tableflip-to-k8s/"><span class="title">优雅重启的范式转移：从 tableflip 到 Kubernetes 的 Go 服务升级终极指南</span></a><a class="item title" href="/2025/08/25/redis/redis-datatype-string/"><span class="title">Redis 数据类型丨String丨从第一性原理看 Redis 字符串的设计哲学 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2023/12/23/floating-point-number/"><span class="title">一文彻底掌握浮点数</span></a><a class="item title" href="/2025/08/15/record-of-abnormal-investigation-of-public-network-traffic/"><span class="title">一次由公网流出带宽飙升引发的服务器性能排查实录</span></a><a class="item title" href="/2025/08/21/llm/guide-to-lr-warmup-cosine-annealing-gradient-clipping/"><span class="title">模型训练核心技巧：学习率预热、余弦衰减与梯度裁剪</span></a><a class="item title" href="/2025/08/20/redis/redis-datatype-list/"><span class="title">Redis 数据类型丨List丨从双向链表到 Listpack 的演进之路 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2025/08/18/llm/pytorch/"><span class="title">告别死记硬背：一份真正理解 PyTorch 核心设计的指南</span></a><a class="item title" href="/2025/08/15/encryption-mode/"><span class="title">从 ECB 到 GCM：理解加密模式的演进</span></a><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/30/llm/note-llm-from-scratch/"><span class="title">读书笔记丨从零构建大语言模型</span></a><a class="item title" href="/2025/08/30/graceful-restart-from-tableflip-to-k8s/"><span class="title">优雅重启的范式转移：从 tableflip 到 Kubernetes 的 Go 服务升级终极指南</span></a><a class="item title" href="/2025/08/25/redis/redis-datatype-string/"><span class="title">Redis 数据类型丨String丨从第一性原理看 Redis 字符串的设计哲学 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2023/12/23/floating-point-number/"><span class="title">一文彻底掌握浮点数</span></a><a class="item title" href="/2025/08/15/record-of-abnormal-investigation-of-public-network-traffic/"><span class="title">一次由公网流出带宽飙升引发的服务器性能排查实录</span></a><a class="item title" href="/2025/08/21/llm/guide-to-lr-warmup-cosine-annealing-gradient-clipping/"><span class="title">模型训练核心技巧：学习率预热、余弦衰减与梯度裁剪</span></a><a class="item title" href="/2025/08/18/llm/pytorch/"><span class="title">告别死记硬背：一份真正理解 PyTorch 核心设计的指南</span></a><a class="item title" href="/2025/08/20/redis/redis-datatype-list/"><span class="title">Redis 数据类型丨List丨从双向链表到 Listpack 的演进之路 (基于 Redis 8.2.1 源码)</span></a><a class="item title" href="/2025/08/15/encryption-mode/"><span class="title">从 ECB 到 GCM：理解加密模式的演进</span></a><a class="item title" href="/2025/08/13/llm/cross-entropy-loss/"><span class="title">大白话解释交叉熵损失</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -94,21 +94,17 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>在 Go
-语言开发中，并发编程一直是其最引人注目的特性之一。然而，如何有效地测试并发代码却常常让开发者感到头疼。Go
-1.24 版本引入的实验性包 <code>testing/synctest</code>
-为这个问题带来了优雅的解决方案。今天，让我们深入了解这个新特性。</p>
-<h1 id="并发测试的传统困境">并发测试的传统困境</h1>
+  </div><article class="md-text content"><p>在 Go 语言开发中，并发编程一直是其最引人注目的特性之一。然而，如何有效地测试并发代码却常常让开发者感到头疼。Go 1.24 版本引入的实验性包 <code>testing/synctest</code> 为这个问题带来了优雅的解决方案。今天，让我们深入了解这个新特性。</p>
+<h1>并发测试的传统困境</h1>
 <p>在介绍新方案之前，我们先看看传统的并发测试面临哪些问题：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestTraditional</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">    done := <span class="literal">false</span></span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="comment">// 执行某些操作</span></span><br><span class="line">        time.Sleep(<span class="number">100</span> * time.Millisecond)</span><br><span class="line">        done = <span class="literal">true</span></span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 等待操作完成</span></span><br><span class="line">    time.Sleep(<span class="number">200</span> * time.Millisecond)</span><br><span class="line">    <span class="keyword">if</span> !done &#123;</span><br><span class="line">        t.Fatal(<span class="string">&quot;操作未完成&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>这种方式存在明显的问题：</p>
-<ol type="1">
-<li><strong>时间依赖</strong>：需要通过 Sleep
-等待，导致测试运行缓慢</li>
+<ol>
+<li><strong>时间依赖</strong>：需要通过 Sleep 等待，导致测试运行缓慢</li>
 <li><strong>不稳定性</strong>：在不同环境下可能产生不同结果</li>
 <li><strong>精确性差</strong>：难以准确把握检查时机</li>
 </ol>
-<h1 id="synctest优雅的解决方案">synctest：优雅的解决方案</h1>
+<h1>synctest：优雅的解决方案</h1>
 <p><code>testing/synctest</code> 包通过两个核心函数改变了这一切：</p>
 <ul>
 <li><code>Run()</code>: 创建隔离的测试环境（bubble）</li>
@@ -116,18 +112,13 @@
 </ul>
 <p>让我们看看如何改写上面的测试：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestWithSynctest</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">    synctest.Run(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        done := <span class="literal">false</span></span><br><span class="line">        <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">            <span class="comment">// 执行某些操作</span></span><br><span class="line">            time.Sleep(<span class="number">100</span> * time.Millisecond)</span><br><span class="line">            done = <span class="literal">true</span></span><br><span class="line">        &#125;()</span><br><span class="line"></span><br><span class="line">        synctest.Wait()  <span class="comment">// 等待所有 goroutine 进入稳定状态</span></span><br><span class="line">        <span class="keyword">if</span> !done &#123;</span><br><span class="line">            t.Fatal(<span class="string">&quot;操作未完成&quot;</span>)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="深入理解-wait-机制">深入理解 Wait 机制</h1>
-<h2 id="wait-的本质">Wait 的本质</h2>
-<p>很多开发者初次接触 <code>Wait()</code>
-时可能会感到困惑：它到底在等待什么？什么时候会返回？</p>
-<p>想象一个场景：你在拍摄一张全家福，需要等待所有人都找到自己的位置，站好不动，才能按下快门。<code>Wait()</code>
-就像这个摄影师，它在等待所有
-goroutine（就像照片中的人）都进入一个稳定的状态（站好不动）。</p>
+<h1>深入理解 Wait 机制</h1>
+<h2 id="Wait-的本质">Wait 的本质</h2>
+<p>很多开发者初次接触 <code>Wait()</code> 时可能会感到困惑：它到底在等待什么？什么时候会返回？</p>
+<p>想象一个场景：你在拍摄一张全家福，需要等待所有人都找到自己的位置，站好不动，才能按下快门。<code>Wait()</code> 就像这个摄影师，它在等待所有 goroutine（就像照片中的人）都进入一个稳定的状态（站好不动）。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">synctest.Run(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="comment">// 类比：三个人要拍全家福</span></span><br><span class="line">    <span class="keyword">go</span> person1()  <span class="comment">// 第一个人找位置</span></span><br><span class="line">    <span class="keyword">go</span> person2()  <span class="comment">// 第二个人找位置</span></span><br><span class="line">    <span class="keyword">go</span> person3()  <span class="comment">// 第三个人找位置</span></span><br><span class="line"></span><br><span class="line">    synctest.Wait()  <span class="comment">// 等待所有人都站好不动</span></span><br><span class="line">    <span class="comment">// 这时可以安全地&quot;按下快门&quot;（检查程序状态）</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
-<h2 id="为什么需要-wait">为什么需要 Wait？</h2>
-<p>在并发程序中，我们经常需要在特定时刻检查程序状态。但是，如果某些
-goroutine 还在运行，这个状态可能随时发生变化。<code>Wait()</code>
-通过确保所有 goroutine 都进入稳定状态，为我们提供了一个"快照"时刻。</p>
+<h2 id="为什么需要-Wait？">为什么需要 Wait？</h2>
+<p>在并发程序中，我们经常需要在特定时刻检查程序状态。但是，如果某些 goroutine 还在运行，这个状态可能随时发生变化。<code>Wait()</code> 通过确保所有 goroutine 都进入稳定状态，为我们提供了一个&quot;快照&quot;时刻。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">synctest.Run(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">    result := <span class="literal">false</span></span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="comment">// 模拟耗时操作</span></span><br><span class="line">        time.Sleep(<span class="number">1</span> * time.Second)</span><br><span class="line">        result = <span class="literal">true</span></span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line">    synctest.Wait()  <span class="comment">// 等待 goroutine 进入稳定状态</span></span><br><span class="line">    <span class="comment">// 此时 result 的值是确定的，不会突然改变</span></span><br><span class="line">    fmt.Println(result)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
 <h2 id="持久阻塞的概念">持久阻塞的概念</h2>
 <p>哪些操作会导致持久阻塞？</p>
@@ -143,68 +134,74 @@ goroutine 还在运行，这个状态可能随时发生变化。<code>Wait()</co
 <li>外部 I/O</li>
 <li>外部 channel 操作</li>
 </ul>
-<h1 id="虚拟时钟测试的神器">虚拟时钟：测试的神器</h1>
-<p><code>synctest</code> 的另一个强大特性是虚拟时钟机制。在 bubble
-内部，所有时间相关的操作都使用虚拟时钟，这意味着：</p>
+<h1>虚拟时钟：测试的神器</h1>
+<p><code>synctest</code> 的另一个强大特性是虚拟时钟机制。在 bubble 内部，所有时间相关的操作都使用虚拟时钟，这意味着：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">synctest.Run(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="comment">// 看似等待24小时</span></span><br><span class="line">    time.Sleep(<span class="number">24</span> * time.Hour)</span><br><span class="line">    <span class="comment">// 实际上立即执行完成！</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
 <p>这个特性让我们能够：</p>
-<ol type="1">
+<ol>
 <li>快速测试长时间操作</li>
 <li>精确控制时间流逝</li>
 <li>避免测试的不确定性</li>
 </ol>
-<h1 id="实战案例深入理解-http-100-continue-测试">实战案例：深入理解 HTTP
-100 Continue 测试</h1>
+<h1>实战案例：深入理解 HTTP 100 Continue 测试</h1>
 <h2 id="背景知识">背景知识</h2>
 <p>HTTP 的 100 Continue 机制是一个优化大文件上传的协议特性：</p>
-<ol type="1">
-<li>客户端想上传大文件时，先发送带有 "Expect: 100-continue"
-头的请求</li>
+<ol>
+<li>客户端想上传大文件时，先发送带有 “Expect: 100-continue” 头的请求</li>
 <li>服务器可以决定是否接受这个上传：
 <ul>
-<li>如果接受，返回 "100 Continue"</li>
+<li>如果接受，返回 “100 Continue”</li>
 <li>如果拒绝，可以直接返回错误状态码</li>
-</ul></li>
+</ul>
+</li>
 <li>客户端根据服务器的响应决定是否发送文件内容</li>
 </ol>
 <h2 id="详细测试实现">详细测试实现</h2>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestHTTPContinue</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">    synctest.Run(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="comment">// 第一步：建立测试环境</span></span><br><span class="line">        srvConn, cliConn := net.Pipe()</span><br><span class="line">        <span class="keyword">defer</span> srvConn.Close()</span><br><span class="line">        <span class="keyword">defer</span> cliConn.Close()</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 第二步：配置 HTTP 客户端</span></span><br><span class="line">        tr := &amp;http.Transport&#123;</span><br><span class="line">            DialContext: <span class="function"><span class="keyword">func</span><span class="params">(ctx context.Context, network, address <span class="type">string</span>)</span></span> (net.Conn, <span class="type">error</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> cliConn, <span class="literal">nil</span></span><br><span class="line">            &#125;,</span><br><span class="line">            ExpectContinueTimeout: <span class="number">5</span> * time.Second,</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 第三步：准备测试数据</span></span><br><span class="line">        body := <span class="string">&quot;request body&quot;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 第四步：发送请求</span></span><br><span class="line">        <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">            req, _ := http.NewRequest(<span class="string">&quot;PUT&quot;</span>, <span class="string">&quot;http://test.tld/&quot;</span>,</span><br><span class="line">                strings.NewReader(body))</span><br><span class="line">            req.Header.Set(<span class="string">&quot;Expect&quot;</span>, <span class="string">&quot;100-continue&quot;</span>)</span><br><span class="line">            resp, err := tr.RoundTrip(req)</span><br><span class="line">            <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">                t.Errorf(<span class="string">&quot;请求失败: %v&quot;</span>, err)</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                resp.Body.Close()</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;()</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 第五步：验证请求头</span></span><br><span class="line">        req, err := http.ReadRequest(bufio.NewReader(srvConn))</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            t.Fatalf(<span class="string">&quot;读取请求失败: %v&quot;</span>, err)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 第六步：验证请求体未发送</span></span><br><span class="line">        <span class="keyword">var</span> gotBody strings.Builder</span><br><span class="line">        <span class="keyword">go</span> io.Copy(&amp;gotBody, req.Body)</span><br><span class="line">        synctest.Wait()</span><br><span class="line">        <span class="keyword">if</span> got := gotBody.String(); got != <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">            t.Fatalf(<span class="string">&quot;在发送 100 Continue 之前，意外收到请求体: %q&quot;</span>, got)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 第七步：发送 100 Continue</span></span><br><span class="line">        srvConn.Write([]<span class="type">byte</span>(<span class="string">&quot;HTTP/1.1 100 Continue\r\n\r\n&quot;</span>))</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 第八步：验证请求体</span></span><br><span class="line">        synctest.Wait()</span><br><span class="line">        <span class="keyword">if</span> got := gotBody.String(); got != body &#123;</span><br><span class="line">            t.Fatalf(<span class="string">&quot;收到的请求体 %q，期望 %q&quot;</span>, got, body)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 第九步：完成请求</span></span><br><span class="line">        srvConn.Write([]<span class="type">byte</span>(<span class="string">&quot;HTTP/1.1 200 OK\r\n\r\n&quot;</span>))</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h2 id="测试的关键点解析">测试的关键点解析</h2>
-<ol type="1">
-<li><p><strong>使用 net.Pipe()</strong></p>
+<ol>
+<li>
+<p><strong>使用 net.Pipe()</strong></p>
 <ul>
 <li>创建内存中的网络连接</li>
 <li>避免依赖真实网络</li>
 <li>保证测试的可重复性</li>
-</ul></li>
-<li><p><strong>请求发送过程</strong></p>
+</ul>
+</li>
+<li>
+<p><strong>请求发送过程</strong></p>
 <ul>
 <li>在独立的 goroutine 中发送请求</li>
-<li>设置 "Expect: 100-continue" 头</li>
+<li>设置 “Expect: 100-continue” 头</li>
 <li>准备要发送的请求体</li>
-</ul></li>
-<li><p><strong>验证关键行为</strong></p>
+</ul>
+</li>
+<li>
+<p><strong>验证关键行为</strong></p>
 <ul>
 <li>确认请求头正确发送</li>
 <li>验证请求体在收到 100 Continue 之前未发送</li>
 <li>验证请求体在收到 100 Continue 后正确发送</li>
-</ul></li>
-<li><p><strong>使用 Wait 的时机</strong></p>
+</ul>
+</li>
+<li>
+<p><strong>使用 Wait 的时机</strong></p>
 <ul>
 <li>在检查请求体之前调用 Wait</li>
 <li>确保所有数据传输操作都已完成或阻塞</li>
 <li>获得稳定的程序状态进行验证</li>
-</ul></li>
+</ul>
+</li>
 </ol>
-<h1 id="使用建议">使用建议</h1>
-<ol type="1">
+<h1>使用建议</h1>
+<ol>
 <li><strong>明确边界</strong>：理解什么操作会导致持久阻塞，什么不会</li>
 <li><strong>清理资源</strong>：确保所有 goroutine 在测试结束前退出</li>
 <li><strong>模拟 I/O</strong>：使用内存管道替代真实网络连接</li>
 <li><strong>合理使用 Wait</strong>：在需要检查状态的关键点调用</li>
 </ol>
-<h1 id="注意事项">注意事项</h1>
-<ol type="1">
+<h1>注意事项</h1>
+<ol>
 <li>目前是实验性功能，需要设置 <code>GOEXPERIMENT=synctest</code></li>
 <li>不支持测试真实的外部 I/O 操作</li>
 <li>互斥锁操作不被视为持久阻塞</li>
@@ -216,8 +213,7 @@ goroutine 还在运行，这个状态可能随时发生变化。<code>Wait()</co
       <div class="body">
         <ul>
         <li class="post-title">
-          <p><a target="_blank" rel="noopener" href="https://go.dev/blog/synctest">Go Blog: Testing concurrent
-code with testing/synctest</a></p>
+          <p><a target="_blank" rel="noopener" href="https://go.dev/blog/synctest">Go Blog: Testing concurrent code with testing/synctest</a></p>
 
         </li>
         </ul>
@@ -226,9 +222,7 @@ code with testing/synctest</a></p>
     
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -268,19 +262,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%B9%B6%E5%8F%91%E6%B5%8B%E8%AF%95%E7%9A%84%E4%BC%A0%E7%BB%9F%E5%9B%B0%E5%A2%83"><span class="toc-text">并发测试的传统困境</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#synctest%E4%BC%98%E9%9B%85%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="toc-text">synctest：优雅的解决方案</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3-wait-%E6%9C%BA%E5%88%B6"><span class="toc-text">深入理解 Wait 机制</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#wait-%E7%9A%84%E6%9C%AC%E8%B4%A8"><span class="toc-text">Wait 的本质</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-wait"><span class="toc-text">为什么需要 Wait？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8C%81%E4%B9%85%E9%98%BB%E5%A1%9E%E7%9A%84%E6%A6%82%E5%BF%B5"><span class="toc-text">持久阻塞的概念</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E6%97%B6%E9%92%9F%E6%B5%8B%E8%AF%95%E7%9A%84%E7%A5%9E%E5%99%A8"><span class="toc-text">虚拟时钟：测试的神器</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%E6%A1%88%E4%BE%8B%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3-http-100-continue-%E6%B5%8B%E8%AF%95"><span class="toc-text">实战案例：深入理解 HTTP
-100 Continue 测试</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%83%8C%E6%99%AF%E7%9F%A5%E8%AF%86"><span class="toc-text">背景知识</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%A6%E7%BB%86%E6%B5%8B%E8%AF%95%E5%AE%9E%E7%8E%B0"><span class="toc-text">详细测试实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%8B%E8%AF%95%E7%9A%84%E5%85%B3%E9%94%AE%E7%82%B9%E8%A7%A3%E6%9E%90"><span class="toc-text">测试的关键点解析</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E5%BB%BA%E8%AE%AE"><span class="toc-text">使用建议</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="toc-text">注意事项</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">并发测试的传统困境</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">synctest：优雅的解决方案</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">深入理解 Wait 机制</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Wait-%E7%9A%84%E6%9C%AC%E8%B4%A8"><span class="toc-text">Wait 的本质</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-Wait%EF%BC%9F"><span class="toc-text">为什么需要 Wait？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8C%81%E4%B9%85%E9%98%BB%E5%A1%9E%E7%9A%84%E6%A6%82%E5%BF%B5"><span class="toc-text">持久阻塞的概念</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">虚拟时钟：测试的神器</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">实战案例：深入理解 HTTP 100 Continue 测试</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%83%8C%E6%99%AF%E7%9F%A5%E8%AF%86"><span class="toc-text">背景知识</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%A6%E7%BB%86%E6%B5%8B%E8%AF%95%E5%AE%9E%E7%8E%B0"><span class="toc-text">详细测试实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%8B%E8%AF%95%E7%9A%84%E5%85%B3%E9%94%AE%E7%82%B9%E8%A7%A3%E6%9E%90"><span class="toc-text">测试的关键点解析</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">使用建议</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">注意事项</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
