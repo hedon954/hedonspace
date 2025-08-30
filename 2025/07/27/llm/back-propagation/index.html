@@ -95,20 +95,41 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><h3 id="一、核心思想：一个-“分锅”-大会">一、核心思想：一个 “分锅” 大会</h3>
-<p>想象一下，你是一个大公司的 CEO，你的公司有一个很长的流水线，用来生产一个精密的产品。这条流水线有很多道工序，每道工序都有一个工人负责。</p>
-<ol>
-<li><strong>最终产品出问题了</strong>：产品下线后，你发现最终的成品和设计图纸有偏差 (比如，要求重 100 克，结果做出来重 110 克)。这个 “10 克的偏差” 就是 <strong>误差 (Error)</strong>。</li>
-<li><strong>你作为 CEO 开始追责</strong>：你肯定不会把所有人都骂一顿，或者随机开除一个工人。最科学的方法是 <strong>从后往前</strong>追查。</li>
-<li><strong>追责第一步</strong>：你首先找到 <strong>最后一道工序</strong> 的工人。因为他是直接影响成品的人。你对他说：“产品重了 10 克，你的操作对最终重量影响最大，你先调整一下你的机器参数。”</li>
-<li><strong>追责第二步</strong>：这个工人会说：“老板，我这道工序的产出，也受到 <strong>上一道工序</strong> 给我的半成品的影响啊。根据我的机器参数，我可以计算出，上一个工人交给我的半成品大概是重了 8 克导致的。”</li>
-<li><strong>追责第三步</strong>：于是，你又拿着这个 “8 克的偏差” 去找 <strong>倒数第二个工人</strong>。这个工人也同样会计算他受到了他上游工序的影响。</li>
-<li><strong>一路向前追溯</strong>：就这样，这个 “锅” (误差) 从最后一个工人开始，一层一层地 <strong>向前传递</strong>，每个工人都根据自己的 “责任” 大小，领走一部分 “锅”，并对自己的机器参数做出微小的调整。</li>
+  </div><article class="md-text content"><h3 id="一核心思想一个-分锅-大会">一、核心思想：一个 “分锅” 大会</h3>
+<p>想象一下，你是一个大公司的
+CEO，你的公司有一个很长的流水线，用来生产一个精密的产品。这条流水线有很多道工序，每道工序都有一个工人负责。</p>
+<ol type="1">
+<li><strong>最终产品出问题了</strong>：产品下线后，你发现最终的成品和设计图纸有偏差
+(比如，要求重 100 克，结果做出来重 110 克)。这个 “10 克的偏差” 就是
+<strong>误差 (Error)</strong>。</li>
+<li><strong>你作为 CEO
+开始追责</strong>：你肯定不会把所有人都骂一顿，或者随机开除一个工人。最科学的方法是
+<strong>从后往前</strong>追查。</li>
+<li><strong>追责第一步</strong>：你首先找到
+<strong>最后一道工序</strong>
+的工人。因为他是直接影响成品的人。你对他说：“产品重了 10
+克，你的操作对最终重量影响最大，你先调整一下你的机器参数。”</li>
+<li><strong>追责第二步</strong>：这个工人会说：“老板，我这道工序的产出，也受到
+<strong>上一道工序</strong>
+给我的半成品的影响啊。根据我的机器参数，我可以计算出，上一个工人交给我的半成品大概是重了
+8 克导致的。”</li>
+<li><strong>追责第三步</strong>：于是，你又拿着这个 “8 克的偏差” 去找
+<strong>倒数第二个工人</strong>。这个工人也同样会计算他受到了他上游工序的影响。</li>
+<li><strong>一路向前追溯</strong>：就这样，这个 “锅” (误差)
+从最后一个工人开始，一层一层地
+<strong>向前传递</strong>，每个工人都根据自己的 “责任” 大小，领走一部分
+“锅”，并对自己的机器参数做出微小的调整。</li>
 </ol>
-<p>这个从后往前追责、分锅、调整的过程，就是 <strong>反向传播</strong> 的核心思想。</p>
-<h3 id="二、从比喻到神经网络">二、从比喻到神经网络</h3>
+<p>这个从后往前追责、分锅、调整的过程，就是 <strong>反向传播</strong>
+的核心思想。</p>
+<h3 id="二从比喻到神经网络">二、从比喻到神经网络</h3>
 <p>现在，我们把上面的比喻翻译成神经网络的术语：</p>
 <table>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 20%" />
+<col style="width: 68%" />
+</colgroup>
 <thead>
 <tr>
 <th>大白话比喻</th>
@@ -145,7 +166,8 @@
 <tr>
 <td><strong>产品偏差</strong></td>
 <td><strong>损失/误差 (Loss / Error)</strong></td>
-<td>预测输出和真实标签之间的差距。由 <strong>损失函数 (Loss Function)</strong> 计算得出。</td>
+<td>预测输出和真实标签之间的差距。由 <strong>损失函数 (Loss
+Function)</strong> 计算得出。</td>
 </tr>
 <tr>
 <td><strong>从后往前追责分锅</strong></td>
@@ -155,56 +177,72 @@
 <tr>
 <td><strong>调整机器参数</strong></td>
 <td><strong>权重更新 (Weight Update)</strong></td>
-<td>使用一种叫做 <strong>梯度下降 (Gradient Descent)</strong> 的方法，根据计算出的“贡献度”来微调网络中所有的权重，目的是让总误差变小。</td>
+<td>使用一种叫做 <strong>梯度下降 (Gradient Descent)</strong>
+的方法，根据计算出的“贡献度”来微调网络中所有的权重，目的是让总误差变小。</td>
 </tr>
 </tbody>
 </table>
-<h3 id="三、核心工具：微积分里的-“链式法则”">三、核心工具：微积分里的 “链式法则”</h3>
+<h3 id="三核心工具微积分里的-链式法则">三、核心工具：微积分里的
+“链式法则”</h3>
 <p>你可能会问，每个工人是怎么精确计算出他应该背多大的“锅”呢？</p>
-<p>这里的“锅”在数学上，就是 <strong>梯度 (Gradient)</strong>，简单理解就是 <strong>导数</strong>。导数衡量的是 “如果我稍微动一下这个参数，最终的误差会改变多少”。</p>
+<p>这里的“锅”在数学上，就是 <strong>梯度
+(Gradient)</strong>，简单理解就是 <strong>导数</strong>。导数衡量的是
+“如果我稍微动一下这个参数，最终的误差会改变多少”。</p>
 <ul>
-<li>如果导数很大 (无论是正还是负)，说明这个参数对最终误差的影响很大，是“主要责任人”，需要大幅调整。</li>
-<li>如果导数很小，接近 0，说明它基本没啥影响，是“吃瓜群众”，基本不用动。</li>
+<li>如果导数很大
+(无论是正还是负)，说明这个参数对最终误差的影响很大，是“主要责任人”，需要大幅调整。</li>
+<li>如果导数很小，接近
+0，说明它基本没啥影响，是“吃瓜群众”，基本不用动。</li>
 </ul>
-<p>反向传播算法的数学精髓，就是应用了微积分里的 <strong>链式法则 (Chain Rule)</strong>。</p>
-<p><strong>链式法则通俗解释</strong>：如果 C 的变化依赖于 B，而 B 的变化又依赖于 A，那么链式法则可以帮助我们计算出 A 的微小变化最终会对 C 产生多大的影响。</p>
-<p>在神经网络里，最终的误差 (Loss) 是输出层 (Output Layer) 的函数，输出层又是前一个隐藏层 (Hidden Layer) 的函数，以此类推，直到输入层。反向传播正是利用链式法则，高效地计算出 <strong>总误差</strong> 相对于 <strong>网络中每一个权重</strong>的梯度 (导数)。它就像一套完美的公式，能精确地把“锅”不多不少、恰如其分地分配给每一个相关的参数。</p>
-<h3 id="四、总结：反向传播的完整流程">四、总结：反向传播的完整流程</h3>
+<p>反向传播算法的数学精髓，就是应用了微积分里的 <strong>链式法则 (Chain
+Rule)</strong>。</p>
+<p><strong>链式法则通俗解释</strong>：如果 C 的变化依赖于 B，而 B
+的变化又依赖于 A，那么链式法则可以帮助我们计算出 A 的微小变化最终会对 C
+产生多大的影响。</p>
+<p>在神经网络里，最终的误差 (Loss) 是输出层 (Output Layer)
+的函数，输出层又是前一个隐藏层 (Hidden Layer)
+的函数，以此类推，直到输入层。反向传播正是利用链式法则，高效地计算出
+<strong>总误差</strong> 相对于 <strong>网络中每一个权重</strong>的梯度
+(导数)。它就像一套完美的公式，能精确地把“锅”不多不少、恰如其分地分配给每一个相关的参数。</p>
+<h3 id="四总结反向传播的完整流程">四、总结：反向传播的完整流程</h3>
 <p>所以，神经网络的学习过程（训练）可以总结为以下循环往复的步骤：</p>
-<ol>
+<ol type="1">
 <li><strong>正向传播 (Forward Pass)</strong>：
 <ul>
 <li>给网络一个输入数据 (例如一张图片)。</li>
-<li>数据从输入层开始，经过每一层神经元的计算 (乘以权重，加上偏置，再通过激活函数)，最后到达输出层，得到一个预测结果。</li>
+<li>数据从输入层开始，经过每一层神经元的计算
+(乘以权重，加上偏置，再通过激活函数)，最后到达输出层，得到一个预测结果。</li>
 <li>这就像把原材料放上传送带，走完整条流水线，得到最终产品。</li>
-</ul>
-</li>
+</ul></li>
 <li><strong>计算损失 (Calculate Loss)</strong>：
 <ul>
-<li>用损失函数比较网络的预测结果和真实的正确答案，计算出它们之间的差距，即总误差 (Loss)。</li>
+<li>用损失函数比较网络的预测结果和真实的正确答案，计算出它们之间的差距，即总误差
+(Loss)。</li>
 <li>这就像质检员检查最终产品，看它和设计图纸差了多少。</li>
-</ul>
-</li>
+</ul></li>
 <li><strong>反向传播 (Backward Pass / Backpropagation)</strong>：
 <ul>
-<li>这是最关键的一步。从总误差出发，利用链式法则，从输出层开始，反向逐层计算出网络中 <strong>每一个权重</strong> 对这个总误差的“贡献度”(梯度)。</li>
+<li>这是最关键的一步。从总误差出发，利用链式法则，从输出层开始，反向逐层计算出网络中
+<strong>每一个权重</strong> 对这个总误差的“贡献度”(梯度)。</li>
 <li>这就像 CEO 拿着质检报告，从后往前追责，精确地给每个工序“分锅”。</li>
-</ul>
-</li>
+</ul></li>
 <li><strong>更新权重 (Update Weights)</strong>：
 <ul>
-<li>根据反向传播计算出的“贡献度”(梯度)，使用梯度下降等优化算法，对网络中所有的权重进行微小的调整。调整的方向是 <strong>让总误差变小</strong> 的方向。</li>
+<li>根据反向传播计算出的“贡献度”(梯度)，使用梯度下降等优化算法，对网络中所有的权重进行微小的调整。调整的方向是
+<strong>让总误差变小</strong> 的方向。</li>
 <li>这就像每个工人接到“整改通知”后，都去微调自己的机器旋钮。</li>
-</ul>
-</li>
+</ul></li>
 </ol>
-<p>通过成千上万次地重复以上 4 个步骤，网络中的所有权重会逐渐被调整到最优状态，使得网络在接收新的输入时，能够做出非常准确的预测。</p>
+<p>通过成千上万次地重复以上 4
+个步骤，网络中的所有权重会逐渐被调整到最优状态，使得网络在接收新的输入时，能够做出非常准确的预测。</p>
 <p>简单来说，<strong>反向传播就是神经网络高效学习的秘诀，它通过一个巧妙的“从后往前分锅”机制，告诉网络里的每一个参数应该如何自我调整，才能让最终的预测结果越来越准。</strong></p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -244,15 +282,19 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3%EF%BC%9A%E4%B8%80%E4%B8%AA-%E2%80%9C%E5%88%86%E9%94%85%E2%80%9D-%E5%A4%A7%E4%BC%9A"><span class="toc-text">一、核心思想：一个 “分锅” 大会</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E4%BB%8E%E6%AF%94%E5%96%BB%E5%88%B0%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C"><span class="toc-text">二、从比喻到神经网络</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%A0%B8%E5%BF%83%E5%B7%A5%E5%85%B7%EF%BC%9A%E5%BE%AE%E7%A7%AF%E5%88%86%E9%87%8C%E7%9A%84-%E2%80%9C%E9%93%BE%E5%BC%8F%E6%B3%95%E5%88%99%E2%80%9D"><span class="toc-text">三、核心工具：微积分里的 “链式法则”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%80%BB%E7%BB%93%EF%BC%9A%E5%8F%8D%E5%90%91%E4%BC%A0%E6%92%AD%E7%9A%84%E5%AE%8C%E6%95%B4%E6%B5%81%E7%A8%8B"><span class="toc-text">四、总结：反向传播的完整流程</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3%E4%B8%80%E4%B8%AA-%E5%88%86%E9%94%85-%E5%A4%A7%E4%BC%9A"><span class="toc-text">一、核心思想：一个 “分锅” 大会</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E4%BB%8E%E6%AF%94%E5%96%BB%E5%88%B0%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C"><span class="toc-text">二、从比喻到神经网络</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E6%A0%B8%E5%BF%83%E5%B7%A5%E5%85%B7%E5%BE%AE%E7%A7%AF%E5%88%86%E9%87%8C%E7%9A%84-%E9%93%BE%E5%BC%8F%E6%B3%95%E5%88%99"><span class="toc-text">三、核心工具：微积分里的
+“链式法则”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E6%80%BB%E7%BB%93%E5%8F%8D%E5%90%91%E4%BC%A0%E6%92%AD%E7%9A%84%E5%AE%8C%E6%95%B4%E6%B5%81%E7%A8%8B"><span class="toc-text">四、总结：反向传播的完整流程</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

@@ -94,64 +94,98 @@
     
   </div>
   </div><article class="md-text content"><p>毫无疑问，<strong>绝对有必要，甚至比以往任何时候都更加重要。</strong></p>
-<p>AI 时代，应用层的技术和工具变得越来越“智能”和“易用”，这反而造成了一种危险的错觉：似乎我们不再需要理解那些复杂的底层原理了。但真相恰恰相反。</p>
-<p>把自己想象成一位 F1 赛车手。AI 工具就像一个极其先进的驾驶辅助系统，它能帮你自动换挡、优化过弯路线，甚至在某些直道上自动驾驶。这能让你开得更快，但如果你想成为冠军，你必须理解：</p>
+<p>AI
+时代，应用层的技术和工具变得越来越“智能”和“易用”，这反而造成了一种危险的错觉：似乎我们不再需要理解那些复杂的底层原理了。但真相恰恰相反。</p>
+<p>把自己想象成一位 F1 赛车手。AI
+工具就像一个极其先进的驾驶辅助系统，它能帮你自动换挡、优化过弯路线，甚至在某些直道上自动驾驶。这能让你开得更快，但如果你想成为冠军，你必须理解：</p>
 <ul>
 <li><strong>引擎的工作原理（操作系统、CPU）</strong>：为什么在某个转速下引擎会抖动？如何压榨出极限动力？</li>
 <li><strong>空气动力学（网络、I/O）</strong>：为什么今天赛车感觉有点“飘”？是风向变了还是下压力调校出了问题？</li>
 <li><strong>轮胎与悬挂（数据结构、数据库）</strong>：如何根据赛道温度和磨损情况选择轮胎？悬挂的软硬如何影响抓地力？</li>
 </ul>
 <p>只依赖驾驶辅助系统的车手，在赛车一切正常时表现尚可。一旦出现任何异常——轮胎异常磨损、引擎过热、通信系统延迟——他将束手无策，只能无奈退赛。而理解底层的车手，能通过细微的反馈感知到问题，与工程师沟通，调整策略，最终赢得比赛。</p>
-<hr>
+<hr />
 <h3 id="五个无法回避的理由">五个无法回避的理由</h3>
 <p>当你再对学习底层技术产生动摇时，请用以下几点来说服自己：</p>
-<h4 id="1-抽象层终会“泄漏”，底层知识是你的救生筏">1. 抽象层终会“泄漏”，底层知识是你的救生筏</h4>
-<p>这是软件工程颠扑不破的“<strong>抽象泄漏定律</strong>”（The Law of Leaky Abstractions）。任何为了简化而存在的上层工具（包括 AI），都无法完美隐藏其底层的复杂性。当问题发生时，这个“泄漏”就会出现。</p>
+<h4 id="抽象层终会泄漏底层知识是你的救生筏">1.
+抽象层终会“泄漏”，底层知识是你的救生筏</h4>
+<p>这是软件工程颠扑不破的“<strong>抽象泄漏定律</strong>”（The Law of
+Leaky Abstractions）。任何为了简化而存在的上层工具（包括
+AI），都无法完美隐藏其底层的复杂性。当问题发生时，这个“泄漏”就会出现。</p>
 <ul>
-<li><strong>场景 A</strong>：AI 帮你生成了一段代码，用于从数据库查询数据，但在生产环境压力下响应极慢。AI 无法告诉你原因是索引失效、发生了锁竞争还是因为 N+1 查询。这时，你需要<strong>数据库底层知识</strong>来分析执行计划、优化索引。</li>
-<li><strong>场景 B</strong>：一个由 AI 调度的微服务出现随机性高延迟。AI 无法告诉你这是因为容器的 CPU 被限制、发生了网络丢包，还是因为 JVM 的垃圾回收（GC）暂停。这时，你需要<strong>操作系统和网络的底层知识</strong>来定位根源。</li>
-<li><strong>场景 C</strong>：你的 RAG 应用召回结果不理想。AI 无法告诉你是因为向量嵌入模型选择不当，还是向量数据库的索引策略（如 HNSW）参数需要调优。这需要你理解<strong>数据结构和算法</strong>。</li>
+<li><strong>场景 A</strong>：AI
+帮你生成了一段代码，用于从数据库查询数据，但在生产环境压力下响应极慢。AI
+无法告诉你原因是索引失效、发生了锁竞争还是因为 N+1
+查询。这时，你需要<strong>数据库底层知识</strong>来分析执行计划、优化索引。</li>
+<li><strong>场景 B</strong>：一个由 AI 调度的微服务出现随机性高延迟。AI
+无法告诉你这是因为容器的 CPU 被限制、发生了网络丢包，还是因为 JVM
+的垃圾回收（GC）暂停。这时，你需要<strong>操作系统和网络的底层知识</strong>来定位根源。</li>
+<li><strong>场景 C</strong>：你的 RAG 应用召回结果不理想。AI
+无法告诉你是因为向量嵌入模型选择不当，还是向量数据库的索引策略（如
+HNSW）参数需要调优。这需要你理解<strong>数据结构和算法</strong>。</li>
 </ul>
-<p><strong>说服自己：当 AI 失灵或表现不佳时，能拯救你的不是另一个 AI，而是你对底层的掌控力。</strong></p>
-<h4 id="2-问题的根源，往往深藏于你看不到的地方">2. 问题的根源，往往深藏于你看不到的地方</h4>
-<p>高级的故障排查（Troubleshooting）是后端工程师的核心价值之一。问题的表象（Symptom）和根源（Root Cause）往往不在同一个层面。</p>
+<p><strong>说服自己：当 AI 失灵或表现不佳时，能拯救你的不是另一个
+AI，而是你对底层的掌控力。</strong></p>
+<h4 id="问题的根源往往深藏于你看不到的地方">2.
+问题的根源，往往深藏于你看不到的地方</h4>
+<p>高级的故障排查（Troubleshooting）是后端工程师的核心价值之一。问题的表象（Symptom）和根源（Root
+Cause）往往不在同一个层面。</p>
 <ul>
-<li>一个 API 超时，表象是应用层错误。根源可能是 TCP 连接池耗尽、是 DNS 解析缓慢、是磁盘 I/O 达到瓶颈。</li>
-<li>AI 可以帮你分析日志，找到那个超时的 API。但它很难跨越多个技术栈，将零散的线索串联起来，形成一个完整的证据链，最终定位到那个深藏的根源。这种系统性的诊断能力，源于你脑中那张完整的技术底层地图。</li>
+<li>一个 API 超时，表象是应用层错误。根源可能是 TCP 连接池耗尽、是 DNS
+解析缓慢、是磁盘 I/O 达到瓶颈。</li>
+<li>AI 可以帮你分析日志，找到那个超时的
+API。但它很难跨越多个技术栈，将零散的线索串联起来，形成一个完整的证据链，最终定位到那个深藏的根源。这种系统性的诊断能力，源于你脑中那张完整的技术底层地图。</li>
 </ul>
 <p><strong>说服自己：只懂“驾驶”的人在车坏了时只能打电话求助，而懂“机械”的人能自己打开发动机盖解决问题。我要做后者。</strong></p>
-<h4 id="3-真正的工程判断力，建立在对权衡（Trade-off）的理解之上">3. 真正的工程判断力，建立在对权衡（Trade-off）的理解之上</h4>
+<h4 id="真正的工程判断力建立在对权衡trade-off的理解之上">3.
+真正的工程判断力，建立在对权衡（Trade-off）的理解之上</h4>
 <p>AI 可以提供“方案”，但无法为你做出最佳的“决策”。工程的核心是权衡。</p>
 <ul>
-<li>用关系型数据库还是 NoSQL？用 Redis 还是本地缓存？服务间通信用 gRPC 还是 RESTful API？</li>
-<li>每一个选择背后，都是对性能、成本、一致性、可用性、开发效率等一系列因素的综合考量。而这些考量的依据，正是来自你对各种技术底层实现机制的理解。不了解 TCP 和 HTTP/2 的底层差异，你如何能在 gRPC 和 REST 之间做出最合理的选择？不了解 B+树和 LSM 树，你如何为特定场景选择最合适的数据库？</li>
+<li>用关系型数据库还是 NoSQL？用 Redis 还是本地缓存？服务间通信用 gRPC
+还是 RESTful API？</li>
+<li>每一个选择背后，都是对性能、成本、一致性、可用性、开发效率等一系列因素的综合考量。而这些考量的依据，正是来自你对各种技术底层实现机制的理解。不了解
+TCP 和 HTTP/2 的底层差异，你如何能在 gRPC 和 REST
+之间做出最合理的选择？不了解 B+树和 LSM
+树，你如何为特定场景选择最合适的数据库？</li>
 </ul>
-<p><strong>说服自己：AI 可以成为我的顾问，但最终做出决策、并为之负责的人是我。我的决策质量，直接取决于我的底层知识深度。</strong></p>
-<h4 id="4-你的职业天花板，由底层知识决定">4. 你的职业天花板，由底层知识决定</h4>
-<p>随着 AI 自动化掉越来越多重复性的、模式化的编码工作，未来后端工程师的价值会更加向两个方向集中：</p>
+<p><strong>说服自己：AI
+可以成为我的顾问，但最终做出决策、并为之负责的人是我。我的决策质量，直接取决于我的底层知识深度。</strong></p>
+<h4 id="你的职业天花板由底层知识决定">4.
+你的职业天花板，由底层知识决定</h4>
+<p>随着 AI
+自动化掉越来越多重复性的、模式化的编码工作，未来后端工程师的价值会更加向两个方向集中：</p>
 <ul>
 <li><strong>向上</strong>：深入理解业务，进行业务建模和架构设计。</li>
 <li><strong>向下</strong>：解决硬核的技术难题，进行极致的性能优化和系统稳定性保障。</li>
 </ul>
 <p>这两个方向，都极度依赖底层技术。没有底层知识，你的架构设计就是空中楼阁；没有底层知识，你永远无法成为解决最棘手问题的那个关键人物。</p>
-<p><strong>说服自己：AI 会拉平初级和中级工程师的差距，但底层技术功底是区分高级/资深工程师与普通工程师的护城河。</strong></p>
-<h4 id="5-创新，源于对第一性原理的掌握">5. 创新，源于对第一性原理的掌握</h4>
-<p>我们使用的所有 AI 工具、框架、平台，本身就是由那些深刻理解底层技术的人创造出来的。他们不是简单地“使用”技术，而是基于对计算、存储、网络等第一性原理的理解，去“创造”新的技术。</p>
+<p><strong>说服自己：AI
+会拉平初级和中级工程师的差距，但底层技术功底是区分高级/资深工程师与普通工程师的护城河。</strong></p>
+<h4 id="创新源于对第一性原理的掌握">5. 创新，源于对第一性原理的掌握</h4>
+<p>我们使用的所有 AI
+工具、框架、平台，本身就是由那些深刻理解底层技术的人创造出来的。他们不是简单地“使用”技术，而是基于对计算、存储、网络等第一性原理的理解，去“创造”新的技术。</p>
 <p>如果你满足于只做一个技术的使用者，或许可以忽略底层。但如果你心中还有一丝火花，想在技术的世界里留下自己的印记，想创造出真正有价值的东西，那么掌握底层就是你唯一的路径。</p>
 <p><strong>说服自己：学习底层技术，不仅是为了解决今天的问题，更是为了获得解决明天未知问题、甚至定义未来的能力。</strong></p>
-<hr>
-<h3 id="结论：如何平衡学习">结论：如何平衡学习</h3>
-<p>这并非要求你立刻放下所有 AI 学习，去埋头啃《计算机程序的构造和解释》。正确的做法是：</p>
+<hr />
+<h3 id="结论如何平衡学习">结论：如何平衡学习</h3>
+<p>这并非要求你立刻放下所有 AI
+学习，去埋头啃《计算机程序的构造和解释》。正确的做法是：</p>
 <ul>
-<li><strong>保持“T 型”结构</strong>：在积极拥抱和学习 AI 这个横向技能的同时，有计划地、持续地加深你的纵向底层知识。</li>
-<li><strong>问题驱动学习</strong>：在应用 AI 或开发业务时，遇到任何性能、稳定性、或“匪夷所思”的问题，都不要轻易放过。把它当作一个深入学习底层技术的绝佳契机。从“为什么会这样？”开始，一路向下挖掘，直到你触及问题的本质。</li>
+<li><strong>保持“T 型”结构</strong>：在积极拥抱和学习 AI
+这个横向技能的同时，有计划地、持续地加深你的纵向底层知识。</li>
+<li><strong>问题驱动学习</strong>：在应用 AI
+或开发业务时，遇到任何性能、稳定性、或“匪夷所思”的问题，都不要轻易放过。把它当作一个深入学习底层技术的绝佳契机。从“为什么会这样？”开始，一路向下挖掘，直到你触及问题的本质。</li>
 </ul>
-<p>AI 时代，底层技术不是你的“备选项”，而是你的“压舱石”。它能让你的技术大船在 AI 的巨浪中，行得更稳、更快、更远。</p>
+<p>AI
+时代，底层技术不是你的“备选项”，而是你的“压舱石”。它能让你的技术大船在
+AI 的巨浪中，行得更稳、更快、更远。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -191,15 +225,22 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E4%B8%AA%E6%97%A0%E6%B3%95%E5%9B%9E%E9%81%BF%E7%9A%84%E7%90%86%E7%94%B1"><span class="toc-text">五个无法回避的理由</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E6%8A%BD%E8%B1%A1%E5%B1%82%E7%BB%88%E4%BC%9A%E2%80%9C%E6%B3%84%E6%BC%8F%E2%80%9D%EF%BC%8C%E5%BA%95%E5%B1%82%E7%9F%A5%E8%AF%86%E6%98%AF%E4%BD%A0%E7%9A%84%E6%95%91%E7%94%9F%E7%AD%8F"><span class="toc-text">1. 抽象层终会“泄漏”，底层知识是你的救生筏</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E9%97%AE%E9%A2%98%E7%9A%84%E6%A0%B9%E6%BA%90%EF%BC%8C%E5%BE%80%E5%BE%80%E6%B7%B1%E8%97%8F%E4%BA%8E%E4%BD%A0%E7%9C%8B%E4%B8%8D%E5%88%B0%E7%9A%84%E5%9C%B0%E6%96%B9"><span class="toc-text">2. 问题的根源，往往深藏于你看不到的地方</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E7%9C%9F%E6%AD%A3%E7%9A%84%E5%B7%A5%E7%A8%8B%E5%88%A4%E6%96%AD%E5%8A%9B%EF%BC%8C%E5%BB%BA%E7%AB%8B%E5%9C%A8%E5%AF%B9%E6%9D%83%E8%A1%A1%EF%BC%88Trade-off%EF%BC%89%E7%9A%84%E7%90%86%E8%A7%A3%E4%B9%8B%E4%B8%8A"><span class="toc-text">3. 真正的工程判断力，建立在对权衡（Trade-off）的理解之上</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-%E4%BD%A0%E7%9A%84%E8%81%8C%E4%B8%9A%E5%A4%A9%E8%8A%B1%E6%9D%BF%EF%BC%8C%E7%94%B1%E5%BA%95%E5%B1%82%E7%9F%A5%E8%AF%86%E5%86%B3%E5%AE%9A"><span class="toc-text">4. 你的职业天花板，由底层知识决定</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-%E5%88%9B%E6%96%B0%EF%BC%8C%E6%BA%90%E4%BA%8E%E5%AF%B9%E7%AC%AC%E4%B8%80%E6%80%A7%E5%8E%9F%E7%90%86%E7%9A%84%E6%8E%8C%E6%8F%A1"><span class="toc-text">5. 创新，源于对第一性原理的掌握</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA%EF%BC%9A%E5%A6%82%E4%BD%95%E5%B9%B3%E8%A1%A1%E5%AD%A6%E4%B9%A0"><span class="toc-text">结论：如何平衡学习</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E4%B8%AA%E6%97%A0%E6%B3%95%E5%9B%9E%E9%81%BF%E7%9A%84%E7%90%86%E7%94%B1"><span class="toc-text">五个无法回避的理由</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%8A%BD%E8%B1%A1%E5%B1%82%E7%BB%88%E4%BC%9A%E6%B3%84%E6%BC%8F%E5%BA%95%E5%B1%82%E7%9F%A5%E8%AF%86%E6%98%AF%E4%BD%A0%E7%9A%84%E6%95%91%E7%94%9F%E7%AD%8F"><span class="toc-text">1.
+抽象层终会“泄漏”，底层知识是你的救生筏</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E7%9A%84%E6%A0%B9%E6%BA%90%E5%BE%80%E5%BE%80%E6%B7%B1%E8%97%8F%E4%BA%8E%E4%BD%A0%E7%9C%8B%E4%B8%8D%E5%88%B0%E7%9A%84%E5%9C%B0%E6%96%B9"><span class="toc-text">2.
+问题的根源，往往深藏于你看不到的地方</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%9C%9F%E6%AD%A3%E7%9A%84%E5%B7%A5%E7%A8%8B%E5%88%A4%E6%96%AD%E5%8A%9B%E5%BB%BA%E7%AB%8B%E5%9C%A8%E5%AF%B9%E6%9D%83%E8%A1%A1trade-off%E7%9A%84%E7%90%86%E8%A7%A3%E4%B9%8B%E4%B8%8A"><span class="toc-text">3.
+真正的工程判断力，建立在对权衡（Trade-off）的理解之上</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%A0%E7%9A%84%E8%81%8C%E4%B8%9A%E5%A4%A9%E8%8A%B1%E6%9D%BF%E7%94%B1%E5%BA%95%E5%B1%82%E7%9F%A5%E8%AF%86%E5%86%B3%E5%AE%9A"><span class="toc-text">4.
+你的职业天花板，由底层知识决定</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%9B%E6%96%B0%E6%BA%90%E4%BA%8E%E5%AF%B9%E7%AC%AC%E4%B8%80%E6%80%A7%E5%8E%9F%E7%90%86%E7%9A%84%E6%8E%8C%E6%8F%A1"><span class="toc-text">5. 创新，源于对第一性原理的掌握</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA%E5%A6%82%E4%BD%95%E5%B9%B3%E8%A1%A1%E5%AD%A6%E4%B9%A0"><span class="toc-text">结论：如何平衡学习</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
