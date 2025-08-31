@@ -34,7 +34,7 @@
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250831134852813.png">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250831135822616.png">
 <meta property="article:published_time" content="2025-08-30T03:22:00.000Z">
-<meta property="article:modified_time" content="2025-08-31T06:49:01.336Z">
+<meta property="article:modified_time" content="2025-08-31T06:53:06.715Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="读书笔记">
 <meta property="article:tag" content="大模型">
@@ -90,7 +90,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-08-30T03:22:00.000Z">2025-08-30</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-08-31T06:49:01.336Z">2025-08-31</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-08-30T03:22:00.000Z">2025-08-30</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-08-31T06:53:06.715Z">2025-08-31</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -447,7 +447,12 @@ embedding)</strong>：关注的是词元之间的相对位置或距离，而非�
 <li><strong>旋转位置嵌入 (Rotary Positional Embedding,
 RoPE)</strong>：通过一种创新的方式将位置信息融入自注意力机制中。它并非将位置向量直接添加到词元嵌入上，而是根据词元的绝对位置，对其在注意力计算中使用的查询（Query）和键（Key）向量进行旋转。这种精妙的旋转操作使得任意两个词元之间的注意力分数，能够自然地表示出它们的相对位置关系，从而让模型在处理位置信息时既高效又具备强大的长度泛化能力。</li>
 </ul>
-<p>OpenAI 的 GPT 模型和本书使用的都是<strong>绝对位置嵌入</strong>：</p>
+<p>GPT-2
+采用的是可学习的绝对位置嵌入，这种方式简单直接，模型可以在训练中自行学会每个位置的'坐标'信息，对于其设计的固定上下文长度（如
+1024）来说已经足够有效。而像 RoPE
+这样的相对位置嵌入，则在处理超长文本和提升长度泛化能力方面表现更优，因此被
+Llama 等更新的模型所采用。</p>
+<p>本书使用的是<strong>绝对位置嵌入</strong>：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">GPTModel</span>(nn.Module):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;完整的GPT模型实现&quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, cfg</span>) -&gt; <span class="literal">None</span>:</span><br><span class="line">				<span class="comment"># ...</span></span><br><span class="line">        <span class="variable language_">self</span>.pos_emb = nn.Embedding(cfg[<span class="string">&quot;context_length&quot;</span>], cfg[<span class="string">&quot;emb_dim&quot;</span>])</span><br><span class="line">        <span class="comment"># ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, in_idx</span>):</span><br><span class="line">        <span class="comment"># ...</span></span><br><span class="line">        pos_embeds = <span class="variable language_">self</span>.pos_emb(torch.arange(seq_len, device=in_idx.device))</span><br><span class="line">        x = tok_embeds + pos_embeds</span><br><span class="line">        <span class="comment"># ...</span></span><br></pre></td></tr></table></figure>
 <ol type="1">
 <li><strong>参数初始化</strong>：<code>self.pos_emb = nn.Embedding(cfg["context_length"], cfg["emb_dim"])</code>
