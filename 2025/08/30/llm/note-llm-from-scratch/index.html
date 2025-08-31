@@ -20,12 +20,12 @@
   <title>读书笔记丨《从零构建大语言模型》 - HedonWang</title>
 
   
-    <meta name="description" content="通过 500 行代码实现，深入解析从零构建 GPT 风格大语言模型的完整流程：从数据处理、Transformer架构核心、训练循环到文本生成策略，带你理解大模型背后的工程实现原理。">
+    <meta name="description" content="通过 500 行代码实现，深入解析从零构建 GPT 风格大语言模型的完整流程：从数据处理、Transformer 架构核心、训练循环到文本生成策略，带你理解大模型背后的工程实现原理。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="读书笔记丨《从零构建大语言模型》">
 <meta property="og:url" content="https://hedon.top/2025/08/30/llm/note-llm-from-scratch/index.html">
 <meta property="og:site_name" content="HedonWang">
-<meta property="og:description" content="通过 500 行代码实现，深入解析从零构建 GPT 风格大语言模型的完整流程：从数据处理、Transformer架构核心、训练循环到文本生成策略，带你理解大模型背后的工程实现原理。">
+<meta property="og:description" content="通过 500 行代码实现，深入解析从零构建 GPT 风格大语言模型的完整流程：从数据处理、Transformer 架构核心、训练循环到文本生成策略，带你理解大模型背后的工程实现原理。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250831134803291.png">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250830172936403.png">
@@ -34,7 +34,7 @@
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250831134852813.png">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250831135822616.png">
 <meta property="article:published_time" content="2025-08-30T03:22:00.000Z">
-<meta property="article:modified_time" content="2025-08-31T06:53:06.715Z">
+<meta property="article:modified_time" content="2025-08-31T06:56:25.592Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="读书笔记">
 <meta property="article:tag" content="大模型">
@@ -90,7 +90,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">读书笔记</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-08-30T03:22:00.000Z">2025-08-30</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-08-31T06:53:06.715Z">2025-08-31</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-08-30T03:22:00.000Z">2025-08-30</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-08-31T06:56:25.592Z">2025-08-31</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -1485,7 +1485,7 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
       <div class="header"><span>分享文章</span></div>
       <div class="body">
         <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://hedon.top/2025/08/30/llm/note-llm-from-scratch/" /></div>
-        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/08/30/llm/note-llm-from-scratch/&title=读书笔记丨《从零构建大语言模型》 - HedonWang&pics=/banner/note-llm-from-scratch.jpg&summary=通过 500 行代码实现，深入解析从零构建 GPT 风格大语言模型的完整流程：从数据处理、Transformer架构核心、训练循环到文本生成策略，带你理解大模型背后的工程实现原理。"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=读书笔记丨《从零构建大语言模型》 - HedonWang&amp;body=https://hedon.top/2025/08/30/llm/note-llm-from-scratch/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
+        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/08/30/llm/note-llm-from-scratch/&title=读书笔记丨《从零构建大语言模型》 - HedonWang&pics=/banner/note-llm-from-scratch.jpg&summary=通过 500 行代码实现，深入解析从零构建 GPT 风格大语言模型的完整流程：从数据处理、Transformer 架构核心、训练循环到文本生成策略，带你理解大模型背后的工程实现原理。"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=读书笔记丨《从零构建大语言模型》 - HedonWang&amp;body=https://hedon.top/2025/08/30/llm/note-llm-from-scratch/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
         
         <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
           <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://hedon.top/2025/08/30/llm/note-llm-from-scratch/"/>
