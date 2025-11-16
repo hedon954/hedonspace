@@ -28,10 +28,10 @@
 <meta property="og:description" content="本文从第一性原理出发，深入探讨 slice 的实现细节，包括 slice 的底层结构、实现原理、使用场景等。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-11-16T05:00:00.000Z">
-<meta property="article:modified_time" content="2025-11-16T05:23:17.709Z">
+<meta property="article:modified_time" content="2025-11-16T10:05:23.010Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Go">
-<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:card" content="summary">
   
   
   
@@ -69,7 +69,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/16/go/go-map-no-swiss/"><span class="title">Go 底层原理丨map（非 swiss 版本）</span></a><a class="item title" href="/2025/11/16/go/go-slice/"><span class="title">Go 底层原理丨slice 从第一性原理到实现细节</span></a><a class="item title" href="/2025/11/14/first-job-review-01-tech-01-manager-complexity/"><span class="title">三年工作复盘丨技术篇：软件工程是什么丨（一）管理复杂度</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/07/24/note/note-fosa/"><span class="title">读书笔记丨《Fundamentals of Software Architecture》</span></a><a class="item title" href="/2025/10/14/note/note-obsidian/"><span class="title">读书笔记丨《上头Obsidian：手把手教你用AI做好知识管理》</span></a><a class="item title" href="/2025/09/23/record-of-mysql-gap-lock/"><span class="title">一次由 MySQL Gap 锁导致的阻塞排查实录</span></a><a class="item title" href="/2025/09/08/redis/redis-datatype-hash-and-set/"><span class="title">Redis 数据类型丨Hash&Set</span></a><a class="item title" href="/2025/09/18/redis/redis-datatype-sorted-set/"><span class="title">Redis 数据类型丨Sorted Set丨listpack vs. skiplist+dict</span></a><a class="item title" href="/2025/09/05/qa/qa-traditional-backend-to-ai-engineer/"><span class="title">Q&A丨AI 视角下的后端技术重塑</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/16/go/go-slice/"><span class="title">Go 底层原理丨slice 从第一性原理到实现细节</span></a><a class="item title" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a><a class="item title" href="/2025/11/16/go/go-map-no-swiss/"><span class="title">Go 底层原理丨map（非 swiss 版本）</span></a><a class="item title" href="/2025/11/14/first-job-review-01-tech-01-manager-complexity/"><span class="title">三年工作复盘丨技术篇：软件工程是什么丨（一）管理复杂度</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/07/24/note/note-fosa/"><span class="title">读书笔记丨《Fundamentals of Software Architecture》</span></a><a class="item title" href="/2025/10/14/note/note-obsidian/"><span class="title">读书笔记丨《上头Obsidian：手把手教你用AI做好知识管理》</span></a><a class="item title" href="/2025/09/23/record-of-mysql-gap-lock/"><span class="title">一次由 MySQL Gap 锁导致的阻塞排查实录</span></a><a class="item title" href="/2025/09/08/redis/redis-datatype-hash-and-set/"><span class="title">Redis 数据类型丨Hash&Set</span></a><a class="item title" href="/2025/09/18/redis/redis-datatype-sorted-set/"><span class="title">Redis 数据类型丨Sorted Set丨listpack vs. skiplist+dict</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -78,11 +78,11 @@
 
 
 
-<div class="article banner top"><img class="bg lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/banner/go-slice.jpg">
+<div class="article banner top">
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/Go/">Go</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-11-16T05:00:00.000Z">2025-11-16</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-11-16T05:23:17.709Z">2025-11-16</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-11-16T05:00:00.000Z">2025-11-16</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-11-16T10:05:23.010Z">2025-11-16</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -126,18 +126,18 @@ target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-b
 <p><code>makeslice</code> 的实现如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">makeslice</span><span class="params">(et *_type, <span class="built_in">len</span>, <span class="built_in">cap</span> <span class="type">int</span>)</span></span> unsafe.Pointer &#123;</span><br><span class="line">	mem, overflow := math.MulUintptr(et.Size_, <span class="type">uintptr</span>(<span class="built_in">cap</span>))</span><br><span class="line">	<span class="keyword">if</span> overflow || mem &gt; maxAlloc || <span class="built_in">len</span> &lt; <span class="number">0</span> || <span class="built_in">len</span> &gt; <span class="built_in">cap</span> &#123;</span><br><span class="line">		mem, overflow := math.MulUintptr(et.Size_, <span class="type">uintptr</span>(<span class="built_in">len</span>))</span><br><span class="line">		<span class="keyword">if</span> overflow || mem &gt; maxAlloc || <span class="built_in">len</span> &lt; <span class="number">0</span> &#123;</span><br><span class="line">			panicmakeslicelen()</span><br><span class="line">		&#125;</span><br><span class="line">		panicmakeslicecap()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> mallocgc(mem, et, <span class="literal">true</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <ol type="1">
-<li><strong>安全检查优先</strong>：
+<li><p><strong>安全检查优先</strong>：</p>
 <ul>
 <li>检查整数溢出（<code>overflow</code>）</li>
 <li>检查内存限制（<code>mem &gt; maxAlloc</code>）</li>
 <li>检查参数合法性（<code>len &lt; 0 || len &gt; cap</code>）</li>
 </ul></li>
-<li><strong>按容量分配内存</strong>：<code>mem = et.Size_ × cap</code>
+<li><p><strong>按容量分配内存</strong>：<code>mem = et.Size_ × cap</code></p>
 <ul>
 <li>分配的是 <code>cap</code> 而非 <code>len</code> 的内存</li>
 <li>这为后续增长预留了空间，避免频繁重新分配</li>
 </ul></li>
-<li><strong>调用 mallocgc</strong>：Go 的核心内存分配器
+<li><p><strong>调用 mallocgc</strong>：Go 的核心内存分配器</p>
 <ul>
 <li>与 GC 集成，支持垃圾回收</li>
 <li>第三个参数 <code>true</code> 表示需要初始化为零值</li>
@@ -162,18 +162,19 @@ target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-b
 slice（新指针、新长度、新容量）。</p></li>
 </ol>
 <h3 id="容量增长算法">3.2 容量增长算法</h3>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">nextslicecap</span><span class="params">(newLen, oldCap <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	newcap := oldCap</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 如果新长度超过两倍旧容量，直接使用新长度</span></span><br><span class="line">	doublecap := newcap + newcap</span><br><span class="line">	<span class="keyword">if</span> newLen &gt; doublecap &#123;</span><br><span class="line">		<span class="keyword">return</span> newLen</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 小于 256，双倍增长</span></span><br><span class="line">	<span class="keyword">const</span> threshold = <span class="number">256</span></span><br><span class="line">	<span class="keyword">if</span> oldCap &lt; threshold &#123;</span><br><span class="line">		<span class="keyword">return</span> doublecap</span><br><span class="line">	&#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 大于 256</span></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">    <span class="comment">// 逐步从 2 倍扩容缩小到 1.25 倍扩容</span></span><br><span class="line">		newcap += (newcap + <span class="number">3</span>*threshold) &gt;&gt; <span class="number">2</span></span><br><span class="line">		<span class="keyword">if</span> <span class="type">uint</span>(newcap) &gt;= <span class="type">uint</span>(newLen) &#123;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> newcap &lt;= <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> newLen</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> newcap</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">nextslicecap</span><span class="params">(newLen, oldCap <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	newcap := oldCap</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 如果新长度超过两倍旧容量，直接使用新长度</span></span><br><span class="line">	doublecap := newcap + newcap</span><br><span class="line">	<span class="keyword">if</span> newLen &gt; doublecap &#123;</span><br><span class="line">		<span class="keyword">return</span> newLen</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 小于 256，双倍增长</span></span><br><span class="line">	<span class="keyword">const</span> threshold = <span class="number">256</span></span><br><span class="line">	<span class="keyword">if</span> oldCap &lt; threshold &#123;</span><br><span class="line">		<span class="keyword">return</span> doublecap</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 大于 256</span></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">    <span class="comment">// 逐步从 2 倍扩容缩小到 1.25 倍扩容</span></span><br><span class="line">		newcap += (newcap + <span class="number">3</span>*threshold) &gt;&gt; <span class="number">2</span></span><br><span class="line">		<span class="keyword">if</span> <span class="type">uint</span>(newcap) &gt;= <span class="type">uint</span>(newLen) &#123;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> newcap &lt;= <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> newLen</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> newcap</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <ol type="1">
-<li><strong>特殊情况</strong>：如果新长度超过两倍旧容量，直接使用新长度
+<li><p><strong>特殊情况</strong>：如果新长度超过两倍旧容量，直接使用新长度</p>
 <ul>
 <li>避免多次扩容</li>
 </ul></li>
-<li><strong>小切片（cap &lt; 256）</strong>：双倍增长
+<li><p><strong>小切片（cap &lt; 256）</strong>：双倍增长</p>
 <ul>
 <li>快速增长，减少小数据量的多次分配</li>
 <li>时间复杂度：单次 append 的摊销成本为 O(1)</li>
 </ul></li>
-<li><strong>大切片（cap ≥ 256）</strong>：从 2 倍逐步降到 1.25 倍增长
+<li><p><strong>大切片（cap ≥ 256）</strong>：从 2 倍逐步降到 1.25
+倍增长</p>
 <ul>
 <li><code>newcap += (newcap + 3×256) / 4</code></li>
 <li>平衡了增长速度和内存浪费</li>
@@ -184,13 +185,13 @@ slice（新指针、新长度、新容量）。</p></li>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">switch</span> &#123;</span><br><span class="line"><span class="keyword">case</span> et.Size_ == <span class="number">1</span>:</span><br><span class="line">	lenmem = <span class="type">uintptr</span>(oldLen)</span><br><span class="line">	newlenmem = <span class="type">uintptr</span>(newLen)</span><br><span class="line">	capmem = roundupsize(<span class="type">uintptr</span>(newcap), noscan)</span><br><span class="line">	overflow = <span class="type">uintptr</span>(newcap) &gt; maxAlloc</span><br><span class="line">	newcap = <span class="type">int</span>(capmem)</span><br><span class="line"><span class="keyword">case</span> et.Size_ == goarch.PtrSize:</span><br><span class="line">	lenmem = <span class="type">uintptr</span>(oldLen) * goarch.PtrSize</span><br><span class="line">	newlenmem = <span class="type">uintptr</span>(newLen) * goarch.PtrSize</span><br><span class="line">	capmem = roundupsize(<span class="type">uintptr</span>(newcap)*goarch.PtrSize, noscan)</span><br><span class="line">	overflow = <span class="type">uintptr</span>(newcap) &gt; maxAlloc/goarch.PtrSize</span><br><span class="line">	newcap = <span class="type">int</span>(capmem / goarch.PtrSize)</span><br><span class="line"><span class="keyword">case</span> isPowerOfTwo(et.Size_):</span><br><span class="line">	<span class="keyword">var</span> shift <span class="type">uintptr</span></span><br><span class="line">	<span class="keyword">if</span> goarch.PtrSize == <span class="number">8</span> &#123;</span><br><span class="line">		<span class="comment">// Mask shift for better code generation.</span></span><br><span class="line">		shift = <span class="type">uintptr</span>(sys.TrailingZeros64(<span class="type">uint64</span>(et.Size_))) &amp; <span class="number">63</span></span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		shift = <span class="type">uintptr</span>(sys.TrailingZeros32(<span class="type">uint32</span>(et.Size_))) &amp; <span class="number">31</span></span><br><span class="line">	&#125;</span><br><span class="line">	lenmem = <span class="type">uintptr</span>(oldLen) &lt;&lt; shift</span><br><span class="line">	newlenmem = <span class="type">uintptr</span>(newLen) &lt;&lt; shift</span><br><span class="line">	capmem = roundupsize(<span class="type">uintptr</span>(newcap)&lt;&lt;shift, noscan)</span><br><span class="line">	overflow = <span class="type">uintptr</span>(newcap) &gt; (maxAlloc &gt;&gt; shift)</span><br><span class="line">	newcap = <span class="type">int</span>(capmem &gt;&gt; shift)</span><br><span class="line">	capmem = <span class="type">uintptr</span>(newcap) &lt;&lt; shift</span><br><span class="line"><span class="keyword">default</span>:</span><br><span class="line">	lenmem = <span class="type">uintptr</span>(oldLen) * et.Size_</span><br><span class="line">	newlenmem = <span class="type">uintptr</span>(newLen) * et.Size_</span><br><span class="line">	capmem, overflow = math.MulUintptr(et.Size_, <span class="type">uintptr</span>(newcap))</span><br><span class="line">	capmem = roundupsize(capmem, noscan)</span><br><span class="line">	newcap = <span class="type">int</span>(capmem / et.Size_)</span><br><span class="line">	capmem = <span class="type">uintptr</span>(newcap) * et.Size_</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><strong>性能优化细节</strong>：</p>
 <ol type="1">
-<li><strong>特化常见情况</strong>：
+<li><p><strong>特化常见情况</strong>：</p>
 <ul>
 <li><code>Size == 1</code>（byte/uint8）：直接计算，无需乘法</li>
 <li><code>Size == PtrSize</code>（指针大小）：编译器可优化为位移</li>
 <li><code>Size</code> 为 2 的幂：用位移替代乘除法</li>
 </ul></li>
-<li><strong>roundupsize 函数</strong>：
+<li><p><strong>roundupsize 函数</strong>：</p>
 <ul>
 <li>将内存大小向上舍入到分配器的 size class</li>
 <li>利用内存分配器的固定大小类别，避免内存碎片</li>
@@ -201,19 +202,19 @@ slice（新指针、新长度、新容量）。</p></li>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> p unsafe.Pointer</span><br><span class="line"><span class="keyword">if</span> !et.Pointers() &#123;</span><br><span class="line">	p = mallocgc(capmem, <span class="literal">nil</span>, <span class="literal">false</span>)</span><br><span class="line">	<span class="comment">// The append() that calls growslice is going to overwrite from oldLen to newLen.</span></span><br><span class="line">	<span class="comment">// Only clear the part that will not be overwritten.</span></span><br><span class="line">	<span class="comment">// The reflect_growslice() that calls growslice will manually clear</span></span><br><span class="line">	<span class="comment">// the region not cleared here.</span></span><br><span class="line">	memclrNoHeapPointers(add(p, newlenmem), capmem-newlenmem)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	<span class="comment">// Note: can&#x27;t use rawmem (which avoids zeroing of memory), because then GC can scan uninitialized memory.</span></span><br><span class="line">	p = mallocgc(capmem, et, <span class="literal">true</span>)</span><br><span class="line">	<span class="keyword">if</span> lenmem &gt; <span class="number">0</span> &amp;&amp; writeBarrier.enabled &#123;</span><br><span class="line">		<span class="comment">// Only shade the pointers in oldPtr since we know the destination slice p</span></span><br><span class="line">		<span class="comment">// only contains nil pointers because it has been cleared during alloc.</span></span><br><span class="line">		<span class="comment">//</span></span><br><span class="line">		<span class="comment">// It&#x27;s safe to pass a type to this function as an optimization because</span></span><br><span class="line">		<span class="comment">// from and to only ever refer to memory representing whole values of</span></span><br><span class="line">		<span class="comment">// type et. See the comment on bulkBarrierPreWrite.</span></span><br><span class="line">		bulkBarrierPreWriteSrcOnly(<span class="type">uintptr</span>(p), <span class="type">uintptr</span>(oldPtr), lenmem-et.Size_+et.PtrBytes, et)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line">memmove(p, oldPtr, lenmem)</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> slice&#123;p, newLen, newcap&#125;</span><br></pre></td></tr></table></figure>
 <p><strong>GC 协作的设计</strong>：</p>
 <ol type="1">
-<li><strong>区分指针和非指针类型</strong>：
+<li><p><strong>区分指针和非指针类型</strong>：</p>
 <ul>
 <li>非指针类型：<code>mallocgc(..., nil, false)</code> - 不需要 GC
 扫描</li>
 <li>指针类型：<code>mallocgc(..., et, true)</code> - 需要 GC 扫描和
 write barrier</li>
 </ul></li>
-<li><strong>Write Barrier</strong>：
+<li><p><strong>Write Barrier</strong>：</p>
 <ul>
 <li>在并发 GC 时，保证指针写入的可见性</li>
 <li>使用 <code>bulkBarrierPreWriteSrcOnly</code> 批量处理，提高效率</li>
 </ul></li>
-<li><strong>内存清零策略</strong>：
+<li><p><strong>内存清零策略</strong>：</p>
 <ul>
 <li>只清除 <code>[newLen, newCap)</code> 区间，节省时间</li>
 <li><code>[oldLen, newLen)</code> 由 append 覆盖，无需清零</li>
@@ -222,19 +223,27 @@ write barrier</li>
 <h2 id="共享机制">4. 共享机制</h2>
 <h3 id="reslicing-原理">4.1 Reslicing 原理</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">s := []<span class="type">int</span>&#123;<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>&#125;</span><br><span class="line">s1 := s[<span class="number">1</span>:<span class="number">4</span>]  <span class="comment">// len=3, cap=5, 共享同一底层数组</span></span><br><span class="line">s2 := s[<span class="number">2</span>:<span class="number">5</span>]  <span class="comment">// len=3, cap=4, 也共享</span></span><br></pre></td></tr></table></figure>
-<p><strong>底层实现</strong>： - 三个 slice 的 <code>array</code>
-指针指向同一块内存的不同偏移 -
-<code>s1.array = s.array + 1×sizeof(int)</code> -
-<code>s2.array = s.array + 2×sizeof(int)</code></p>
-<p><strong>设计权衡</strong>： -
-<strong>优势</strong>：零拷贝，高效的子序列操作 -
-<strong>风险</strong>：修改一个 slice 会影响其他共享底层数组的 slice -
-<strong>哲学</strong>：Go 选择效率优先，由程序员管理共享语义</p>
+<p><strong>底层实现</strong>：</p>
+<ul>
+<li>三个 slice 的 <code>array</code> 指针指向同一块内存的不同偏移</li>
+<li><code>s1.array = s.array + 1×sizeof(int)</code></li>
+<li><code>s2.array = s.array + 2×sizeof(int)</code></li>
+</ul>
+<p><strong>设计权衡</strong>：</p>
+<ul>
+<li><strong>优势</strong>：零拷贝，高效的子序列操作</li>
+<li><strong>风险</strong>：修改一个 slice 会影响其他共享底层数组的
+slice</li>
+<li><strong>哲学</strong>：Go 选择效率优先，由程序员管理共享语义</li>
+</ul>
 <h3 id="特殊情况元素大小为-0">4.2 特殊情况：元素大小为 0</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> et.Size_ == <span class="number">0</span> &#123;</span><br><span class="line">	<span class="comment">// append should not create a slice with nil pointer but non-zero len.</span></span><br><span class="line">	<span class="comment">// We assume that append doesn&#x27;t need to preserve oldPtr in this case.</span></span><br><span class="line">	<span class="keyword">return</span> slice&#123;unsafe.Pointer(&amp;zerobase), newLen, newLen&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>对于 <code>struct&#123;&#125;</code>、<code>[0]int</code> 等零大小类型： -
-所有实例共享同一个地址 <code>&amp;zerobase</code> - 不分配任何实际内存 -
-len 和 cap 的语义依然保持</p>
+<p>对于 <code>struct&#123;&#125;</code>、<code>[0]int</code> 等零大小类型：</p>
+<ul>
+<li>所有实例共享同一个地址 <code>&amp;zerobase</code></li>
+<li>不分配任何实际内存</li>
+<li>len 和 cap 的语义依然保持</li>
+</ul>
 <h2 id="实践">5. 实践</h2>
 <h3 id="预分配的重要性">5.1 预分配的重要性</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 差：多次扩容</span></span><br><span class="line"><span class="keyword">var</span> s []<span class="type">int</span></span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++ &#123;</span><br><span class="line">    s = <span class="built_in">append</span>(s, i)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 好：一次分配</span></span><br><span class="line">s := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">0</span>, <span class="number">10000</span>)</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++ &#123;</span><br><span class="line">    s = <span class="built_in">append</span>(s, i)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -256,7 +265,7 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
       <div class="header"><span>分享文章</span></div>
       <div class="body">
         <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://hedon.top/2025/11/16/go/go-slice/" /></div>
-        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/11/16/go/go-slice/&title=Go 底层原理丨slice 从第一性原理到实现细节 - HedonWang&pics=/banner/go-slice.jpg&summary=本文从第一性原理出发，深入探讨 slice 的实现细节，包括 slice 的底层结构、实现原理、使用场景等。"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=Go 底层原理丨slice 从第一性原理到实现细节 - HedonWang&amp;body=https://hedon.top/2025/11/16/go/go-slice/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
+        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/11/16/go/go-slice/&title=Go 底层原理丨slice 从第一性原理到实现细节 - HedonWang&summary=本文从第一性原理出发，深入探讨 slice 的实现细节，包括 slice 的底层结构、实现原理、使用场景等。"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=Go 底层原理丨slice 从第一性原理到实现细节 - HedonWang&amp;body=https://hedon.top/2025/11/16/go/go-slice/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
         
         <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
           <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://hedon.top/2025/11/16/go/go-slice/"/>
