@@ -72,10 +72,10 @@
 
 
 
-<div class="navbar top"><nav class="post"><a href="/">近期发布</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a class="active" href="/topic/">专栏</a><a href="/archives/">归档</a></nav></div><div class="post-list wiki topic"><a class="post-card wiki topic" href="/2025/06/11/rust-action-rwlock/">
-<article class="md-text"><div class="preview"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/assets/rust-action-icon.png"/></div><div class="excerpt"><h2 class="post-title">Rust 实战集合</h2><p>本专栏汇集了笔者在学习 Rust 过程中的实战项目，旨在梳理详尽的实现思路、技术难点分析和最佳实践总结。</p></div></article>
-</a></div><div class="post-list wiki topic"><a class="post-card wiki topic" href="/2025/06/30/go/go-gin/">
+<div class="navbar top"><nav class="post"><a href="/">近期发布</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a class="active" href="/topic/">专栏</a><a href="/archives/">归档</a></nav></div><div class="post-list wiki topic"><a class="post-card wiki topic" href="/2025/06/30/go/go-gin/">
 <article class="md-text"><div class="preview"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/assets/go-advance-icon.jpeg"/></div><div class="excerpt"><h2 class="post-title">Go 底层原理</h2><p>本专栏主要记录笔者在学习和使用 Go 语言过程中，对 Go 语言底层原理的探索和理解。</p></div></article>
+</a></div><div class="post-list wiki topic"><a class="post-card wiki topic" href="/2025/06/11/rust-action-rwlock/">
+<article class="md-text"><div class="preview"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/assets/rust-action-icon.png"/></div><div class="excerpt"><h2 class="post-title">Rust 实战集合</h2><p>本专栏汇集了笔者在学习 Rust 过程中的实战项目，旨在梳理详尽的实现思路、技术难点分析和最佳实践总结。</p></div></article>
 </a></div>
 <footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
 target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
@@ -690,7 +690,35 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
     }
   });
 </script>
+<script defer type="text/javascript" src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 <script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    var mermaid_config = {
+      startOnLoad: true,
+      theme:
+        "" == "auto" &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "neutral",
+      logLevel: 3,
+      themeVariables: {
+        darkMode: true
+      },
+      flowchart: {
+        useMaxWidth: false,
+        htmlLabels: true,
+        curve: "linear"
+      },
+      gantt: {
+        axisFormat: "%Y/%m/%d"
+      },
+      sequence: {
+        actorMargin: 50
+      }
+    }
+    mermaid.initialize(mermaid_config);
+  });
+</script><script>
   document.addEventListener('DOMContentLoaded', function () {
     window.codeElements = document.querySelectorAll('.code');
     if (window.codeElements.length > 0) {
