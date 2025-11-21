@@ -27,6 +27,8 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本篇从 LLM 训练过程概述开始，通过&quot;教学徒写文章&quot;的生动比喻，帮助读者理解交叉熵损失在机器学习中的核心作用，以及如何用它来评估和优化模型的预测能力。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250813193726179.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250813200501445.png">
 <meta property="article:published_time" content="2025-08-13T11:30:20.000Z">
 <meta property="article:modified_time" content="2025-08-14T01:35:22.174Z">
 <meta property="article:author" content="Hedon Wang">
@@ -34,6 +36,7 @@
 <meta property="article:tag" content="深度学习">
 <meta property="article:tag" content="大模型">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250813193726179.png">
   
   
   
@@ -95,245 +98,160 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><h2 id="llm-训练过程概述">LLM 训练过程概述</h2>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250813193726179.png"
-alt="LLM 训练过程概述" />
-<figcaption aria-hidden="true">LLM 训练过程概述</figcaption>
-</figure>
-<p>在介绍交叉熵损失之前，我们先参考 <a
-target="_blank" rel="noopener" href="https://github.com/rasbt/LLMs-from-scratch/blob/main/ch05/01_main-chapter-code/ch05.ipynb">Build
-a Large Language Model</a> 一书梳理一下训练 LLM
-的核心过程。笔者并非这个方向的专业人士，只能尝试从自己理解的角度来尽可能用大白话阐述这个过程在做什么、为什么这么做、能达到什么效果。</p>
+  </div><article class="md-text content"><h2 id="LLM-训练过程概述">LLM 训练过程概述</h2>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250813193726179.png" alt="LLM 训练过程概述"></p>
+<p>在介绍交叉熵损失之前，我们先参考 <a target="_blank" rel="noopener" href="https://github.com/rasbt/LLMs-from-scratch/blob/main/ch05/01_main-chapter-code/ch05.ipynb">Build a Large Language Model</a> 一书梳理一下训练 LLM 的核心过程。笔者并非这个方向的专业人士，只能尝试从自己理解的角度来尽可能用大白话阐述这个过程在做什么、为什么这么做、能达到什么效果。</p>
 <p>为了便于理解，我们可以把整个过程想象成<strong>教一个学徒如何写文章</strong>。</p>
-<h3 id="文本生成text-generation">1. 文本生成（Text generation）</h3>
+<h3 id="1-文本生成（Text-generation）">1. 文本生成（Text generation）</h3>
 <blockquote>
-<p>这就像让你的学徒开始写文章。一开始，它什么都不懂，只会胡乱地写一些词语。你给它一个开头，比如"从前有座山..."，它可能随便接上"...山里有只大象在跳舞。"完全不合逻辑。</p>
+<p>这就像让你的学徒开始写文章。一开始，它什么都不懂，只会胡乱地写一些词语。你给它一个开头，比如&quot;从前有座山…“，它可能随便接上”…山里有只大象在跳舞。&quot;完全不合逻辑。</p>
 </blockquote>
 <p>这是模型还没有训练好时，它根据一些输入，随机生成的一段文本。它生成的文本质量很差，毫无章法。</p>
-<h3 id="文本评估text-evaluation">2. 文本评估（Text evaluation）</h3>
+<h3 id="2-文本评估（Text-evaluation）">2. 文本评估（Text evaluation）</h3>
 <blockquote>
-<p>你现在需要一个<strong>"老师"</strong>来给这个学徒写的文章打分。你拿着学徒写的文章，和一篇<strong>标准答案（正确文章）</strong>进行对比。这个“老师”会告诉你，学徒写的文章和标准答案之间有多大的差距。这个打分的过程，就是我们本文将提到的<strong>交叉熵损失（Cross-Entropy
-Loss）</strong>。</p>
+<p>你现在需要一个**&quot;老师&quot;<strong>来给这个学徒写的文章打分。你拿着学徒写的文章，和一篇</strong>标准答案（正确文章）<strong>进行对比。这个“老师”会告诉你，学徒写的文章和标准答案之间有多大的差距。这个打分的过程，就是我们本文将提到的</strong>交叉熵损失（Cross-Entropy Loss）**。</p>
 </blockquote>
 <p>这个步骤是计算模型生成的文本与真实文本之间的损失值。模型会计算出它对下一个词的预测概率，并用交叉熵损失来衡量这个预测概率与真实词的“独热编码”概率有多大差距。<font color="red"><strong>损失值越大，说明模型预测得越差</strong></font>。</p>
-<h3 id="训练集和验证集的损失training-set-and-validation-set-losses">3.
-训练集和验证集的损失（Training set and validation set losses）</h3>
+<h3 id="3-训练集和验证集的损失（Training-set-and-validation-set-losses）">3. 训练集和验证集的损失（Training set and validation set losses）</h3>
 <blockquote>
 <p>你的学徒现在开始正式学习了。你给他一大堆文章（<strong>训练集</strong>）让他模仿学习，然后定期拿出一小部分它没看过的文章（<strong>验证集</strong>）给他做测试。</p>
 <ul>
-<li><strong>训练集损失：</strong>
-衡量学徒在学习过程中，对那些它看过的文章模仿得有多像。</li>
-<li><strong>验证集损失：</strong>
-衡量学徒在面对新文章时，能不能把学到的东西举一反三，而不是只会死记硬背。</li>
+<li><strong>训练集损失：</strong> 衡量学徒在学习过程中，对那些它看过的文章模仿得有多像。</li>
+<li><strong>验证集损失：</strong> 衡量学徒在面对新文章时，能不能把学到的东西举一反三，而不是只会死记硬背。</li>
 </ul>
 </blockquote>
-<p>如果训练集损失一直下降，但验证集损失不降反升，那就说明学徒只会"死记硬背"了，这在机器学习里叫做<strong>过拟合（Overfitting）</strong>。</p>
-<h3 id="大语言模型训练函数llm-training-function">4.
-大语言模型训练函数（LLM training function）</h3>
-<p>这就是学徒的<strong>"大脑"</strong>，也是整个学习的核心。它根据"老师"给出的分数（损失值），调整自己的"大脑结构"（模型参数/权重）。如果某篇文章写得不好，它就会"反思"自己为什么写不好，然后调整下一次的写作方式，争取写得更好。这个调整的过程叫做<a
-href="https://hedon.top/2025/07/27/llm/back-propagation/"><strong>反向传播（Backpropagation）</strong></a>和<strong>梯度下降（Gradient
-Descent）</strong>。</p>
-<h3
-id="训练模型生成类似人类的文本train-the-model-to-generate-human-like-text">5.
-训练模型生成类似人类的文本（Train the model to generate human-like
-text）</h3>
-<p>这就是整个训练的目的：通过不断地重复第 1-4
-步，让学徒的写作能力越来越强，最终写出来的文章，就像人类写的一样自然、流畅。</p>
-<h3 id="文本生成策略text-generation-strategies">6. 文本生成策略（Text
-generation strategies）</h3>
+<p>如果训练集损失一直下降，但验证集损失不降反升，那就说明学徒只会&quot;死记硬背&quot;了，这在机器学习里叫做<strong>过拟合（Overfitting）</strong>。</p>
+<h3 id="4-大语言模型训练函数（LLM-training-function）">4. 大语言模型训练函数（LLM training function）</h3>
+<p>这就是学徒的**“大脑”<strong>，也是整个学习的核心。它根据&quot;老师&quot;给出的分数（损失值），调整自己的&quot;大脑结构&quot;（模型参数/权重）。如果某篇文章写得不好，它就会&quot;反思&quot;自己为什么写不好，然后调整下一次的写作方式，争取写得更好。这个调整的过程叫做<a href="https://hedon.top/2025/07/27/llm/back-propagation/"><strong>反向传播（Backpropagation）</strong></a>和</strong>梯度下降（Gradient Descent）**。</p>
+<h3 id="5-训练模型生成类似人类的文本（Train-the-model-to-generate-human-like-text）">5. 训练模型生成类似人类的文本（Train the model to generate human-like text）</h3>
+<p>这就是整个训练的目的：通过不断地重复第 1-4 步，让学徒的写作能力越来越强，最终写出来的文章，就像人类写的一样自然、流畅。</p>
+<h3 id="6-文本生成策略（Text-generation-strategies）">6. 文本生成策略（Text generation strategies）</h3>
 <blockquote>
 <p>学徒学得差不多了，但有时候会变得特别死板，只会把训练集里的东西原封不动地背出来。为了让它更有创意，更像人，你需要教它一些“写作技巧”。</p>
-<p>例如：
-有时候，你不要总是选那个最有可能出现的词，可以偶尔选一些稍微不那么确定，但也很合理的词。</p>
+<p>例如： 有时候，你不要总是选那个最有可能出现的词，可以偶尔选一些稍微不那么确定，但也很合理的词。</p>
 </blockquote>
-<p>这就是像<strong>Top-k
-采样</strong>、<strong>Top-p（核）采样</strong>、<strong>温度（Temperature）</strong>调节等技术。这些方法会让模型在生成文本时，增加一些随机性，避免总是生成重复、机械化的内容，减少过拟合的风险。</p>
-<h3 id="权重保存和加载weight-saving-loading">7. 权重保存和加载（Weight
-saving &amp; loading）</h3>
-<p>学徒经过了长期的学习，终于成才了！现在你需要把它的"大脑"状态（也就是模型参数）保存下来。这样，下次再用的时候，就不用从头开始教了，直接把这个保存好的"大脑"拿出来用就行。</p>
-<h3 id="来自-openai-的预训练权重pretrained-weights-from-openai">8. 来自
-OpenAI 的预训练权重（Pretrained weights from OpenAI）</h3>
-<p>这就像你不是从一个零基础的学徒开始教，而是直接找一个已经很有经验的"天才学徒"来培养。OpenAI
-训练了海量的数据，已经把一个 GPT
-模型训练得非常强大了。我们直接拿来用，再结合自己的任务，在它的基础上继续微调。这样不仅省时省力，还能得到一个更好的模型。</p>
+<p>这就是像<strong>Top-k 采样</strong>、<strong>Top-p（核）采样</strong>、**温度（Temperature）**调节等技术。这些方法会让模型在生成文本时，增加一些随机性，避免总是生成重复、机械化的内容，减少过拟合的风险。</p>
+<h3 id="7-权重保存和加载（Weight-saving-loading）">7. 权重保存和加载（Weight saving &amp; loading）</h3>
+<p>学徒经过了长期的学习，终于成才了！现在你需要把它的&quot;大脑&quot;状态（也就是模型参数）保存下来。这样，下次再用的时候，就不用从头开始教了，直接把这个保存好的&quot;大脑&quot;拿出来用就行。</p>
+<h3 id="8-来自-OpenAI-的预训练权重（Pretrained-weights-from-OpenAI）">8. 来自 OpenAI 的预训练权重（Pretrained weights from OpenAI）</h3>
+<p>这就像你不是从一个零基础的学徒开始教，而是直接找一个已经很有经验的&quot;天才学徒&quot;来培养。OpenAI 训练了海量的数据，已经把一个 GPT 模型训练得非常强大了。我们直接拿来用，再结合自己的任务，在它的基础上继续微调。这样不仅省时省力，还能得到一个更好的模型。</p>
 <h3 id="总结">总结</h3>
-<p>GPT
-的训练过程就是，让一个初出茅庐的学徒（模型）写文章，找一个老师（损失函数）给它打分，然后根据分数调整它的大脑（参数）。反复这个过程，直到它写出来的文章像人类一样。为了让它更有创意，我们还教它一些写作技巧。最后，我们会把它的"大脑"保存下来，或者直接用一个"天才学徒"的大脑，在上面继续学习。</p>
+<p>GPT 的训练过程就是，让一个初出茅庐的学徒（模型）写文章，找一个老师（损失函数）给它打分，然后根据分数调整它的大脑（参数）。反复这个过程，直到它写出来的文章像人类一样。为了让它更有创意，我们还教它一些写作技巧。最后，我们会把它的&quot;大脑&quot;保存下来，或者直接用一个&quot;天才学徒&quot;的大脑，在上面继续学习。</p>
 <h2 id="交叉熵损失">交叉熵损失</h2>
-<p>接下来我们回到本文的主题：<font color="red"><strong>交叉熵损失（Cross-Entropy
-Loss）</strong></font>。</p>
+<p>接下来我们回到本文的主题：<font color="red"><strong>交叉熵损失（Cross-Entropy Loss）</strong></font>。</p>
 <blockquote>
-<p>交叉熵损失是一种衡量模型预测结果与真实结果之间差异的指标。在分类任务中，模型通常会输出一个预测概率分布，而真实标签也可以被看作一个“理想”的概率分布。交叉熵损失的作用就是比较这两个概率分布的相似程度。<strong>如果模型的预测概率分布和真实概率分布越接近，交叉熵损失就越小，反之则越大。</strong>
-我们的目标就是通过训练，不断减小这个损失值，从而让模型学会做出更准确的预测。</p>
+<p>交叉熵损失是一种衡量模型预测结果与真实结果之间差异的指标。在分类任务中，模型通常会输出一个预测概率分布，而真实标签也可以被看作一个“理想”的概率分布。交叉熵损失的作用就是比较这两个概率分布的相似程度。<strong>如果模型的预测概率分布和真实概率分布越接近，交叉熵损失就越小，反之则越大。</strong> 我们的目标就是通过训练，不断减小这个损失值，从而让模型学会做出更准确的预测。</p>
 </blockquote>
 <p>是不是一头雾水？哈哈，没关系，下面笔者将从概念、由来、原理和计算四个部分进行展开，尽可能以大白话的方式进行阐述，相信你阅读后回来再看一段定义的时候，会有不一样的理解~</p>
-<h3 id="概念交叉熵损失就是给猜词打分">1.
-概念：交叉熵损失，就是给"猜词"打分</h3>
-<p>想象一下，你正在教一个学徒写一句话。你告诉他句子的开头是："今天天气真..."，然后你让他猜下一个词应该是什么。</p>
+<h3 id="1-概念：交叉熵损失，就是给-猜词-打分">1. 概念：交叉熵损失，就是给&quot;猜词&quot;打分</h3>
+<p>想象一下，你正在教一个学徒写一句话。你告诉他句子的开头是：“今天天气真…”，然后你让他猜下一个词应该是什么。</p>
 <ul>
-<li><p><strong>学徒的预测：</strong> 他可能会给出一些预测，比如：</p>
+<li>
+<p><strong>学徒的预测：</strong> 他可能会给出一些预测，比如：</p>
 <ul>
-<li>"好" （他觉得最可能）</li>
-<li>"差" （也有一点可能）</li>
-<li>"棒" （可能性更小）</li>
-<li>"猫" （几乎不可能）</li>
+<li>“好” （他觉得最可能）</li>
+<li>“差” （也有一点可能）</li>
+<li>“棒” （可能性更小）</li>
+<li>“猫” （几乎不可能）</li>
 </ul>
-<p>这些预测，可以被看作一个<strong>概率分布</strong>。比如，他可能认为"好"的概率是
-80%，"差"的概率是 15%，"棒"的概率是 4%，"猫"的概率是 1%。</p></li>
-<li><p><strong>正确的答案：</strong>
-实际上，正确的下一个词是<strong>"好"</strong>。</p></li>
-<li><p><strong>交叉熵损失的作用：</strong>
-交叉熵损失就像一个严厉的老师，它只关注学徒对<strong>正确答案</strong>的预测。它会说："你对'好'这个词的预测概率是多少？<strong>这个概率越大，你这次的表现就越好，你的'惩罚'（损失）就越小。反之，你的表现越差，你的'惩罚'就越大。</strong>"</p></li>
+<p>这些预测，可以被看作一个<strong>概率分布</strong>。比如，他可能认为&quot;好&quot;的概率是 80%，&quot;差&quot;的概率是 15%，&quot;棒&quot;的概率是 4%，&quot;猫&quot;的概率是 1%。</p>
+</li>
+<li>
+<p><strong>正确的答案：</strong> 实际上，正确的下一个词是**“好”**。</p>
+</li>
+<li>
+<p><strong>交叉熵损失的作用：</strong> 交叉熵损失就像一个严厉的老师，它只关注学徒对<strong>正确答案</strong>的预测。它会说：“你对’好’这个词的预测概率是多少？<strong>这个概率越大，你这次的表现就越好，你的’惩罚’（损失）就越小。反之，你的表现越差，你的’惩罚’就越大。</strong>”</p>
+</li>
 </ul>
-<p>简单来说，交叉熵损失的计算公式可以简化为： <span
-class="math display">\[
-损失值 = -log(模型对正确答案的预测概率)
-\]</span></p>
+<p>简单来说，交叉熵损失的计算公式可以简化为：<br>
+$$<br>
+损失值 = -log(模型对正确答案的预测概率)<br>
+$$</p>
 <ul>
-<li>如果学徒对“好”的预测概率是 <strong>0.8</strong>，那么损失值大约是
-<span class="math inline">\(−log(0.8)≈0.223\)</span>。</li>
-<li>如果学徒对“好”的预测概率是
-<strong>0.01</strong>（很差），那么损失值大约是 <span
-class="math inline">\(−log(0.01)≈4.605\)</span>。</li>
-<li>如果学徒猜中率是 <strong>1.0</strong>（完美），那么损失值是 $
-−log(1)=0$。</li>
+<li>如果学徒对“好”的预测概率是 <strong>0.8</strong>，那么损失值大约是 $−log(0.8)≈0.223$。</li>
+<li>如果学徒对“好”的预测概率是 <strong>0.01</strong>（很差），那么损失值大约是 $−log(0.01)≈4.605$。</li>
+<li>如果学徒猜中率是 <strong>1.0</strong>（完美），那么损失值是 $ −log(1)=0$。</li>
 </ul>
 <p>由此可见，交叉熵损失完美地实现了我们的教学目标：<strong>预测对了，损失就小；预测错了，损失就大。</strong></p>
-<h3 id="由来从信息论到机器学习的迁移">2.
-由来：从信息论到机器学习的"迁移"</h3>
+<h3 id="2-由来：从信息论到机器学习的-迁移">2. 由来：从信息论到机器学习的&quot;迁移&quot;</h3>
 <p>要理解交叉熵损失的原理，我们需要追溯到它的老家：<strong>信息论</strong>。</p>
-<h4 id="熵entropy">2.1 熵（Entropy）</h4>
-<p>信息论中有一个概念叫"熵"，它衡量的是一个事件的<strong>不确定性</strong>。一个越不确定的事件，它的熵就越高，包含的信息量就越大。</p>
+<h4 id="2-1-熵（Entropy）">2.1 熵（Entropy）</h4>
+<p>信息论中有一个概念叫&quot;熵&quot;，它衡量的是一个事件的<strong>不确定性</strong>。一个越不确定的事件，它的熵就越高，包含的信息量就越大。</p>
 <ul>
-<li>比如，我告诉您"太阳从东边升起"，这几乎是 100%
-确定的事，您没有获得任何新信息，所以它的熵很低。</li>
-<li>但如果我告诉您"今天股市大涨"，这本身是一个不确定的事件，您就获得了新信息，所以它的熵很高。</li>
+<li>比如，我告诉您&quot;太阳从东边升起&quot;，这几乎是 100% 确定的事，您没有获得任何新信息，所以它的熵很低。</li>
+<li>但如果我告诉您&quot;今天股市大涨&quot;，这本身是一个不确定的事件，您就获得了新信息，所以它的熵很高。</li>
 </ul>
-<h4 id="交叉熵cross-entropy">2.2 交叉熵（Cross-Entropy）</h4>
-<p>现在我们有两个概率分布：一个是真实的、完美的概率分布（记为 <span
-class="math inline">\(p\)</span>），另一个是我们模型的预测概率分布（记为
-<span class="math inline">\(q\)</span>）。</p>
-<p>交叉熵衡量的就是，用我们模型的预测分布 <span
-class="math inline">\(q\)</span> 来表示真实的分布 <span
-class="math inline">\(p\)</span>，需要多少额外的"信息量"或者说"代价"。</p>
-<p><strong>理论公式：</strong> 交叉熵的理论公式是 <span
-class="math inline">\(H(p,q)=−∑_ip_ilog(q_i)\)</span>。</p>
+<h4 id="2-2-交叉熵（Cross-Entropy）">2.2 交叉熵（Cross-Entropy）</h4>
+<p>现在我们有两个概率分布：一个是真实的、完美的概率分布（记为 $p$），另一个是我们模型的预测概率分布（记为 $q$）。</p>
+<p>交叉熵衡量的就是，用我们模型的预测分布 $q$ 来表示真实的分布 $p$，需要多少额外的&quot;信息量&quot;或者说&quot;代价&quot;。</p>
+<p><strong>理论公式：</strong> 交叉熵的理论公式是 $H(p,q)=−∑_ip_ilog(q_i)$。</p>
 <ul>
-<li>这里的 <span class="math inline">\(p_i\)</span>
-是真实事件的概率。</li>
-<li><span class="math inline">\(q_i\)</span> 是我们模型预测的概率。</li>
+<li>这里的 $p_i$ 是真实事件的概率。</li>
+<li>$q_i$ 是我们模型预测的概率。</li>
 </ul>
 <p><strong>独热编码（One-hot）的简化</strong>：</p>
-<p>在机器学习的分类任务中，我们的真实标签通常是独热编码的，比如正确答案是"猫''，那么真实分布
-<span class="math inline">\(p\)</span> 就是 <span
-class="math display">\[
-[0, 1, 0, ...]
-\]</span> 现在，让我们把独热编码的 <span
-class="math inline">\(p\)</span> 代入到上面的公式中： <span
-class="math display">\[
-H(p,q)=−(0⋅log(q_1)+1⋅log(q_2)+0⋅log(q_3)+...)
-\]</span>
-你会发现，求和公式里，只有<strong>正确类别（猫）</strong>对应的 <span
-class="math inline">\(p_i\)</span> 是 1，其他都是 <span
-class="math inline">\(0\)</span>。所以，整个求和公式就只剩下了一项：
-<span class="math display">\[
-H(p,q)=−log(q_{正确类别})
-\]</span>
-这就是交叉熵损失的最终形式。它之所以这样计算，完全是因为在分类任务中，我们<strong>只关心模型对正确答案的预测概率</strong>，而信息论中的交叉熵公式在遇到独热编码时，正好简化成了这个形式。</p>
-<h3 id="原理为什么-logp-是一个好的损失函数">3. 原理：为什么 −log(p)
-是一个好的损失函数？</h3>
-<p>让我们从数学和直觉两个角度来理解，为什么 <span
-class="math inline">\(−log(p)\)</span> 是一个完美的损失函数。</p>
-<h4 id="数学角度">3.1 数学角度</h4>
-<p><strong>梯度：</strong> 我们的目标是通过梯度下降法来最小化损失。对于
-<span class="math inline">\(−log(p)\)</span>，它的导数是 <span
-class="math inline">\(−1/p\)</span>。</p>
+<p>在机器学习的分类任务中，我们的真实标签通常是独热编码的，比如正确答案是&quot;猫’'，那么真实分布 $p$ 就是<br>
+$$<br>
+[0, 1, 0, …]<br>
+$$<br>
+现在，让我们把独热编码的 $p$ 代入到上面的公式中：<br>
+$$<br>
+H(p,q)=−(0⋅log(q_1)+1⋅log(q_2)+0⋅log(q_3)+…)<br>
+$$<br>
+你会发现，求和公式里，只有<strong>正确类别（猫）<strong>对应的 $p_i$ 是 1，其他都是 $0$。所以，整个求和公式就只剩下了一项：<br>
+$$<br>
+H(p,q)=−log(q_{正确类别})<br>
+$$<br>
+这就是交叉熵损失的最终形式。它之所以这样计算，完全是因为在分类任务中，我们</strong>只关心模型对正确答案的预测概率</strong>，而信息论中的交叉熵公式在遇到独热编码时，正好简化成了这个形式。</p>
+<h3 id="3-原理：为什么-−log-p-是一个好的损失函数？">3. 原理：为什么 −log(p) 是一个好的损失函数？</h3>
+<p>让我们从数学和直觉两个角度来理解，为什么 $−log(p)$ 是一个完美的损失函数。</p>
+<h4 id="3-1-数学角度">3.1 数学角度</h4>
+<p><strong>梯度：</strong> 我们的目标是通过梯度下降法来最小化损失。对于 $−log(p)$，它的导数是 $−1/p$。</p>
 <ul>
-<li>当 <span class="math inline">\(p\)</span> 接近 1
-时（预测得很准），<span class="math inline">\(1/p\)</span> 接近
-1，损失的梯度就很小。这意味着模型参数调整的幅度不大，因为它已经做得不错了。</li>
-<li>当 <span class="math inline">\(p\)</span> 接近 0
-时（预测得很差），<span class="math inline">\(1/p\)</span>
-趋近于无穷大，损失的梯度就变得非常大。这意味着模型参数调整的幅度会非常大，因为它犯了一个严重的错误，需要大力纠正。</li>
+<li>当 $p$ 接近 1 时（预测得很准），$1/p$ 接近 1，损失的梯度就很小。这意味着模型参数调整的幅度不大，因为它已经做得不错了。</li>
+<li>当 $p$ 接近 0 时（预测得很差），$1/p$ 趋近于无穷大，损失的梯度就变得非常大。这意味着模型参数调整的幅度会非常大，因为它犯了一个严重的错误，需要大力纠正。</li>
 </ul>
 <p>这种特性使得模型在犯错时能快速学习，而在预测准确时则能稳定下来，这非常符合我们对训练过程的期望。</p>
-<h4 id="直觉角度">3.2 直觉角度</h4>
-<p><strong>不确定性：</strong> 让我们回到信息论。<span
-class="math inline">\(−log(p)\)</span> 实际上就是正确事件的信息量。</p>
+<h4 id="3-2-直觉角度">3.2 直觉角度</h4>
+<p><strong>不确定性：</strong> 让我们回到信息论。$−log(p)$ 实际上就是正确事件的信息量。</p>
 <ul>
-<li>如果模型预测正确事件的概率 <span class="math inline">\(p\)</span>
-很低，说明模型对正确答案非常不确定，那么这个正确答案的出现就包含了大量信息。交叉熵损失就用这个巨大的信息量来惩罚模型。</li>
-<li>如果模型预测正确事件的概率 <span class="math inline">\(p\)</span>
-很高，说明模型很确定答案，那么这个正确答案的出现就包含很少信息。交叉熵损失就用这个很小的信息量来奖励模型。</li>
+<li>如果模型预测正确事件的概率 $p$ 很低，说明模型对正确答案非常不确定，那么这个正确答案的出现就包含了大量信息。交叉熵损失就用这个巨大的信息量来惩罚模型。</li>
+<li>如果模型预测正确事件的概率 $p$ 很高，说明模型很确定答案，那么这个正确答案的出现就包含很少信息。交叉熵损失就用这个很小的信息量来奖励模型。</li>
 </ul>
-<p>这种<strong>"用信息量来惩罚"</strong>的机制，确保了模型会努力去减少它对正确答案的不确定性，从而让它的预测结果越来越接近真实情况。</p>
-<h3 id="计算">4. 计算</h3>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250813200501445.png"
-alt="交叉熵损失计算过程" />
-<figcaption aria-hidden="true">交叉熵损失计算过程</figcaption>
-</figure>
-<p>参考 <a
-target="_blank" rel="noopener" href="https://github.com/rasbt/LLMs-from-scratch/blob/main/ch05/01_main-chapter-code/ch05.ipynb">Build
-a Large Language Model</a> 一书，交叉熵损失的计算过程大概分成上面所示的
-6 个步骤。</p>
+<p>这种**“用信息量来惩罚”**的机制，确保了模型会努力去减少它对正确答案的不确定性，从而让它的预测结果越来越接近真实情况。</p>
+<h3 id="4-计算">4. 计算</h3>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250813200501445.png" alt="交叉熵损失计算过程"></p>
+<p>参考 <a target="_blank" rel="noopener" href="https://github.com/rasbt/LLMs-from-scratch/blob/main/ch05/01_main-chapter-code/ch05.ipynb">Build a Large Language Model</a> 一书，交叉熵损失的计算过程大概分成上面所示的 6 个步骤。</p>
 <p><strong>步骤 1：Logits（对数几率）</strong></p>
-<p>Logits 是模型在 Softmax
-层之前的原始输出值，它可以是任意实数。这些值代表了模型对每个类别的"置信度"，但还没有归一化为概率。图片中的
-<code>[[0.1113, -0.1057, -0.3666, ...]]</code> 就是一个样本的 Logits
-输出。</p>
+<p>Logits 是模型在 Softmax 层之前的原始输出值，它可以是任意实数。这些值代表了模型对每个类别的&quot;置信度&quot;，但还没有归一化为概率。图片中的 <code>[[0.1113, -0.1057, -0.3666, ...]]</code> 就是一个样本的 Logits 输出。</p>
 <p><strong>步骤 2：Probabilities（概率）</strong></p>
-<p>通过 Softmax 函数将 Logits
-转换为概率分布。这个函数的作用是将一组任意实数转换成一个概率分布，使得所有值都在
-0 到 1 之间，并且总和为 1。它的公式是 <span
-class="math inline">\(q_i=\frac{e^{z_i}}{∑_j^{e^{z_j}}}\)</span>， (其中
-<span class="math inline">\(z_i\)</span> 是第 <span
-class="math inline">\(i\)</span> 个类别的
-Logit)。<code>[[1.8849e-05, 1.5172e-05, 1.1687e-05, ...]]</code>
-就是经过 Softmax 转换后的概率分布。</p>
+<p>通过 Softmax 函数将 Logits 转换为概率分布。这个函数的作用是将一组任意实数转换成一个概率分布，使得所有值都在 0 到 1 之间，并且总和为 1。它的公式是 $q_i=\frac{e^{z_i}}{∑_j^{e^{z_j}}}$， (其中 $z_i$ 是第 $i$ 个类别的 Logit)。<code>[[1.8849e-05, 1.5172e-05, 1.1687e-05, ...]]</code> 就是经过 Softmax 转换后的概率分布。</p>
 <p><strong>步骤 3：Target probabilities（目标概率）</strong></p>
-<p>这一步的核心是从模型的预测中，提取出与真实答案相对应的概率值。在理论上，我们用独热编码（One-Hot
-Encoding）来表示真实标签，例如 <code>[0, 1, 0, ...]</code>。图片中的
-<code>[7.4541e-05, ...]</code>
-正是模型根据这个独热编码所指示的正确索引，给出的预测概率。这些值通常很小，因为在训练初期，模型对正确答案的预测能力还很弱。在计算交叉熵时，我们只关心真实类别对应的预测概率。</p>
+<p>这一步的核心是从模型的预测中，提取出与真实答案相对应的概率值。在理论上，我们用独热编码（One-Hot Encoding）来表示真实标签，例如 <code>[0, 1, 0, ...]</code>。图片中的 <code>[7.4541e-05, ...]</code> 正是模型根据这个独热编码所指示的正确索引，给出的预测概率。这些值通常很小，因为在训练初期，模型对正确答案的预测能力还很弱。在计算交叉熵时，我们只关心真实类别对应的预测概率。</p>
 <p><strong>步骤 4：Log probabilities（对数概率）</strong></p>
-<p>这一步是计算每个目标概率值的自然对数，即 <span
-class="math inline">\(log(q_i)\)</span>。例如，<code>[-9.5042, -10.3796, -11.3677, ...]</code>
-就是对目标概率取自然对数的结果。</p>
+<p>这一步是计算每个目标概率值的自然对数，即 $log(q_i)$。例如，<code>[-9.5042, -10.3796, -11.3677, ...]</code> 就是对目标概率取自然对数的结果。</p>
 <p><strong>步骤 5：Average log probability（平均对数概率）</strong></p>
-<p>这一步是计算<strong>所有对数概率的平均值</strong>。在步骤 4
-中，我们已经得到了模型对每个正确答案的预测概率的对数值。这一步就是将这些值加起来，然后除以样本或序列的长度，以得到一个平均值。</p>
-<p><strong>步骤 6：Negative average log
-probability（负平均对数概率）</strong></p>
-<p><strong>这是计算</strong>最终损失值的步骤。在步骤 5
-的基础上，我们对平均对数概率取负号。这是为了<strong>将一个衡量模型错误程度的负数，转换成一个衡量模型错误程度的正数</strong>。这个操作没有复杂的数学含义，它只是为了让损失值的符号符合我们的直觉和约定。损失值越小代表模型表现越好。在图片中，对
-<code>-10.7940</code> 取负号后，得到的值是
-<code>10.7940</code>。这个值就是我们最终要最小化的损失（Loss）。在模型训练中，我们通过反向传播和梯度下降来不断减小这个损失值，从而迫使模型提高对正确答案的预测概率。</p>
+<p>这一步是计算<strong>所有对数概率的平均值</strong>。在步骤 4 中，我们已经得到了模型对每个正确答案的预测概率的对数值。这一步就是将这些值加起来，然后除以样本或序列的长度，以得到一个平均值。</p>
+<p><strong>步骤 6：Negative average log probability（负平均对数概率）</strong></p>
+<p><strong>这是计算</strong>最终损失值的步骤。在步骤 5 的基础上，我们对平均对数概率取负号。这是为了<strong>将一个衡量模型错误程度的负数，转换成一个衡量模型错误程度的正数</strong>。这个操作没有复杂的数学含义，它只是为了让损失值的符号符合我们的直觉和约定。损失值越小代表模型表现越好。在图片中，对 <code>-10.7940</code> 取负号后，得到的值是 <code>10.7940</code>。这个值就是我们最终要最小化的损失（Loss）。在模型训练中，我们通过反向传播和梯度下降来不断减小这个损失值，从而迫使模型提高对正确答案的预测概率。</p>
 <blockquote>
-<p>上面 6 个步骤，可以直接使用 pytorch 的 <code>cross_entropy</code>
-计算，一步到位！</p>
+<p>上面 6 个步骤，可以直接使用 pytorch 的 <code>cross_entropy</code> 计算，一步到位！</p>
 </blockquote>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">loss = torch.nn.functional.cross_entropy(logits_flat, targets_flat)</span><br></pre></td></tr></table></figure>
 <p>总结一下，整个计算流程可以概括为：</p>
-<ol type="1">
+<ol>
 <li>模型输出原始分数（Logits）。</li>
 <li>通过 Softmax 函数将分数转换为概率分布。</li>
 <li>找出真实类别对应的预测概率。</li>
 <li>对这个概率取负对数，得到损失值。</li>
 <li>在训练时，我们会对所有样本的损失值求平均，然后进行反向传播更新模型参数。</li>
 </ol>
-<p>这个计算方式之所以合理，正是因为它完美地结合了信息论和机器学习的目标：<strong>通过最小化这个损失值，我们实际上是在最大化模型对正确类别的预测概率，从而让模型的预测分布越来越接近真实的分布。</strong>
-这是一种非常高效且理论基础坚实的训练方法。</p>
+<p>这个计算方式之所以合理，正是因为它完美地结合了信息论和机器学习的目标：<strong>通过最小化这个损失值，我们实际上是在最大化模型对正确类别的预测概率，从而让模型的预测分布越来越接近真实的分布。</strong> 这是一种非常高效且理论基础坚实的训练方法。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -373,28 +291,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#llm-%E8%AE%AD%E7%BB%83%E8%BF%87%E7%A8%8B%E6%A6%82%E8%BF%B0"><span class="toc-text">LLM 训练过程概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E6%9C%AC%E7%94%9F%E6%88%90text-generation"><span class="toc-text">1. 文本生成（Text generation）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E6%9C%AC%E8%AF%84%E4%BC%B0text-evaluation"><span class="toc-text">2. 文本评估（Text evaluation）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%AD%E7%BB%83%E9%9B%86%E5%92%8C%E9%AA%8C%E8%AF%81%E9%9B%86%E7%9A%84%E6%8D%9F%E5%A4%B1training-set-and-validation-set-losses"><span class="toc-text">3.
-训练集和验证集的损失（Training set and validation set losses）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%A7%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E5%87%BD%E6%95%B0llm-training-function"><span class="toc-text">4.
-大语言模型训练函数（LLM training function）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%AD%E7%BB%83%E6%A8%A1%E5%9E%8B%E7%94%9F%E6%88%90%E7%B1%BB%E4%BC%BC%E4%BA%BA%E7%B1%BB%E7%9A%84%E6%96%87%E6%9C%ACtrain-the-model-to-generate-human-like-text"><span class="toc-text">5.
-训练模型生成类似人类的文本（Train the model to generate human-like
-text）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E6%9C%AC%E7%94%9F%E6%88%90%E7%AD%96%E7%95%A5text-generation-strategies"><span class="toc-text">6. 文本生成策略（Text
-generation strategies）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9D%83%E9%87%8D%E4%BF%9D%E5%AD%98%E5%92%8C%E5%8A%A0%E8%BD%BDweight-saving-loading"><span class="toc-text">7. 权重保存和加载（Weight
-saving &amp; loading）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9D%A5%E8%87%AA-openai-%E7%9A%84%E9%A2%84%E8%AE%AD%E7%BB%83%E6%9D%83%E9%87%8Dpretrained-weights-from-openai"><span class="toc-text">8. 来自
-OpenAI 的预训练权重（Pretrained weights from OpenAI）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%A4%E5%8F%89%E7%86%B5%E6%8D%9F%E5%A4%B1"><span class="toc-text">交叉熵损失</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A6%82%E5%BF%B5%E4%BA%A4%E5%8F%89%E7%86%B5%E6%8D%9F%E5%A4%B1%E5%B0%B1%E6%98%AF%E7%BB%99%E7%8C%9C%E8%AF%8D%E6%89%93%E5%88%86"><span class="toc-text">1.
-概念：交叉熵损失，就是给&quot;猜词&quot;打分</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%B1%E6%9D%A5%E4%BB%8E%E4%BF%A1%E6%81%AF%E8%AE%BA%E5%88%B0%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%9A%84%E8%BF%81%E7%A7%BB"><span class="toc-text">2.
-由来：从信息论到机器学习的&quot;迁移&quot;</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%86%B5entropy"><span class="toc-text">2.1 熵（Entropy）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BA%A4%E5%8F%89%E7%86%B5cross-entropy"><span class="toc-text">2.2 交叉熵（Cross-Entropy）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E7%90%86%E4%B8%BA%E4%BB%80%E4%B9%88-logp-%E6%98%AF%E4%B8%80%E4%B8%AA%E5%A5%BD%E7%9A%84%E6%8D%9F%E5%A4%B1%E5%87%BD%E6%95%B0"><span class="toc-text">3. 原理：为什么 −log(p)
-是一个好的损失函数？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B0%E5%AD%A6%E8%A7%92%E5%BA%A6"><span class="toc-text">3.1 数学角度</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%9B%B4%E8%A7%89%E8%A7%92%E5%BA%A6"><span class="toc-text">3.2 直觉角度</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%A1%E7%AE%97"><span class="toc-text">4. 计算</span></a></li></ol></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#LLM-%E8%AE%AD%E7%BB%83%E8%BF%87%E7%A8%8B%E6%A6%82%E8%BF%B0"><span class="toc-text">LLM 训练过程概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%96%87%E6%9C%AC%E7%94%9F%E6%88%90%EF%BC%88Text-generation%EF%BC%89"><span class="toc-text">1. 文本生成（Text generation）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E6%96%87%E6%9C%AC%E8%AF%84%E4%BC%B0%EF%BC%88Text-evaluation%EF%BC%89"><span class="toc-text">2. 文本评估（Text evaluation）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E8%AE%AD%E7%BB%83%E9%9B%86%E5%92%8C%E9%AA%8C%E8%AF%81%E9%9B%86%E7%9A%84%E6%8D%9F%E5%A4%B1%EF%BC%88Training-set-and-validation-set-losses%EF%BC%89"><span class="toc-text">3. 训练集和验证集的损失（Training set and validation set losses）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%A4%A7%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B%E8%AE%AD%E7%BB%83%E5%87%BD%E6%95%B0%EF%BC%88LLM-training-function%EF%BC%89"><span class="toc-text">4. 大语言模型训练函数（LLM training function）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E8%AE%AD%E7%BB%83%E6%A8%A1%E5%9E%8B%E7%94%9F%E6%88%90%E7%B1%BB%E4%BC%BC%E4%BA%BA%E7%B1%BB%E7%9A%84%E6%96%87%E6%9C%AC%EF%BC%88Train-the-model-to-generate-human-like-text%EF%BC%89"><span class="toc-text">5. 训练模型生成类似人类的文本（Train the model to generate human-like text）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-%E6%96%87%E6%9C%AC%E7%94%9F%E6%88%90%E7%AD%96%E7%95%A5%EF%BC%88Text-generation-strategies%EF%BC%89"><span class="toc-text">6. 文本生成策略（Text generation strategies）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-%E6%9D%83%E9%87%8D%E4%BF%9D%E5%AD%98%E5%92%8C%E5%8A%A0%E8%BD%BD%EF%BC%88Weight-saving-loading%EF%BC%89"><span class="toc-text">7. 权重保存和加载（Weight saving &amp; loading）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-%E6%9D%A5%E8%87%AA-OpenAI-%E7%9A%84%E9%A2%84%E8%AE%AD%E7%BB%83%E6%9D%83%E9%87%8D%EF%BC%88Pretrained-weights-from-OpenAI%EF%BC%89"><span class="toc-text">8. 来自 OpenAI 的预训练权重（Pretrained weights from OpenAI）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%A4%E5%8F%89%E7%86%B5%E6%8D%9F%E5%A4%B1"><span class="toc-text">交叉熵损失</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%A6%82%E5%BF%B5%EF%BC%9A%E4%BA%A4%E5%8F%89%E7%86%B5%E6%8D%9F%E5%A4%B1%EF%BC%8C%E5%B0%B1%E6%98%AF%E7%BB%99-%E7%8C%9C%E8%AF%8D-%E6%89%93%E5%88%86"><span class="toc-text">1. 概念：交叉熵损失，就是给&quot;猜词&quot;打分</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%94%B1%E6%9D%A5%EF%BC%9A%E4%BB%8E%E4%BF%A1%E6%81%AF%E8%AE%BA%E5%88%B0%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E7%9A%84-%E8%BF%81%E7%A7%BB"><span class="toc-text">2. 由来：从信息论到机器学习的&quot;迁移&quot;</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-%E7%86%B5%EF%BC%88Entropy%EF%BC%89"><span class="toc-text">2.1 熵（Entropy）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-%E4%BA%A4%E5%8F%89%E7%86%B5%EF%BC%88Cross-Entropy%EF%BC%89"><span class="toc-text">2.2 交叉熵（Cross-Entropy）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%8E%9F%E7%90%86%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88-%E2%88%92log-p-%E6%98%AF%E4%B8%80%E4%B8%AA%E5%A5%BD%E7%9A%84%E6%8D%9F%E5%A4%B1%E5%87%BD%E6%95%B0%EF%BC%9F"><span class="toc-text">3. 原理：为什么 −log(p) 是一个好的损失函数？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-1-%E6%95%B0%E5%AD%A6%E8%A7%92%E5%BA%A6"><span class="toc-text">3.1 数学角度</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-2-%E7%9B%B4%E8%A7%89%E8%A7%92%E5%BA%A6"><span class="toc-text">3.2 直觉角度</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E8%AE%A1%E7%AE%97"><span class="toc-text">4. 计算</span></a></li></ol></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
