@@ -27,20 +27,12 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文从一个经典问题 0.1+0.2 !&#x3D; 0.3 出发，详细介绍了 IEEE-754 标准下的浮点数表示方法，细致阐述了 3 种浮点数类型的表示逻辑，包括规格化值、非规格化值和特殊值。还介绍了浮点数舍入的 4 种模式，以及浮点数的基本运算。最后，本文结合 Go 语言给出了浮点数不同的输出方式的例子，以及简单介绍了 Go 语言中的 math&#x2F;big 库在大数运算和精度更高的运算场景中的应用。本文包含">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/IEEE-754%20%E6%B5%AE%E7%82%B9%E6%95%B0.jpg">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224102703581.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224102756244.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/544558-20211104211145834-189368139.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224130157112.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224130849986.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224102703581.png">
 <meta property="article:published_time" content="2023-12-23T13:51:52.000Z">
 <meta property="article:modified_time" content="2025-08-25T15:15:59.965Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="计算机原理">
 <meta property="article:tag" content="浮点数">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/IEEE-754%20%E6%B5%AE%E7%82%B9%E6%95%B0.jpg">
   
   
   
@@ -78,7 +70,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a><a class="item title" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a><a class="item title" href="/2025/11/16/go/go-slice/"><span class="title">Go 底层原理丨slice 从第一性原理到实现细节</span></a><a class="item title" href="/2025/11/16/go/go-map-no-swiss/"><span class="title">Go 底层原理丨map（非 swiss 版本）</span></a><a class="item title" href="/2025/11/14/first-job-review-01-tech-01-manager-complexity/"><span class="title">三年工作复盘丨技术篇：软件工程是什么丨（一）管理复杂度</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a><a class="item title" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a><a class="item title" href="/2025/11/16/go/go-slice/"><span class="title">Go 底层原理丨slice 从第一性原理到实现细节</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -108,72 +100,104 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> f1 <span class="type">float64</span> = <span class="number">0.1</span></span><br><span class="line">	<span class="keyword">var</span> f2 <span class="type">float64</span> = <span class="number">0.2</span></span><br><span class="line">	fmt.Println(f1+f2 == <span class="number">0.3</span>)</span><br><span class="line">	fmt.Println(f1 + f2)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>输出：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="literal">false</span></span><br><span class="line">0.30000000000000004</span><br></pre></td></tr></table></figure>
-<p>如此违背 “常识” 的结果，其实是因为当下计算机体系中小数的表示方式是浮点数，而计算机中对浮点数的表示并非百分百精确的，在表示和计算过程中都有可能会丢失精度。</p>
+<p>如此违背 “常识”
+的结果，其实是因为当下计算机体系中小数的表示方式是浮点数，而计算机中对浮点数的表示并非百分百精确的，在表示和计算过程中都有可能会丢失精度。</p>
 <p>这迫使必须深入理解浮点数在计算机中的存储方式及性质，才能正确处理关于数字的计算问题。</p>
 <h2 id="结论先行">结论先行</h2>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/IEEE-754%20%E6%B5%AE%E7%82%B9%E6%95%B0.jpg" alt="IEEE-754 浮点数"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/IEEE-754%20%E6%B5%AE%E7%82%B9%E6%95%B0.jpg"
+alt="IEEE-754 浮点数" />
+<figcaption aria-hidden="true">IEEE-754 浮点数</figcaption>
+</figure>
 <h2 id="定点数">定点数</h2>
 <p>要理解浮点数的第一步是考虑含有小数值的二进制数字。在这之前，我们来看看更加熟悉的十进制表示法：</p>
-<p>$$<br>
-d_md_{m-1} ··· d_1d_0 . d_{-1}d_{-2}··· d_{-n}<br>
-$$</p>
-<p>小数点 <code>.</code> 左边是整数部分，右边是小数部分。其中每个十进制数 <code>di</code> 的取值范围是 0~9。</p>
+<p><span class="math display">\[
+d_md_{m-1} ··· d_1d_0 . d_{-1}d_{-2}··· d_{-n}
+\]</span></p>
+<p>小数点 <code>.</code>
+左边是整数部分，右边是小数部分。其中每个十进制数 <code>di</code>
+的取值范围是 0~9。</p>
 <p>如十进制的 <code>12.34</code> 即可以表示为：</p>
-<p>$$<br>
-1×10^1+2×10^0+3×10^{-1}+4×10^{-2}<br>
-$$</p>
-<p>那其实二进制也是一样的道理，只不过把其中的 <code>10</code> 换成 <code>2</code>，而 <code>di</code> 的取值范围为 0~1。</p>
+<p><span class="math display">\[
+1×10^1+2×10^0+3×10^{-1}+4×10^{-2}
+\]</span></p>
+<p>那其实二进制也是一样的道理，只不过把其中的 <code>10</code> 换成
+<code>2</code>，而 <code>di</code> 的取值范围为 0~1。</p>
 <p>如二进制的 <code>101.11</code> 可以表示为：</p>
-<p>$$<br>
-1×2^2+0×2^1+1×2^0+1×2^{-1}+1×2^{-2}<br>
-$$</p>
-<p>如果我们仅考虑有限长度的编码，那么十进制表示法不能准确表达像 1/3 和 5/7 这样的数。类似的，小数的二进制表示法只能表示那些能够被写成以下形式的数：</p>
-<p>$$<br>
-x × 2^y<br>
-$$</p>
+<p><span class="math display">\[
+1×2^2+0×2^1+1×2^0+1×2^{-1}+1×2^{-2}
+\]</span></p>
+<p>如果我们仅考虑有限长度的编码，那么十进制表示法不能准确表达像 1/3 和
+5/7
+这样的数。类似的，小数的二进制表示法只能表示那些能够被写成以下形式的数：</p>
+<p><span class="math display">\[
+x × 2^y
+\]</span></p>
 <p>其他的值就只能近似地表示。</p>
-<p>定点数的整数部分是小数部分的位数是固定不变的，在位数有限的情况下，定点数的取值范围和精度都比较差。于是就有了 IEEE-754 提出的浮点数表示法。</p>
+<p>定点数的整数部分是小数部分的位数是固定不变的，在位数有限的情况下，定点数的取值范围和精度都比较差。于是就有了
+IEEE-754 提出的浮点数表示法。</p>
 <h2 id="浮点数">浮点数</h2>
-<p>所谓“浮点数”（Floating-point numbers），即小数点可以“<strong>浮动</strong>”，即小数点的位置不是固定的，而是可以根据数值的大小和精度需求移动的。这种表示法允许在广泛的范围内表示数值，同时保持相对恒定的精度。</p>
-<p>在计算机中，浮点数通常遵循 IEEE-754 标准。这个标准定义了浮点数的存储和运算方式，确保了不同计算机系统之间的一致性。IEEE-754 用以下形式来表示一个数：</p>
-<p>$$<br>
-V = (-1)^s×M×2^E<br>
-$$</p>
+<p>所谓“浮点数”（Floating-point
+numbers），即小数点可以“<strong>浮动</strong>”，即小数点的位置不是固定的，而是可以根据数值的大小和精度需求移动的。这种表示法允许在广泛的范围内表示数值，同时保持相对恒定的精度。</p>
+<p>在计算机中，浮点数通常遵循 IEEE-754
+标准。这个标准定义了浮点数的存储和运算方式，确保了不同计算机系统之间的一致性。IEEE-754
+用以下形式来表示一个数：</p>
+<p><span class="math display">\[
+V = (-1)^s×M×2^E
+\]</span></p>
 <p>其中：</p>
 <ul>
 <li><strong>s 符号位（Sign bit）</strong>：表示数值的正负。</li>
 <li><strong>M 尾数（Mantissa）</strong>：表示数值的有效数字。</li>
 <li><strong>E 指数（Exponent）</strong>：决定小数点的位置。</li>
 </ul>
-<p>IEEE-754 将浮点数的位表示划分成三个部分，分别对各个部分进行编码，对应上面公式右边的 3 个字母：</p>
+<p>IEEE-754
+将浮点数的位表示划分成三个部分，分别对各个部分进行编码，对应上面公式右边的
+3 个字母：</p>
 <ul>
 <li>一个单独的符号位 <code>s</code> 直接编码符号 <code>s</code>。</li>
-<li>$k$ 位的阶码字段 $exp=e_{k-1}\cdots e_1e_0$ 编码阶码 <code>E</code>。</li>
-<li>$n$ 位小数字段 $frac=f_{n-1}\cdots f_1f_0$ 编码尾数 <code>M</code>，但是编码出来的值也依赖于阶码字段的值是否等于 0。</li>
+<li><span class="math inline">\(k\)</span> 位的阶码字段 <span
+class="math inline">\(exp=e_{k-1}\cdots e_1e_0\)</span> 编码阶码
+<code>E</code>。</li>
+<li><span class="math inline">\(n\)</span> 位小数字段 <span
+class="math inline">\(frac=f_{n-1}\cdots f_1f_0\)</span> 编码尾数
+<code>M</code>，但是编码出来的值也依赖于阶码字段的值是否等于 0。</li>
 </ul>
-<p>在 IEEE-754 标准中，定义了两种精度的浮点数，分别是单精度浮点数（32 位）和双精度浮点数（64 位）。</p>
+<p>在 IEEE-754 标准中，定义了两种精度的浮点数，分别是单精度浮点数（32
+位）和双精度浮点数（64 位）。</p>
 <p>单精度：</p>
 <ul>
 <li>1 位符号位 s</li>
 <li>8 位指数 exp</li>
 <li>23 位尾数 frac</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224102703581.png" alt="单精度浮点数"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224102703581.png"
+alt="单精度浮点数" />
+<figcaption aria-hidden="true">单精度浮点数</figcaption>
+</figure>
 <p>双精度：</p>
 <ul>
 <li>1 位符号位 s</li>
 <li>11 位指数 exp</li>
 <li>52 位尾数 frac</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224102756244.png" alt="双精度浮点数"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224102756244.png"
+alt="双精度浮点数" />
+<figcaption aria-hidden="true">双精度浮点数</figcaption>
+</figure>
 <p>根据 <code>exp</code> 的值，浮点数又可以分成三类：</p>
-<ol>
+<ol type="1">
 <li>规格化的</li>
 <li>非规格化的</li>
 <li>特殊的</li>
 </ol>
 <p>其中第三类“特殊的”又可以根据 <code>frac</code> 分成两类：</p>
-<ol>
+<ol type="1">
 <li>无穷大</li>
 <li>不是一个数 NaN（Not a Number）</li>
 </ol>
@@ -182,47 +206,52 @@ $$</p>
 <thead>
 <tr>
 <th></th>
-<th style="text-align:center">exp</th>
-<th style="text-align:center">frac</th>
+<th style="text-align: center;">exp</th>
+<th style="text-align: center;">frac</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>规格化的</td>
-<td style="text-align:center">≠0 &amp; ≠ 255</td>
-<td style="text-align:center">f</td>
+<td style="text-align: center;">≠0 &amp; ≠ 255</td>
+<td style="text-align: center;">f</td>
 </tr>
 <tr>
 <td>非规格化的</td>
-<td style="text-align:center">0</td>
-<td style="text-align:center">f</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">f</td>
 </tr>
 <tr>
 <td>特殊的</td>
-<td style="text-align:center">1</td>
-<td style="text-align:center">f</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">f</td>
 </tr>
 <tr>
 <td>- 无穷大</td>
-<td style="text-align:center">1</td>
-<td style="text-align:center">0</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">0</td>
 </tr>
 <tr>
 <td>- NaN</td>
-<td style="text-align:center">1</td>
-<td style="text-align:center">≠0</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">≠0</td>
 </tr>
 </tbody>
 </table>
-<p>对于不同类型的浮点数，在计算公式 $V=(-1)^s×M×2^E$ 中，<code>exp -&gt; E</code> 和 <code>frac -&gt; M</code> 的方式有所不同。</p>
+<p>对于不同类型的浮点数，在计算公式 <span
+class="math inline">\(V=(-1)^s×M×2^E\)</span>
+中，<code>exp -&gt; E</code> 和 <code>frac -&gt; M</code>
+的方式有所不同。</p>
 <p>下面我们来对这几种不同类型进行详细讨论，其中不乏有一些很有趣且充满智慧的设计理念。</p>
-<h3 id="特殊值-Special-Values">特殊值 Special Values</h3>
+<h3 id="特殊值-special-values">特殊值 Special Values</h3>
 <ul>
 <li><strong>指数部分</strong>：全为 0。</li>
-<li><strong>尾数部分</strong>：全为 0 则表示无穷大，不全为 0 则表示 NaN。</li>
-<li><strong>作用</strong>：特殊值用于表示那些无法用常规数值表示的情况，如无穷大、非数（NaN）等。这些值通常用于操作的错误或特殊情况的结果，如除以 0、无效操作等。</li>
+<li><strong>尾数部分</strong>：全为 0 则表示无穷大，不全为 0 则表示
+NaN。</li>
+<li><strong>作用</strong>：特殊值用于表示那些无法用常规数值表示的情况，如无穷大、非数（NaN）等。这些值通常用于操作的错误或特殊情况的结果，如除以
+0、无效操作等。</li>
 </ul>
-<h3 id="规格化的值-Normalize-Values">规格化的值 Normalize Values</h3>
+<h3 id="规格化的值-normalize-values">规格化的值 Normalize Values</h3>
 <ul>
 <li><strong>指数部分</strong>：不全为 0 且不全为 1。</li>
 <li><strong>尾数部分</strong>：可以是任意值。</li>
@@ -230,132 +259,194 @@ $$</p>
 </ul>
 <p>在规格化值中：</p>
 <ul>
-<li>$E=e-bias$</li>
-<li>$M=1+f$</li>
+<li><span class="math inline">\(E=e-bias\)</span></li>
+<li><span class="math inline">\(M=1+f\)</span></li>
 </ul>
-<p>其中 <code>e</code> 即为 <code>exp</code>，，<code>bias</code> 是偏置量，它的值为 $2^{k-1} -1$，其中 <code>k</code> 为 <code>exp</code> 的位数，故：</p>
+<p>其中 <code>e</code> 即为 <code>exp</code>，，<code>bias</code>
+是偏置量，它的值为 <span class="math inline">\(2^{k-1} -1\)</span>，其中
+<code>k</code> 为 <code>exp</code> 的位数，故：</p>
 <ul>
-<li>在单精度中，$bias=2^{8-1}-1=2^7-1=128-1=127$</li>
-<li>在双精度中，$bias=2^{11-1}-1=2^{10}-1=1024-1=1023$</li>
+<li>在单精度中，<span
+class="math inline">\(bias=2^{8-1}-1=2^7-1=128-1=127\)</span></li>
+<li>在双精度中，<span
+class="math inline">\(bias=2^{11-1}-1=2^{10}-1=1024-1=1023\)</span></li>
 </ul>
-<p>其中 <code>f</code> 为 <code>frac</code> 表示的数，范围 $0≤f&lt;1$。</p>
+<p>其中 <code>f</code> 为 <code>frac</code> 表示的数，范围 <span
+class="math inline">\(0≤f&lt;1\)</span>。</p>
 <p>所以一个规格化数，具体可以表示为：</p>
-<p>$$<br>
-V=(-1)^{sign}×1.frac×2^{(exp-bias)}<br>
-$$</p>
+<p><span class="math display">\[
+V=(-1)^{sign}×1.frac×2^{(exp-bias)}
+\]</span></p>
 <p>这里有 4 个问题：</p>
-<ol>
+<ol type="1">
 <li>这个 <code>bias</code> 是什么？</li>
-<li>为什么 <code>E</code> 要 <code>e</code> 去减掉一个 <code>bias</code>？</li>
-<li><code>bias</code> 的值是怎么定下的，如单精度为什么是 127，不是 126 或 128？</li>
-<li><code>M</code> 为什么需要 <code>f</code> 去加上一个 <code>1</code>？</li>
+<li>为什么 <code>E</code> 要 <code>e</code> 去减掉一个
+<code>bias</code>？</li>
+<li><code>bias</code> 的值是怎么定下的，如单精度为什么是 127，不是 126
+或 128？</li>
+<li><code>M</code> 为什么需要 <code>f</code> 去加上一个
+<code>1</code>？</li>
 </ol>
 <p>下面我们来对这 4 个问题进行一一解答。</p>
 <p><strong>第 1 个问题，这个 bias 是什么？</strong></p>
 <blockquote>
-<p><code>bias</code> 是一个预设的偏移量，用于将指数部分的值偏移到全正数，从而简化处理。</p>
+<p><code>bias</code>
+是一个预设的偏移量，用于将指数部分的值偏移到全正数，从而简化处理。</p>
 </blockquote>
 <p><strong>第 2 个问题：为什么 E 要 e 去减去一个 bias？</strong></p>
 <blockquote>
-<p>先说结论：使用 bias（偏置指数，biased exponent）可以允许浮点数以统一的方式表示，同时也使得浮点数的排序和比较变得简单。</p>
+<p>先说结论：使用 bias（偏置指数，biased
+exponent）可以允许浮点数以统一的方式表示，同时也使得浮点数的排序和比较变得简单。</p>
 </blockquote>
-<p>首先指数肯定得支持正负形式的出现，那么直接使用无符号整型来表示指数肯定是不行的，因为它无法表示负指数。暂时先抛开 IEEE-754 定下的标准，我们可以尝试用补码来表示指数。</p>
-<p>假设我们有两个 32 位的浮点数 <code>A</code> 和 <code>B</code>，并且我们假设它们的指数部分使用 8 位二进制补码表示（这与 IEEE-754 标准不同）。</p>
+<p>首先指数肯定得支持正负形式的出现，那么直接使用无符号整型来表示指数肯定是不行的，因为它无法表示负指数。暂时先抛开
+IEEE-754 定下的标准，我们可以尝试用补码来表示指数。</p>
+<p>假设我们有两个 32 位的浮点数 <code>A</code> 和
+<code>B</code>，并且我们假设它们的指数部分使用 8 位二进制补码表示（这与
+IEEE-754 标准不同）。</p>
 <ul>
-<li><code>A</code> 的二进制表示：<code>0 0000010 00000000000000000000000</code></li>
-<li><code>B</code> 的二进制表示：<code>0 1111110 00000000000000000000000</code></li>
+<li><code>A</code>
+的二进制表示：<code>0 0000010 00000000000000000000000</code></li>
+<li><code>B</code>
+的二进制表示：<code>0 1111110 00000000000000000000000</code></li>
 </ul>
-<p>在这里，第一位是符号位（0 表示正数），接下来的 8 位是以补码形式表示的指数，剩下的 23 位是尾数。</p>
+<p>在这里，第一位是符号位（0 表示正数），接下来的 8
+位是以补码形式表示的指数，剩下的 23 位是尾数。</p>
 <p>我们想要比较这两个数的大小，需要怎么做呢？</p>
 <p>我们先解析这 2 个数：</p>
 <ul>
-<li>符号位：对于 <code>A</code> 和 <code>B</code>，符号位都是 0，表示这是两个正数。</li>
+<li>符号位：对于 <code>A</code> 和 <code>B</code>，符号位都是
+0，表示这是两个正数。</li>
 <li>指数部分（使用补码表示）
 <ul>
 <li><code>A</code> 的指数为 <code>0000010</code>，解读为正数 +2。</li>
-<li><code>B</code> 的指数为 <code>1111110</code>，在补码表示中，这是一个负数。先加取反后加 1 转换为正数 <code>00000010</code>，它表示 -2。</li>
-</ul>
-</li>
+<li><code>B</code> 的指数为
+<code>1111110</code>，在补码表示中，这是一个负数。先加取反后加 1
+转换为正数 <code>00000010</code>，它表示 -2。</li>
+</ul></li>
 </ul>
 <p>要比较这 2 个数：</p>
 <ul>
-<li>当我们比较 <code>A</code> 和 <code>B</code> 时，首先需要考虑它们的指数。</li>
-<li>指数 <code>A</code> 为 +2，而 <code>B</code> 为 -2。即使它们的尾数部分相同（在这个例子中都是 0），<code>A</code> 的实际值要大于 <code>B</code>，因为正指数表示的数值范围远大于负指数。</li>
+<li>当我们比较 <code>A</code> 和 <code>B</code>
+时，首先需要考虑它们的指数。</li>
+<li>指数 <code>A</code> 为 +2，而 <code>B</code> 为
+-2。即使它们的尾数部分相同（在这个例子中都是 0），<code>A</code>
+的实际值要大于
+<code>B</code>，因为正指数表示的数值范围远大于负指数。</li>
 </ul>
 <p>可以看出：使用补码表示指数增加了比较过程的复杂性，因为我们需要解读补码并考虑其正负。特别是在涉及到负指数的情况下，我们不能仅仅比较二进制表示的大小，而必须将补码转换为实际的数值，然后再进行比较。</p>
-<p>现在回过头来看看 IEEE-754 的设计，假设我们有两个单精度（32 位）浮点数 <code>A</code> 和 <code>B</code>：</p>
+<p>现在回过头来看看 IEEE-754 的设计，假设我们有两个单精度（32 位）浮点数
+<code>A</code> 和 <code>B</code>：</p>
 <ul>
-<li><code>A</code> 的二进制表示为：<code>0 10000010 00000000000000000000000</code></li>
-<li><code>B</code> 的二进制表示为：<code>0 01111110 00000000000000000000000</code></li>
+<li><code>A</code>
+的二进制表示为：<code>0 10000010 00000000000000000000000</code></li>
+<li><code>B</code>
+的二进制表示为：<code>0 01111110 00000000000000000000000</code></li>
 </ul>
 <p>解析这两个数：</p>
 <ul>
-<li><code>A</code>：符号位为 0（正数），指数部分为 <code>10000010</code>（二进制，对应十进制的 130），尾数部分为全 0。</li>
-<li><code>B</code>：符号位为 0（正数），指数部分为 <code>01111110</code>（二进制，对应十进制的 126），尾数部分为全 0。</li>
+<li><code>A</code>：符号位为 0（正数），指数部分为
+<code>10000010</code>（二进制，对应十进制的 130），尾数部分为全 0。</li>
+<li><code>B</code>：符号位为 0（正数），指数部分为
+<code>01111110</code>（二进制，对应十进制的 126），尾数部分为全 0。</li>
 </ul>
-<p>计算实际指数值：单精度浮点数的偏置值 <code>bias</code> 为 127，故：</p>
+<p>计算实际指数值：单精度浮点数的偏置值 <code>bias</code> 为
+127，故：</p>
 <ul>
 <li><code>A</code> 的实际指数 <code>E = 130 - 127 = 3</code>。</li>
 <li><code>B</code> 的实际指数 <code>E = 126 - 127 = -1</code>。</li>
 </ul>
 <p>比较这两个数：</p>
 <ul>
-<li>在减去 <code>bias</code> 后，我们可以直接比较指数部分的二进制表示来确定数值的大小。</li>
-<li>由于 <code>10000010</code>（130）大于 <code>01111110</code>（126），因此我们可以直接得出 <code>A</code> 大于 <code>B</code>，而无需考虑负指数的复杂表示问题。</li>
+<li>在减去 <code>bias</code>
+后，我们可以直接比较指数部分的二进制表示来确定数值的大小。</li>
+<li>由于 <code>10000010</code>（130）大于
+<code>01111110</code>（126），因此我们可以直接得出 <code>A</code> 大于
+<code>B</code>，而无需考虑负指数的复杂表示问题。</li>
 </ul>
-<p>这个例子说明了通过减去偏置值，IEEE-754 标准能够简化浮点数的比较和排序操作。偏置后的指数表示方法允许计算机以统一和高效的方式处理浮点数，无论它们的实际数值大小如何。</p>
-<p><strong>第 3 个问题：bias 的值是怎么定下的，如单精度为什么是 127，而不是 126 或 128？</strong></p>
+<p>这个例子说明了通过减去偏置值，IEEE-754
+标准能够简化浮点数的比较和排序操作。偏置后的指数表示方法允许计算机以统一和高效的方式处理浮点数，无论它们的实际数值大小如何。</p>
+<p><strong>第 3 个问题：bias 的值是怎么定下的，如单精度为什么是
+127，而不是 126 或 128？</strong></p>
 <blockquote>
-<p><code>bias</code> 值的选择，是为了平衡正负指数的表示范围，并且充分利用指数部分的存储空间。</p>
+<p><code>bias</code>
+值的选择，是为了平衡正负指数的表示范围，并且充分利用指数部分的存储空间。</p>
 </blockquote>
-<p>以单精度为例，<code>exp</code> 占了 8 位，8 位二进制可以表示的值的范围是 $[0,255]$。如果我们选择 127 作为 <code>bias</code>，则存储的指数范围就是 $[-127,128]$。这样可以使得指数部分可以均匀地表示从负大数到正大数的范围（对称）。</p>
-<p>在 IEEE-754 标准中，全 0 的指数表示为非规格化数或 0，而全 1 的指数用于表示无穷大或 NaN）。选择 127 作为 <code>bias</code> 可以在保留这些特殊值的同时，提供最大的有效指数范围。</p>
+<p>以单精度为例，<code>exp</code> 占了 8 位，8
+位二进制可以表示的值的范围是 <span
+class="math inline">\([0,255]\)</span>。如果我们选择 127 作为
+<code>bias</code>，则存储的指数范围就是 <span
+class="math inline">\([-127,128]\)</span>。这样可以使得指数部分可以均匀地表示从负大数到正大数的范围（对称）。</p>
+<p>在 IEEE-754 标准中，全 0 的指数表示为非规格化数或 0，而全 1
+的指数用于表示无穷大或 NaN）。选择 127 作为 <code>bias</code>
+可以在保留这些特殊值的同时，提供最大的有效指数范围。</p>
 <p><strong>第 4 个问题：M 为什么需要 f 去加上一个 1？</strong></p>
 <blockquote>
-<p>在规格化数中隐含最高位 1 是为了提高尾数部分的表示效率，从而增加精度。</p>
+<p>在规格化数中隐含最高位 1
+是为了提高尾数部分的表示效率，从而增加精度。</p>
 </blockquote>
-<p>其实这跟科学计数法的很像的，为了确保浮点数表示的<strong>唯一性</strong>，IEEE-754 规定规格化浮点数最高位一定是非零的。如果不规定最高位非零，同一个数可以有多种不同的浮点表示，例如，在二进制中 <code>0.5</code> 可以表示为 $1.0×2^{-1}$，也可以表示位 $0.1×2^0$ 或 $0.01×2^1$ 等等。这种多重表示会使浮点运算变得复杂且低效。</p>
-<p>那既然最高位总是 1，那就没必要显示存储了，还可以使尾数部分中多 1 位的存储空间，从而允许存储更多的有效数字，以<strong>提高精度</strong>。</p>
-<h3 id="非规格化的值-Denormalized-Values">非规格化的值 Denormalized Values</h3>
+<p>其实这跟科学计数法的很像的，为了确保浮点数表示的<strong>唯一性</strong>，IEEE-754
+规定规格化浮点数最高位一定是非零的。如果不规定最高位非零，同一个数可以有多种不同的浮点表示，例如，在二进制中
+<code>0.5</code> 可以表示为 <span
+class="math inline">\(1.0×2^{-1}\)</span>，也可以表示位 <span
+class="math inline">\(0.1×2^0\)</span> 或 <span
+class="math inline">\(0.01×2^1\)</span>
+等等。这种多重表示会使浮点运算变得复杂且低效。</p>
+<p>那既然最高位总是 1，那就没必要显示存储了，还可以使尾数部分中多 1
+位的存储空间，从而允许存储更多的有效数字，以<strong>提高精度</strong>。</p>
+<h3 id="非规格化的值-denormalized-values">非规格化的值 Denormalized
+Values</h3>
 <ul>
 <li><strong>指数部分</strong>：全为 0。</li>
 <li><strong>尾数部分</strong>：可以是任意值。</li>
 <li><strong>作用</strong>：
 <ul>
-<li>提供表示数值 0 的方法。因为规格化中 $M≥1$，所以无法表示 0。</li>
-<li>用于表示非常接近于 0 的数值，这些数值太小，无法用规格化格式表示。它们填补了 0 和最小规格化正数之间的间隙，提供了渐近于 0 的连续表示，防止了所谓的“下溢”。</li>
-</ul>
-</li>
+<li>提供表示数值 0 的方法。因为规格化中 <span
+class="math inline">\(M≥1\)</span>，所以无法表示 0。</li>
+<li>用于表示非常接近于 0
+的数值，这些数值太小，无法用规格化格式表示。它们填补了 0
+和最小规格化正数之间的间隙，提供了渐近于 0
+的连续表示，防止了所谓的“下溢”。</li>
+</ul></li>
 </ul>
 <p>在非规格化值中：</p>
 <ul>
-<li>$E=1-bias$</li>
-<li>$M=f$</li>
+<li><span class="math inline">\(E=1-bias\)</span></li>
+<li><span class="math inline">\(M=f\)</span></li>
 </ul>
 <p>所以一个规格化数，具体可以表示为：</p>
-<p>$$<br>
-V=(-1)^{sign}×0.frac×2^{(1-bias)}<br>
-$$</p>
+<p><span class="math display">\[
+V=(-1)^{sign}×0.frac×2^{(1-bias)}
+\]</span></p>
 <p>那这里又有 2 个问题了：</p>
-<ol>
-<li>为什么指数部分不是 $0-bias$ 而是 $1-bias$？</li>
+<ol type="1">
+<li>为什么指数部分不是 <span class="math inline">\(0-bias\)</span> 而是
+<span class="math inline">\(1-bias\)</span>？</li>
 <li>为什么 M 不需要隐含的 1 了？</li>
 </ol>
-<p><strong>第 1 个问题：为什么指数部分不是 0-bias 而是 1-bias？</strong></p>
+<p><strong>第 1 个问题：为什么指数部分不是 0-bias 而是
+1-bias？</strong></p>
 <blockquote>
 <p>这是一个特殊的设计，旨在使非规格化数能够平滑地连接到规格化数的最小正值。</p>
 </blockquote>
-<p>最小的规格化数的指数为 <code>1 - bias</code>。为了在数值上平滑地过渡到非规格化数，非规格化数的实际指数也被设定为 <code>1 - bias</code>。这样，非规格化数就可以代表那些小于最小规格化正数的数值，而不会出现一个数值的“间隙”。</p>
+<p>最小的规格化数的指数为
+<code>1 - bias</code>。为了在数值上平滑地过渡到非规格化数，非规格化数的实际指数也被设定为
+<code>1 - bias</code>。这样，非规格化数就可以代表那些小于最小规格化正数的数值，而不会出现一个数值的“间隙”。</p>
 <p><strong>第 2 个问题：为什么 M 不需要隐含的 1 了？</strong></p>
 <blockquote>
-<p>不包含隐含的 1 使得非规格化数能够在浮点数表示中填补 0 和最小规格化数之间的空隙，提供对极小数值的连续表示。</p>
+<p>不包含隐含的 1 使得非规格化数能够在浮点数表示中填补 0
+和最小规格化数之间的空隙，提供对极小数值的连续表示。</p>
 </blockquote>
 <ul>
-<li><strong>避免下溢</strong>：非规格化数通过允许尾数部分不以隐含的 1 开始（而是以显式的 0 开始），使得它们可以表示比最小规格化数还要小的数值。这对于避免数值下溢至 0 非常重要，尤其是在累积了多次运算后的场合。</li>
-<li><strong>精度牺牲</strong>：使用非规格化数的代价是牺牲了一些精度。由于没有隐含的最高位 1，非规格化数的精度较低。但这是为了在非常小的数值范围内提供数值的连续性所做的必要妥协。</li>
+<li><strong>避免下溢</strong>：非规格化数通过允许尾数部分不以隐含的 1
+开始（而是以显式的 0
+开始），使得它们可以表示比最小规格化数还要小的数值。这对于避免数值下溢至
+0 非常重要，尤其是在累积了多次运算后的场合。</li>
+<li><strong>精度牺牲</strong>：使用非规格化数的代价是牺牲了一些精度。由于没有隐含的最高位
+1，非规格化数的精度较低。但这是为了在非常小的数值范围内提供数值的连续性所做的必要妥协。</li>
 </ul>
 <h3 id="总结">总结</h3>
-<p>规格化值、非规格化值和特殊值三种类型共同构成了 IEEE-754 浮点数标准的完整表示体系，使得浮点数能够在计算机中有效低处理从非常小到非常大的数值范围，同时还能应对特殊的计算情况。</p>
+<p>规格化值、非规格化值和特殊值三种类型共同构成了 IEEE-754
+浮点数标准的完整表示体系，使得浮点数能够在计算机中有效低处理从非常小到非常大的数值范围，同时还能应对特殊的计算情况。</p>
 <h3 id="举例">举例</h3>
 <p>参考《深入理解计算机系统》，我们以 8 位浮点数为例，其中：</p>
 <ul>
@@ -363,63 +454,85 @@ $$</p>
 <li>4 位指数 exp</li>
 <li>3 位尾数 frac</li>
 </ul>
-<p>可以算出 $bias=2^{4-1}-1=2^3-1=8-1=7$。</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/544558-20211104211145834-189368139.png" alt="8 位浮点数（≥0部分）"></p>
+<p>可以算出 <span
+class="math inline">\(bias=2^{4-1}-1=2^3-1=8-1=7\)</span>。</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/544558-20211104211145834-189368139.png"
+alt="8 位浮点数（≥0部分）" />
+<figcaption aria-hidden="true">8 位浮点数（≥0部分）</figcaption>
+</figure>
 <p>其中靠近 0 的是非规格化值：</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224130157112.png" alt="8 位浮点数 - 非规格化值"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224130157112.png"
+alt="8 位浮点数 - 非规格化值" />
+<figcaption aria-hidden="true">8 位浮点数 - 非规格化值</figcaption>
+</figure>
 <p>以 <code>0 0000 001</code> 为例：</p>
-<p>$$<br>
-V = (-1)^s×M×2^E \<br>
-= (-1)^s×0.frac×2^{1-bias} \<br>
-= (-1)^0×(0+(1/8))×2^{1-7} \<br>
-= 1×1/8×2^{-6} \<br>
-=2^{(-9)} \<br>
-= 1/512<br>
-$$</p>
+<p><span class="math display">\[
+V = (-1)^s×M×2^E \\
+= (-1)^s×0.frac×2^{1-bias} \\
+= (-1)^0×(0+(1/8))×2^{1-7} \\
+= 1×1/8×2^{-6} \\
+=2^{(-9)} \\
+= 1/512
+\]</span></p>
 <p>再往下，就是规格化值：</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224130849986.png" alt="8 位浮点数 - 规格化值"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224130849986.png"
+alt="8 位浮点数 - 规格化值" />
+<figcaption aria-hidden="true">8 位浮点数 - 规格化值</figcaption>
+</figure>
 <p>以 <code>0 0110 110</code> 为例：</p>
-<p>$$<br>
-V = (-1)^s×M×2^E \<br>
-= (-1)^s×1.frac×2^{e-bias} \<br>
-= (-1)^0×(1+6/8)×2^{6-7} \<br>
-=1×14/8×2^{-1} \<br>
-= 14/16 \<br>
-=7/8<br>
-$$</p>
+<p><span class="math display">\[
+V = (-1)^s×M×2^E \\
+= (-1)^s×1.frac×2^{e-bias} \\
+= (-1)^0×(1+6/8)×2^{6-7} \\
+=1×14/8×2^{-1} \\
+= 14/16 \\
+=7/8
+\]</span></p>
 <h2 id="整型转为浮点型">整型转为浮点型</h2>
 <p>下面以一个例子来直观感受一下一个整型是如何转为浮点型的。</p>
-<p>现在我们有一个 int32 的整型 <code>123</code>，我们希望将其转为单精度浮点型 <code>123.0</code>。</p>
+<p>现在我们有一个 int32 的整型
+<code>123</code>，我们希望将其转为单精度浮点型 <code>123.0</code>。</p>
 <p><strong>1. 将整型用二进制表示出来</strong></p>
-<p>$$<br>
-12345_{(10)} = 1111011_{(2)}<br>
-$$</p>
+<p><span class="math display">\[
+12345_{(10)} = 1111011_{(2)}
+\]</span></p>
 <p><strong>2. 规范化表示</strong></p>
-<p>$$<br>
-1111011= 1.111011×2^6<br>
-$$</p>
+<p><span class="math display">\[
+1111011= 1.111011×2^6
+\]</span></p>
 <p><strong>3. 计算指数</strong></p>
-<p>$$<br>
-exp = 6 + 127 = 133_{(10)} = 10000101_{(2)}<br>
-$$</p>
+<p><span class="math display">\[
+exp = 6 + 127 = 133_{(10)} = 10000101_{(2)}
+\]</span></p>
 <p><strong>4. 确定尾数**</strong></p>
-<p>这是个规范化值，所以 <code>1.frac</code> 的 <code>1</code> 省略，又因为单精度浮点数 <code>frac</code> 占 23 位，所以我们需要在 <code>111011</code> 后面再填 17 个 0，即：</p>
-<p>$$<br>
-frac = 111011 0000 0000 0000 0000 0<br>
-$$</p>
+<p>这是个规范化值，所以 <code>1.frac</code> 的 <code>1</code>
+省略，又因为单精度浮点数 <code>frac</code> 占 23 位，所以我们需要在
+<code>111011</code> 后面再填 17 个 0，即：</p>
+<p><span class="math display">\[
+frac = 111011 0000 0000 0000 0000 0
+\]</span></p>
 <p><strong>5. 确定符号位</strong></p>
-<p>$$<br>
-s = 0_{(2)}<br>
-$$</p>
+<p><span class="math display">\[
+s = 0_{(2)}
+\]</span></p>
 <p><strong>6. 组合起来</strong></p>
-<p><code>12345.0</code> = <code>0  10000101 11101100000000000000000</code></p>
+<p><code>12345.0</code> =
+<code>0  10000101 11101100000000000000000</code></p>
 <h2 id="浮点数舍入">浮点数舍入</h2>
-<p>由于浮点数的表示具有固定的精度，在进行运算或表示时，经常会遇到无法精确表示的数值，这就需要采用舍入方法来近似表示这些数值。IEEE-754 标准定义了几种不同的舍入模式，以适应不同的计算需求。</p>
+<p>由于浮点数的表示具有固定的精度，在进行运算或表示时，经常会遇到无法精确表示的数值，这就需要采用舍入方法来近似表示这些数值。IEEE-754
+标准定义了几种不同的舍入模式，以适应不同的计算需求。</p>
 <h3 id="舍入模式">舍入模式</h3>
 <p><strong>最近舍入（Round to Nearest）</strong>:</p>
 <ul>
 <li>这是最常用的舍入模式，也是默认的模式。</li>
-<li>规则是向最接近的可表示值舍入。如果精确结果位于两个可表示值的中点，通常舍入到最近的偶数（即尾数的最后一位为 0）。</li>
+<li>规则是向最接近的可表示值舍入。如果精确结果位于两个可表示值的中点，通常舍入到最近的偶数（即尾数的最后一位为
+0）。</li>
 <li>这种方法减少了累积误差，确保了在多次运算后的总体精度。</li>
 </ul>
 <p><strong>向零舍入（Round Toward Zero）</strong>:</p>
@@ -448,188 +561,215 @@ $$</p>
 <thead>
 <tr>
 <th>Mode</th>
-<th style="text-align:center">1.40</th>
-<th style="text-align:center">1.60</th>
-<th style="text-align:center">1.50</th>
-<th style="text-align:center">2.50</th>
-<th style="text-align:center">-1.50</th>
+<th style="text-align: center;">1.40</th>
+<th style="text-align: center;">1.60</th>
+<th style="text-align: center;">1.50</th>
+<th style="text-align: center;">2.50</th>
+<th style="text-align: center;">-1.50</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>最近舍入</td>
-<td style="text-align:center">1</td>
-<td style="text-align:center">2</td>
-<td style="text-align:center">2</td>
-<td style="text-align:center">2</td>
-<td style="text-align:center">-2</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">-2</td>
 </tr>
 <tr>
 <td>向零舍入</td>
-<td style="text-align:center">1</td>
-<td style="text-align:center">1</td>
-<td style="text-align:center">1</td>
-<td style="text-align:center">2</td>
-<td style="text-align:center">-1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">-1</td>
 </tr>
 <tr>
 <td>向上舍入</td>
-<td style="text-align:center">2</td>
-<td style="text-align:center">2</td>
-<td style="text-align:center">2</td>
-<td style="text-align:center">3</td>
-<td style="text-align:center">-1</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">-1</td>
 </tr>
 <tr>
 <td>向下舍入</td>
-<td style="text-align:center">1</td>
-<td style="text-align:center">1</td>
-<td style="text-align:center">1</td>
-<td style="text-align:center">2</td>
-<td style="text-align:center">-2</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">-2</td>
 </tr>
 </tbody>
 </table>
 <h2 id="浮点数运算">浮点数运算</h2>
 <p>因为浮点数本身就存在精度问题，所以浮点数运算在计算机中是一个近似过程，涉及到精确度的权衡、特殊值的处理、错误的传播，以及舍入规则的应用。</p>
 <h3 id="浮点数加减">浮点数加减</h3>
-<ol>
+<ol type="1">
 <li>浮点数加法和减法首先需要对操作数进行对齐，使得它们的指数相同。这可能涉及将尾数的二进制表示向右移位，可能导致精度损失。</li>
 <li>然后执行加法或减法操作。</li>
 <li>对结果进行规范化和舍入。</li>
 </ol>
 <p>注意，浮点数的加减法<strong>不满足</strong>结合律、交换律和分配律，这你简单分析下应该就可以理解了，这里不赘述了。</p>
 <p>假设我们要在单精度浮点数格式下计算：</p>
-<p>$$<br>
-12.375 + 0.1 = ?<br>
-$$</p>
+<p><span class="math display">\[
+12.375 + 0.1 = ?
+\]</span></p>
 <p><strong>第 1 步：转为二进制表示</strong></p>
 <p>其中 12.375 我们可以用二进制精确表示：</p>
-<p>$$<br>
-12.375_{(10)} = 1100.011_{(2)}<br>
-$$</p>
+<p><span class="math display">\[
+12.375_{(10)} = 1100.011_{(2)}
+\]</span></p>
 <p>而 0.1 就比较特殊了，用二进制表示的话它会无限循环。</p>
 <blockquote>
-<p>将十进制小数转换为二进制表示涉及到重复乘以 2 的过程，并提取每次乘法后整数部分作为二进制位。这个过程是一个不断重复的过程，直到小数部分变为 0 或开始循环。</p>
+<p>将十进制小数转换为二进制表示涉及到重复乘以 2
+的过程，并提取每次乘法后整数部分作为二进制位。这个过程是一个不断重复的过程，直到小数部分变为
+0 或开始循环。</p>
 </blockquote>
-<ol>
-<li>
-<p>取 <code>0.1</code> 的小数部分乘以 2（即 <code>0.1 × 2 = 0.2</code>），整数部分是 <code>0</code>，小数部分是 <code>0.2</code>。</p>
-</li>
-<li>
-<p>再次取小数部分乘以 2（即 <code>0.2 × 2 = 0.4</code>），整数部分是 <code>0</code>，小数部分是 <code>0.4</code>。</p>
-</li>
-<li>
-<p>继续这个过程，我们得到以下序列：</p>
+<ol type="1">
+<li><p>取 <code>0.1</code> 的小数部分乘以 2（即
+<code>0.1 × 2 = 0.2</code>），整数部分是 <code>0</code>，小数部分是
+<code>0.2</code>。</p></li>
+<li><p>再次取小数部分乘以 2（即 <code>0.2 × 2 = 0.4</code>），整数部分是
+<code>0</code>，小数部分是 <code>0.4</code>。</p></li>
+<li><p>继续这个过程，我们得到以下序列：</p>
 <p><code>0.4 × 2 = 0.8</code> → 整数部分 <code>0</code></p>
 <p><code>0.8 × 2 = 1.6</code> → 整数部分 <code>1</code></p>
 <p><code>0.6 × 2 = 1.2</code> → 整数部分 <code>1</code></p>
 <p><code>0.2 × 2 = 0.4</code> → 整数部分 <code>0</code></p>
-<p>…（循环开始）</p>
-</li>
+<p>…（循环开始）</p></li>
 </ol>
-<p>所以，<code>0.1</code> 的二进制表示开始为 <code>0.0001100110011…</code>，并且这个模式会无限循环下去。</p>
+<p>所以，<code>0.1</code> 的二进制表示开始为
+<code>0.0001100110011…</code>，并且这个模式会无限循环下去。</p>
 <p><strong>第 2 步：规格化</strong></p>
 <p>回顾一下这张图：</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224102703581.png" alt="单精度浮点数"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20231224102703581.png"
+alt="单精度浮点数" />
+<figcaption aria-hidden="true">单精度浮点数</figcaption>
+</figure>
 <p>所以 12.375 规格化表示为：</p>
 <ul>
-<li>先规范化为 1.xxxx 形式： $1100.011_{(2)} = 1.100011 × 2^3$</li>
-<li>指数为：$3 + 127 = 130 = 10000010_{(2)}$</li>
-<li>尾数为：$10001100000000000000000（23;位，右边补;0）$</li>
-<li>汇总：$0;10000010;10001100000000000000000$</li>
+<li>先规范化为 1.xxxx 形式： <span class="math inline">\(1100.011_{(2)}
+= 1.100011 × 2^3\)</span></li>
+<li>指数为：<span class="math inline">\(3 + 127 = 130 =
+10000010_{(2)}\)</span></li>
+<li>尾数为：<span
+class="math inline">\(10001100000000000000000（23\;位，右边补\;0）\)</span></li>
+<li>汇总：<span
+class="math inline">\(0\;10000010\;10001100000000000000000\)</span></li>
 </ul>
-<p>而 0.1 由于无限循环，我们在单精度下只能保留 23 位，并采用<strong>最近舍入</strong>，所以 0.1 规格化表示为：</p>
+<p>而 0.1 由于无限循环，我们在单精度下只能保留 23
+位，并采用<strong>最近舍入</strong>，所以 0.1 规格化表示为：</p>
 <ul>
-<li>先规范为 1.xxxx 形式：$0.00011001100110011001100(循环) = 1.10011001100110011001100 × 2^-4$</li>
-<li>指数为：$-4 + 127 = 123 = 01111011_{(2)}$</li>
-<li>尾数为：$10011001100110011001100$</li>
-<li>汇总：$0;01111011;10011001100110011001100$</li>
+<li>先规范为 1.xxxx 形式：<span
+class="math inline">\(0.00011001100110011001100(循环) =
+1.10011001100110011001100 × 2^-4\)</span></li>
+<li>指数为：<span class="math inline">\(-4 + 127 = 123 =
+01111011_{(2)}\)</span></li>
+<li>尾数为：<span
+class="math inline">\(10011001100110011001100\)</span></li>
+<li>汇总：<span
+class="math inline">\(0\;01111011\;10011001100110011001100\)</span></li>
 </ul>
 <p><strong>第 3 步：对齐指数</strong></p>
 <p>先把 2 个浮点表示放在一起，好对比：</p>
 <ul>
-<li>$0;10000010;10001100000000000000000$</li>
-<li>$0;01111011;10011001100110011001100$</li>
+<li><span
+class="math inline">\(0\;10000010\;10001100000000000000000\)</span></li>
+<li><span
+class="math inline">\(0\;01111011\;10011001100110011001100\)</span></li>
 </ul>
 <p>将两个数的指数对齐，较小的指数增加，同时相应地调整尾数。</p>
-<p>这里需要调整将 <code>0.1</code> 的指数从 <code>01111011</code> 调整到 <code>10000010</code>，这里加了 <code>7</code>，所以 <code>0.1</code> 的尾数 <code>1.10011001100110011001100</code>需要右移 <code>7</code> 位，即：<code>0.00000011001100110011001</code>。</p>
+<p>这里需要调整将 <code>0.1</code> 的指数从 <code>01111011</code> 调整到
+<code>10000010</code>，这里加了 <code>7</code>，所以 <code>0.1</code>
+的尾数 <code>1.10011001100110011001100</code>需要右移 <code>7</code>
+位，即：<code>0.00000011001100110011001</code>。</p>
 <p><strong>第 4 步：相加</strong></p>
 <p>现在两个数的指数相同了，我们可以直接把它们的尾数相加：</p>
-<p>$$<br>
-;;;1.10001100000000000000000 \<br>
-+;0.00000011001100110011001 \<br>
-=;1.10001111001100110011001<br>
-$$</p>
+<p><span class="math display">\[
+\;\;\;1.10001100000000000000000 \\
++\;0.00000011001100110011001 \\
+=\;1.10001111001100110011001
+\]</span></p>
 <p><strong>第 5 步：规范化结果</strong></p>
 <p>这里无需规范化。</p>
 <p><strong>第 6 步：舍入</strong></p>
 <p>这里没有进位，不需要舍入。</p>
 <p><strong>第 7 步：浮点化表示</strong></p>
-<p>$$<br>
-0;10000010;10001111001100110011001<br>
-$$</p>
+<p><span class="math display">\[
+0\;10000010\;10001111001100110011001
+\]</span></p>
 <p><strong>第 8 步：转为十进制</strong></p>
-<p>$$<br>
-V =(-1)^s×M×2^E \<br>
-= (-1)^s×1.frac×2^{e-bias} \<br>
-= 1.10001111001100110011001 × 2^3 \<br>
-= 1100.01111001100110011001_{(2)} \<br>
-= 12.47499942779541015625_{(10)} \<br>
-≈ 12.475_{(10)}<br>
-$$</p>
+<p><span class="math display">\[
+V =(-1)^s×M×2^E \\
+= (-1)^s×1.frac×2^{e-bias} \\
+= 1.10001111001100110011001 × 2^3 \\
+= 1100.01111001100110011001_{(2)} \\
+= 12.47499942779541015625_{(10)} \\
+≈ 12.475_{(10)}
+\]</span></p>
 <h3 id="浮点数乘法">浮点数乘法</h3>
-<ol>
+<ol type="1">
 <li><strong>符号位计算</strong>：结果的符号由两个操作数的符号位决定。如果符号位相同（都是正数或都是负数），结果为正；如果符号位不同，结果为负。</li>
-<li><strong>指数相加</strong>：两个数的指数相加，并减去偏置值（单精度浮点数中为 127，双精度为 1023）。</li>
-<li><strong>尾数相乘</strong>：两个数的尾数相乘。这里的尾数包括隐含的最高位 1。</li>
-<li><strong>结果规范化</strong>：如果乘法的结果需要规范化（即调整为 <code>1.xxxx</code> 的形式），则相应调整指数。</li>
+<li><strong>指数相加</strong>：两个数的指数相加，并减去偏置值（单精度浮点数中为
+127，双精度为 1023）。</li>
+<li><strong>尾数相乘</strong>：两个数的尾数相乘。这里的尾数包括隐含的最高位
+1。</li>
+<li><strong>结果规范化</strong>：如果乘法的结果需要规范化（即调整为
+<code>1.xxxx</code> 的形式），则相应调整指数。</li>
 <li><strong>舍入处理</strong>：如果需要，对结果进行舍入以适应目标格式。</li>
-<li><strong>检查溢出或下溢</strong>：如果指数超出了表示范围，则发生溢出（结果可能为无穷大或特殊值）；如果指数太小，发生下溢（结果可能为 0 或非规格化数）。</li>
+<li><strong>检查溢出或下溢</strong>：如果指数超出了表示范围，则发生溢出（结果可能为无穷大或特殊值）；如果指数太小，发生下溢（结果可能为
+0 或非规格化数）。</li>
 </ol>
 <p>假设我们要在单精度浮点数格式下计算：</p>
-<p>$$<br>
-2.0 × 3.0 = ?<br>
-$$</p>
+<p><span class="math display">\[
+2.0 × 3.0 = ?
+\]</span></p>
 <p><strong>第 1 步：转为二进制表示</strong></p>
-<p>$$<br>
-2.0_{(10)} = 1_{(2)} \<br>
-3.0_{(10)} = 11_{(2)}<br>
-$$</p>
+<p><span class="math display">\[
+2.0_{(10)} = 1_{(2)} \\
+3.0_{(10)} = 11_{(2)}
+\]</span></p>
 <p><strong>第 2 步：规范化</strong></p>
-<p>$$<br>
-1 = 1.0 × 2^0 \<br>
-11 = 1.1 × 2^1<br>
-$$</p>
+<p><span class="math display">\[
+1 = 1.0 × 2^0 \\
+11 = 1.1 × 2^1
+\]</span></p>
 <p><strong>第 3 步：浮点化</strong></p>
-<p>$$<br>
-2.0 = 0;00000001;00000000000000000000000 \<br>
-3.0 = 0;00000001;10000000000000000000000<br>
-$$</p>
+<p><span class="math display">\[
+2.0 = 0\;00000001\;00000000000000000000000 \\
+3.0 = 0\;00000001\;10000000000000000000000
+\]</span></p>
 <p><strong>第 4 步：乘法操作</strong></p>
 <ul>
-<li>符号位：正正得正：$0_{(2)} × 0_{(2)} = 0_{(2)}$</li>
-<li>指数相加并减去偏置值：$(127+1)+(127+1)-127=129$</li>
-<li>尾数相乘：$1.0_{(2)}×1.1_{(2)} = 1.1_{(2)}$</li>
+<li>符号位：正正得正：<span class="math inline">\(0_{(2)} × 0_{(2)} =
+0_{(2)}\)</span></li>
+<li>指数相加并减去偏置值：<span
+class="math inline">\((127+1)+(127+1)-127=129\)</span></li>
+<li>尾数相乘：<span class="math inline">\(1.0_{(2)}×1.1_{(2)} =
+1.1_{(2)}\)</span></li>
 </ul>
 <p><strong>第 5 步：规范化</strong></p>
 <p>这里无需规范化。</p>
 <p><strong>第 6 步：舍入</strong></p>
 <p>这里无需舍入。</p>
 <p><strong>第 7 步：浮点化结果</strong></p>
-<p>$$<br>
-0;00000010;10000000000000000000000<br>
-$$</p>
+<p><span class="math display">\[
+0\;00000010\;10000000000000000000000
+\]</span></p>
 <p><strong>第 8 步：转为十进制</strong></p>
-<p>$$<br>
-V = (-1)^s×1.frac×2^{(e-127)} \<br>
-= 0 × 1.1 × 2^2 \<br>
-= 110_{(2)} \<br>
-= 6.0_{(10)}<br>
-$$</p>
+<p><span class="math display">\[
+V = (-1)^s×1.frac×2^{(e-127)} \\
+= 0 × 1.1 × 2^2 \\
+= 110_{(2)} \\
+= 6.0_{(10)}
+\]</span></p>
 <h3 id="浮点数除法">浮点数除法</h3>
 <p>浮点数除法类似于乘法，但有一些不同：</p>
-<ol>
+<ol type="1">
 <li><strong>符号位计算</strong>：与乘法类似，结果的符号由两个操作数的符号位决定。</li>
 <li><strong>指数相减</strong>：被除数的指数减去除数的指数，再加上偏置值。</li>
 <li><strong>尾数相除</strong>：被除数的尾数除以除数的尾数。</li>
@@ -638,49 +778,55 @@ $$</p>
 <li><strong>检查溢出或下溢</strong>：与乘法类似的检查。</li>
 </ol>
 <p>假设我们要在单精度浮点数格式下计算：</p>
-<p>$$<br>
-6.0 ÷ 3.0 =?<br>
-$$</p>
+<p><span class="math display">\[
+6.0 ÷ 3.0 =?
+\]</span></p>
 <p><strong>第 1 步：转为二进制表示</strong></p>
-<p>$$<br>
-6.0_{(10)} = 110_{(2)} \<br>
-3.0_{(10)} = 11_{(2)}<br>
-$$</p>
+<p><span class="math display">\[
+6.0_{(10)} = 110_{(2)} \\
+3.0_{(10)} = 11_{(2)}
+\]</span></p>
 <p><strong>第 2 步：规范化</strong></p>
-<p>$$<br>
-6.0 = 110 = 1.10 × 2^2 \<br>
-3.0 = 11 = 1.1 × 2^1<br>
-$$</p>
+<p><span class="math display">\[
+6.0 = 110 = 1.10 × 2^2 \\
+3.0 = 11 = 1.1 × 2^1
+\]</span></p>
 <p><strong>第 3 步：浮点化</strong></p>
-<p>$$<br>
-6.0 = 0;00000020;10000000000000000000000 \<br>
-3.0 = 0;00000001;10000000000000000000000<br>
-$$</p>
+<p><span class="math display">\[
+6.0 = 0\;00000020\;10000000000000000000000 \\
+3.0 = 0\;00000001\;10000000000000000000000
+\]</span></p>
 <p><strong>第 4 步：除法操作</strong></p>
 <ul>
-<li>符号位：正正得正：$0_{(2)} × 0_{(2)} = 0_{(2)}$</li>
-<li>指数减并加上偏置值：$(127+2)-(127+1)+127=128$</li>
-<li>尾数相除：$1.1_{(2)}×1.1_{(2)} = 1.0_{(2)}$</li>
+<li>符号位：正正得正：<span class="math inline">\(0_{(2)} × 0_{(2)} =
+0_{(2)}\)</span></li>
+<li>指数减并加上偏置值：<span
+class="math inline">\((127+2)-(127+1)+127=128\)</span></li>
+<li>尾数相除：<span class="math inline">\(1.1_{(2)}×1.1_{(2)} =
+1.0_{(2)}\)</span></li>
 </ul>
 <p><strong>第 5 步：规范化</strong></p>
 <p>这里无需规范化。</p>
 <p><strong>第 6 步：舍入</strong></p>
 <p>这里无需舍入。</p>
 <p><strong>第 7 步：浮点化结果</strong></p>
-<p>$$<br>
-0;00000001;00000000000000000000000<br>
-$$</p>
+<p><span class="math display">\[
+0\;00000001\;00000000000000000000000
+\]</span></p>
 <p><strong>第 8 步：转为十进制</strong></p>
-<p>$$<br>
-V = (-1)^s×1.frac×2^{(e-127)} \<br>
-= 0 × 1.0 × 2^1 \<br>
-= 10_{(2)} \<br>
-= 2.0_{(10)}<br>
-$$</p>
-<h2 id="Go-语言输出浮点数">Go 语言输出浮点数</h2>
+<p><span class="math display">\[
+V = (-1)^s×1.frac×2^{(e-127)} \\
+= 0 × 1.0 × 2^1 \\
+= 10_{(2)} \\
+= 2.0_{(10)}
+\]</span></p>
+<h2 id="go-语言输出浮点数">Go 语言输出浮点数</h2>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> number <span class="type">float32</span> = <span class="number">12.375</span></span><br><span class="line">	fmt.Printf(<span class="string">&quot;浮点数：%f\n&quot;</span>, number)</span><br><span class="line">	fmt.Printf(<span class="string">&quot;科学计数法：%e\n&quot;</span>, number)</span><br><span class="line">	fmt.Printf(<span class="string">&quot;保留 2 位小数：%.2f\n&quot;</span>, number)</span><br><span class="line"></span><br><span class="line">	bits := math.Float32bits(number)</span><br><span class="line">	bitsStr := fmt.Sprintf(<span class="string">&quot;%.32b&quot;</span>, bits)</span><br><span class="line">	fmt.Printf(<span class="string">&quot;输出32位浮点表示：%s %s %s\n&quot;</span>, bitsStr[:<span class="number">1</span>], bitsStr[<span class="number">1</span>:<span class="number">9</span>], bitsStr[<span class="number">9</span>:])</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="math-big">math/big</h2>
-<p>Go 语言的 <code>math/big</code> 包提供了对大数的精确计算支持，这些大数的大小超出了标准整数类型（如 <code>int64</code>）或浮点类型（如 <code>float64</code>）的范围。这个包主要用于需要高精度计算的领域，如加密、科学计算等。</p>
+<h2 id="mathbig">math/big</h2>
+<p>Go 语言的 <code>math/big</code>
+包提供了对大数的精确计算支持，这些大数的大小超出了标准整数类型（如
+<code>int64</code>）或浮点类型（如
+<code>float64</code>）的范围。这个包主要用于需要高精度计算的领域，如加密、科学计算等。</p>
 <p>主要功能：</p>
 <ul>
 <li><strong>算术运算</strong>：支持基本的加、减、乘、除等算术运算。</li>
@@ -692,23 +838,28 @@ $$</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := big.NewFloat(math.MaxFloat64)</span><br><span class="line">	b := big.NewFloat(math.MaxFloat64)</span><br><span class="line">	sum := big.NewFloat(<span class="number">0</span>)</span><br><span class="line">	sum.Add(a, b)</span><br><span class="line">	fmt.Println(<span class="string">&quot;a:&quot;</span>, a)</span><br><span class="line">	fmt.Println(<span class="string">&quot;sum:&quot;</span>, sum)</span><br><span class="line">	sum2 := big.NewFloat(<span class="number">0</span>).</span><br><span class="line">		SetPrec(<span class="number">15</span>).        <span class="comment">// 设置精度，prec 越大，精度越高，计算越复杂</span></span><br><span class="line">		SetMode(big.ToZero) <span class="comment">// 设置舍入策略</span></span><br><span class="line">	sum2.Add(a, b)</span><br><span class="line">	fmt.Println(<span class="string">&quot;sum2:&quot;</span>, sum2)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// a: 1.7976931348623157e+308</span></span><br><span class="line"><span class="comment">// sum: 3.5953862697246314e+308</span></span><br><span class="line"><span class="comment">// sum2: 3.5953e+308</span></span><br></pre></td></tr></table></figure>
 <p>注意事项：</p>
 <ul>
-<li><strong>性能考虑</strong>：由于 <code>math/big</code> 提供的是任意精度计算，其性能通常低于原生的固定大小数值类型。</li>
+<li><strong>性能考虑</strong>：由于 <code>math/big</code>
+提供的是任意精度计算，其性能通常低于原生的固定大小数值类型。</li>
 <li><strong>内存使用</strong>：大数运算可能会消耗更多的内存。</li>
-<li><strong>方法链式调用</strong>：<code>math/big</code> 的许多方法返回接收者本身，支持链式调用。</li>
+<li><strong>方法链式调用</strong>：<code>math/big</code>
+的许多方法返回接收者本身，支持链式调用。</li>
 </ul>
 <h2 id="参考资料">参考资料</h2>
 <ul>
-<li><a target="_blank" rel="noopener" href="https://people.eecs.berkeley.edu/~wkahan/ieee754status/IEEE754.PDF">IEEE-754</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://people.eecs.berkeley.edu/~wkahan/ieee754status/IEEE754.PDF">IEEE-754</a></li>
 <li>深入理解计算机系统</li>
 <li>Go 语言底层原理剖析</li>
-<li><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1zK4y1j7Cn">https://www.bilibili.com/video/BV1zK4y1j7Cn</a></li>
+<li>https://www.bilibili.com/video/BV1zK4y1j7Cn</li>
 <li>ChatGPT-4</li>
 </ul>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -748,15 +899,19 @@ $$</p>
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%8F%E5%85%B8%E9%97%AE%E9%A2%98"><span class="toc-text">经典问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA%E5%85%88%E8%A1%8C"><span class="toc-text">结论先行</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9A%E7%82%B9%E6%95%B0"><span class="toc-text">定点数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0"><span class="toc-text">浮点数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%89%B9%E6%AE%8A%E5%80%BC-Special-Values"><span class="toc-text">特殊值 Special Values</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A7%84%E6%A0%BC%E5%8C%96%E7%9A%84%E5%80%BC-Normalize-Values"><span class="toc-text">规格化的值 Normalize Values</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9D%9E%E8%A7%84%E6%A0%BC%E5%8C%96%E7%9A%84%E5%80%BC-Denormalized-Values"><span class="toc-text">非规格化的值 Denormalized Values</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BE%E4%BE%8B"><span class="toc-text">举例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B4%E5%9E%8B%E8%BD%AC%E4%B8%BA%E6%B5%AE%E7%82%B9%E5%9E%8B"><span class="toc-text">整型转为浮点型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E8%88%8D%E5%85%A5"><span class="toc-text">浮点数舍入</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%88%8D%E5%85%A5%E6%A8%A1%E5%BC%8F"><span class="toc-text">舍入模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%88%8D%E5%85%A5%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="toc-text">舍入的影响</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B"><span class="toc-text">实例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E8%BF%90%E7%AE%97"><span class="toc-text">浮点数运算</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E5%8A%A0%E5%87%8F"><span class="toc-text">浮点数加减</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E4%B9%98%E6%B3%95"><span class="toc-text">浮点数乘法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E9%99%A4%E6%B3%95"><span class="toc-text">浮点数除法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Go-%E8%AF%AD%E8%A8%80%E8%BE%93%E5%87%BA%E6%B5%AE%E7%82%B9%E6%95%B0"><span class="toc-text">Go 语言输出浮点数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#math-big"><span class="toc-text">math&#x2F;big</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%8F%E5%85%B8%E9%97%AE%E9%A2%98"><span class="toc-text">经典问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA%E5%85%88%E8%A1%8C"><span class="toc-text">结论先行</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9A%E7%82%B9%E6%95%B0"><span class="toc-text">定点数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0"><span class="toc-text">浮点数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%89%B9%E6%AE%8A%E5%80%BC-special-values"><span class="toc-text">特殊值 Special Values</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A7%84%E6%A0%BC%E5%8C%96%E7%9A%84%E5%80%BC-normalize-values"><span class="toc-text">规格化的值 Normalize Values</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9D%9E%E8%A7%84%E6%A0%BC%E5%8C%96%E7%9A%84%E5%80%BC-denormalized-values"><span class="toc-text">非规格化的值 Denormalized
+Values</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BE%E4%BE%8B"><span class="toc-text">举例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B4%E5%9E%8B%E8%BD%AC%E4%B8%BA%E6%B5%AE%E7%82%B9%E5%9E%8B"><span class="toc-text">整型转为浮点型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E8%88%8D%E5%85%A5"><span class="toc-text">浮点数舍入</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%88%8D%E5%85%A5%E6%A8%A1%E5%BC%8F"><span class="toc-text">舍入模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%88%8D%E5%85%A5%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="toc-text">舍入的影响</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B"><span class="toc-text">实例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E8%BF%90%E7%AE%97"><span class="toc-text">浮点数运算</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E5%8A%A0%E5%87%8F"><span class="toc-text">浮点数加减</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E4%B9%98%E6%B3%95"><span class="toc-text">浮点数乘法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E9%99%A4%E6%B3%95"><span class="toc-text">浮点数除法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#go-%E8%AF%AD%E8%A8%80%E8%BE%93%E5%87%BA%E6%B5%AE%E7%82%B9%E6%95%B0"><span class="toc-text">Go 语言输出浮点数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#mathbig"><span class="toc-text">math&#x2F;big</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

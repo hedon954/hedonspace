@@ -27,8 +27,6 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本篇通过回答《Fundamentals of Software Architecture》第八章的课后思考题，深入探讨软件组件的核心概念与实现方式、技术导向与领域导向分区策略的差异、实体陷阱问题的本质及解决方案，以及Actor&#x2F;Actions模式、工作流分析和事件风暴等组件识别技术的适用场景与局限性，帮助理解如何运用领域驱动的思维方式来设计组件边界，提升系统的内聚性、松耦合特性和业务适应能力。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250709102652672.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250709102924588.png">
 <meta property="article:published_time" content="2025-07-09T02:20:00.000Z">
 <meta property="article:modified_time" content="2025-07-27T04:29:14.328Z">
 <meta property="article:author" content="Hedon Wang">
@@ -36,7 +34,6 @@
 <meta property="article:tag" content="软件架构">
 <meta property="article:tag" content="fosa">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250709102652672.png">
   
   
   
@@ -74,7 +71,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a><a class="item title" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a><a class="item title" href="/2025/11/16/go/go-slice/"><span class="title">Go 底层原理丨slice 从第一性原理到实现细节</span></a><a class="item title" href="/2025/11/16/go/go-map-no-swiss/"><span class="title">Go 底层原理丨map（非 swiss 版本）</span></a><a class="item title" href="/2025/11/14/first-job-review-01-tech-01-manager-complexity/"><span class="title">三年工作复盘丨技术篇：软件工程是什么丨（一）管理复杂度</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a><a class="item title" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a><a class="item title" href="/2025/11/16/go/go-slice/"><span class="title">Go 底层原理丨slice 从第一性原理到实现细节</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -98,55 +95,77 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>本系列文章通过逐章回答<a target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of Software Architecture》</a>（下文简称 FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第八章</u>内容。</p>
+  </div><article class="md-text content"><p>本系列文章通过逐章回答<a
+target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of
+Software Architecture》</a>（下文简称
+FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第八章</u>内容。</p>
 <p>本章的课后题是：</p>
-<ol>
-<li>
-<p>We define the term <em>component</em> as a building block of an application—something the application does. A component usually consist of a group of classes or source files. How are components typically manifested within an application or service?</p>
-<p>组件在应用程序或服务中通常如何体现？</p>
-</li>
-<li>
-<p>What is the difference between technical partitioning and domain partitioning? Provide an example of each.</p>
-<p>技术分区和领域分区有什么区别？请各举一个例子。</p>
-</li>
-<li>
-<p>What is the advantage of domain partitioning?</p>
-<p>领域分区的优点是什么？</p>
-</li>
-<li>
-<p>Under what circumstances would technical partitioning be a better choice over domain partitioning?</p>
-<p>在什么情况下，技术分区会是比领域分区更好的选择？</p>
-</li>
-<li>
-<p>What is the entity trap? Why is it not a good approach for component identification?</p>
-<p>&quot;实体陷阱&quot;是什么？为什么它不是一种好的组件识别方法？</p>
-</li>
-<li>
-<p>When might you choose the workflow approach over the Actor/Actions approach when identifying core components?</p>
-<p>在识别核心组件时，你何时会选择 workflow 方法而不是 actor/actions 方法？</p>
-</li>
+<ol type="1">
+<li><p>We define the term <em>component</em> as a building block of an
+application—something the application does. A component usually consist
+of a group of classes or source files. How are components typically
+manifested within an application or service?</p>
+<p>组件在应用程序或服务中通常如何体现？</p></li>
+<li><p>What is the difference between technical partitioning and domain
+partitioning? Provide an example of each.</p>
+<p>技术分区和领域分区有什么区别？请各举一个例子。</p></li>
+<li><p>What is the advantage of domain partitioning?</p>
+<p>领域分区的优点是什么？</p></li>
+<li><p>Under what circumstances would technical partitioning be a better
+choice over domain partitioning?</p>
+<p>在什么情况下，技术分区会是比领域分区更好的选择？</p></li>
+<li><p>What is the entity trap? Why is it not a good approach for
+component identification?</p>
+<p>"实体陷阱"是什么？为什么它不是一种好的组件识别方法？</p></li>
+<li><p>When might you choose the workflow approach over the
+Actor/Actions approach when identifying core components?</p>
+<p>在识别核心组件时，你何时会选择 workflow 方法而不是 actor/actions
+方法？</p></li>
 </ol>
-<hr>
+<hr />
 <h2 id="组件范围">组件范围</h2>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250709102652672.png" alt="FOSA Figure 8-1. Different varieties of components"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250709102652672.png"
+alt="FOSA Figure 8-1. Different varieties of components" />
+<figcaption aria-hidden="true">FOSA Figure 8-1. Different varieties of
+components</figcaption>
+</figure>
 <p>在软件架构中，组件被定义为模块的物理体现。它代表了相关代码的逻辑分组，并通过不同的方式进行物理打包。</p>
 <p>组件在应用程序或服务中的典型体现方式包括：</p>
 <ul>
-<li><strong>库文件</strong>：这是最简单的组件形式，它将代码包装成更高层次的模块，通常在与调用代码相同的内存地址空间中运行，并通过语言函数调用机制进行通信。例如，Java 中的 JAR 文件、.NET 中的 DLL 文件和 Ruby 中的 Gem 文件。</li>
+<li><strong>库文件</strong>：这是最简单的组件形式，它将代码包装成更高层次的模块，通常在与调用代码相同的内存地址空间中运行，并通过语言函数调用机制进行通信。例如，Java
+中的 JAR 文件、.NET 中的 DLL 文件和 Ruby 中的 Gem 文件。</li>
 <li><strong>子系统或层</strong>：组件也可以作为架构中的子系统或层来出现。</li>
-<li><strong>服务</strong>：特别是在微服务等架构风格中，服务是一种组件，它在自己的地址空间中运行，并通过低级网络协议（如 TCP/IP）或高级格式（如 REST 或消息队列）进行通信，形成独立的、可部署的单元。</li>
-<li><strong>逻辑边界</strong>：从领域驱动设计（DDD）的角度来看，有界上下文（Bounded Contexts）物理组件，例如服务、子系统等。每个有界上下文应作为一个独立的服务或项目来实现，这意味着它可以独立于其他有界上下文进行实现、演进和版本控制。有时一个有界上下文可以包含多个子域，此时有界上下文是物理边界，而其每个子域是逻辑边界，这些逻辑边界在不同编程语言中可能被称为命名空间、模块或包。</li>
+<li><strong>服务</strong>：特别是在微服务等架构风格中，服务是一种组件，它在自己的地址空间中运行，并通过低级网络协议（如
+TCP/IP）或高级格式（如 REST
+或消息队列）进行通信，形成独立的、可部署的单元。</li>
+<li><strong>逻辑边界</strong>：从领域驱动设计（DDD）的角度来看，有界上下文（Bounded
+Contexts）物理组件，例如服务、子系统等。每个有界上下文应作为一个独立的服务或项目来实现，这意味着它可以独立于其他有界上下文进行实现、演进和版本控制。有时一个有界上下文可以包含多个子域，此时有界上下文是物理边界，而其每个子域是逻辑边界，这些逻辑边界在不同编程语言中可能被称为命名空间、模块或包。</li>
 </ul>
 <p>总之，组件是架构中最基本的模块化构建块，它们定义了代码的组织方式以及系统各部分之间的交互方式。</p>
 <h2 id="架构分区">架构分区</h2>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250709102924588.png" alt="FOSA Figure 8-4. Two types of top-level partitioning in architecture"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250709102924588.png"
+alt="FOSA Figure 8-4. Two types of top-level partitioning in architecture" />
+<figcaption aria-hidden="true">FOSA Figure 8-4. Two types of top-level
+partitioning in architecture</figcaption>
+</figure>
 <h3 id="技术分区">技术分区</h3>
-<p><strong>技术分区 (Technical Partitioning):</strong> 是 <strong>根据代码的技术职责</strong> 来组织代码。这是传统分层架构的典型做法。每一层都有明确的技术目标，例如处理 HTTP 请求、执行业务规则或与数据库交互。</p>
+<p><strong>技术分区 (Technical Partitioning):</strong> 是
+<strong>根据代码的技术职责</strong>
+来组织代码。这是传统分层架构的典型做法。每一层都有明确的技术目标，例如处理
+HTTP 请求、执行业务规则或与数据库交互。</p>
 <p>典型分层:</p>
 <ul>
-<li><strong>表现层 (Presentation/UI):</strong> 负责处理用户交互和展示，例如 MVC 框架中的 <code>Controller</code> 和 <code>View</code>。</li>
-<li><strong>业务逻辑层 (Business/Service):</strong> 负责实现核心业务规则和流程，是系统的核心。</li>
-<li><strong>数据访问层 (Data Access/Persistence):</strong> 负责与数据库或其他数据存储进行交互，执行增删改查 (CRUD)。</li>
+<li><strong>表现层 (Presentation/UI):</strong>
+负责处理用户交互和展示，例如 MVC 框架中的 <code>Controller</code> 和
+<code>View</code>。</li>
+<li><strong>业务逻辑层 (Business/Service):</strong>
+负责实现核心业务规则和流程，是系统的核心。</li>
+<li><strong>数据访问层 (Data Access/Persistence):</strong>
+负责与数据库或其他数据存储进行交互，执行增删改查 (CRUD)。</li>
 </ul>
 <p>优点：</p>
 <ul>
@@ -156,23 +175,43 @@
 </ul>
 <p>缺点：</p>
 <ul>
-<li><strong>业务内聚性极低 (Low Business Cohesion):</strong> 这是技术分区最大的问题。一个完整的业务功能（例如，“用户下单”）的逻辑被强制拆散，散落在所有三个层次中。当你需要理解或修改这个功能时，必须在多个目录和文件中来回跳转，增加了认知负荷。</li>
-<li><strong>功能开发导致高耦合 (High Coupling for Feature Development):</strong> 由于功能代码被分散，任何一个业务需求的变更，都可能导致从上到下的“全垒打”式修改（即 <code>Controller</code> -&gt; <code>Service</code> -&gt; <code>Repository</code> 都需要改）。这使得变更的影响范围变大，回归测试的成本也更高。</li>
-<li><strong>容易形成“上帝类”和瓶颈 (Prone to “God Classes” and Bottlenecks):</strong> 随着业务越来越复杂，业务逻辑层 (<code>Business Layer</code>) 很容易膨胀成一个巨大而臃肿的“上帝模块”，它了解所有业务细节，被所有表现层组件依赖。这个模块会变得难以维护和测试，成为整个系统演进的瓶颈。</li>
-<li><strong>阻碍团队自治和独立扩展 (Impedes Team Autonomy and Scalability):</strong> 很难将一个完整的业务功能垂直地分配给一个团队。两个团队开发不同功能时，很可能会在共享的业务逻辑层或数据访问层产生代码冲突。在分布式架构中，你也无法仅仅因为订单逻辑复杂就单独扩展业务逻辑层，而必须扩展整个单体应用。</li>
+<li><strong>业务内聚性极低 (Low Business Cohesion):</strong>
+这是技术分区最大的问题。一个完整的业务功能（例如，"用户下单"）的逻辑被强制拆散，散落在所有三个层次中。当你需要理解或修改这个功能时，必须在多个目录和文件中来回跳转，增加了认知负荷。</li>
+<li><strong>功能开发导致高耦合 (High Coupling for Feature
+Development):</strong>
+由于功能代码被分散，任何一个业务需求的变更，都可能导致从上到下的“全垒打”式修改（即
+<code>Controller</code> -&gt; <code>Service</code> -&gt;
+<code>Repository</code>
+都需要改）。这使得变更的影响范围变大，回归测试的成本也更高。</li>
+<li><strong>容易形成“上帝类”和瓶颈 (Prone to "God Classes" and
+Bottlenecks):</strong> 随着业务越来越复杂，业务逻辑层
+(<code>Business Layer</code>)
+很容易膨胀成一个巨大而臃肿的“上帝模块”，它了解所有业务细节，被所有表现层组件依赖。这个模块会变得难以维护和测试，成为整个系统演进的瓶颈。</li>
+<li><strong>阻碍团队自治和独立扩展 (Impedes Team Autonomy and
+Scalability):</strong>
+很难将一个完整的业务功能垂直地分配给一个团队。两个团队开发不同功能时，很可能会在共享的业务逻辑层或数据访问层产生代码冲突。在分布式架构中，你也无法仅仅因为订单逻辑复杂就单独扩展业务逻辑层，而必须扩展整个单体应用。</li>
 </ul>
 <p>适用场景：</p>
 <ul>
-<li><strong>小型、简单的应用程序：</strong> 尤其是 CRUD 密集型的管理后台、内容管理系统等。</li>
-<li><strong>业务领域稳定且不复杂：</strong> 如果业务在可预见的未来不会有大的变化，技术分区的简单性就是一种优势。</li>
-<li><strong>项目初期或概念验证 (PoC):</strong> 当业务边界尚不明确，需要快速验证想法时，可以从技术分区开始。</li>
-<li><strong>按技术职能划分的团队：</strong> 如果你的公司有独立的前端团队、后端 Java 团队和 DBA 团队，这种分区方式能匹配组织结构。</li>
+<li><strong>小型、简单的应用程序：</strong> 尤其是 CRUD
+密集型的管理后台、内容管理系统等。</li>
+<li><strong>业务领域稳定且不复杂：</strong>
+如果业务在可预见的未来不会有大的变化，技术分区的简单性就是一种优势。</li>
+<li><strong>项目初期或概念验证 (PoC):</strong>
+当业务边界尚不明确，需要快速验证想法时，可以从技术分区开始。</li>
+<li><strong>按技术职能划分的团队：</strong>
+如果你的公司有独立的前端团队、后端 Java 团队和 DBA
+团队，这种分区方式能匹配组织结构。</li>
 </ul>
 <h3 id="领域分区">领域分区</h3>
-<p><strong>领域分区 (Domain Partitioning):</strong> 是 <strong>根据业务领域或业务能力</strong> 来组织代码。每个组件都封装了某个特定业务领域所需的所有技术实现。这与领域驱动设计 (DDD) 的思想高度一致。</p>
+<p><strong>领域分区 (Domain Partitioning):</strong> 是
+<strong>根据业务领域或业务能力</strong>
+来组织代码。每个组件都封装了某个特定业务领域所需的所有技术实现。这与领域驱动设计
+(DDD) 的思想高度一致。</p>
 <p>典型分区:</p>
 <ul>
-<li><strong>订单组件 (Ordering):</strong> 包含处理订单的所有逻辑，从 API 端点到数据库交互。</li>
+<li><strong>订单组件 (Ordering):</strong> 包含处理订单的所有逻辑，从 API
+端点到数据库交互。</li>
 <li><strong>库存组件 (Inventory):</strong> 负责管理商品库存。</li>
 <li><strong>支付组件 (Payment):</strong> 封装与支付相关的所有功能。</li>
 </ul>
@@ -186,59 +225,92 @@
 </ul>
 <p>缺点：</p>
 <ul>
-<li><strong>初期复杂度和设计门槛高 (Higher Initial Complexity):</strong> 正确地识别和划分领域边界是领域分区的核心挑战。这需要架构师对业务有深刻的理解，并投入大量的前期分析设计（例如通过领域驱动设计 DDD 中的事件风暴等实践）。如果边界划分错误，后期的重构成本会非常高。</li>
-<li><strong>可能导致代码重复 (Potential for Code Duplication):</strong> 不同的领域组件可能需要相似的功能，例如身份验证、日志记录、数据访问模式等。如果缺乏良好的治理，这些横切关注点 (Cross-cutting Concerns) 可能会在多个组件中被重复实现。这通常需要通过共享库、平台服务或服务网格 (Service Mesh) 来解决。</li>
-<li><strong>分布式架构的额外开销 (Overhead of Distributed Architecture):</strong> 如果将每个领域组件实现为微服务，就需要处理分布式系统带来的所有复杂性，如服务发现、网络延迟、数据一致性、分布式事务等。</li>
+<li><strong>初期复杂度和设计门槛高 (Higher Initial Complexity):</strong>
+正确地识别和划分领域边界是领域分区的核心挑战。这需要架构师对业务有深刻的理解，并投入大量的前期分析设计（例如通过领域驱动设计
+DDD
+中的事件风暴等实践）。如果边界划分错误，后期的重构成本会非常高。</li>
+<li><strong>可能导致代码重复 (Potential for Code Duplication):</strong>
+不同的领域组件可能需要相似的功能，例如身份验证、日志记录、数据访问模式等。如果缺乏良好的治理，这些横切关注点
+(Cross-cutting Concerns)
+可能会在多个组件中被重复实现。这通常需要通过共享库、平台服务或服务网格
+(Service Mesh) 来解决。</li>
+<li><strong>分布式架构的额外开销 (Overhead of Distributed
+Architecture):</strong>
+如果将每个领域组件实现为微服务，就需要处理分布式系统带来的所有复杂性，如服务发现、网络延迟、数据一致性、分布式事务等。</li>
 </ul>
 <p>适用场景：</p>
 <ul>
-<li><strong>大型、复杂的企业级系统：</strong> 尤其是那些业务逻辑复杂、需要长期演进的系统。</li>
-<li><strong>微服务架构 (Microservices Architecture):</strong> 领域分区是实现微服务的标准和基础。</li>
+<li><strong>大型、复杂的企业级系统：</strong>
+尤其是那些业务逻辑复杂、需要长期演进的系统。</li>
+<li><strong>微服务架构 (Microservices Architecture):</strong>
+领域分区是实现微服务的标准和基础。</li>
 </ul>
 <h2 id="组件识别">组件识别</h2>
 <p>组件识别是指在定义了宏观的架构风格（例如，分层单体、微服务）之后，<strong>发现和划定系统中各个功能模块（即组件）边界的过程</strong>。这个过程的目标是创建一组高内聚、低耦合的组件。</p>
 <p>组件识别不是一个随意的过程，它需要系统性的方法和深刻的业务理解。如果边界划分错误，将会导致维护困难、扩展不易等一系列问题。接下来我们将要讨论的几个概念，正是服务于这个目的的方法论和需要警惕的陷阱。</p>
 <h3 id="实体陷阱">实体陷阱</h3>
-<p>这是在组件识别过程中最常见、也最需要警惕的一个反模式 (Anti-pattern)。</p>
-<p>实体陷阱是指 <strong>错误地将数据实体（通常直接对应数据库中的表）当作组件来进行划分</strong>。例如，系统中有 <code>User</code>, <code>Product</code>, <code>Order</code> 三张表，就草率地创建 <code>User</code> 组件、<code>Product</code> 组件和 <code>Order</code> 组件。</p>
+<p>这是在组件识别过程中最常见、也最需要警惕的一个反模式
+(Anti-pattern)。</p>
+<p>实体陷阱是指
+<strong>错误地将数据实体（通常直接对应数据库中的表）当作组件来进行划分</strong>。例如，系统中有
+<code>User</code>, <code>Product</code>, <code>Order</code>
+三张表，就草率地创建 <code>User</code> 组件、<code>Product</code> 组件和
+<code>Order</code> 组件。</p>
 <p>为什么是陷阱？</p>
 <blockquote>
-<p>软件的核心价值在于处理 <strong>业务流程 (Business Workflow)</strong>，而不仅仅是管理数据。一个有意义的业务流程往往会跨越多个数据实体。</p>
+<p>软件的核心价值在于处理 <strong>业务流程 (Business
+Workflow)</strong>，而不仅仅是管理数据。一个有意义的业务流程往往会跨越多个数据实体。</p>
 </blockquote>
-<p>我们以经典的&quot;用户下单&quot;流程为例。这个行为需要：</p>
-<ol>
+<p>我们以经典的"用户下单"流程为例。这个行为需要：</p>
+<ol type="1">
 <li>读取 <strong>用户信息</strong> (User) 以确认其身份和收货地址。</li>
 <li>查询 <strong>商品信息</strong> (Product) 以获取价格并检查库存。</li>
 <li>创建一个新的 <strong>订单记录</strong> (Order)。</li>
 <li>更新 <strong>商品库存</strong> (Product)。</li>
 </ol>
-<p>如果 <code>User</code>、<code>Product</code>、<code>Order</code> 各自是一个独立的组件，那么&quot;用户下单&quot;这段核心业务逻辑应该放在哪里呢？</p>
+<p>如果 <code>User</code>、<code>Product</code>、<code>Order</code>
+各自是一个独立的组件，那么"用户下单"这段核心业务逻辑应该放在哪里呢？</p>
 <ul>
-<li>放在 <code>Order</code> 组件里？那么它就需要频繁调用 <code>User</code> 组件和 <code>Product</code> 组件，并且可能需要了解它们的内部数据结构，形成了紧密的耦合。</li>
-<li>放在一个单独的 <code>PlacingOrderService</code> 里？这个服务本身没有归属，像一个&quot;流浪&quot;的脚本，操纵着另外三个“只有数据没有行为”的贫血组件。</li>
+<li>放在 <code>Order</code> 组件里？那么它就需要频繁调用
+<code>User</code> 组件和 <code>Product</code>
+组件，并且可能需要了解它们的内部数据结构，形成了紧密的耦合。</li>
+<li>放在一个单独的 <code>PlacingOrderService</code>
+里？这个服务本身没有归属，像一个"流浪"的脚本，操纵着另外三个“只有数据没有行为”的贫血组件。</li>
 </ul>
-<p><strong>结论：</strong> 实体陷阱导致了 <strong>业务逻辑的碎片化</strong> 和 <strong>组件间的高度耦合</strong>。</p>
+<p><strong>结论：</strong> 实体陷阱导致了
+<strong>业务逻辑的碎片化</strong> 和
+<strong>组件间的高度耦合</strong>。</p>
 <blockquote>
-<p>👉🏻 正确的做法是围绕 <strong>业务能力</strong> 来划分组件，而不是围绕数据实体。一个更合理的组件应该是 <code>Ordering</code> (订单管理)，它封装了 <code>Order</code> 实体以及所有相关的业务行为（如下单、取消订单、查询订单状态等）。</p>
+<p>👉🏻 正确的做法是围绕 <strong>业务能力</strong>
+来划分组件，而不是围绕数据实体。一个更合理的组件应该是
+<code>Ordering</code> (订单管理)，它封装了 <code>Order</code>
+实体以及所有相关的业务行为（如下单、取消订单、查询订单状态等）。</p>
 </blockquote>
-<h3 id="Actor-Actions">Actor/Actions</h3>
-<p>这是一种非常直观且有效的自顶向下的组件识别方法。它的核心是回答：“<strong>谁 (Who) 会对系统做什么 (What)？</strong>”</p>
+<h3 id="actoractions">Actor/Actions</h3>
+<p>这是一种非常直观且有效的自顶向下的组件识别方法。它的核心是回答："<strong>谁
+(Who) 会对系统做什么 (What)？</strong>"</p>
 <p><strong>实施步骤：</strong></p>
-<ol>
-<li><strong>识别执行者 (Identify Actors):</strong> 列出所有会与系统交互的&quot;人&quot;或&quot;外部系统&quot;。例如：顾客 (Customer)、管理员 (Admin)、仓库管理系统 (WMS)、支付网关 (Payment Gateway)。</li>
-<li><strong>识别操作 (Identify Actions):</strong> 针对每一个执行者，列出他们会对系统发起的具体操作（可以理解为用例）。
+<ol type="1">
+<li><strong>识别执行者 (Identify Actors):</strong>
+列出所有会与系统交互的"人"或"外部系统"。例如：顾客 (Customer)、管理员
+(Admin)、仓库管理系统 (WMS)、支付网关 (Payment Gateway)。</li>
+<li><strong>识别操作 (Identify Actions):</strong>
+针对每一个执行者，列出他们会对系统发起的具体操作（可以理解为用例）。
 <ul>
-<li><strong>顾客</strong> 可以：搜索商品、查看商品详情、添加购物车、提交订单、支付。</li>
-<li><strong>管理员</strong> 可以：上架商品、调整价格、查看销售报表。</li>
-</ul>
-</li>
+<li><strong>顾客</strong>
+可以：搜索商品、查看商品详情、添加购物车、提交订单、支付。</li>
+<li><strong>管理员</strong>
+可以：上架商品、调整价格、查看销售报表。</li>
+</ul></li>
 <li><strong>组件划分：</strong> 将相关的操作进行分组，形成初步的组件。
 <ul>
-<li><code>搜索商品</code>、<code>查看商品详情</code> -&gt; 可能属于 <code>Catalog</code> (商品目录) 组件。</li>
-<li><code>添加购物车</code>、<code>提交订单</code> -&gt; 可能属于 <code>Ordering</code> (订单) 组件。</li>
-<li><code>上架商品</code>、<code>调整价格</code> -&gt; 可能属于 <code>ProductManagement</code> (商品管理) 组件。</li>
-</ul>
-</li>
+<li><code>搜索商品</code>、<code>查看商品详情</code> -&gt; 可能属于
+<code>Catalog</code> (商品目录) 组件。</li>
+<li><code>添加购物车</code>、<code>提交订单</code> -&gt; 可能属于
+<code>Ordering</code> (订单) 组件。</li>
+<li><code>上架商品</code>、<code>调整价格</code> -&gt; 可能属于
+<code>ProductManagement</code> (商品管理) 组件。</li>
+</ul></li>
 </ol>
 <p><strong>优点：</strong></p>
 <ul>
@@ -249,69 +321,90 @@
 <ul>
 <li>可能遗漏那些没有明确执行者的后台流程或系统内部流程。</li>
 </ul>
-<h3 id="Event-storming">Event storming</h3>
-<p>事件风暴是领域驱动设计 (DDD) 中一种强大的 <strong>协作式工作坊技术</strong>，用于快速、全面地探索复杂的业务领域，并从中识别出聚合 (Aggregates) 和限界上下文 (Bounded Contexts)，而这些正是划分高质量组件（尤其是微服务）的理想边界。</p>
-<p><strong>核心过程:</strong> 这是一个由业务专家和技术专家共同参与的会议，大家在一个足够大的墙上，用不同颜色的即时贴 (sticky notes) 来“风暴”出整个业务流程。</p>
-<ol>
+<h3 id="event-storming">Event storming</h3>
+<p>事件风暴是领域驱动设计 (DDD) 中一种强大的
+<strong>协作式工作坊技术</strong>，用于快速、全面地探索复杂的业务领域，并从中识别出聚合
+(Aggregates) 和限界上下文 (Bounded
+Contexts)，而这些正是划分高质量组件（尤其是微服务）的理想边界。</p>
+<p><strong>核心过程:</strong>
+这是一个由业务专家和技术专家共同参与的会议，大家在一个足够大的墙上，用不同颜色的即时贴
+(sticky notes) 来“风暴”出整个业务流程。</p>
+<ol type="1">
 <li><strong>橙色贴 - 领域事件 (Domain Event):</strong>
 <ul>
-<li><strong>规则：</strong> 用过去时态描述业务中发生过的、有价值的事情。这是整个风暴的核心。</li>
-<li><strong>例子：</strong> <code>订单已提交</code>、<code>商品已添加到购物车</code>、<code>用户已注册</code>。</li>
+<li><strong>规则：</strong>
+用过去时态描述业务中发生过的、有价值的事情。这是整个风暴的核心。</li>
+<li><strong>例子：</strong>
+<code>订单已提交</code>、<code>商品已添加到购物车</code>、<code>用户已注册</code>。</li>
 <li>大家将所有能想到的事件，按照时间顺序从左到右贴在墙上。</li>
-</ul>
-</li>
+</ul></li>
 <li><strong>蓝色贴 - 命令 (Command):</strong>
 <ul>
 <li><strong>规则：</strong> 触发领域事件的用户操作或系统指令。</li>
-<li><strong>例子：</strong> <code>提交订单</code> (触发 <code>订单已提交</code>)、<code>添加商品到购物车</code> (触发 <code>商品已添加到购物车</code>)。</li>
-</ul>
-</li>
+<li><strong>例子：</strong> <code>提交订单</code> (触发
+<code>订单已提交</code>)、<code>添加商品到购物车</code> (触发
+<code>商品已添加到购物车</code>)。</li>
+</ul></li>
 <li><strong>黄色小贴 - 执行者 (Actor):</strong>
 <ul>
 <li><strong>规则：</strong> 发出命令的人或系统。</li>
-<li><strong>例子：</strong> <code>顾客</code> (发出 <code>提交订单</code> 命令)。</li>
-</ul>
-</li>
+<li><strong>例子：</strong> <code>顾客</code> (发出
+<code>提交订单</code> 命令)。</li>
+</ul></li>
 <li><strong>粉色/黄色大贴 - 聚合 (Aggregate):</strong>
 <ul>
-<li><strong>规则：</strong> 聚合是处理命令并产生事件的业务实体，它负责维护一组相关对象的数据一致性。</li>
-<li><strong>例子：</strong> <code>订单</code> 聚合负责处理 <code>提交订单</code> 命令，并产生 <code>订单已提交</code> 事件。</li>
-</ul>
-</li>
-<li><strong>划定边界 - 限界上下文 (Bounded Context):</strong> 当整个流程可视化之后，团队会发现某些事件、命令和聚合在业务上高度相关，形成了一个个的&quot;簇&quot;。这些&quot;簇&quot;的边界，就是 <strong>限界上下文</strong> 的边界，也是 <strong>组件/微服务</strong> 的理想边界。例如，所有与订单创建、修改、状态流转相关的即时贴会自然地聚集在一起，形成 <code>Ordering</code> 上下文。</li>
+<li><strong>规则：</strong>
+聚合是处理命令并产生事件的业务实体，它负责维护一组相关对象的数据一致性。</li>
+<li><strong>例子：</strong> <code>订单</code> 聚合负责处理
+<code>提交订单</code> 命令，并产生 <code>订单已提交</code> 事件。</li>
+</ul></li>
+<li><strong>划定边界 - 限界上下文 (Bounded Context):</strong>
+当整个流程可视化之后，团队会发现某些事件、命令和聚合在业务上高度相关，形成了一个个的"簇"。这些"簇"的边界，就是
+<strong>限界上下文</strong> 的边界，也是 <strong>组件/微服务</strong>
+的理想边界。例如，所有与订单创建、修改、状态流转相关的即时贴会自然地聚集在一起，形成
+<code>Ordering</code> 上下文。</li>
 </ol>
 <p><strong>优点：</strong></p>
 <ul>
-<li><strong>协作性：</strong> 打破了业务与技术之间的隔阂，让所有人对业务有统一的理解。</li>
-<li><strong>深度洞察：</strong> 能发现隐性的业务规则和流程，识别出比 Actor/Actions 更自然的边界。</li>
-<li><strong>结果可靠：</strong> 通过事件风暴识别出的边界通常非常稳定，是划分微服务的黄金标准。</li>
+<li><strong>协作性：</strong>
+打破了业务与技术之间的隔阂，让所有人对业务有统一的理解。</li>
+<li><strong>深度洞察：</strong> 能发现隐性的业务规则和流程，识别出比
+Actor/Actions 更自然的边界。</li>
+<li><strong>结果可靠：</strong>
+通过事件风暴识别出的边界通常非常稳定，是划分微服务的黄金标准。</li>
 </ul>
-<h3 id="Workflow">Workflow</h3>
-<p>这种方法是对 Actor/Actions 方法的一个重要补充，它专注于识别那些 <strong>没有明确、单一执行者的端到端业务流程</strong>。</p>
-<p><strong>核心思想：</strong> 寻找系统中的关键业务事件，并追踪由该事件引发的一系列后续处理步骤，将整个流程封装成一个组件。</p>
+<h3 id="workflow">Workflow</h3>
+<p>这种方法是对 Actor/Actions 方法的一个重要补充，它专注于识别那些
+<strong>没有明确、单一执行者的端到端业务流程</strong>。</p>
+<p><strong>核心思想：</strong>
+寻找系统中的关键业务事件，并追踪由该事件引发的一系列后续处理步骤，将整个流程封装成一个组件。</p>
 <p><strong>实施步骤：</strong></p>
-<ol>
-<li><strong>识别关键业务事件或调度任务：</strong> 例如：“订单支付成功”、“每月一日进行财务结算”。</li>
-<li><strong>描绘工作流：</strong> 画出该事件发生后，系统需要依次完成的所有步骤。
+<ol type="1">
+<li><strong>识别关键业务事件或调度任务：</strong>
+例如："订单支付成功"、"每月一日进行财务结算"。</li>
+<li><strong>描绘工作流：</strong>
+画出该事件发生后，系统需要依次完成的所有步骤。
 <ul>
 <li><strong>事件：订单支付成功 (Order Paid)</strong></li>
 <li><strong>工作流：</strong>
-<ol>
+<ol type="1">
 <li>更新订单状态为“待发货”。</li>
 <li>调用仓库管理系统 (WMS) 接口，通知发货。</li>
 <li>向用户发送“支付成功”的邮件/短信。</li>
 <li>为用户增加积分。</li>
-</ol>
-</li>
-</ul>
-</li>
-<li><strong>组件划分：</strong> 整个工作流可以被识别为一个或多个组件。例如，可以有一个 <code>OrderFulfillment</code> (订单履行) 组件来编排这个流程。</li>
+</ol></li>
+</ul></li>
+<li><strong>组件划分：</strong>
+整个工作流可以被识别为一个或多个组件。例如，可以有一个
+<code>OrderFulfillment</code> (订单履行) 组件来编排这个流程。</li>
 </ol>
 <p><strong>适用场景：</strong></p>
 <ul>
 <li><strong>后台处理：</strong> 如报表生成、数据同步、月末结算等。</li>
-<li><strong>异步流程：</strong> 一个操作触发后，后台需要执行一系列复杂的、耗时的任务。</li>
-<li><strong>编排服务 (Orchestration):</strong> 一个组件的主要职责是调用其他多个组件/服务来完成一个复杂的业务目标。</li>
+<li><strong>异步流程：</strong>
+一个操作触发后，后台需要执行一系列复杂的、耗时的任务。</li>
+<li><strong>编排服务 (Orchestration):</strong>
+一个组件的主要职责是调用其他多个组件/服务来完成一个复杂的业务目标。</li>
 </ul>
 <h2 id="架构师职责">架构师职责</h2>
 <ul>
@@ -321,8 +414,7 @@
 <li>按模块分区</li>
 <li>按技术分区</li>
 <li>按领域分区</li>
-</ul>
-</li>
+</ul></li>
 <li>开发职责：组件识别
 <ul>
 <li>识别基础组件</li>
@@ -330,14 +422,15 @@
 <li>分析组件角色和职责</li>
 <li>分析架构特征</li>
 <li>重构组件</li>
-</ul>
-</li>
+</ul></li>
 </ul>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -377,15 +470,18 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%84%E4%BB%B6%E8%8C%83%E5%9B%B4"><span class="toc-text">组件范围</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E5%88%86%E5%8C%BA"><span class="toc-text">架构分区</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%80%E6%9C%AF%E5%88%86%E5%8C%BA"><span class="toc-text">技术分区</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A2%86%E5%9F%9F%E5%88%86%E5%8C%BA"><span class="toc-text">领域分区</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%84%E4%BB%B6%E8%AF%86%E5%88%AB"><span class="toc-text">组件识别</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E9%99%B7%E9%98%B1"><span class="toc-text">实体陷阱</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Actor-Actions"><span class="toc-text">Actor&#x2F;Actions</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Event-storming"><span class="toc-text">Event storming</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Workflow"><span class="toc-text">Workflow</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E5%B8%88%E8%81%8C%E8%B4%A3"><span class="toc-text">架构师职责</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%84%E4%BB%B6%E8%8C%83%E5%9B%B4"><span class="toc-text">组件范围</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E5%88%86%E5%8C%BA"><span class="toc-text">架构分区</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%80%E6%9C%AF%E5%88%86%E5%8C%BA"><span class="toc-text">技术分区</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A2%86%E5%9F%9F%E5%88%86%E5%8C%BA"><span class="toc-text">领域分区</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%84%E4%BB%B6%E8%AF%86%E5%88%AB"><span class="toc-text">组件识别</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E9%99%B7%E9%98%B1"><span class="toc-text">实体陷阱</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#actoractions"><span class="toc-text">Actor&#x2F;Actions</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#event-storming"><span class="toc-text">Event storming</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#workflow"><span class="toc-text">Workflow</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E5%B8%88%E8%81%8C%E8%B4%A3"><span class="toc-text">架构师职责</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

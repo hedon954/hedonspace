@@ -71,7 +71,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a><a class="item title" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a><a class="item title" href="/2025/11/16/go/go-slice/"><span class="title">Go 底层原理丨slice 从第一性原理到实现细节</span></a><a class="item title" href="/2025/11/16/go/go-map-no-swiss/"><span class="title">Go 底层原理丨map（非 swiss 版本）</span></a><a class="item title" href="/2025/11/14/first-job-review-01-tech-01-manager-complexity/"><span class="title">三年工作复盘丨技术篇：软件工程是什么丨（一）管理复杂度</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a><a class="item title" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a><a class="item title" href="/2025/11/16/go/go-slice/"><span class="title">Go 底层原理丨slice 从第一性原理到实现细节</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -95,52 +95,59 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>本系列文章通过逐章回答<a target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of Software Architecture》</a>（下文简称 FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第九章</u>内容。</p>
+  </div><article class="md-text content"><p>本系列文章通过逐章回答<a
+target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of
+Software Architecture》</a>（下文简称
+FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第九章</u>内容。</p>
 <p>本章的课后题是：</p>
-<ol>
-<li>
-<p>List the eight fallacies of distributed computing.</p>
-<p>列举分布式计算中的 8 个谬论。</p>
-</li>
-<li>
-<p>Name three challenges that distributed architectures have that monolithic architectures don’t.</p>
-<p>说出 3 个单体架构没有而分布式架构有的挑战。</p>
-</li>
-<li>
-<p>What is stamp coupling?</p>
-<p>什么是邮票耦合？</p>
-</li>
-<li>
-<p>What are some ways of addressing stamp coupling?</p>
-<p>邮票耦合有哪些解决方案？</p>
-</li>
+<ol type="1">
+<li><p>List the eight fallacies of distributed computing.</p>
+<p>列举分布式计算中的 8 个谬论。</p></li>
+<li><p>Name three challenges that distributed architectures have that
+monolithic architectures don’t.</p>
+<p>说出 3 个单体架构没有而分布式架构有的挑战。</p></li>
+<li><p>What is stamp coupling?</p>
+<p>什么是邮票耦合？</p></li>
+<li><p>What are some ways of addressing stamp coupling?</p>
+<p>邮票耦合有哪些解决方案？</p></li>
 </ol>
-<hr>
+<hr />
 <h2 id="分布式八谬论">分布式八谬论</h2>
 <p><strong>1. 网络是可靠的 (The network is reliable)。</strong></p>
 <ul>
-<li><strong>谬论</strong>：开发者常常假设网络连接永远不会中断，数据总能成功从 A 点传输到 B 点。</li>
-<li><strong>现实</strong>：网络硬件可能发生故障、交换机可能崩溃、路由器可能过载、网线可能被拔掉。任何网络调用都有可能失败，数据包可能会丢失、损坏或重复。因此，必须在设计中考虑网络中断的可能性，并加入重试机制 (retry mechanisms)、超时 (timeouts)、熔断器 (circuit breakers) 等容错策略。</li>
+<li><strong>谬论</strong>：开发者常常假设网络连接永远不会中断，数据总能成功从
+A 点传输到 B 点。</li>
+<li><strong>现实</strong>：网络硬件可能发生故障、交换机可能崩溃、路由器可能过载、网线可能被拔掉。任何网络调用都有可能失败，数据包可能会丢失、损坏或重复。因此，必须在设计中考虑网络中断的可能性，并加入重试机制
+(retry mechanisms)、超时 (timeouts)、熔断器 (circuit breakers)
+等容错策略。</li>
 </ul>
 <p><strong>2. 延迟为零 (Latency is zero)。</strong></p>
 <ul>
 <li><strong>谬论</strong>：开发者假设通过网络发送请求和接收响应是瞬时完成的，就像本地方法调用一样。</li>
-<li><strong>现实</strong>：数据在网络上传输需要时间，这个时间被称为延迟 (latency)。即使在光速的限制下，物理距离也会导致不可避免的延迟。网络拥堵、数据包的路由跳转等因素都会增加延迟。在设计分布式系统时，必须意识到延迟的存在，并尽可能地减少网络往返次数，例如通过批处理请求或使用异步通信模式。</li>
+<li><strong>现实</strong>：数据在网络上传输需要时间，这个时间被称为延迟
+(latency)。即使在光速的限制下，物理距离也会导致不可避免的延迟。网络拥堵、数据包的路由跳转等因素都会增加延迟。在设计分布式系统时，必须意识到延迟的存在，并尽可能地减少网络往返次数，例如通过批处理请求或使用异步通信模式。</li>
 </ul>
 <p><strong>3. 带宽是无限的 (Bandwidth is infinite)。</strong></p>
 <ul>
 <li><strong>谬论</strong>：开发者认为网络的传输能力是无限的，可以随心所欲地发送大量数据。</li>
-<li><strong>现实</strong>：每个网络连接都有其最大吞吐量，即带宽 (bandwidth) 限制。过度发送数据会导致网络拥塞，增加延迟，甚至导致数据包丢失。架构师需要关注数据传输的效率，对数据进行压缩，避免在网络上传输不必要的“重量级”数据对象。</li>
+<li><strong>现实</strong>：每个网络连接都有其最大吞吐量，即带宽
+(bandwidth)
+限制。过度发送数据会导致网络拥塞，增加延迟，甚至导致数据包丢失。架构师需要关注数据传输的效率，对数据进行压缩，避免在网络上传输不必要的“重量级”数据对象。</li>
 </ul>
 <p><strong>4. 网络是安全的 (The network is secure)。</strong></p>
 <ul>
 <li><strong>谬论</strong>：开发者假设内部网络是安全的，传输的数据不会被窃听或篡改。</li>
-<li><strong>现实</strong>：任何网络连接都有可能受到攻击。数据在传输过程中可能被中间人 (man-in-the-middle) 截获、窃听或修改。因此，必须采取加密措施（如 TLS/SSL）来保护传输中的数据，并使用认证 (authentication) 和授权 (authorization) 机制来确保只有合法的服务和用户才能访问资源。</li>
+<li><strong>现实</strong>：任何网络连接都有可能受到攻击。数据在传输过程中可能被中间人
+(man-in-the-middle) 截获、窃听或修改。因此，必须采取加密措施（如
+TLS/SSL）来保护传输中的数据，并使用认证 (authentication) 和授权
+(authorization) 机制来确保只有合法的服务和用户才能访问资源。</li>
 </ul>
-<p><strong>5. 拓扑结构不会改变 (Topology doesn’t change)。</strong></p>
+<p><strong>5. 拓扑结构不会改变 (Topology doesn't change)。</strong></p>
 <ul>
 <li><strong>谬论</strong>：开发者假设网络的布局、服务器的地址和服务的部署位置是固定不变的。</li>
-<li><strong>现实</strong>：在现代的云原生和微服务环境中，网络拓扑是动态变化的。服务器可能会宕机，新的服务实例可能会被启动，服务可能会被迁移到不同的物理位置或 IP 地址。依赖硬编码的 IP 地址和端口是极其脆弱的。应该使用服务发现 (service discovery) 机制来动态地查找和连接服务。</li>
+<li><strong>现实</strong>：在现代的云原生和微服务环境中，网络拓扑是动态变化的。服务器可能会宕机，新的服务实例可能会被启动，服务可能会被迁移到不同的物理位置或
+IP 地址。依赖硬编码的 IP 地址和端口是极其脆弱的。应该使用服务发现
+(service discovery) 机制来动态地查找和连接服务。</li>
 </ul>
 <p><strong>6. 只有一个管理员 (There is one administrator)。</strong></p>
 <ul>
@@ -150,70 +157,102 @@
 <p><strong>7. 传输成本为零 (Transport cost is zero)。</strong></p>
 <ul>
 <li><strong>谬论</strong>：开发者认为进行网络通信本身是不需要成本的。</li>
-<li><strong>现实</strong>：这里所说的“成本”不仅指金钱。它包括了运行网络硬件所需的 CPU 周期、内存，以及将数据序列化 (serialization) 和反序列化 (deserialization) 所需的计算资源。在云环境中，网络流量本身通常也是直接收费的。因此，在设计 API 和数据格式时，需要考虑其对性能和运营成本的综合影响。</li>
+<li><strong>现实</strong>：这里所说的“成本”不仅指金钱。它包括了运行网络硬件所需的
+CPU 周期、内存，以及将数据序列化 (serialization) 和反序列化
+(deserialization)
+所需的计算资源。在云环境中，网络流量本身通常也是直接收费的。因此，在设计
+API 和数据格式时，需要考虑其对性能和运营成本的综合影响。</li>
 </ul>
 <p><strong>8. 网络是同质的 (The network is homogeneous)。</strong></p>
 <ul>
 <li><strong>谬论</strong>：开发者假设网络中的所有设备都来自同一个供应商，使用相同的协议栈，并且性能表现一致。</li>
-<li><strong>现实</strong>：一个复杂的网络通常由来自不同供应商的硬件（路由器、交换机、防火墙）和运行着不同操作系统（Linux, Windows）的服务器组成。这些异构组件的组合可能导致意想不到的兼容性问题和性能瓶颈。在设计系统时，应依赖于广泛支持的标准化协议，并对系统的端到端性能进行充分测试。</li>
+<li><strong>现实</strong>：一个复杂的网络通常由来自不同供应商的硬件（路由器、交换机、防火墙）和运行着不同操作系统（Linux,
+Windows）的服务器组成。这些异构组件的组合可能导致意想不到的兼容性问题和性能瓶颈。在设计系统时，应依赖于广泛支持的标准化协议，并对系统的端到端性能进行充分测试。</li>
 </ul>
 <h2 id="分布式系统挑战">分布式系统挑战</h2>
-<p><strong>1. 服务间通信的复杂性 (Inter-service Communication Complexity)</strong></p>
+<p><strong>1. 服务间通信的复杂性 (Inter-service Communication
+Complexity)</strong></p>
 <ul>
-<li><strong>在单体架构中</strong>：不同模块或组件之间的调用是进程内的函数调用 (in-process function calls)。这种调用非常快速、可靠，并且事务性可以通过语言层面的机制轻松保证。</li>
-<li><strong>在分布式架构中</strong>：服务间的调用变成了跨网络的远程过程调用 (RPC)。这立刻引入了前述“分布式计算的 8 个谬论”中的所有问题：网络可能失败，存在延迟，带宽有限，需要考虑安全等。开发者必须处理部分失败 (partial failure) 的情况——即一个服务可用，而它依赖的另一个服务却不可用。这就需要引入重试、超时、熔断、服务发现等复杂的模式来保证系统的韧性 (resilience)。</li>
+<li><strong>在单体架构中</strong>：不同模块或组件之间的调用是进程内的函数调用
+(in-process function
+calls)。这种调用非常快速、可靠，并且事务性可以通过语言层面的机制轻松保证。</li>
+<li><strong>在分布式架构中</strong>：服务间的调用变成了跨网络的远程过程调用
+(RPC)。这立刻引入了前述“分布式计算的 8
+个谬论”中的所有问题：网络可能失败，存在延迟，带宽有限，需要考虑安全等。开发者必须处理部分失败
+(partial failure)
+的情况——即一个服务可用，而它依赖的另一个服务却不可用。这就需要引入重试、超时、熔断、服务发现等复杂的模式来保证系统的韧性
+(resilience)。</li>
 </ul>
-<p><strong>2. 分布式事务与数据一致性 (Distributed Transactions and Data Consistency)</strong></p>
+<p><strong>2. 分布式事务与数据一致性 (Distributed Transactions and Data
+Consistency)</strong></p>
 <ul>
-<li><strong>在单体架构中</strong>：通常使用单一的数据库，可以依赖数据库本身提供的 ACID（原子性、一致性、隔离性、持久性）事务来保证跨多个数据表的强一致性。操作要么全部成功，要么全部失败，状态不会处于中间状态。</li>
-<li><strong>在分布式架构中</strong>：每个服务通常拥有自己独立的数据库，以实现松耦合和独立部署。当一个业务流程需要跨越多个服务时，就无法使用传统的单数据库事务。这就带来了分布式事务的挑战。实现强一致性的两阶段提交 (Two-Phase Commit, 2PC) 等协议通常非常复杂且性能低下。因此，架构师往往不得不放弃强一致性，转而寻求最终一致性 (eventual consistency)，并采用 Saga 模式、事件溯源 (Event Sourcing) 等更复杂的模式来管理跨服务的数据一致性，这极大地增加了开发的难度和心智负担。</li>
+<li><strong>在单体架构中</strong>：通常使用单一的数据库，可以依赖数据库本身提供的
+ACID（原子性、一致性、隔离性、持久性）事务来保证跨多个数据表的强一致性。操作要么全部成功，要么全部失败，状态不会处于中间状态。</li>
+<li><strong>在分布式架构中</strong>：每个服务通常拥有自己独立的数据库，以实现松耦合和独立部署。当一个业务流程需要跨越多个服务时，就无法使用传统的单数据库事务。这就带来了分布式事务的挑战。实现强一致性的两阶段提交
+(Two-Phase Commit, 2PC)
+等协议通常非常复杂且性能低下。因此，架构师往往不得不放弃强一致性，转而寻求最终一致性
+(eventual consistency)，并采用 Saga 模式、事件溯源 (Event Sourcing)
+等更复杂的模式来管理跨服务的数据一致性，这极大地增加了开发的难度和心智负担。</li>
 </ul>
-<p><strong>3. 运维和监控的复杂性 (Operational and Observability Complexity)</strong></p>
+<p><strong>3. 运维和监控的复杂性 (Operational and Observability
+Complexity)</strong></p>
 <ul>
-<li>
-<p><strong>在单体架构中</strong>：整个应用被部署为一个单元。日志集中在一个地方，调试相对直接（例如，通过附加调试器），监控也相对简单，只需关注单个进程和服务器的 CPU、内存等指标。</p>
-</li>
-<li>
-<p><strong>在分布式架构中</strong>：一个请求可能会流经数十个甚至上百个服务。要诊断一个问题，你需要追踪这个请求在整个系统中的调用链。这就需要建立复杂的“可观测性” (Observability) 体系，包括：</p>
+<li><p><strong>在单体架构中</strong>：整个应用被部署为一个单元。日志集中在一个地方，调试相对直接（例如，通过附加调试器），监控也相对简单，只需关注单个进程和服务器的
+CPU、内存等指标。</p></li>
+<li><p><strong>在分布式架构中</strong>：一个请求可能会流经数十个甚至上百个服务。要诊断一个问题，你需要追踪这个请求在整个系统中的调用链。这就需要建立复杂的“可观测性”
+(Observability) 体系，包括：</p>
 <ul>
-<li>
-<p><strong>集中式日志 (Centralized Logging)</strong>：将所有服务的日志聚合到一起进行分析。</p>
-</li>
-<li>
-<p><strong>分布式追踪 (Distributed Tracing)</strong>：为每个请求分配一个唯一的 ID，并在整个调用链中传递，以便追踪其路径和耗时。</p>
-</li>
-<li>
-<p><strong>聚合指标 (Metrics Aggregation)</strong>：从各个服务收集关键性能指标（如请求率、错误率、延迟）并进行聚合展示。</p>
-<p>部署、扩缩容、故障排查的难度都呈指数级增长。</p>
-</li>
-</ul>
-</li>
+<li><p><strong>集中式日志 (Centralized
+Logging)</strong>：将所有服务的日志聚合到一起进行分析。</p></li>
+<li><p><strong>分布式追踪 (Distributed
+Tracing)</strong>：为每个请求分配一个唯一的
+ID，并在整个调用链中传递，以便追踪其路径和耗时。</p></li>
+<li><p><strong>聚合指标 (Metrics
+Aggregation)</strong>：从各个服务收集关键性能指标（如请求率、错误率、延迟）并进行聚合展示。</p>
+<p>部署、扩缩容、故障排查的难度都呈指数级增长。</p></li>
+</ul></li>
 </ul>
 <h2 id="邮票耦合">邮票耦合</h2>
-<p><strong>邮票耦合 (Stamp Coupling)</strong> 是一种特定类型的<strong>数据耦合 (Data Coupling)</strong>。当一个模块（或服务）向另一个模块传递一个复杂的数据结构（如一个对象或记录），但接收方模块实际上只需要该数据结构中的一小部分字段时，就发生了邮票耦合。</p>
+<p><strong>邮票耦合 (Stamp Coupling)</strong>
+是一种特定类型的<strong>数据耦合 (Data
+Coupling)</strong>。当一个模块（或服务）向另一个模块传递一个复杂的数据结构（如一个对象或记录），但接收方模块实际上只需要该数据结构中的一小部分字段时，就发生了邮票耦合。</p>
 <p>这个名字的比喻来源于：</p>
 <blockquote>
-<p>你只是想寄一封信，却把整个邮局（包含了所有信件和包裹）都递给了邮递员。接收方不得不从这个庞大的结构中&quot;筛选&quot;出自己需要的信息。</p>
+<p>你只是想寄一封信，却把整个邮局（包含了所有信件和包裹）都递给了邮递员。接收方不得不从这个庞大的结构中"筛选"出自己需要的信息。</p>
 </blockquote>
 <p>核心特征：</p>
 <ul>
 <li><strong>传递了超量信息</strong>：调用者传递了比被调用者实际需要的多得多的数据。</li>
 <li><strong>不必要的依赖</strong>：被调用者被迫依赖于一个它并不完全需要的数据结构的具体定义。</li>
 </ul>
-<p>解决邮票耦合的核心思想是将数据契约 (data contract) 的关注点从&quot;<strong>提供方有什么</strong>&quot;转变为&quot;<strong>消费方要什么</strong>&quot;。</p>
+<p>解决邮票耦合的核心思想是将数据契约 (data contract)
+的关注点从"<strong>提供方有什么</strong>"转变为"<strong>消费方要什么</strong>"。</p>
 <ul>
-<li><strong>创建私有的 RESTful API 端点</strong>：为特定的内部消费者（服务）创建专门的、不对外公开的 API 端点 (endpoint)。这些端点被设计为只返回该消费者完成其特定任务所必需的数据子集。</li>
-<li><strong>在契约中使用字段选择器</strong>：允许 API 的调用方通过查询参数 (query parameter) 来动态指定响应中应包含哪些字段。</li>
-<li><strong>使用 GraphQL 来解耦契约</strong>：GraphQL 从根本上就是为了解决 REST API 中常见的数据过度获取 (over-fetching) 和数据获取不足 (under-fetching) 问题而设计的，而过度获取正是邮票耦合的表现形式。</li>
-<li><strong>使用价值驱动契约与消费者驱动契约</strong>：消费者驱动契约 (CDC) 是一种模式，其中 API 的消费者编写一份&quot;契约&quot;，明确声明它对提供者的期望（需要哪些字段、什么样的数据格式）。这份契约被用作自动化测试的一部分。</li>
-<li><strong>使用内部消息端点</strong>：在消息系统中，不发布一个包含完整实体状态的&quot;大而全&quot;的事件，而是发布更细粒度、更具业务意图的事件。</li>
+<li><strong>创建私有的 RESTful API
+端点</strong>：为特定的内部消费者（服务）创建专门的、不对外公开的 API
+端点
+(endpoint)。这些端点被设计为只返回该消费者完成其特定任务所必需的数据子集。</li>
+<li><strong>在契约中使用字段选择器</strong>：允许 API
+的调用方通过查询参数 (query parameter)
+来动态指定响应中应包含哪些字段。</li>
+<li><strong>使用 GraphQL 来解耦契约</strong>：GraphQL
+从根本上就是为了解决 REST API 中常见的数据过度获取 (over-fetching)
+和数据获取不足 (under-fetching)
+问题而设计的，而过度获取正是邮票耦合的表现形式。</li>
+<li><strong>使用价值驱动契约与消费者驱动契约</strong>：消费者驱动契约
+(CDC) 是一种模式，其中 API
+的消费者编写一份"契约"，明确声明它对提供者的期望（需要哪些字段、什么样的数据格式）。这份契约被用作自动化测试的一部分。</li>
+<li><strong>使用内部消息端点</strong>：在消息系统中，不发布一个包含完整实体状态的"大而全"的事件，而是发布更细粒度、更具业务意图的事件。</li>
 </ul>
-<p>总而言之，这五种方案都体现了从 Push 模型向 Pull 模型的转变，是解决分布式系统中耦合问题的关键实践。</p>
+<p>总而言之，这五种方案都体现了从 Push 模型向 Pull
+模型的转变，是解决分布式系统中耦合问题的关键实践。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -253,8 +292,11 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
