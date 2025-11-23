@@ -72,7 +72,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/23/linux-io-epoll/"><span class="title">从第一性原理理解 epoll</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/23/linux-io-epoll/"><span class="title">从第一性原理理解 epoll</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -96,9 +96,12 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>在分布式追踪系统中，采样策略直接影响着系统的性能和可观测性。OpenTelemetry 作为当前最流行的可观测性框架，其采样机制设计有着深刻的考量。本文将深入探讨 OpenTelemetry 的采样机制，特别是为什么它在 SDK 层面不支持尾采样。</p>
+  </div><article class="md-text content"><p>在分布式追踪系统中，采样策略直接影响着系统的性能和可观测性。OpenTelemetry
+作为当前最流行的可观测性框架，其采样机制设计有着深刻的考量。本文将深入探讨
+OpenTelemetry 的采样机制，特别是为什么它在 SDK 层面不支持尾采样。</p>
 <h2 id="前置采样-vs-尾采样">前置采样 vs 尾采样</h2>
-<p>在讨论 OpenTelemetry 的采样机制前，我们需要理解两种主要的采样策略：</p>
+<p>在讨论 OpenTelemetry
+的采样机制前，我们需要理解两种主要的采样策略：</p>
 <p><strong>前置采样（Head-based Sampling）</strong>：</p>
 <ul>
 <li>在链路开始时就决定是否采样</li>
@@ -111,11 +114,14 @@
 <li>可以基于完整链路信息（如总耗时、是否有错误）做决策</li>
 <li>需要临时缓存所有链路数据</li>
 </ul>
-<h2 id="OpenTelemetry-的采样实现">OpenTelemetry 的采样实现</h2>
-<p>通过分析 <a target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-go/blob/v1.35.0/sdk/trace/tracer.go#L65">OpenTelemetry Go SDK 的源码</a>，我们可以清晰地看到它采用的是前置采样策略。关键代码如下：</p>
+<h2 id="opentelemetry-的采样实现">OpenTelemetry 的采样实现</h2>
+<p>通过分析 <a
+target="_blank" rel="noopener" href="https://github.com/open-telemetry/opentelemetry-go/blob/v1.35.0/sdk/trace/tracer.go#L65">OpenTelemetry
+Go SDK
+的源码</a>，我们可以清晰地看到它采用的是前置采样策略。关键代码如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(tr *tracer)</span></span> newSpan(ctx context.Context, name <span class="type">string</span>, config *trace.SpanConfig) trace.Span &#123;</span><br><span class="line">    <span class="comment">// ... 前面的代码 ...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 执行采样决策</span></span><br><span class="line">    samplingResult := tr.provider.sampler.ShouldSample(SamplingParameters&#123;</span><br><span class="line">        ParentContext: ctx,</span><br><span class="line">        TraceID:       tid,</span><br><span class="line">        Name:          name,</span><br><span class="line">        Kind:          config.SpanKind(),</span><br><span class="line">        Attributes:    config.Attributes(),</span><br><span class="line">        Links:         config.Links(),</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 设置采样标志</span></span><br><span class="line">    <span class="keyword">if</span> isSampled(samplingResult) &#123;</span><br><span class="line">        scc.TraceFlags = psc.TraceFlags() | trace.FlagsSampled</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        scc.TraceFlags = psc.TraceFlags() &amp;^ trace.FlagsSampled</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ... 后面的代码 ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>这段代码揭示了几个关键点：</p>
-<ol>
+<ol type="1">
 <li>采样决策在 span 创建时就已经做出</li>
 <li>采样标志通过位操作设置在 TraceFlags 中</li>
 <li>这个标志会随着 SpanContext 传播到整个分布式系统</li>
@@ -126,111 +132,97 @@
 <p>这段代码使用位操作来设置或清除采样标志：</p>
 <ul>
 <li><code>|</code> 操作用于设置采样标志，保留其他标志位不变</li>
-<li><code>&amp;^</code> 操作用于清除采样标志，同样保留其他标志位不变</li>
+<li><code>&amp;^</code>
+操作用于清除采样标志，同样保留其他标志位不变</li>
 </ul>
 <p>这确保了采样决策能够一致地传播到整个分布式链路中。</p>
-<h2 id="为什么-OpenTelemetry-不支持尾采样？">为什么 OpenTelemetry 不支持尾采样？</h2>
-<p>最重要的原因是：<font color="red">在 SDK 中找不到尾巴！因为不知道链路什么时候结束！</font></p>
-<p>在分布式系统中，一条链路可能跨越多个服务，所以你在某一个服务中，是不知道链路是否结束的，而 OpenTelemetry 也不是一次性上报一整条链路，而是每个 <code>span</code> 独立上报，最后再拼接到一起。</p>
-<h3 id="OpenTelemetry-上报原理">OpenTelemetry 上报原理</h3>
-<ol>
-<li>
-<p>独立上报</p>
+<h2 id="为什么-opentelemetry-不支持尾采样">为什么 OpenTelemetry
+不支持尾采样？</h2>
+<p>最重要的原因是：<font color="red">在 SDK
+中找不到尾巴！因为不知道链路什么时候结束！</font></p>
+<p>在分布式系统中，一条链路可能跨越多个服务，所以你在某一个服务中，是不知道链路是否结束的，而
+OpenTelemetry 也不是一次性上报一整条链路，而是每个 <code>span</code>
+独立上报，最后再拼接到一起。</p>
+<h3 id="opentelemetry-上报原理">OpenTelemetry 上报原理</h3>
+<ol type="1">
+<li><p>独立上报</p>
 <ul>
-<li>
-<p>每个 <code>span</code> 在结束时（调用 <code>span.End()</code>）会被传递给 <code>SpanProcessor</code></p>
-</li>
-<li>
-<p><code>SpanProcessor</code> 决定如何处理这个 <code>span</code>（立即导出或批量导出）</p>
-</li>
-<li>
-<p>导出是独立的，不会等待整个 <code>trace</code> 完成</p>
-</li>
-</ul>
-</li>
-<li>
-<p>批处理机制</p>
+<li><p>每个 <code>span</code> 在结束时（调用
+<code>span.End()</code>）会被传递给 <code>SpanProcessor</code></p></li>
+<li><p><code>SpanProcessor</code> 决定如何处理这个
+<code>span</code>（立即导出或批量导出）</p></li>
+<li><p>导出是独立的，不会等待整个 <code>trace</code> 完成</p></li>
+</ul></li>
+<li><p>批处理机制</p>
 <ul>
-<li>
-<p>默认使用 <code>BatchSpanProcessor</code>，它会收集一定数量的 <code>spans</code> 或等待一定时间然后批量导出</p>
-</li>
-<li>
-<p>但这个批处理与 <code>trace</code> 完整性无关，只是为了效率</p>
-</li>
-</ul>
-</li>
+<li><p>默认使用 <code>BatchSpanProcessor</code>，它会收集一定数量的
+<code>spans</code> 或等待一定时间然后批量导出</p></li>
+<li><p>但这个批处理与 <code>trace</code>
+完整性无关，只是为了效率</p></li>
+</ul></li>
 </ol>
-<h3 id="Collector-如何实现尾采样">Collector 如何实现尾采样</h3>
+<h3 id="collector-如何实现尾采样">Collector 如何实现尾采样</h3>
 <p>Collector 通过以下方式解决这些问题：</p>
-<ol>
-<li>
-<p>设置等待时间窗口</p>
+<ol type="1">
+<li><p>设置等待时间窗口</p>
 <ul>
-<li>
-<p>为每个 trace 设置一个等待期（如 10 秒）</p>
-</li>
-<li>
-<p>在此期间收集该 trace 的所有 spans</p>
-</li>
-<li>
-<p><strong>超过等待期后，基于已收集的 spans 做决策</strong></p>
-</li>
-</ul>
-</li>
-<li>
-<p>集中式收集</p>
+<li><p>为每个 trace 设置一个等待期（如 10 秒）</p></li>
+<li><p>在此期间收集该 trace 的所有 spans</p></li>
+<li><p><strong>超过等待期后，基于已收集的 spans 做决策</strong></p></li>
+</ul></li>
+<li><p>集中式收集</p>
 <ul>
-<li>
-<p>所有服务的 spans 都发送到 Collector</p>
-</li>
-<li>
-<p>Collector 有更全面的视图来关联 spans</p>
-</li>
-</ul>
-</li>
-<li>
-<p>专门的资源分配：Collector 作为独立组件，有专门的资源处理这种复杂逻辑，不会影响应用性能。</p>
-</li>
+<li><p>所有服务的 spans 都发送到 Collector</p></li>
+<li><p>Collector 有更全面的视图来关联 spans</p></li>
+</ul></li>
+<li><p>专门的资源分配：Collector
+作为独立组件，有专门的资源处理这种复杂逻辑，不会影响应用性能。</p></li>
 </ol>
-<h2 id="如何在-OpenTelemetry-生态中实现尾采样？">如何在 OpenTelemetry 生态中实现尾采样？</h2>
-<p>虽然 SDK 不直接支持尾采样，但 OpenTelemetry 生态提供了其他方式实现类似功能：</p>
-<h3 id="1-使用-OpenTelemetry-Collector">1. 使用 OpenTelemetry Collector</h3>
-<p>Collector 提供了 Tail Sampling Processor，可以在数据聚合层实现尾采样：</p>
+<h2 id="如何在-opentelemetry-生态中实现尾采样">如何在 OpenTelemetry
+生态中实现尾采样？</h2>
+<p>虽然 SDK 不直接支持尾采样，但 OpenTelemetry
+生态提供了其他方式实现类似功能：</p>
+<h3 id="使用-opentelemetry-collector">1. 使用 OpenTelemetry
+Collector</h3>
+<p>Collector 提供了 Tail Sampling
+Processor，可以在数据聚合层实现尾采样：</p>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">processors:</span></span><br><span class="line">  <span class="attr">tail_sampling:</span></span><br><span class="line">    <span class="attr">decision_wait:</span> <span class="string">10s</span></span><br><span class="line">    <span class="attr">num_traces:</span> <span class="number">100</span></span><br><span class="line">    <span class="attr">expected_new_traces_per_sec:</span> <span class="number">10</span></span><br><span class="line">    <span class="attr">policies:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">error-policy</span></span><br><span class="line">        <span class="attr">type:</span> <span class="string">status_code</span></span><br><span class="line">        <span class="attr">status_code:</span> <span class="string">ERROR</span></span><br></pre></td></tr></table></figure>
-<h3 id="2-结合前置采样和错误捕获">2. 结合前置采样和错误捕获</h3>
+<h3 id="结合前置采样和错误捕获">2. 结合前置采样和错误捕获</h3>
 <p>可以实现一个智能的前置采样器，对特定场景（如包含错误属性）强制采样：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> SmartSampler <span class="keyword">struct</span> &#123;</span><br><span class="line">    baseSamplingRate <span class="type">float64</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *SmartSampler)</span></span> ShouldSample(p trace.SamplingParameters) trace.SamplingResult &#123;</span><br><span class="line">    <span class="comment">// 错误请求必采样</span></span><br><span class="line">    <span class="keyword">for</span> _, attr := <span class="keyword">range</span> p.Attributes &#123;</span><br><span class="line">        <span class="keyword">if</span> attr.Key == <span class="string">&quot;error&quot;</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> trace.SamplingResult&#123;Decision: trace.RecordAndSample&#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 其他请求使用基础采样率</span></span><br><span class="line">    <span class="keyword">if</span> <span class="type">float64</span>(p.TraceID[<span class="number">0</span>])/<span class="number">255.0</span> &lt; s.baseSamplingRate &#123;</span><br><span class="line">        <span class="keyword">return</span> trace.SamplingResult&#123;Decision: trace.RecordAndSample&#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> trace.SamplingResult&#123;Decision: trace.Drop&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="3-使用专门的后端系统">3. 使用专门的后端系统</h3>
+<h3 id="使用专门的后端系统">3. 使用专门的后端系统</h3>
 <p>一些专门的可观测性后端系统提供了尾采样功能：</p>
 <ul>
-<li>
-<p>Jaeger 的 Adaptive Sampling</p>
-</li>
-<li>
-<p>SkyWalking 的 Trace Sampling</p>
-</li>
-<li>
-<p>Grafana Tempo 的 Trace Sampling</p>
-</li>
+<li><p>Jaeger 的 Adaptive Sampling</p></li>
+<li><p>SkyWalking 的 Trace Sampling</p></li>
+<li><p>Grafana Tempo 的 Trace Sampling</p></li>
 </ul>
 <h2 id="结论">结论</h2>
-<p>OpenTelemetry SDK 采用前置采样而非尾采样，是基于分布式系统一致性、性能优化和架构分层等多方面考虑的结果。虽然这意味着无法基于完整链路信息做采样决策，但 OpenTelemetry 生态提供了多种方式来弥补这一限制。</p>
+<p>OpenTelemetry SDK
+采用前置采样而非尾采样，是基于分布式系统一致性、性能优化和架构分层等多方面考虑的结果。虽然这意味着无法基于完整链路信息做采样决策，但
+OpenTelemetry 生态提供了多种方式来弥补这一限制。</p>
 <p>在实际应用中，我们可以：</p>
-<ol>
+<ol type="1">
 <li>在 SDK 层使用智能前置采样策略，确保关键链路被采样</li>
 <li>在 Collector 层实现尾采样，进一步筛选有价值的链路</li>
 <li>结合使用多种采样策略，平衡性能和可观测性</li>
 </ol>
-<p>通过这种分层设计，OpenTelemetry 既保证了高效的数据收集，又为高级采样策略提供了可能性，满足了不同场景的需求。</p>
+<p>通过这种分层设计，OpenTelemetry
+既保证了高效的数据收集，又为高级采样策略提供了可能性，满足了不同场景的需求。</p>
 <div class="tag-plugin quot"><h2 class="content" id="实战案例" type="icon"><img class="icon prefix lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://bu.dusays.com/2022/10/24/63567d3e07da3.png" /><span class="text">实战案例</span><span class="empty"></span></h2></div>
-<p>笔者实现一个 Go 语言的开源项目 <code>goapm</code>，对多个 Go 语言中常用的组件进行了 trace、log 和 metrics 的集成封装，用于快速在 Go 语言项目中实现可观测性，同时还提供了 <code>goapm-example</code> 实战案例，可供参考。</p>
+<p>笔者实现一个 Go 语言的开源项目 <code>goapm</code>，对多个 Go
+语言中常用的组件进行了 trace、log 和 metrics 的集成封装，用于快速在 Go
+语言项目中实现可观测性，同时还提供了 <code>goapm-example</code>
+实战案例，可供参考。</p>
 <div class="tag-plugin link dis-select"><a class="link-card plain" title="" href="https://github.com/hedon954/goapm" target="_blank" rel="external nofollow noopener noreferrer" cardlink api="https://site-info-api-hedon.vercel.app/api/v1?url=https://github.com/hedon954/goapm" autofill="title,icon"><div class="left"><span class="title">https://github.com/hedon954/goapm</span><span class="cap link footnote">https://github.com/hedon954/goapm</span></div><div class="right"><div class="lazy img" data-bg="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/link/8f277b4ee0ecd.svg"></div></div></a></div>
 <div class="tag-plugin link dis-select"><a class="link-card plain" title="" href="https://github.com/hedon954/goapm-example" target="_blank" rel="external nofollow noopener noreferrer" cardlink api="https://site-info-api-hedon.vercel.app/api/v1?url=https://github.com/hedon954/goapm-example" autofill="title,icon"><div class="left"><span class="title">https://github.com/hedon954/goapm-example</span><span class="cap link footnote">https://github.com/hedon954/goapm-example</span></div><div class="right"><div class="lazy img" data-bg="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/link/8f277b4ee0ecd.svg"></div></div></a></div>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -270,15 +262,21 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E7%BD%AE%E9%87%87%E6%A0%B7-vs-%E5%B0%BE%E9%87%87%E6%A0%B7"><span class="toc-text">前置采样 vs 尾采样</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#OpenTelemetry-%E7%9A%84%E9%87%87%E6%A0%B7%E5%AE%9E%E7%8E%B0"><span class="toc-text">OpenTelemetry 的采样实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%87%E6%A0%B7%E6%A0%87%E5%BF%97%E7%9A%84%E4%BC%A0%E6%92%AD%E6%9C%BA%E5%88%B6"><span class="toc-text">采样标志的传播机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88-OpenTelemetry-%E4%B8%8D%E6%94%AF%E6%8C%81%E5%B0%BE%E9%87%87%E6%A0%B7%EF%BC%9F"><span class="toc-text">为什么 OpenTelemetry 不支持尾采样？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#OpenTelemetry-%E4%B8%8A%E6%8A%A5%E5%8E%9F%E7%90%86"><span class="toc-text">OpenTelemetry 上报原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Collector-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%B0%BE%E9%87%87%E6%A0%B7"><span class="toc-text">Collector 如何实现尾采样</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E5%9C%A8-OpenTelemetry-%E7%94%9F%E6%80%81%E4%B8%AD%E5%AE%9E%E7%8E%B0%E5%B0%BE%E9%87%87%E6%A0%B7%EF%BC%9F"><span class="toc-text">如何在 OpenTelemetry 生态中实现尾采样？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E4%BD%BF%E7%94%A8-OpenTelemetry-Collector"><span class="toc-text">1. 使用 OpenTelemetry Collector</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%BB%93%E5%90%88%E5%89%8D%E7%BD%AE%E9%87%87%E6%A0%B7%E5%92%8C%E9%94%99%E8%AF%AF%E6%8D%95%E8%8E%B7"><span class="toc-text">2. 结合前置采样和错误捕获</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E4%BD%BF%E7%94%A8%E4%B8%93%E9%97%A8%E7%9A%84%E5%90%8E%E7%AB%AF%E7%B3%BB%E7%BB%9F"><span class="toc-text">3. 使用专门的后端系统</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA"><span class="toc-text">结论</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%E6%A1%88%E4%BE%8B"><span class="toc-text">实战案例</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E7%BD%AE%E9%87%87%E6%A0%B7-vs-%E5%B0%BE%E9%87%87%E6%A0%B7"><span class="toc-text">前置采样 vs 尾采样</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#opentelemetry-%E7%9A%84%E9%87%87%E6%A0%B7%E5%AE%9E%E7%8E%B0"><span class="toc-text">OpenTelemetry 的采样实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%87%E6%A0%B7%E6%A0%87%E5%BF%97%E7%9A%84%E4%BC%A0%E6%92%AD%E6%9C%BA%E5%88%B6"><span class="toc-text">采样标志的传播机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88-opentelemetry-%E4%B8%8D%E6%94%AF%E6%8C%81%E5%B0%BE%E9%87%87%E6%A0%B7"><span class="toc-text">为什么 OpenTelemetry
+不支持尾采样？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#opentelemetry-%E4%B8%8A%E6%8A%A5%E5%8E%9F%E7%90%86"><span class="toc-text">OpenTelemetry 上报原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#collector-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%B0%BE%E9%87%87%E6%A0%B7"><span class="toc-text">Collector 如何实现尾采样</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E5%9C%A8-opentelemetry-%E7%94%9F%E6%80%81%E4%B8%AD%E5%AE%9E%E7%8E%B0%E5%B0%BE%E9%87%87%E6%A0%B7"><span class="toc-text">如何在 OpenTelemetry
+生态中实现尾采样？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8-opentelemetry-collector"><span class="toc-text">1. 使用 OpenTelemetry
+Collector</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%93%E5%90%88%E5%89%8D%E7%BD%AE%E9%87%87%E6%A0%B7%E5%92%8C%E9%94%99%E8%AF%AF%E6%8D%95%E8%8E%B7"><span class="toc-text">2. 结合前置采样和错误捕获</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E4%B8%93%E9%97%A8%E7%9A%84%E5%90%8E%E7%AB%AF%E7%B3%BB%E7%BB%9F"><span class="toc-text">3. 使用专门的后端系统</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA"><span class="toc-text">结论</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%E6%A1%88%E4%BE%8B"><span class="toc-text">实战案例</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
