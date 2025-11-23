@@ -29,7 +29,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/e6c9d24egy1h5leaayjlcj20u010zn0e.jpg">
 <meta property="article:published_time" content="2025-11-23T04:00:00.000Z">
-<meta property="article:modified_time" content="2025-11-23T12:06:21.792Z">
+<meta property="article:modified_time" content="2025-11-23T12:14:12.333Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="epoll">
 <meta property="article:tag" content="网络编程">
@@ -73,7 +73,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/23/linux-io-epoll/"><span class="title">从第一性原理理解 epoll</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/23/linux-io-epoll/"><span class="title">从第一性原理理解 epoll</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -86,7 +86,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/Go/">Go</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-11-23T04:00:00.000Z">2025-11-23</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-11-23T12:06:21.792Z">2025-11-23</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-11-23T04:00:00.000Z">2025-11-23</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-11-23T12:14:12.333Z">2025-11-23</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -610,32 +610,8 @@ poll_runtime_pollServerInit</h3>
 <p>通过原子操作 &amp; 双重检查来执行一次
 <code>netpollinit()</code>，创建一个 epoll。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//go:linkname poll_runtime_pollServerInit internal/poll.runtime_pollServerInit</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">poll_runtime_pollServerInit</span><span class="params">()</span></span> &#123;</span><br><span class="line">	netpollGenericInit()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">netpollGenericInit</span><span class="params">()</span></span> &#123;</span><br><span class="line">  <span class="comment">// 类似于 双重检查 的单例模式</span></span><br><span class="line">  <span class="comment">// 保证只执行一次 netpollinit()</span></span><br><span class="line">	<span class="keyword">if</span> netpollInited.Load() == <span class="number">0</span> &#123;</span><br><span class="line">		lockInit(&amp;netpollInitLock, lockRankNetpollInit)</span><br><span class="line">		lockInit(&amp;pollcache.lock, lockRankPollCache)</span><br><span class="line">		lock(&amp;netpollInitLock)</span><br><span class="line">		<span class="keyword">if</span> netpollInited.Load() == <span class="number">0</span> &#123;</span><br><span class="line">			netpollinit() <span class="comment">// epoll_create() 创建一个多路复用器</span></span><br><span class="line">			netpollInited.Store(<span class="number">1</span>)</span><br><span class="line">		&#125;</span><br><span class="line">		unlock(&amp;netpollInitLock)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>[!TIP]</p>
-<p>补充：go:linkname</p>
-<blockquote>
-<p>The //go:linkname directive instructs the compiler to use
-“importpath.name” as the object file symbol name for the variable or
-function declared as “localname” in the source code. Because this
-directive can subvert the type system and package modularity, it is only
-enabled in files that have imported “unsafe”.</p>
-</blockquote>
-<p><code>//go:linkname</code>的目的是告诉编译器使用<code>importpath.name</code>来对本来不可导出的（localname）函数或者变量实现导出功能。由于这种方法是破坏了
-Go
-语言的模块化规则的，所以必须在导入了<code>"unsafe"</code>包的情况下使用。</p>
-<p>即：</p>
-<blockquote>
-<p>由于 Go
-语法规则限制，小写字母开头的函数或者变量是本模块私有的，不可被包外的代码访问；但是如果必须要能被外部模块访问到，又要限制为私有方法呢？只能在编译器上做手脚，通过一个特殊的
-<strong>标记</strong> 来实现这种功能。</p>
-</blockquote>
-<p>具体到上面的例子：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//go:linkname poll_runtime_pollServerInit internal/poll.runtime_pollServerInit</span></span><br></pre></td></tr></table></figure>
-<ul>
-<li>表示调用 <code>internal/poll.runtime_pollServerInit</code>
-相当于调用当前的 <code>poll_runtime_pollServerInit</code>。</li>
-</ul>
-</blockquote>
+<div class="tag-plugin colorful note" color="green"><div class="title"><strong><p>补充：go:linkname</p>
+</strong></div><div class="body"><p>补充：go:linkname</p><blockquote><p>The //go:linkname directive instructs the compiler to use“importpath.name” as the object file symbol name for the variable orfunction declared as “localname” in the source code. Because thisdirective can subvert the type system and package modularity, it is onlyenabled in files that have imported “unsafe”.</p></blockquote><p><code>//go:linkname</code>的目的是告诉编译器使用<code>importpath.name</code>来对本来不可导出的（localname）函数或者变量实现导出功能。由于这种方法是破坏了Go语言的模块化规则的，所以必须在导入了<code>"unsafe"</code>包的情况下使用。</p><p>即：</p><blockquote><p>由于 Go语法规则限制，小写字母开头的函数或者变量是本模块私有的，不可被包外的代码访问；但是如果必须要能被外部模块访问到，又要限制为私有方法呢？只能在编译器上做手脚，通过一个特殊的<strong>标记</strong> 来实现这种功能。</p></blockquote><p>具体到上面的例子：</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//go:linkname poll_runtime_pollServerInit internal/poll.runtime_pollServerInit</span></span><br></pre></td></tr></table></figure><ul><li>表示调用 <code>internal/poll.runtime_pollServerInit</code>相当于调用当前的 <code>poll_runtime_pollServerInit</code>。</li></ul></div></div>
 <h3 id="新增监听-poll_runtime_pollopen">2.3.2 新增监听
 poll_runtime_pollOpen</h3>
 <ol type="1">

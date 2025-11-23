@@ -28,7 +28,7 @@
 <meta property="og:description" content="本文跳出传统 API 层面，从第一性原理剖析 epoll 的高并发优势，阐释其通过内核态持久化管理、异步事件驱动和红黑树&#x2F;链表机制，彻底解决 select&#x2F;poll 线性瓶颈的内核机制与原理。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-11-23T12:00:00.000Z">
-<meta property="article:modified_time" content="2025-11-23T12:04:51.624Z">
+<meta property="article:modified_time" content="2025-11-23T12:15:39.896Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="epoll">
 <meta property="article:tag" content="网络编程">
@@ -71,7 +71,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/23/linux-io-epoll/"><span class="title">从第一性原理理解 epoll</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/23/linux-io-epoll/"><span class="title">从第一性原理理解 epoll</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -84,7 +84,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-11-23T12:00:00.000Z">2025-11-23</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-11-23T12:04:51.624Z">2025-11-23</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-11-23T12:00:00.000Z">2025-11-23</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-11-23T12:15:39.896Z">2025-11-23</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -97,14 +97,8 @@
   </div>
   </div><article class="md-text content"><p>要从根本上理解 <code>epoll</code>，我们必须跳出 API
 的表象，深入到操作系统内核的数据结构和中断处理机制中。</p>
-<p>一句话概括 epoll 的第一性原理：</p>
-<blockquote>
-<p>[!IMPORTANT]</p>
-<p>它将 I/O 处理模式从 <strong>"同步轮询 (Synchronous Polling)"</strong>
-彻底转变为 <strong>"异步事件驱动 (Asynchronous
-Event-Driven)"</strong>，并将文件描述符（FD）集合的管理权从 "用户态"
-移交给了 "内核态" 以实现状态持久化。</p>
-</blockquote>
+<div class="tag-plugin colorful note" color="orange"><div class="title"><strong><p>一句话总结 epoll</p>
+</strong></div><div class="body"><p>它将 I/O 处理模式从 <strong>"同步轮询 (Synchronous Polling)"</strong>彻底转变为 <strong>"异步事件驱动 (AsynchronousEvent-Driven)"</strong>，并将文件描述符（FD）集合的管理权从 "用户态"移交给了 "内核态" 以实现状态持久化。</p></div></div>
 <p>为了讲清楚，我们把它拆解为三个维度：<strong>核心痛点</strong>（为什么要有它）、<strong>内核架构</strong>（它长什么样）、<strong>工作流程</strong>（它是怎么跑的）。</p>
 <h2 id="核心痛点on-的线性复杂度瓶颈">1. 核心痛点：O(N)
 的线性复杂度瓶颈</h2>
