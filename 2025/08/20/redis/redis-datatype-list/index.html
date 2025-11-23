@@ -69,7 +69,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a><a class="item title" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/23/linux-io-epoll/"><span class="title">从第一性原理理解 epoll</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -93,215 +93,113 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>当你向 Redis 执行一条 <code>LPUSH mylist "hello"</code>
-命令时，你有没有想过，这个 "hello" 究竟被存放在了哪里？Redis
-为了让这次看似简单的操作尽可能快、尽可能省内存，在底层做了哪些令人惊叹的优化？</p>
-<p>大多数开发者止步于 API
-的使用，但真正的技术专家，善于运用第一性原理，探究其设计背后的本质。今天，我们将从最基础的数据结构和计算机体系结构出发，层层剥茧，彻底解构
-Redis List 的进化史，并最终通过阅读 <a
-target="_blank" rel="noopener" href="https://github.com/redis/redis/blob/8.2.1/src/listpack.c#L505">Redis
-8.2.1 的源码</a>，来印证我们所有的推论。</p>
+  </div><article class="md-text content"><p>当你向 Redis 执行一条 <code>LPUSH mylist &quot;hello&quot;</code> 命令时，你有没有想过，这个 “hello” 究竟被存放在了哪里？Redis 为了让这次看似简单的操作尽可能快、尽可能省内存，在底层做了哪些令人惊叹的优化？</p>
+<p>大多数开发者止步于 API 的使用，但真正的技术专家，善于运用第一性原理，探究其设计背后的本质。今天，我们将从最基础的数据结构和计算机体系结构出发，层层剥茧，彻底解构 Redis List 的进化史，并最终通过阅读 <a target="_blank" rel="noopener" href="https://github.com/redis/redis/blob/8.2.1/src/listpack.c#L505">Redis 8.2.1 的源码</a>，来印证我们所有的推论。</p>
 <h3 id="路线图">路线图</h3>
 <p>我们的探索将遵循 Redis List 自身真实的进化路径：</p>
-<ol type="1">
-<li><strong>创世纪：<code>linkedlist</code></strong> -
-教科书式的完美与现实的代价。</li>
-<li><strong>激进探索：<code>ziplist</code></strong> -
-对内存的极致压榨与性能的隐患。</li>
-<li><strong>伟大妥协：<code>quicklist</code></strong> -
-平衡空间与时间的工程奇迹。</li>
-<li><strong>完美进化：<code>listpack</code></strong> -
-<code>quicklist</code> 的新内核，理论与现实的最终统一。</li>
+<ol>
+<li><strong>创世纪：<code>linkedlist</code></strong> - 教科书式的完美与现实的代价。</li>
+<li><strong>激进探索：<code>ziplist</code></strong> - 对内存的极致压榨与性能的隐患。</li>
+<li><strong>伟大妥协：<code>quicklist</code></strong> - 平衡空间与时间的工程奇迹。</li>
+<li><strong>完美进化：<code>listpack</code></strong> - <code>quicklist</code> 的新内核，理论与现实的最终统一。</li>
 </ol>
-<hr />
-<h3 id="创世纪linkedlist-的优雅与代价">1.
-创世纪：<code>linkedlist</code> 的优雅与代价</h3>
-<p>从计算机科学的角度看，List (列表)
-的最直观实现就是一个<strong>双向链表 (Doubly Linked
-List)</strong>。早期的 Redis (2.0时代) 正是这样做的。</p>
-<h4 id="第一性原理数据结构">第一性原理：数据结构</h4>
+<hr>
+<h3 id="1-创世纪：linkedlist-的优雅与代价">1. 创世纪：<code>linkedlist</code> 的优雅与代价</h3>
+<p>从计算机科学的角度看，List (列表) 的最直观实现就是一个<strong>双向链表 (Doubly Linked List)</strong>。早期的 Redis (2.0时代) 正是这样做的。</p>
+<h4 id="第一性原理：数据结构">第一性原理：数据结构</h4>
 <p>一个双向链表由一系列独立的节点构成，每个节点除了保存数据外，还拥有两个指针，分别指向其前驱和后继节点。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">          +------+     +------+     +------+</span><br><span class="line">... &lt;---- | prev | &lt;-&gt; | prev | &lt;-&gt; | prev | ----&gt; ...</span><br><span class="line">          | data |     | data |     | data |</span><br><span class="line">... &lt;---- | next | &lt;-&gt; | next | &lt;-&gt; | next | ----&gt; ...</span><br><span class="line">          +------+     +------+     +------+</span><br></pre></td></tr></table></figure>
 <p>优点：完美的 O(1) 头尾操作</p>
 <ul>
-<li>在链表的头部或尾部插入/删除一个节点，只需要修改相邻的 2-3
-个指针即可，这个过程消耗的时间是常数，与链表长度无关。这对于
-LPUSH/RPUSH/LPOP/RPOP 这样的操作来说，是理论上最完美的数据结构。</li>
+<li>在链表的头部或尾部插入/删除一个节点，只需要修改相邻的 2-3 个指针即可，这个过程消耗的时间是常数，与链表长度无关。这对于 LPUSH/RPUSH/LPOP/RPOP 这样的操作来说，是理论上最完美的数据结构。</li>
 </ul>
 <p>缺点：现实世界的双重代价</p>
-<ol type="1">
-<li><strong>高昂的内存开销</strong>：这是 <code>linkedlist</code>
-被淘汰的<strong>首要原因</strong>。在一个 64 位系统中，一个指针占用 8
-字节。这意味着每个节点，除了存储你的数据，仅 <code>prev</code> 和
-<code>next</code> 两个指针就要额外消耗 16
-字节！当你存储大量小数据时（比如整数），指针占用的空间会远超数据本身，这是对宝贵内存的巨大浪费。</li>
-<li><strong>糟糕的 CPU
-缓存局部性</strong>：链表的节点在内存中是<strong>离散</strong>分布的。当
-CPU
-遍历链表时，它需要不断地从内存的不同区域加载节点数据，这种指针跳转的行为极易导致
-<strong>CPU Cache Miss (缓存未命中)</strong>。CPU
-无法有效利用其高速缓存来预读数据，导致遍历性能远不如连续内存的数组。</li>
+<ol>
+<li><strong>高昂的内存开销</strong>：这是 <code>linkedlist</code> 被淘汰的<strong>首要原因</strong>。在一个 64 位系统中，一个指针占用 8 字节。这意味着每个节点，除了存储你的数据，仅 <code>prev</code> 和 <code>next</code> 两个指针就要额外消耗 16 字节！当你存储大量小数据时（比如整数），指针占用的空间会远超数据本身，这是对宝贵内存的巨大浪费。</li>
+<li><strong>糟糕的 CPU 缓存局部性</strong>：链表的节点在内存中是<strong>离散</strong>分布的。当 CPU 遍历链表时，它需要不断地从内存的不同区域加载节点数据，这种指针跳转的行为极易导致 <strong>CPU Cache Miss (缓存未命中)</strong>。CPU 无法有效利用其高速缓存来预读数据，导致遍历性能远不如连续内存的数组。</li>
 </ol>
-<hr />
-<h3 id="激进探索ziplist-对内存的极致压榨">2.
-激进探索：<code>ziplist</code> 对内存的极致压榨</h3>
-<p>为了克服 <code>linkedlist</code> 的双重代价，Redis
-的设计者们创造了一种极其紧凑的数据结构：<strong>压缩列表
-(ziplist)</strong>。</p>
-<h4 id="第一性原理连续内存布局">第一性原理：连续内存布局</h4>
-<p><code>ziplist</code>
-的核心思想是，用一块<strong>连续的、完整的内存块</strong>来存储所有元素，从而彻底消除指针开销，并最大化利用
-CPU 缓存。</p>
+<hr>
+<h3 id="2-激进探索：ziplist-对内存的极致压榨">2. 激进探索：<code>ziplist</code> 对内存的极致压榨</h3>
+<p>为了克服 <code>linkedlist</code> 的双重代价，Redis 的设计者们创造了一种极其紧凑的数据结构：<strong>压缩列表 (ziplist)</strong>。</p>
+<h4 id="第一性原理：连续内存布局">第一性原理：连续内存布局</h4>
+<p><code>ziplist</code> 的核心思想是，用一块<strong>连续的、完整的内存块</strong>来存储所有元素，从而彻底消除指针开销，并最大化利用 CPU 缓存。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;zlbytes&gt; &lt;zltail&gt; &lt;zllen&gt; &lt;entry_1&gt; &lt;entry_2&gt; ... &lt;entry_N&gt; &lt;zlend&gt;</span><br></pre></td></tr></table></figure>
 <ul>
-<li><code>&lt;zlbytes&gt;</code>: 整个 <code>ziplist</code>
-占用的总字节数。</li>
-<li><code>&lt;zltail&gt;</code>: 到最后一个 entry
-的偏移量，用于快速定位到表尾。</li>
+<li><code>&lt;zlbytes&gt;</code>: 整个 <code>ziplist</code> 占用的总字节数。</li>
+<li><code>&lt;zltail&gt;</code>: 到最后一个 entry 的偏移量，用于快速定位到表尾。</li>
 <li><code>&lt;zllen&gt;</code>: entry 的数量。</li>
-<li><code>&lt;entry&gt;</code>: 真正的列表元素，每个 entry
-也是变长的。</li>
+<li><code>&lt;entry&gt;</code>: 真正的列表元素，每个 entry 也是变长的。</li>
 <li><code>&lt;zlend&gt;</code>: 特殊的结束标记 <code>0xFF</code>。</li>
 </ul>
-<p><code>ziplist</code> 的精髓在于 <code>entry</code> 的设计。每个 entry
-的头部会记录<strong>前一个 entry</strong> 的长度
-(<code>prev-len</code>)，这使得 <code>ziplist</code>
-可以从后向前遍历。</p>
+<p><code>ziplist</code> 的精髓在于 <code>entry</code> 的设计。每个 entry 的头部会记录<strong>前一个 entry</strong> 的长度 (<code>prev-len</code>)，这使得 <code>ziplist</code> 可以从后向前遍历。</p>
 <p>优点：极致的内存效率</p>
 <ul>
-<li><code>ziplist</code> 是 Redis
-为了节省内存而设计的典范。它没有指针，并对小整数和短字符串使用变长编码，是内存使用最经济的序列型数据结构。同时，连续内存对
-CPU 缓存极为友好。</li>
+<li><code>ziplist</code> 是 Redis 为了节省内存而设计的典范。它没有指针，并对小整数和短字符串使用变长编码，是内存使用最经济的序列型数据结构。同时，连续内存对 CPU 缓存极为友好。</li>
 </ul>
 <p>缺点：连锁更新 (Cascading Updates)</p>
 <ul>
-<li>这是 <code>ziplist</code> 的<a
-target="_blank" rel="noopener" href="https://zh.wikipedia.org/w/index.php?title=%E9%98%BF%E5%96%80%E7%90%89%E6%96%AF">阿喀琉斯之踵</a>。由于每个
-<code>entry</code> 记录了前一个 <code>entry</code> 的长度，当在前一个
-<code>entry</code> 发生大小变化时，可能会导致当前 <code>entry</code>
-需要用更多的字节来存储 <code>prev-len</code>，这又可能导致当前
-<code>entry</code> 自身总长度变化，从而级联影响到下一个
-<code>entry</code>... 在最坏的情况下，一次插入可能导致后续所有
-<code>entry</code> 都需要重新分配空间，时间复杂度从 O(N) 退化到
-O(N2)。</li>
+<li>这是 <code>ziplist</code> 的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/w/index.php?title=%E9%98%BF%E5%96%80%E7%90%89%E6%96%AF">阿喀琉斯之踵</a>。由于每个 <code>entry</code> 记录了前一个 <code>entry</code> 的长度，当在前一个 <code>entry</code> 发生大小变化时，可能会导致当前 <code>entry</code> 需要用更多的字节来存储 <code>prev-len</code>，这又可能导致当前 <code>entry</code> 自身总长度变化，从而级联影响到下一个 <code>entry</code>… 在最坏的情况下，一次插入可能导致后续所有 <code>entry</code> 都需要重新分配空间，时间复杂度从 O(N) 退化到 O(N2)。</li>
 </ul>
-<hr />
-<h3 id="伟大妥协quicklist-的平衡之道">3.
-伟大妥协：<code>quicklist</code> 的平衡之道</h3>
-<p>既然 <code>linkedlist</code> 和 <code>ziplist</code>
-各有优劣，能否将它们结合起来，取其精华，去其糟粕？<strong>快速列表
-(quicklist)</strong> 应运而生，并从 Redis 3.2 开始成为 List
-的默认实现。</p>
-<h4 id="第一性原理混合数据结构">第一性原理：混合数据结构</h4>
-<p><code>quicklist</code> 的本质，就是一个由
-<code>ziplist</code>（或后来的
-<code>listpack</code>）节点组成的<strong>双向链表</strong>。</p>
+<hr>
+<h3 id="3-伟大妥协：quicklist-的平衡之道">3. 伟大妥协：<code>quicklist</code> 的平衡之道</h3>
+<p>既然 <code>linkedlist</code> 和 <code>ziplist</code> 各有优劣，能否将它们结合起来，取其精华，去其糟粕？<strong>快速列表 (quicklist)</strong> 应运而生，并从 Redis 3.2 开始成为 List 的默认实现。</p>
+<h4 id="第一性原理：混合数据结构">第一性原理：混合数据结构</h4>
+<p><code>quicklist</code> 的本质，就是一个由 <code>ziplist</code>（或后来的 <code>listpack</code>）节点组成的<strong>双向链表</strong>。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">+----------------+     +----------------+     +----------------+</span><br><span class="line">| quicklistNode  | &lt;-&gt; | quicklistNode  | &lt;-&gt; | quicklistNode  |</span><br><span class="line">| (ziplist/pack) |     | (ziplist/pack) |     | (ziplist/pack) |</span><br><span class="line">+----------------+     +----------------+     +----------------+</span><br><span class="line">         ^                    ^                      ^</span><br><span class="line">         |                    |                      |</span><br><span class="line">   [ e1, e2, e3 ]       [ e4, e5 ]           [ e6, e7, e8, e9 ]</span><br></pre></td></tr></table></figure>
-<p>它在宏观上是一个 <code>linkedlist</code>，保持了 O(1)
-的头尾插入性能和灵活性。而在微观上，每个节点内部是一个
-<code>ziplist</code> 或
-<code>listpack</code>，存储了多个元素，极大地节省了内存，并提升了缓存局部性。<code>quicklist</code>
-通过将连锁更新的风险<strong>限制</strong>在一个个独立的小节点内部，完美地规避了
-<code>ziplist</code> 最大的风险。</p>
-<hr />
-<h3 id="完美进化listpack-的最终形态">4. 完美进化：<code>listpack</code>
-的最终形态</h3>
-<p><code>quicklist</code> 已经非常优秀，但它的内核 <code>ziplist</code>
-依然存在理论上的连锁更新风险。为了追求极致的理论完备性，Redis
-开发者设计了 <code>ziplist</code>
-的继任者：<strong>listpack</strong>。从 Redis 7.0
-开始，<code>quicklist</code> 的内部节点默认已由 <code>ziplist</code>
-替换为 <code>listpack</code>。</p>
-<p><code>listpack</code> 的目标与 <code>ziplist</code>
-一样：用一块连续内存来存储数据。但它通过一个绝妙的设计，彻底根除了连锁更新。</p>
-<h4
-id="第一性原理信息自包含与回溯机制">第一性原理：信息自包含与回溯机制</h4>
-<p><code>ziplist</code>
-连锁更新的根源在于：<strong>后一个节点存储了前一个节点的信息
-(<code>prev-len</code>)</strong>。<code>listpack</code>
-的设计哲学是：<strong>每个节点只存储与自身相关的信息</strong>。</p>
+<p>它在宏观上是一个 <code>linkedlist</code>，保持了 O(1) 的头尾插入性能和灵活性。而在微观上，每个节点内部是一个 <code>ziplist</code> 或 <code>listpack</code>，存储了多个元素，极大地节省了内存，并提升了缓存局部性。<code>quicklist</code> 通过将连锁更新的风险<strong>限制</strong>在一个个独立的小节点内部，完美地规避了 <code>ziplist</code> 最大的风险。</p>
+<hr>
+<h3 id="4-完美进化：listpack-的最终形态">4. 完美进化：<code>listpack</code> 的最终形态</h3>
+<p><code>quicklist</code> 已经非常优秀，但它的内核 <code>ziplist</code> 依然存在理论上的连锁更新风险。为了追求极致的理论完备性，Redis 开发者设计了 <code>ziplist</code> 的继任者：<strong>listpack</strong>。从 Redis 7.0 开始，<code>quicklist</code> 的内部节点默认已由 <code>ziplist</code> 替换为 <code>listpack</code>。</p>
+<p><code>listpack</code> 的目标与 <code>ziplist</code> 一样：用一块连续内存来存储数据。但它通过一个绝妙的设计，彻底根除了连锁更新。</p>
+<h4 id="第一性原理：信息自包含与回溯机制">第一性原理：信息自包含与回溯机制</h4>
+<p><code>ziplist</code> 连锁更新的根源在于：<strong>后一个节点存储了前一个节点的信息 (<code>prev-len</code>)</strong>。<code>listpack</code> 的设计哲学是：<strong>每个节点只存储与自身相关的信息</strong>。</p>
 <p>一个 <code>listpack</code> entry 的结构如下：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">+----------------+----------------+----------------+</span><br><span class="line">| encoding-type  | element-data   |    back-len    |</span><br><span class="line">+----------------+----------------+----------------+</span><br></pre></td></tr></table></figure>
-<p>要理解 <code>listpack</code>
-的精髓，我们必须深度剖析其灵魂设计——<code>back-len</code> 字段。</p>
+<p>要理解 <code>listpack</code> 的精髓，我们必须深度剖析其灵魂设计——<code>back-len</code> 字段。</p>
 <ul>
-<li><strong>命名</strong>：源码中称之为
-<code>backlen</code>，它最核心的功能是用于<strong>向后
-(Backward)</strong> 遍历。</li>
-<li><strong>存储内容</strong>：<code>back-len</code>
-字段里物理存储的数值，等于该条目自身的
-<code>&lt;encoding-type&gt;</code> 和 <code>&lt;element-data&gt;</code>
-<strong>两部分加起来的长度</strong>（我们称之为“部分长度”）。</li>
-<li><strong>作用</strong>：当需要从后向前遍历时，解析器会从前一个条目的<strong>尾部</strong>，反向解析出这个“部分长度”，然后再动态计算出
-<code>&lt;back-len&gt;</code>
-字段自身的长度，两者相加得到前一个条目的<strong>总长度</strong>，从而实现精确的回溯跳转。</li>
+<li><strong>命名</strong>：源码中称之为 <code>backlen</code>，它最核心的功能是用于<strong>向后 (Backward)</strong> 遍历。</li>
+<li><strong>存储内容</strong>：<code>back-len</code> 字段里物理存储的数值，等于该条目自身的 <code>&lt;encoding-type&gt;</code> 和 <code>&lt;element-data&gt;</code> <strong>两部分加起来的长度</strong>（我们称之为“部分长度”）。</li>
+<li><strong>作用</strong>：当需要从后向前遍历时，解析器会从前一个条目的<strong>尾部</strong>，反向解析出这个“部分长度”，然后再动态计算出 <code>&lt;back-len&gt;</code> 字段自身的长度，两者相加得到前一个条目的<strong>总长度</strong>，从而实现精确的回溯跳转。</li>
 </ul>
-<h4
-id="源码佐证lpprev-函数及其秘术-redis-8.2.1">源码佐证：<code>lpPrev</code>
-函数及其"秘术" (Redis 8.2.1)</h4>
-<p>让我们直接阅读 Redis <code>8.2.1</code> 版本的 <a
-target="_blank" rel="noopener" href="https://github.com/redis/redis/blob/8.2.1/src/listpack.c#L505">listpack.c</a>
-源码，看看 <code>lpPrev</code> 函数是如何实现回溯的。</p>
+<h4 id="源码佐证：lpPrev-函数及其-秘术-Redis-8-2-1">源码佐证：<code>lpPrev</code> 函数及其&quot;秘术&quot; (Redis 8.2.1)</h4>
+<p>让我们直接阅读 Redis <code>8.2.1</code> 版本的 <a target="_blank" rel="noopener" href="https://github.com/redis/redis/blob/8.2.1/src/listpack.c#L505">listpack.c</a> 源码，看看 <code>lpPrev</code> 函数是如何实现回溯的。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* from: https://github.com/redis/redis/blob/8.2.1/src/listpack.c */</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">char</span> *<span class="title function_">lpPrev</span><span class="params">(<span class="type">unsigned</span> <span class="type">char</span> *lp, <span class="type">unsigned</span> <span class="type">char</span> *p)</span> &#123;</span><br><span class="line">    assert(p);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 边界检查：如果已经是第一个元素，无法再回溯 */</span></span><br><span class="line">    <span class="keyword">if</span> (p-lp == LP_HDR_SIZE) <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 关键一步(1)：从当前条目p的开头，后退一字节，来到前一个条目的末尾 */</span></span><br><span class="line">    p--; </span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 关键一步(2)：从前一个条目的末尾，反向解析出其“部分长度” */</span></span><br><span class="line">    <span class="type">uint64_t</span> prevlen = lpDecodeBacklen(p);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 关键一步(3)：计算&lt;back-len&gt;字段自身的长度，并加到“部分长度”上，得到“总长度” */</span></span><br><span class="line">    prevlen += lpEncodeBacklenBytes(prevlen);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 关键一步(4)：执行跳转。p指针当前在前一个条目的末尾，</span></span><br><span class="line"><span class="comment">     * 回退 (总长度 - 1) 的距离，就来到了前一个条目的开头 */</span></span><br><span class="line">    p -= prevlen<span class="number">-1</span>; </span><br><span class="line">    </span><br><span class="line">    lpAssertValidEntry(lp, lpBytes(lp), p);</span><br><span class="line">    <span class="keyword">return</span> p;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>要完全看懂这段代码，我们必须潜入它调用的两个核心函数：<code>lpDecodeBacklen</code>
-和 <code>lpEncodeBacklenBytes</code>。</p>
-<p><strong><code>lpDecodeBacklen</code> - 优雅的"盲人摸象"</strong></p>
-<p><code>lpDecodeBacklen</code> 的任务是，在不知道
-<code>&lt;back-len&gt;</code>
-字段有多长的情况下，从它的最后一个字节开始，反向、完整地把它读出来。这是如何做到的？答案是<strong>可变长度整数编码</strong>。</p>
-<p><code>&lt;back-len&gt;</code> 的每个字节中，最高位 (MSB)
-是一个<strong>"延续位"</strong>：</p>
+<p>要完全看懂这段代码，我们必须潜入它调用的两个核心函数：<code>lpDecodeBacklen</code> 和 <code>lpEncodeBacklenBytes</code>。</p>
+<p><strong><code>lpDecodeBacklen</code> - 优雅的&quot;盲人摸象&quot;</strong></p>
+<p><code>lpDecodeBacklen</code> 的任务是，在不知道 <code>&lt;back-len&gt;</code> 字段有多长的情况下，从它的最后一个字节开始，反向、完整地把它读出来。这是如何做到的？答案是<strong>可变长度整数编码</strong>。</p>
+<p><code>&lt;back-len&gt;</code> 的每个字节中，最高位 (MSB) 是一个**“延续位”**：</p>
 <ul>
-<li><code>MSB = 1</code>：表示"我不是开头，前面还有字节"。</li>
-<li><code>MSB = 0</code>：表示"我就是开头，到我为止"。</li>
+<li><code>MSB = 1</code>：表示&quot;我不是开头，前面还有字节&quot;。</li>
+<li><code>MSB = 0</code>：表示&quot;我就是开头，到我为止&quot;。</li>
 </ul>
 <p><code>lpDecodeBacklen</code> 的算法就像“盲人摸象”，但极其高效：</p>
-<ol type="1">
+<ol>
 <li>从 <code>p</code> 指针（前一个条目的末尾）开始，读取 1 个字节。</li>
-<li>检查它的最高位。如果是 <code>0</code>，说明
-<code>&lt;back-len&gt;</code> 只有 1 字节长，其余 7
-位就是长度值，任务完成。</li>
-<li>如果是 <code>1</code>，说明这是多字节长度的一部分，记下其余 7
-位，然后
-<code>p--</code>，继续向前读下一个字节，重复此过程，直到找到那个最高位为
-<code>0</code> 的“领头”字节。</li>
-<li>最后，将所有收集到的 7
-位数据块拼接起来，还原出完整的“部分长度”。</li>
+<li>检查它的最高位。如果是 <code>0</code>，说明 <code>&lt;back-len&gt;</code> 只有 1 字节长，其余 7 位就是长度值，任务完成。</li>
+<li>如果是 <code>1</code>，说明这是多字节长度的一部分，记下其余 7 位，然后 <code>p--</code>，继续向前读下一个字节，重复此过程，直到找到那个最高位为 <code>0</code> 的“领头”字节。</li>
+<li>最后，将所有收集到的 7 位数据块拼接起来，还原出完整的“部分长度”。</li>
 </ol>
 <p>以下是 <code>lpDecodeBacklen</code> 的核心源码片段：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* from: https://github.com/redis/redis/blob/8.2.1/src/listpack.c */</span></span><br><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">uint64_t</span> <span class="title function_">lpDecodeBacklen</span><span class="params">(<span class="type">unsigned</span> <span class="type">char</span> *p)</span> &#123;</span><br><span class="line">    <span class="type">uint64_t</span> val = <span class="number">0</span>;</span><br><span class="line">    <span class="type">uint64_t</span> shift = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        <span class="comment">/* 从 p 指针开始，向低地址（左）移动 */</span></span><br><span class="line">        val |= (<span class="type">uint64_t</span>)(p[<span class="number">0</span>] &amp; <span class="number">127</span>) &lt;&lt; shift;</span><br><span class="line">        <span class="comment">/* 如果最高位是 0，表示这是最后一个字节，循环终止 */</span></span><br><span class="line">        <span class="keyword">if</span> ((p[<span class="number">0</span>] &amp; <span class="number">128</span>) == <span class="number">0</span>) <span class="keyword">break</span>;</span><br><span class="line">        shift += <span class="number">7</span>;</span><br><span class="line">        p--;</span><br><span class="line">        <span class="comment">/* 安全检查，防止无限循环 */</span></span><br><span class="line">        <span class="keyword">if</span> (shift &gt; <span class="number">63</span>) <span class="keyword">return</span> UINT64_MAX;</span><br><span class="line">    &#125; <span class="keyword">while</span>(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">return</span> val;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><strong><code>lpEncodeBacklenBytes</code> -
-未卜先知的计算</strong></p>
-<p><code>lpPrev</code> 在得到"部分长度" <code>prevlen</code>
-后，还需要知道 <code>&lt;back-len&gt;</code>
-字段本身占了几个字节，才能算出总长度。<code>lpEncodeBacklenBytes</code>
-的作用就是回答这个问题。</p>
+<p><strong><code>lpEncodeBacklenBytes</code> - 未卜先知的计算</strong></p>
+<p><code>lpPrev</code> 在得到&quot;部分长度&quot; <code>prevlen</code> 后，还需要知道 <code>&lt;back-len&gt;</code> 字段本身占了几个字节，才能算出总长度。<code>lpEncodeBacklenBytes</code> 的作用就是回答这个问题。</p>
 <p>它的逻辑很简单，就是一系列的范围判断，这正是可变长度整数编码的逆过程。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* from: https://github.com/redis/redis/blob/8.2.1/src/listpack.c */</span></span><br><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">uint64_t</span> <span class="title function_">lpEncodeBacklenBytes</span><span class="params">(<span class="type">uint64_t</span> len)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (len &lt; <span class="number">128</span>) <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (len &lt; <span class="number">16384</span>) <span class="keyword">return</span> <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (len &lt; <span class="number">2097152</span>) <span class="keyword">return</span> <span class="number">3</span>;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (len &lt; <span class="number">268435456</span>) <span class="keyword">return</span> <span class="number">4</span>;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">return</span> <span class="number">5</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>例如，如果 <code>lpDecodeBacklen</code> 返回的 <code>prevlen</code>
-是 <code>100</code>，<code>lpEncodeBacklenBytes(100)</code> 就会返回
-<code>1</code>。<code>lpPrev</code> 随即将两者相加得到总长度
-<code>101</code>，完成最终的回溯跳转。</p>
-<h3 id="结论永不休止的优化之路">结论：永不休止的优化之路</h3>
+<p>例如，如果 <code>lpDecodeBacklen</code> 返回的 <code>prevlen</code> 是 <code>100</code>，<code>lpEncodeBacklenBytes(100)</code> 就会返回 <code>1</code>。<code>lpPrev</code> 随即将两者相加得到总长度 <code>101</code>，完成最终的回溯跳转。</p>
+<h3 id="结论：永不休止的优化之路">结论：永不休止的优化之路</h3>
 <p>Redis List 的演进史，是软件工程领域追求极致性能和效率的缩影：</p>
-<ol type="1">
-<li><strong><code>linkedlist</code></strong>：一个优雅的理论起点，但在现实的内存和
-CPU 面前显得脆弱。</li>
+<ol>
+<li><strong><code>linkedlist</code></strong>：一个优雅的理论起点，但在现实的内存和 CPU 面前显得脆弱。</li>
 <li><strong><code>ziplist</code></strong>：一次激进的、向内存效率极限发起的冲锋，但留下了性能抖动的隐患。</li>
 <li><strong><code>quicklist</code></strong>：一次伟大的工程妥协，在宏观与微观层面取得了精妙的平衡，成为稳定服务多年的基石。</li>
-<li><strong><code>listpack</code></strong>：一次对理论完美的最终追求，通过改变节点内部的信息记录方式，彻底根除了历史遗留问题，让
-List 的实现达到了新的高度。</li>
+<li><strong><code>listpack</code></strong>：一次对理论完美的最终追求，通过改变节点内部的信息记录方式，彻底根除了历史遗留问题，让 List 的实现达到了新的高度。</li>
 </ol>
-<p>作为 Redis 的使用者，我们享受着 <code>LPUSH</code>/<code>RPOP</code>
-的简洁与高效。但作为技术的探索者，我们更应欣赏这背后长达十余年的、对每一个字节、每一次
-CPU 缓存命中、每一种风险场景的极致思考与打磨。</p>
+<p>作为 Redis 的使用者，我们享受着 <code>LPUSH</code>/<code>RPOP</code> 的简洁与高效。但作为技术的探索者，我们更应欣赏这背后长达十余年的、对每一个字节、每一次 CPU 缓存命中、每一种风险场景的极致思考与打磨。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -341,23 +239,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B7%AF%E7%BA%BF%E5%9B%BE"><span class="toc-text">路线图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%9B%E4%B8%96%E7%BA%AAlinkedlist-%E7%9A%84%E4%BC%98%E9%9B%85%E4%B8%8E%E4%BB%A3%E4%BB%B7"><span class="toc-text">1.
-创世纪：linkedlist 的优雅与代价</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%80%A7%E5%8E%9F%E7%90%86%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-text">第一性原理：数据结构</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BF%80%E8%BF%9B%E6%8E%A2%E7%B4%A2ziplist-%E5%AF%B9%E5%86%85%E5%AD%98%E7%9A%84%E6%9E%81%E8%87%B4%E5%8E%8B%E6%A6%A8"><span class="toc-text">2.
-激进探索：ziplist 对内存的极致压榨</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%80%A7%E5%8E%9F%E7%90%86%E8%BF%9E%E7%BB%AD%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80"><span class="toc-text">第一性原理：连续内存布局</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%9F%E5%A4%A7%E5%A6%A5%E5%8D%8Fquicklist-%E7%9A%84%E5%B9%B3%E8%A1%A1%E4%B9%8B%E9%81%93"><span class="toc-text">3.
-伟大妥协：quicklist 的平衡之道</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%80%A7%E5%8E%9F%E7%90%86%E6%B7%B7%E5%90%88%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-text">第一性原理：混合数据结构</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%8C%E7%BE%8E%E8%BF%9B%E5%8C%96listpack-%E7%9A%84%E6%9C%80%E7%BB%88%E5%BD%A2%E6%80%81"><span class="toc-text">4. 完美进化：listpack
-的最终形态</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%80%A7%E5%8E%9F%E7%90%86%E4%BF%A1%E6%81%AF%E8%87%AA%E5%8C%85%E5%90%AB%E4%B8%8E%E5%9B%9E%E6%BA%AF%E6%9C%BA%E5%88%B6"><span class="toc-text">第一性原理：信息自包含与回溯机制</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%BA%90%E7%A0%81%E4%BD%90%E8%AF%81lpprev-%E5%87%BD%E6%95%B0%E5%8F%8A%E5%85%B6%E7%A7%98%E6%9C%AF-redis-8.2.1"><span class="toc-text">源码佐证：lpPrev
-函数及其&quot;秘术&quot; (Redis 8.2.1)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA%E6%B0%B8%E4%B8%8D%E4%BC%91%E6%AD%A2%E7%9A%84%E4%BC%98%E5%8C%96%E4%B9%8B%E8%B7%AF"><span class="toc-text">结论：永不休止的优化之路</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B7%AF%E7%BA%BF%E5%9B%BE"><span class="toc-text">路线图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%88%9B%E4%B8%96%E7%BA%AA%EF%BC%9Alinkedlist-%E7%9A%84%E4%BC%98%E9%9B%85%E4%B8%8E%E4%BB%A3%E4%BB%B7"><span class="toc-text">1. 创世纪：linkedlist 的优雅与代价</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%80%A7%E5%8E%9F%E7%90%86%EF%BC%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-text">第一性原理：数据结构</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E6%BF%80%E8%BF%9B%E6%8E%A2%E7%B4%A2%EF%BC%9Aziplist-%E5%AF%B9%E5%86%85%E5%AD%98%E7%9A%84%E6%9E%81%E8%87%B4%E5%8E%8B%E6%A6%A8"><span class="toc-text">2. 激进探索：ziplist 对内存的极致压榨</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%80%A7%E5%8E%9F%E7%90%86%EF%BC%9A%E8%BF%9E%E7%BB%AD%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80"><span class="toc-text">第一性原理：连续内存布局</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E4%BC%9F%E5%A4%A7%E5%A6%A5%E5%8D%8F%EF%BC%9Aquicklist-%E7%9A%84%E5%B9%B3%E8%A1%A1%E4%B9%8B%E9%81%93"><span class="toc-text">3. 伟大妥协：quicklist 的平衡之道</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%80%A7%E5%8E%9F%E7%90%86%EF%BC%9A%E6%B7%B7%E5%90%88%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-text">第一性原理：混合数据结构</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%AE%8C%E7%BE%8E%E8%BF%9B%E5%8C%96%EF%BC%9Alistpack-%E7%9A%84%E6%9C%80%E7%BB%88%E5%BD%A2%E6%80%81"><span class="toc-text">4. 完美进化：listpack 的最终形态</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%80%A7%E5%8E%9F%E7%90%86%EF%BC%9A%E4%BF%A1%E6%81%AF%E8%87%AA%E5%8C%85%E5%90%AB%E4%B8%8E%E5%9B%9E%E6%BA%AF%E6%9C%BA%E5%88%B6"><span class="toc-text">第一性原理：信息自包含与回溯机制</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%BA%90%E7%A0%81%E4%BD%90%E8%AF%81%EF%BC%9AlpPrev-%E5%87%BD%E6%95%B0%E5%8F%8A%E5%85%B6-%E7%A7%98%E6%9C%AF-Redis-8-2-1"><span class="toc-text">源码佐证：lpPrev 函数及其&quot;秘术&quot; (Redis 8.2.1)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA%EF%BC%9A%E6%B0%B8%E4%B8%8D%E4%BC%91%E6%AD%A2%E7%9A%84%E4%BC%98%E5%8C%96%E4%B9%8B%E8%B7%AF"><span class="toc-text">结论：永不休止的优化之路</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

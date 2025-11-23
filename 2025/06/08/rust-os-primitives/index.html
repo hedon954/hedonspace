@@ -27,6 +27,11 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="操作系统的并发原语是实现各种锁、条件变量和同步工具的核心基础。无论是 Linux 中被广泛使用的 futex、macOS 中的 pthread 和 os_unfair_lock，还是 Windows 系统上的重量级内核对象、轻量级原语及地址等待机制，本质上都是围绕着三个基本动作展开：wait、wake_one 和 wake_all。本文将通过对三大主流操作系统底层并发原语的梳理与对比，帮助你建立统">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608190516988.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608190538982.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608192945913.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608224608594.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608232051766.png">
 <meta property="article:published_time" content="2025-06-08T09:45:28.000Z">
 <meta property="article:modified_time" content="2025-11-22T02:43:28.131Z">
 <meta property="article:author" content="Hedon Wang">
@@ -34,6 +39,7 @@
 <meta property="article:tag" content="并发编程">
 <meta property="article:tag" content="操作系统">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608190516988.png">
   
   
   
@@ -71,7 +77,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a><a class="item title" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/23/linux-io-epoll/"><span class="title">从第一性原理理解 epoll</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -97,169 +103,94 @@
   </div>
   </div><article class="md-text content"><p>系列文章：</p>
 <ul>
-<li><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust
-原理丨聊一聊 Rust 的 Atomic 和内存顺序</a></li>
-<li><a
-href="https://hedon.top/2025/06/05/rust-atomic-in-processor/">Rust
-原理丨从汇编角度看原子操作</a></li>
-<li><a href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust
-实战丨手写一个 SpinLock</a></li>
-<li><a
-href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust
-实战丨手写一个 oneshot channel</a></li>
-<li><a href="https://hedon.top/2025/06/03/rust-action-arc/">Rust
-实战丨手写一个 Arc</a></li>
-<li><a href="https://hedon.top/2025/06/08/rust-os-primitives/">Rust
-原理丨操作系统并发原语</a> 👈 本篇</li>
-<li><a href="https://hedon.top/2025/06/09/rust-action-mutex/">Rust
-实战丨手写一个 Mutex</a></li>
-<li><a href="https://hedon.top/2025/06/09/rust-action-condvar/">Rust
-实战丨手写一个 Condvar</a></li>
-<li><a href="https://hedon.top/2025/06/11/rust-action-rwlock/">Rust
-实战丨手写一个 RwLock</a></li>
+<li><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</a></li>
+<li><a href="https://hedon.top/2025/06/05/rust-atomic-in-processor/">Rust 原理丨从汇编角度看原子操作</a></li>
+<li><a href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust 实战丨手写一个 SpinLock</a></li>
+<li><a href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust 实战丨手写一个 oneshot channel</a></li>
+<li><a href="https://hedon.top/2025/06/03/rust-action-arc/">Rust 实战丨手写一个 Arc</a></li>
+<li><a href="https://hedon.top/2025/06/08/rust-os-primitives/">Rust 原理丨操作系统并发原语</a> 👈 本篇</li>
+<li><a href="https://hedon.top/2025/06/09/rust-action-mutex/">Rust 实战丨手写一个 Mutex</a></li>
+<li><a href="https://hedon.top/2025/06/09/rust-action-condvar/">Rust 实战丨手写一个 Condvar</a></li>
+<li><a href="https://hedon.top/2025/06/11/rust-action-rwlock/">Rust 实战丨手写一个 RwLock</a></li>
 </ul>
-<hr />
-<p>在本系列的前面所有篇章中，我们对非阻塞类的并发操作进行了详细的阐述和实践（除了
-SpinLock，不过自旋锁是通过自旋来实现阻塞作用，本质上线程并没有陷入阻塞等待的状态）。</p>
-<p>后面我们将继续参考 <a target="_blank" rel="noopener" href="https://marabos.nl/atomics/">Rust Atomics
-and Locks</a> 书中的后续篇章，继续手写几个阻塞类的并发工具，有
-Mutex（互斥锁）、RwLock（读写锁）和
-CondVar（条件变量）。它们都有一个共同的特点：<strong>线程会陷入阻塞，让出
-CPU，在等待某个条件满足要求后，会被唤醒并重新调度执行</strong>。这就需要借助内核的能力了，我们需要内核支持：</p>
-<ol type="1">
+<hr>
+<p>在本系列的前面所有篇章中，我们对非阻塞类的并发操作进行了详细的阐述和实践（除了 SpinLock，不过自旋锁是通过自旋来实现阻塞作用，本质上线程并没有陷入阻塞等待的状态）。</p>
+<p>后面我们将继续参考 <a target="_blank" rel="noopener" href="https://marabos.nl/atomics/">Rust Atomics and Locks</a> 书中的后续篇章，继续手写几个阻塞类的并发工具，有 Mutex（互斥锁）、RwLock（读写锁）和 CondVar（条件变量）。它们都有一个共同的特点：<strong>线程会陷入阻塞，让出 CPU，在等待某个条件满足要求后，会被唤醒并重新调度执行</strong>。这就需要借助内核的能力了，我们需要内核支持：</p>
+<ol>
 <li>记住那些陷入阻塞的线程；</li>
 <li>在满足条件后，能够唤醒对应的正确的线程。</li>
 </ol>
-<p>熟悉操作系统原理的读者应该清楚，我们编写的应用程序，一般是处于<strong>用户态</strong>，而想要跟内核进行交互，需要陷入<strong>内核态</strong>，而这种切换，很大程度需要依赖于操作系统提供的系统调用能力，即
-<code>syscall</code>。</p>
-<p>所以在进入手写 Mutex、RwLock 和 CondVar
-篇章之前，我们需要先来学习一下，不同的操作系统，都为我们在并发操作中提供了什么样的能力和限制。</p>
-<p>在 <a target="_blank" rel="noopener" href="https://marabos.nl/atomics/os-primitives.html">Rust
-Atomics and Locks</a> 第八章（Operating System
-Primitives）中，作者介绍并比较了各平台提供的操作系统级并发原语，包括
-POSIX 的 <code>pthread</code> 系列、Linux 的 <code>futex</code>、macOS
-的 <code>os_unfair_lock</code>，以及 Windows
-的<code>重量级内核对象</code>、<code>轻量级对象</code>和<code>基于地址的等待机制</code>。</p>
+<p>熟悉操作系统原理的读者应该清楚，我们编写的应用程序，一般是处于<strong>用户态</strong>，而想要跟内核进行交互，需要陷入<strong>内核态</strong>，而这种切换，很大程度需要依赖于操作系统提供的系统调用能力，即 <code>syscall</code>。</p>
+<p>所以在进入手写 Mutex、RwLock 和 CondVar 篇章之前，我们需要先来学习一下，不同的操作系统，都为我们在并发操作中提供了什么样的能力和限制。</p>
+<p>在 <a target="_blank" rel="noopener" href="https://marabos.nl/atomics/os-primitives.html">Rust Atomics and Locks</a> 第八章（Operating System Primitives）中，作者介绍并比较了各平台提供的操作系统级并发原语，包括 POSIX 的 <code>pthread</code> 系列、Linux 的 <code>futex</code>、macOS 的 <code>os_unfair_lock</code>，以及 Windows 的<code>重量级内核对象</code>、<code>轻量级对象</code>和<code>基于地址的等待机制</code>。</p>
 <p>在本篇，笔者将基于自己的理解，尝试对这章进行梳理和总结，以便为后面的手写实践篇章奠定一个良好的理论基础，这里还是建议读者去阅读原文，以便获得更多的细节，加深理解。</p>
-<h1 id="posix-线程原语-pthread">POSIX 线程原语 pthread</h1>
-<p>在 Unix 类操作系统中，比如 Linux，<code>libc</code>
-就承担了跟内核进行交互的标准接口。在 <code>libc</code>
-的基础之前，诞生了一个标准：<em>Portable Operationg System
-Interface</em>，即熟知的 <strong>POSIX</strong>。在 Rust 中，对应了 <a
-target="_blank" rel="noopener" href="https://crates.io/crates/libc">libc</a> crate。</p>
-<p>Windows 系统并不遵循 POSIX
-标准，而是一系列的系统库来提供内核交互能力，比如 <a
-target="_blank" rel="noopener" href="https://www.geoffchappell.com/studies/windows/win32/kernel32/api/index.htm">kernel32.dll</a>。</p>
-<p>针对线程操作，POSIX 定义了一系列的数据类型和函数，即所谓的
-<strong>pthreads</strong>。它提供了以下几个比较重要的并发原语，我将其归纳为一个表格，供你参考。</p>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608190516988.png" /></p>
-<h1 id="linuxfutex-用户态等待与唤醒">Linux：Futex 用户态等待与唤醒</h1>
-<p>在 Linux 中，所有 <code>pthread</code> 原语的实现，都是通过
-<strong>futex</strong> 这个系统调用。它是全程是 <em>fast user-space
-mutex</em>。它的实现核心是：<strong>通过操作一个 32
-位的原子变量来实现等待和唤醒</strong>。等待操作会将一个线程陷入睡眠，而唤醒操作会唤醒那些操作同一个原子变量的睡眠中的线程。</p>
-<p>这里我们简单进行一下展开，思考一下这个 <code>futex</code>
-这个名字的含义，<em>fast user-space mutex</em>
-翻译成中文就是<em>快速用户空间互斥锁</em>。我们知道，系统调用的代价是比较昂贵的，需要频繁地在用户态和内核态之间进行切换，对性能是很不友好的。</p>
-<p>在 Linux 系统中，<strong>futex</strong>
-机制并非独立存在，而是与互斥锁、条件变量等同步原语协同工作，形成
-“<strong>用户态自旋 + 内核态等待</strong>”
-的分层设计，以兼顾性能与功能。</p>
+<h1>POSIX 线程原语 pthread</h1>
+<p>在 Unix 类操作系统中，比如 Linux，<code>libc</code> 就承担了跟内核进行交互的标准接口。在 <code>libc</code> 的基础之前，诞生了一个标准：<em>Portable Operationg System Interface</em>，即熟知的 <strong>POSIX</strong>。在 Rust 中，对应了 <a target="_blank" rel="noopener" href="https://crates.io/crates/libc">libc</a> crate。</p>
+<p>Windows 系统并不遵循 POSIX 标准，而是一系列的系统库来提供内核交互能力，比如 <a target="_blank" rel="noopener" href="https://www.geoffchappell.com/studies/windows/win32/kernel32/api/index.htm">kernel32.dll</a>。</p>
+<p>针对线程操作，POSIX 定义了一系列的数据类型和函数，即所谓的 <strong>pthreads</strong>。它提供了以下几个比较重要的并发原语，我将其归纳为一个表格，供你参考。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608190516988.png" alt=""></p>
+<h1>Linux：Futex 用户态等待与唤醒</h1>
+<p>在 Linux 中，所有 <code>pthread</code> 原语的实现，都是通过 <strong>futex</strong> 这个系统调用。它是全程是 <em>fast user-space mutex</em>。它的实现核心是：<strong>通过操作一个 32 位的原子变量来实现等待和唤醒</strong>。等待操作会将一个线程陷入睡眠，而唤醒操作会唤醒那些操作同一个原子变量的睡眠中的线程。</p>
+<p>这里我们简单进行一下展开，思考一下这个 <code>futex</code> 这个名字的含义，<em>fast user-space mutex</em> 翻译成中文就是<em>快速用户空间互斥锁</em>。我们知道，系统调用的代价是比较昂贵的，需要频繁地在用户态和内核态之间进行切换，对性能是很不友好的。</p>
+<p>在 Linux 系统中，<strong>futex</strong> 机制并非独立存在，而是与互斥锁、条件变量等同步原语协同工作，形成 “<strong>用户态自旋 + 内核态等待</strong>” 的分层设计，以兼顾性能与功能。</p>
 <p>比如在 Mutex 互斥锁场景下，采用 “两级等待” 策略：</p>
 <ul>
 <li><strong>用户态自旋阶段</strong>：尝试获取锁时先通过原子操作（如<code>atomic_compare_exchange</code>）自旋尝试，避免内核调用。</li>
-<li><strong>内核态等待阶段</strong>：若自旋失败，通过 Futex 的
-<code>FUTEX_WAIT</code> 陷入内核，将线程挂起，直到其他线程通过
-<code>FUTEX_WAKE</code> 唤醒。</li>
+<li><strong>内核态等待阶段</strong>：若自旋失败，通过 Futex 的 <code>FUTEX_WAIT</code> 陷入内核，将线程挂起，直到其他线程通过 <code>FUTEX_WAKE</code> 唤醒。</li>
 </ul>
-<p>这样多数短时间持锁场景可在用户态完成，仅在长时间竞争时陷入内核，相比纯内核互斥锁（如
-spinlock）大幅降低系统调用开销。</p>
-<p>这里有个很重要的点：<strong>判断和陷入等待，是原子的</strong>。也就是说，线程
-A
-在确定陷入等待时，如果关联的原子变量已经发生了变化，这个时候，不会陷入等待，而是会直接返回。这也就避免了唤醒信号的丢失。</p>
+<p>这样多数短时间持锁场景可在用户态完成，仅在长时间竞争时陷入内核，相比纯内核互斥锁（如 spinlock）大幅降低系统调用开销。</p>
+<p>这里有个很重要的点：<strong>判断和陷入等待，是原子的</strong>。也就是说，线程 A 在确定陷入等待时，如果关联的原子变量已经发生了变化，这个时候，不会陷入等待，而是会直接返回。这也就避免了唤醒信号的丢失。</p>
 <p>这里我整理了 <strong>futex</strong> 的核心操作，供你参考：</p>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608190538982.png" /></p>
-<p>我们知道了 Linux 通过 Futex
-实现等待与唤醒，内核究竟是如何实现这个等待与唤醒的能力的呢？我们需要解决三个核心问题：</p>
-<ol type="1">
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608190538982.png" alt=""></p>
+<p>我们知道了 Linux 通过 Futex 实现等待与唤醒，内核究竟是如何实现这个等待与唤醒的能力的呢？我们需要解决三个核心问题：</p>
+<ol>
 <li><strong>寻址问题</strong>：内核怎么知道用户态传入的一个内存地址（虚拟地址），对应的是哪个物理锁？</li>
 <li><strong>存储问题</strong>：成千上万个线程在休眠，内核把它们存在哪里？如何高效找到它们？</li>
-<li><strong>调度问题</strong>：线程是如何从"运行"变成"睡眠"，又是如何被放回
-CPU 的？</li>
+<li><strong>调度问题</strong>：线程是如何从&quot;运行&quot;变成&quot;睡眠&quot;，又是如何被放回 CPU 的？</li>
 </ol>
 <p><strong>1. 寻址问题：从虚拟地址到 Futex Key</strong></p>
-<p>用户态调用 <code>futex_wait(uaddr, val)</code> 时，传入的是一个
-虚拟地址（Virtual
-Address）。但是，不同的进程可能将同一块物理内存映射到不同的虚拟地址（共享内存场景）。如果内核只看虚拟地址，就无法让不同进程的线程锁住同一个锁。</p>
-<p>因此，内核的第一步是将 <strong>用户态的虚拟地址</strong>
-转换为内核态唯一的 <strong>Futex Key</strong>。</p>
+<p>用户态调用 <code>futex_wait(uaddr, val)</code> 时，传入的是一个 虚拟地址（Virtual Address）。但是，不同的进程可能将同一块物理内存映射到不同的虚拟地址（共享内存场景）。如果内核只看虚拟地址，就无法让不同进程的线程锁住同一个锁。</p>
+<p>因此，内核的第一步是将 <strong>用户态的虚拟地址</strong> 转换为内核态唯一的 <strong>Futex Key</strong>。</p>
 <p>内核根据锁的类型（进程内私有 vs 进程间共享）生成唯一的 Key：</p>
 <ul>
-<li><strong>私有锁（Private）</strong>：<code>mm_struct</code>（当前进程的内存描述符地址）
-+ <code>虚拟地址</code>。</li>
-<li><strong>共享锁（Shared）</strong>：<code>inode</code>（物理文件索引节点）
-+ <code>page_offset</code>（页内偏移量）。</li>
+<li><strong>私有锁（Private）</strong>：<code>mm_struct</code>（当前进程的内存描述符地址） + <code>虚拟地址</code>。</li>
+<li><strong>共享锁（Shared）</strong>：<code>inode</code>（物理文件索引节点） + <code>page_offset</code>（页内偏移量）。</li>
 </ul>
-<p><strong>本质</strong>：Futex Key
-就像是给这一块内存打了一个身份证号。无论你在哪个进程、哪个虚拟地址，只要最终指向同一块物理内存，算出来的
-Key 就是一样的。</p>
+<p><strong>本质</strong>：Futex Key 就像是给这一块内存打了一个身份证号。无论你在哪个进程、哪个虚拟地址，只要最终指向同一块物理内存，算出来的 Key 就是一样的。</p>
 <p><strong>2. 存储问题：全局哈希表（Futex Hash Bucket）</strong></p>
 <p>解决了身份识别，接下来是存储。内核不能给每个锁都分配一个独立的等待队列（太浪费内存），也不能把所有睡眠线程放在一个大链表里（查找太慢）。</p>
-<p>Linux 采用了一个折中方案：<strong>全局哈希表
-(<code>futex_queues</code>)</strong>。</p>
-<p>内核维护了一个固定大小的哈希表，每个槽位（Slot）被称为一个
-Bucket（桶）。每个 Bucket 内部维护：</p>
-<ol type="1">
+<p>Linux 采用了一个折中方案：<strong>全局哈希表 (<code>futex_queues</code>)</strong>。</p>
+<p>内核维护了一个固定大小的哈希表，每个槽位（Slot）被称为一个 Bucket（桶）。每个 Bucket 内部维护：</p>
+<ol>
 <li><strong>自旋锁（Spinlock）</strong>：保护这个桶的操作。</li>
-<li><strong>链表（Linked
-List）</strong>：串联挂在这个桶上的所有睡眠线程。</li>
+<li><strong>链表（Linked List）</strong>：串联挂在这个桶上的所有睡眠线程。</li>
 </ol>
-<p>不管系统里有多少个 futex 锁，所有的等待线程都会根据 Futex Key
-的哈希值，散列到这些有限的 Bucket
-中。这意味着，不同的锁（若哈希冲突）可能会落在同一个 Bucket
-里，但这没关系，链表遍历时会再次比对 Key。</p>
+<p>不管系统里有多少个 futex 锁，所有的等待线程都会根据 Futex Key 的哈希值，散列到这些有限的 Bucket 中。这意味着，不同的锁（若哈希冲突）可能会落在同一个 Bucket 里，但这没关系，链表遍历时会再次比对 Key。</p>
 <p><strong>3. 休眠的底层实现（<code>futex_wait</code>）</strong></p>
 <p>当线程决定休眠时，内核执行以下步骤：</p>
-<ol type="1">
-<li><strong>生成 Key</strong>：根据 <code>uaddr</code> 计算
-<code>futex_key</code>。</li>
-<li><strong>查找 Bucket</strong>：计算哈希，找到对应的
-<code>hash_bucket</code>。</li>
-<li><strong>加锁 Bucket</strong>：获取该 Bucket
-的自旋锁（Spinlock）。这是为了防止你在检查的时候，别人把你唤醒了（竞态条件）。</li>
+<ol>
+<li><strong>生成 Key</strong>：根据 <code>uaddr</code> 计算 <code>futex_key</code>。</li>
+<li><strong>查找 Bucket</strong>：计算哈希，找到对应的 <code>hash_bucket</code>。</li>
+<li><strong>加锁 Bucket</strong>：获取该 Bucket 的自旋锁（Spinlock）。这是为了防止你在检查的时候，别人把你唤醒了（竞态条件）。</li>
 <li><strong>原子检查（最后一道防线）</strong>：
 <ul>
-<li>这是 <code>futex</code> 极其关键的一步。内核读取用户态
-<code>uaddr</code> 的值。</li>
-<li><strong>如果值 !=
-expected</strong>：说明用户态判断错了（或者在进内核途中锁变了），立即释放
-Bucket 锁，返回
-<code>EWOULDBLOCK</code>。<strong>线程不会休眠</strong>。</li>
+<li>这是 <code>futex</code> 极其关键的一步。内核读取用户态 <code>uaddr</code> 的值。</li>
+<li><strong>如果值 != expected</strong>：说明用户态判断错了（或者在进内核途中锁变了），立即释放 Bucket 锁，返回 <code>EWOULDBLOCK</code>。<strong>线程不会休眠</strong>。</li>
 <li><strong>如果值 == expected</strong>：准备休眠。</li>
-</ul></li>
-<li><strong>入队</strong>：创建一个代表当前线程的等待对象
-<code>futex_q</code>，填入 Key
-和当前线程信息（<code>task_struct</code>），挂入 Bucket 的链表中。</li>
-<li><strong>切换状态</strong>：将当前线程的状态从
-<code>TASK_RUNNING</code> 修改为
-<code>TASK_INTERRUPTIBLE</code>（可中断睡眠）。</li>
+</ul>
+</li>
+<li><strong>入队</strong>：创建一个代表当前线程的等待对象 <code>futex_q</code>，填入 Key 和当前线程信息（<code>task_struct</code>），挂入 Bucket 的链表中。</li>
+<li><strong>切换状态</strong>：将当前线程的状态从 <code>TASK_RUNNING</code> 修改为 <code>TASK_INTERRUPTIBLE</code>（可中断睡眠）。</li>
 <li><strong>释放 Bucket 锁</strong>：入队完成，不再需要锁 Bucket。</li>
-<li><strong>让出 CPU（Schedule）</strong>：调用核心调度函数
-<code>schedule()</code>。CPU
-保存当前线程的上下文，切换到下一个任务。当前线程停在代码的这一行，不再执行，直到被唤醒。</li>
+<li><strong>让出 CPU（Schedule）</strong>：调用核心调度函数 <code>schedule()</code>。CPU 保存当前线程的上下文，切换到下一个任务。当前线程停在代码的这一行，不再执行，直到被唤醒。</li>
 </ol>
 <p><strong>4. 唤醒的底层实现（<code>futex_wake</code>）</strong></p>
-<p>当另一个线程释放锁并调用 <code>futex_wake(uaddr, count)</code>
-时：</p>
-<ol type="1">
+<p>当另一个线程释放锁并调用 <code>futex_wake(uaddr, count)</code> 时：</p>
+<ol>
 <li><strong>生成 Key</strong>：同样计算出 <code>futex_key</code>。</li>
 <li><strong>查找 Bucket</strong>：找到对应的哈希桶。</li>
 <li><strong>加锁 Bucket</strong>：锁住整个桶。</li>
-<li><strong>遍历链表</strong>：遍历桶里的链表，逐个检查
-<code>futex_q</code> 对象的 Key 是否与当前 <code>uaddr</code> 的 Key
-相同。</li>
+<li><strong>遍历链表</strong>：遍历桶里的链表，逐个检查 <code>futex_q</code> 对象的 Key 是否与当前 <code>uaddr</code> 的 Key 相同。</li>
 <li><strong>出队与唤醒</strong>：
 <ul>
 <li>找到匹配的线程（<code>futex_q</code>）。</li>
@@ -268,139 +199,59 @@ Bucket 锁，返回
 <ul>
 <li>这个函数会将线程的状态改回 <code>TASK_RUNNING</code>。</li>
 <li>将线程加入 CPU 的 <strong>运行队列（Run Queue）</strong>。</li>
-</ul></li>
-<li>如果唤醒数量达到了 <code>count</code>（比如唤醒 1
-个），就停止遍历。</li>
-</ul></li>
+</ul>
+</li>
+<li>如果唤醒数量达到了 <code>count</code>（比如唤醒 1 个），就停止遍历。</li>
+</ul>
+</li>
 <li><strong>释放 Bucket 锁</strong>。</li>
 <li><strong>返回用户态</strong>。</li>
 </ol>
-<p>如果我们要用一句话概括 <code>futex</code>
-的底层休眠唤醒机制，那就是：</p>
+<p>如果我们要用一句话概括 <code>futex</code> 的底层休眠唤醒机制，那就是：</p>
 <blockquote>
 <p>[!IMPORTANT]</p>
-<p><strong>利用物理内存地址（Key）作为唯一标识，通过全局哈希表（Hash
-Table）对等待线程进行分片管理，最终利用内核调度器（Scheduler）的
-<code>schedule()</code> 和 <code>wake_up()</code> 能力来实现 CPU
-资源的让出与回收。</strong></p>
+<p><strong>利用物理内存地址（Key）作为唯一标识，通过全局哈希表（Hash Table）对等待线程进行分片管理，最终利用内核调度器（Scheduler）的 <code>schedule()</code> 和 <code>wake_up()</code> 能力来实现 CPU 资源的让出与回收。</strong></p>
 </blockquote>
-<h1 id="macos公平的-pthread-与非公平的-os_unfair_lock">macOS：公平的
-pthread 与非公平的 os_unfair_lock</h1>
-<p>在 macOS 上，线程/锁的内核 syscalls（<code>__psynch_*</code>
-等）<strong>不是公开稳定 ABI</strong>，官方要求开发者只通过
-<strong>LibSystem</strong>（libc + libpthread + Objective-C/Swift
-runtime 等）来访问，它们都完全实现了 <code>pthread</code>。</p>
-<p>不过值得注意的是，在 macOS 10.12 版本之前，macOS 的 pthread lock
-默认都是公平锁（fair locks），不过在 macOS 10.12 (Sierra, 2016) 起新增了
-<a
-target="_blank" rel="noopener" href="https://developer.apple.com/documentation/os/os_unfair_lock">os_unfair_lock</a>，它是一个不公平、阻塞型、低开销的锁，取代了已弃用的
-<code>OSSpinLock</code>。</p>
-<p>需要注意，<code>os_unfair_lock</code>
-没有提供对应的条件变量或读写锁功能
-。也就是说，如果需要使用条件等待或读写锁语义，仍需使用
-<code>pthread_cond_t</code> 或 <code>pthread_rwlock_t</code> 等 POSIX
-原语，或者使用更高层的 GCD（Grand Central Dispatch）并发模型。Apple
-将<code>os_unfair_lock</code> 定位为替代早期的 <code>OSSpinLock</code>
-的低级锁，以解决 <code>OSSpinLock</code>
-存在的优先级反转问题，同时提供比 <code>pthread_mutex</code>
-更快的性能。<code>os_unfair_lock</code> 内部会在必要时让出 CPU
-而非自旋等待，从而避免高优先级线程饥饿，但调度上又不像
-<code>pthread_mutex</code> 那样严格 FIFO。</p>
-<h1 id="windows">Windows</h1>
-<p>Windows 提供了一系列独特的并发原语，可分为<a
-target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/windows/win32/sysinfo/kernel-objects">重量级内核对象</a>、轻量级对象（如
-<a
-target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/windows/win32/sync/critical-section-objects">Critical
-Section</a>、<a
-target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/windows/win32/sync/slim-reader-writer--srw--locks">SRW
-锁</a>、<a
-target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/windows/win32/sync/condition-variables">Condition
-Variable 条件变量</a>等）和<a
-target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitonaddress">基于地址的等待机制</a>三大类。它们在
-API 设计、用法和实现上各不相同，体现了 Windows 从早期到现代的演进。</p>
-<h2
-id="重量级内核对象基于-handle-的-wait-与-notify">重量级内核对象：基于
-HANDLE 的 wait 与 notify</h2>
-<p>Windows
-的重量级同步原语是由内核完全管理的对象，典型代表包括：<strong>Mutex</strong>（互斥量）、<strong>Event</strong>（事件）、<strong>Semaphore</strong>（信号量）、<strong>WaitableTimer</strong>（可等待计时器）等
-。这些对象通过 Windows API
-创建，相当于创建了一个内核对象句柄（<strong>HANDLE</strong>），类似打开文件会得到文件句柄一样
-。每个对象在内核有对应的数据结构，操作系统维护其状态和等待队列。具体可以参考：
-<a
-target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/windows/win32/sysinfo/kernel-objects">重量级内核对象</a>。</p>
+<h1>macOS：公平的 pthread 与非公平的 os_unfair_lock</h1>
+<p>在 macOS 上，线程/锁的内核 syscalls（<code>__psynch_*</code> 等）<strong>不是公开稳定 ABI</strong>，官方要求开发者只通过 <strong>LibSystem</strong>（libc + libpthread + Objective-C/Swift runtime 等）来访问，它们都完全实现了 <code>pthread</code>。</p>
+<p>不过值得注意的是，在 macOS 10.12 版本之前，macOS 的 pthread lock 默认都是公平锁（fair locks），不过在 macOS 10.12 (Sierra, 2016) 起新增了 <a target="_blank" rel="noopener" href="https://developer.apple.com/documentation/os/os_unfair_lock">os_unfair_lock</a>，它是一个不公平、阻塞型、低开销的锁，取代了已弃用的 <code>OSSpinLock</code>。</p>
+<p>需要注意，<code>os_unfair_lock</code> 没有提供对应的条件变量或读写锁功能 。也就是说，如果需要使用条件等待或读写锁语义，仍需使用 <code>pthread_cond_t</code> 或 <code>pthread_rwlock_t</code> 等 POSIX 原语，或者使用更高层的 GCD（Grand Central Dispatch）并发模型。Apple 将<code>os_unfair_lock</code> 定位为替代早期的 <code>OSSpinLock</code> 的低级锁，以解决 <code>OSSpinLock</code> 存在的优先级反转问题，同时提供比 <code>pthread_mutex</code> 更快的性能。<code>os_unfair_lock</code> 内部会在必要时让出 CPU 而非自旋等待，从而避免高优先级线程饥饿，但调度上又不像 <code>pthread_mutex</code> 那样严格 FIFO。</p>
+<h1>Windows</h1>
+<p>Windows 提供了一系列独特的并发原语，可分为<a target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/windows/win32/sysinfo/kernel-objects">重量级内核对象</a>、轻量级对象（如 <a target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/windows/win32/sync/critical-section-objects">Critical Section</a>、<a target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/windows/win32/sync/slim-reader-writer--srw--locks">SRW 锁</a>、<a target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/windows/win32/sync/condition-variables">Condition Variable 条件变量</a>等）和<a target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitonaddress">基于地址的等待机制</a>三大类。它们在 API 设计、用法和实现上各不相同，体现了 Windows 从早期到现代的演进。</p>
+<h2 id="重量级内核对象：基于-HANDLE-的-wait-与-notify">重量级内核对象：基于 HANDLE 的 wait 与 notify</h2>
+<p>Windows 的重量级同步原语是由内核完全管理的对象，典型代表包括：<strong>Mutex</strong>（互斥量）、<strong>Event</strong>（事件）、<strong>Semaphore</strong>（信号量）、<strong>WaitableTimer</strong>（可等待计时器）等 。这些对象通过 Windows API 创建，相当于创建了一个内核对象句柄（<strong>HANDLE</strong>），类似打开文件会得到文件句柄一样 。每个对象在内核有对应的数据结构，操作系统维护其状态和等待队列。具体可以参考： <a target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/windows/win32/sysinfo/kernel-objects">重量级内核对象</a>。</p>
 <p>我整理了它们的基本使用方式，供你参考：</p>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608192945913.png" /></p>
-<h2
-id="轻量级对象criticalsectionsrwlock-与-conditionvariable">轻量级对象：CriticalSection、SRWLock
-与 ConditionVariable</h2>
-<p>"轻量级"同步原语是指<strong>不以独立内核对象形式存在、主要在用户态运作、仅在必要时调用内核的机制</strong>。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608192945913.png" alt=""></p>
+<h2 id="轻量级对象：CriticalSection、SRWLock-与-ConditionVariable">轻量级对象：CriticalSection、SRWLock 与 ConditionVariable</h2>
+<p>&quot;轻量级&quot;同步原语是指<strong>不以独立内核对象形式存在、主要在用户态运作、仅在必要时调用内核的机制</strong>。</p>
 <blockquote>
 <p>是不是已经开始有点 futex 的感觉了？🤭</p>
 </blockquote>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608224608594.png" /></p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608224608594.png" alt=""></p>
 <p><strong>CRITICAL_SECTION</strong></p>
-<p>它并非通过 Create 函数得到句柄，而是定义为结构体
-<code>CRITICAL_SECTION</code>，需调用
-<code>InitializeCriticalSection()</code>
-初始化，之后直接用地址操作。本质上是一个递归互斥锁，同一个线程可以多次
-<code>Enter</code>，内部有一个递归计数，必须对应次数的
-<code>Leave</code> 才能完全释放。</p>
-<p>Critical Section 在未争用情况下尝试通过用户态 Atomic 操作获取，比如
-CAS
-交换为当前线程，成功则进入，失败则可能先自旋尝试，依旧失败再进入内核等待。</p>
+<p>它并非通过 Create 函数得到句柄，而是定义为结构体 <code>CRITICAL_SECTION</code>，需调用 <code>InitializeCriticalSection()</code> 初始化，之后直接用地址操作。本质上是一个递归互斥锁，同一个线程可以多次 <code>Enter</code>，内部有一个递归计数，必须对应次数的 <code>Leave</code> 才能完全释放。</p>
+<p>Critical Section 在未争用情况下尝试通过用户态 Atomic 操作获取，比如 CAS 交换为当前线程，成功则进入，失败则可能先自旋尝试，依旧失败再进入内核等待。</p>
 <p><strong>SRW Locks</strong></p>
-<p>SRW Locks 不支持递归获取，同一线程如果持有写锁，再请求写锁会死锁。SRW
-之所以被称为 "slim"
-锁，是因为其实现相当高效，无锁时获取和释放都是用户态的 Atomic
-操作，发生争用时，内核用一个优化的等待机制管理等待队列。</p>
+<p>SRW Locks 不支持递归获取，同一线程如果持有写锁，再请求写锁会死锁。SRW 之所以被称为 “slim” 锁，是因为其实现相当高效，无锁时获取和释放都是用户态的 Atomic 操作，发生争用时，内核用一个优化的等待机制管理等待队列。</p>
 <p><strong>Condition Variable</strong></p>
-<p>是 <a target="_blank" rel="noopener" href="https://wuu.wikipedia.org/wiki/Windows_Vista">Vista</a>
-时代引入的新原语，它必须搭配 Critical Section 或 SWR Lock 使用。</p>
-<h2
-id="基于地址的等待机制waitonaddress">基于地址的等待机制：WaitOnAddress</h2>
-<p>Windows 在 8 版（2012）引入了全新的底层同步机制，与 Linux futex
-非常相似，主要函数有：</p>
+<p>是 <a target="_blank" rel="noopener" href="https://wuu.wikipedia.org/wiki/Windows_Vista">Vista</a> 时代引入的新原语，它必须搭配 Critical Section 或 SWR Lock 使用。</p>
+<h2 id="基于地址的等待机制：WaitOnAddress">基于地址的等待机制：WaitOnAddress</h2>
+<p>Windows 在 8 版（2012）引入了全新的底层同步机制，与 Linux futex 非常相似，主要函数有：</p>
 <ul>
-<li><code>WaitOnAddress(address, compare_address, _,_)</code>:
-让当前线程在 address 指向的内存值满足特定条件前进入睡眠，函数会将
-address 处提供的值和 compare_address
-提高的值逐字节比较，如果全等，则线程睡眠，等待后续唤醒，如果不等，函数立即返回。与
-futex_wait
-相同，<strong>比较与睡眠是一个原子操作</strong>：在检查内存值与期望值决定休眠的过程中，若有其他线程改变了
-address 或发起唤醒，系统会保证不漏掉信号。</li>
-<li><code>WakeByAddressSingle(address)</code>:
-唤醒在指定地址上等待的一个线程。</li>
-<li><code>WakeByAddressAll(address)</code>:
-唤醒在指定地址上等待的所有线程。</li>
+<li><code>WaitOnAddress(address, compare_address, _,_)</code>: 让当前线程在 address 指向的内存值满足特定条件前进入睡眠，函数会将 address 处提供的值和 compare_address 提高的值逐字节比较，如果全等，则线程睡眠，等待后续唤醒，如果不等，函数立即返回。与 futex_wait 相同，<strong>比较与睡眠是一个原子操作</strong>：在检查内存值与期望值决定休眠的过程中，若有其他线程改变了 address 或发起唤醒，系统会保证不漏掉信号。</li>
+<li><code>WakeByAddressSingle(address)</code>: 唤醒在指定地址上等待的一个线程。</li>
+<li><code>WakeByAddressAll(address)</code>: 唤醒在指定地址上等待的所有线程。</li>
 </ul>
-<p>在实现上，WaitOnAddress
-非常轻量，没有显式的内存对象或句柄。当线程等待时，内核只是将线程放入与那块内存地址相关联的等待队列中，唤醒时根据地址找到等待线程列表进行唤醒。</p>
-<h1 id="总结">总结</h1>
-<p>通过对 3
-个不同的操作系统的分析，从大的角度来讲，我们会发现它们的并发原语最重要的就是要利用原子变量，在用户态实现
-3 个操作，以减少系统调用的出现，进一步提升性能。这 3
-个操作可以归纳为：</p>
+<p>在实现上，WaitOnAddress 非常轻量，没有显式的内存对象或句柄。当线程等待时，内核只是将线程放入与那块内存地址相关联的等待队列中，唤醒时根据地址找到等待线程列表进行唤醒。</p>
+<h1>总结</h1>
+<p>通过对 3 个不同的操作系统的分析，从大的角度来讲，我们会发现它们的并发原语最重要的就是要利用原子变量，在用户态实现 3 个操作，以减少系统调用的出现，进一步提升性能。这 3 个操作可以归纳为：</p>
 <ul>
-<li><strong>wait(&amp;AtomicU32)</strong>:
-在原子变量等于期望值的时候陷入等待，否则直接返回。</li>
-<li><strong>wake_one(&amp;AtomicU32)</strong>: 唤醒某个
-<code>wait()</code> 在当前变量的线程。</li>
-<li><strong>wake_all(&amp;AtomicU32)</strong>: 唤醒所有
-<code>wait()</code> 在当前变量的线程。</li>
+<li><strong>wait(&amp;AtomicU32)</strong>: 在原子变量等于期望值的时候陷入等待，否则直接返回。</li>
+<li><strong>wake_one(&amp;AtomicU32)</strong>: 唤醒某个 <code>wait()</code> 在当前变量的线程。</li>
+<li><strong>wake_all(&amp;AtomicU32)</strong>: 唤醒所有 <code>wait()</code> 在当前变量的线程。</li>
 </ul>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608232051766.png" /></p>
-<p>所以下一步如果我们想在编程语言的层面上（Rust）实现自己的
-<code>Mutex</code>、<code>REMutex</code> 和
-<code>CondVar</code>，第一步就是需要针对不同的操作系统实现一套
-<code>wait/wake_one/wake_all</code>
-以屏蔽不同操作系统的实现差异，幸运的是 <a
-target="_blank" rel="noopener" href="https://marabos.nl/atomics/">Rust Atomics and Locks</a> 的作者 <a
-target="_blank" rel="noopener" href="https://github.com/m-ou-se">Mara Bos</a> 已经帮我们实现好了：<a
-target="_blank" rel="noopener" href="https://github.com/m-ou-se/atomic-wait">atomic-wait</a>。下篇，我们就利用这个
-crate，来一步步手写一个自己的 <code>Mutex</code>！</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250608232051766.png" alt=""></p>
+<p>所以下一步如果我们想在编程语言的层面上（Rust）实现自己的 <code>Mutex</code>、<code>REMutex</code> 和 <code>CondVar</code>，第一步就是需要针对不同的操作系统实现一套 <code>wait/wake_one/wake_all</code> 以屏蔽不同操作系统的实现差异，幸运的是 <a target="_blank" rel="noopener" href="https://marabos.nl/atomics/">Rust Atomics and Locks</a> 的作者 <a target="_blank" rel="noopener" href="https://github.com/m-ou-se">Mara Bos</a> 已经帮我们实现好了：<a target="_blank" rel="noopener" href="https://github.com/m-ou-se/atomic-wait">atomic-wait</a>。下篇，我们就利用这个 crate，来一步步手写一个自己的 <code>Mutex</code>！</p>
 <p>Happy Coding! Peace~</p>
 
 <div class="article-footer fs14">
@@ -414,39 +265,32 @@ crate，来一步步手写一个自己的 <code>Mutex</code>！</p>
         </li>
         
         <li class="post-title">
-          <p><a target="_blank" rel="noopener" href="https://doc.rust-lang.org/book/">Rust Programming
-Language</a></p>
+          <p><a target="_blank" rel="noopener" href="https://doc.rust-lang.org/book/">Rust Programming Language</a></p>
 
         </li>
         
         <li class="post-title">
-          <p><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust
-原理丨聊一聊 Rust 的 Atomic 和内存顺序</a></p>
+          <p><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</a></p>
 
         </li>
         
         <li class="post-title">
-          <p><a href="https://hedon.top/2025/06/05/rust-atomic-in-processor/">Rust
-原理丨从汇编角度看原子操作</a></p>
+          <p><a href="https://hedon.top/2025/06/05/rust-atomic-in-processor/">Rust 原理丨从汇编角度看原子操作</a></p>
 
         </li>
         
         <li class="post-title">
-          <p><a href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust
-实战丨手写一个 SpinLock</a></p>
+          <p><a href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust 实战丨手写一个 SpinLock</a></p>
 
         </li>
         
         <li class="post-title">
-          <p><a
-href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust
-实战丨手写一个 oneshot channel</a></p>
+          <p><a href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust 实战丨手写一个 oneshot channel</a></p>
 
         </li>
         
         <li class="post-title">
-          <p><a href="https://hedon.top/2025/06/03/rust-action-arc/">Rust
-实战丨手写一个 Arc</a></p>
+          <p><a href="https://hedon.top/2025/06/03/rust-action-arc/">Rust 实战丨手写一个 Arc</a></p>
 
         </li>
         </ul>
@@ -455,9 +299,7 @@ href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust
     
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -497,21 +339,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#posix-%E7%BA%BF%E7%A8%8B%E5%8E%9F%E8%AF%AD-pthread"><span class="toc-text">POSIX 线程原语 pthread</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#linuxfutex-%E7%94%A8%E6%88%B7%E6%80%81%E7%AD%89%E5%BE%85%E4%B8%8E%E5%94%A4%E9%86%92"><span class="toc-text">Linux：Futex 用户态等待与唤醒</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#macos%E5%85%AC%E5%B9%B3%E7%9A%84-pthread-%E4%B8%8E%E9%9D%9E%E5%85%AC%E5%B9%B3%E7%9A%84-os_unfair_lock"><span class="toc-text">macOS：公平的
-pthread 与非公平的 os_unfair_lock</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#windows"><span class="toc-text">Windows</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%8D%E9%87%8F%E7%BA%A7%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1%E5%9F%BA%E4%BA%8E-handle-%E7%9A%84-wait-%E4%B8%8E-notify"><span class="toc-text">重量级内核对象：基于
-HANDLE 的 wait 与 notify</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BD%BB%E9%87%8F%E7%BA%A7%E5%AF%B9%E8%B1%A1criticalsectionsrwlock-%E4%B8%8E-conditionvariable"><span class="toc-text">轻量级对象：CriticalSection、SRWLock
-与 ConditionVariable</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E5%9C%B0%E5%9D%80%E7%9A%84%E7%AD%89%E5%BE%85%E6%9C%BA%E5%88%B6waitonaddress"><span class="toc-text">基于地址的等待机制：WaitOnAddress</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">POSIX 线程原语 pthread</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">Linux：Futex 用户态等待与唤醒</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">macOS：公平的 pthread 与非公平的 os_unfair_lock</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">Windows</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%8D%E9%87%8F%E7%BA%A7%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1%EF%BC%9A%E5%9F%BA%E4%BA%8E-HANDLE-%E7%9A%84-wait-%E4%B8%8E-notify"><span class="toc-text">重量级内核对象：基于 HANDLE 的 wait 与 notify</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BD%BB%E9%87%8F%E7%BA%A7%E5%AF%B9%E8%B1%A1%EF%BC%9ACriticalSection%E3%80%81SRWLock-%E4%B8%8E-ConditionVariable"><span class="toc-text">轻量级对象：CriticalSection、SRWLock 与 ConditionVariable</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E5%9C%B0%E5%9D%80%E7%9A%84%E7%AD%89%E5%BE%85%E6%9C%BA%E5%88%B6%EF%BC%9AWaitOnAddress"><span class="toc-text">基于地址的等待机制：WaitOnAddress</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

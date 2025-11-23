@@ -27,12 +27,14 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="在多线程编程中，你是否遇到过这样的困扰：消费者线程不断轮询检查数据是否准备好，白白浪费 CPU 资源？或者在生产者-消费者模式中，如何让消费者优雅地等待数据到来？本文将带你手写一个高效的 Condvar（条件变量），解决线程间的等待与唤醒问题。我们将从最基础的实现开始，逐步优化到减少不必要的系统调用，并深入分析内存顺序的选择，让你彻底理解条件变量背后的设计哲学。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250610230511147.png">
 <meta property="article:published_time" content="2025-06-09T00:51:46.000Z">
 <meta property="article:modified_time" content="2025-07-27T04:29:14.334Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="rust">
 <meta property="article:tag" content="并发编程">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250610230511147.png">
   
   
   
@@ -70,7 +72,7 @@
 <div class="widgets">
 <widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">专栏：Rust 实战集合</span></div><div class="widget-body"><a class="item" href="/2025/06/11/rust-action-rwlock/"><span class="title">Rust 实战丨手写一个 RwLock</span></a><a class="item" href="/2025/06/09/rust-action-mutex/"><span class="title">Rust 实战丨手写一个 Mutex</span></a><a class="item active" href="/2025/06/09/rust-action-condvar/"><span class="title">Rust 实战丨手写一个 Condvar</span><svg class="active-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11.098v4.993c0 3.096 0 4.645-.734 5.321c-.35.323-.792.526-1.263.58c-.987.113-2.14-.907-4.445-2.946c-1.02-.901-1.529-1.352-2.118-1.47a2.225 2.225 0 0 0-.88 0c-.59.118-1.099.569-2.118 1.47c-2.305 2.039-3.458 3.059-4.445 2.945a2.238 2.238 0 0 1-1.263-.579C3 20.736 3 19.188 3 16.091v-4.994C3 6.81 3 4.666 4.318 3.333C5.636 2 7.758 2 12 2c4.243 0 6.364 0 7.682 1.332C21 4.665 21 6.81 21 11.098" opacity=".5"/><path fill="currentColor" d="M9 5.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5z"/></svg></a><a class="item" href="/2025/06/03/rust-action-arc/"><span class="title">Rust 实战丨手写一个 Arc</span></a><a class="item" href="/2025/05/29/rust-action-oneshot-channel/"><span class="title">Rust 实战丨手写一个 oneshot channel</span></a><a class="item" href="/2025/05/13/rust-action-spinlock/"><span class="title">Rust 实战丨手写一个 SpinLock</span></a><a class="item" href="/2024/06/06/rust-action-sse/"><span class="title">Rust 实战丨SSE(Server-Sent Events)</span></a><a class="item" href="/2024/05/28/rust-action-macro-json/"><span class="title">Rust 实战丨通过实现 json! 掌握声明宏</span></a><a class="item" href="/2024/04/23/rust-action-inverted-index-concurrency/"><span class="title">Rust 实战丨并发构建倒排索引</span></a><a class="item" href="/2024/04/15/rust-action-inverted-index-demo/"><span class="title">Rust 实战丨倒排索引</span></a><a class="item" href="/2024/03/06/rust-action-httpie/"><span class="title">Rust 实战丨HTTPie</span></a><a class="item" href="/2024/01/17/rust-action-mandelbrot/"><span class="title">Rust 实战丨绘制曼德博集</span></a></div></widget>
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a><a class="item title" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/23/linux-io-epoll/"><span class="title">从第一性原理理解 epoll</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -96,64 +98,37 @@
   </div>
   </div><article class="md-text content"><p>系列文章：</p>
 <ul>
-<li><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust
-原理丨聊一聊 Rust 的 Atomic 和内存顺序</a></li>
-<li><a
-href="https://hedon.top/2025/06/05/rust-atomic-in-processor/">Rust
-原理丨从汇编角度看原子操作</a></li>
-<li><a href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust
-实战丨手写一个 SpinLock</a></li>
-<li><a
-href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust
-实战丨手写一个 oneshot channel</a></li>
-<li><a href="https://hedon.top/2025/06/03/rust-action-arc/">Rust
-实战丨手写一个 Arc</a></li>
-<li><a href="https://hedon.top/2025/06/08/rust-os-primitives/">Rust
-原理丨操作系统并发原语</a></li>
-<li><a href="https://hedon.top/2025/06/09/rust-action-mutex/">Rust
-实战丨手写一个 Mutex</a></li>
-<li><a href="https://hedon.top/2025/06/09/rust-action-condvar/">Rust
-实战丨手写一个 Condvar</a> 👈 本篇</li>
-<li><a href="https://hedon.top/2025/06/11/rust-action-rwlock/">Rust
-实战丨手写一个 RwLock</a></li>
+<li><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</a></li>
+<li><a href="https://hedon.top/2025/06/05/rust-atomic-in-processor/">Rust 原理丨从汇编角度看原子操作</a></li>
+<li><a href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust 实战丨手写一个 SpinLock</a></li>
+<li><a href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust 实战丨手写一个 oneshot channel</a></li>
+<li><a href="https://hedon.top/2025/06/03/rust-action-arc/">Rust 实战丨手写一个 Arc</a></li>
+<li><a href="https://hedon.top/2025/06/08/rust-os-primitives/">Rust 原理丨操作系统并发原语</a></li>
+<li><a href="https://hedon.top/2025/06/09/rust-action-mutex/">Rust 实战丨手写一个 Mutex</a></li>
+<li><a href="https://hedon.top/2025/06/09/rust-action-condvar/">Rust 实战丨手写一个 Condvar</a> 👈 本篇</li>
+<li><a href="https://hedon.top/2025/06/11/rust-action-rwlock/">Rust 实战丨手写一个 RwLock</a></li>
 </ul>
-<hr />
-<p>本篇我们继续参考 <a
-target="_blank" rel="noopener" href="https://marabos.nl/atomics/building-locks.html#condition-variable">Rust
-Atomics and Locks</a> 一书来手写一个条件变量：<em>Condition
-Variable</em>，简称 <code>Condvar</code>。</p>
+<hr>
+<p>本篇我们继续参考 <a target="_blank" rel="noopener" href="https://marabos.nl/atomics/building-locks.html#condition-variable">Rust Atomics and Locks</a> 一书来手写一个条件变量：<em>Condition Variable</em>，简称 <code>Condvar</code>。</p>
 <p>在本章开始之前，我们假设你已经：</p>
-<ol type="1">
+<ol>
 <li>熟悉并理解 Rust 的各种原子操作。</li>
-<li>阅读过 <a
-href="https://hedon.top/2024/11/11/rust-memory-order/">Rust 原理丨聊一聊
-Rust 的 Atomic 和内存顺序</a> 和 <a
-href="https://hedon.top/2025/06/05/rust-atomic-in-processor/">Rust
-原理丨从汇编角度看原子操作</a>，并理解内存顺序和内存屏障的原理和使用方法。</li>
-<li>理解 Rust <code>UnsafeCell&lt;T&gt;</code>
-提供的内部可变性允许我们在持有共享引用 <code>&amp;</code>
-的时候可以对数据进行修改。</li>
-<li>阅读过 <a
-href="https://hedon.top/2025/06/08/rust-os-primitives/">Rust
-原理丨操作系统并发原语</a> 并了解 <a
-target="_blank" rel="noopener" href="https://crates.io/crates/atomic-wait">atomic-wait</a> crate 中
-<code>wait/wake_one/wake_all</code> 的适用场景和使用方法。</li>
+<li>阅读过 <a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</a> 和 <a href="https://hedon.top/2025/06/05/rust-atomic-in-processor/">Rust 原理丨从汇编角度看原子操作</a>，并理解内存顺序和内存屏障的原理和使用方法。</li>
+<li>理解 Rust <code>UnsafeCell&lt;T&gt;</code> 提供的内部可变性允许我们在持有共享引用 <code>&amp;</code> 的时候可以对数据进行修改。</li>
+<li>阅读过 <a href="https://hedon.top/2025/06/08/rust-os-primitives/">Rust 原理丨操作系统并发原语</a> 并了解 <a target="_blank" rel="noopener" href="https://crates.io/crates/atomic-wait">atomic-wait</a> crate 中 <code>wait/wake_one/wake_all</code> 的适用场景和使用方法。</li>
 </ol>
-<p>在 Rust 中，<code>Condvar</code> 是一个配合 <code>Mutex</code>
-使用的线程同步原语，主要作用是让线程在满足某些“条件”之前主动<strong>睡眠</strong>（阻塞），待条件达成时再被唤醒。</p>
-<p>典型的就是生产者和消费者模式，我们先来看一下标准库的
-<code>Condvar</code> 如何使用：</p>
+<p>在 Rust 中，<code>Condvar</code> 是一个配合 <code>Mutex</code> 使用的线程同步原语，主要作用是让线程在满足某些“条件”之前主动<strong>睡眠</strong>（阻塞），待条件达成时再被唤醒。</p>
+<p>典型的就是生产者和消费者模式，我们先来看一下标准库的 <code>Condvar</code> 如何使用：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[cfg(test)]</span></span><br><span class="line"><span class="keyword">mod</span> tests &#123;</span><br><span class="line">    <span class="keyword">use</span> std::&#123;</span><br><span class="line">        collections::VecDeque,</span><br><span class="line">        sync::&#123;Condvar, Mutex&#125;,</span><br><span class="line">        thread,</span><br><span class="line">        time::Duration,</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="meta">#[test]</span></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">condvar_usage</span>() &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">queue</span> = Mutex::<span class="title function_ invoke__">new</span>(VecDeque::<span class="title function_ invoke__">new</span>());</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">not_empty</span> = Condvar::<span class="title function_ invoke__">new</span>();</span><br><span class="line"></span><br><span class="line">        thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">          	<span class="comment">// 消费者</span></span><br><span class="line">            s.<span class="title function_ invoke__">spawn</span>(|| <span class="keyword">loop</span> &#123;</span><br><span class="line">                <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">q</span> = queue.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line">                <span class="keyword">let</span> <span class="variable">item</span> = <span class="keyword">loop</span> &#123;</span><br><span class="line">                    <span class="keyword">if</span> <span class="keyword">let</span> <span class="variable">Some</span>(item) = q.<span class="title function_ invoke__">pop_front</span>() &#123; <span class="comment">// 从队列中获取数据</span></span><br><span class="line">                        <span class="keyword">break</span> item; <span class="comment">// 获取到则返回</span></span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        q = not_empty.<span class="title function_ invoke__">wait</span>(q).<span class="title function_ invoke__">unwrap</span>(); <span class="comment">// 获取不到数据则阻塞等待</span></span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;;</span><br><span class="line">                <span class="title function_ invoke__">drop</span>(q);</span><br><span class="line">                dbg!(item);</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">          	<span class="comment">// 生产者</span></span><br><span class="line">            <span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="number">0</span>..<span class="number">10</span> &#123;</span><br><span class="line">                queue.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">unwrap</span>().<span class="title function_ invoke__">push_back</span>(i);  <span class="comment">// 往队列里面投放数据</span></span><br><span class="line">                not_empty.<span class="title function_ invoke__">notify_one</span>();  <span class="comment">// 唤醒潜在的阻塞线程</span></span><br><span class="line">                thread::<span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_secs</span>(<span class="number">1</span>));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>在上面这个例子中，我们实现了一对生产者和消费者：</p>
-<ol type="1">
+<ol>
 <li>消费尝试获取锁，并从队列中获取数据：
-<ol type="1">
+<ol>
 <li>如果有，则释放锁并返回。</li>
-<li>如果没有，则调用条件变量的 <code>wait</code>
-陷入阻塞<strong>并释放锁</strong>。</li>
-</ol></li>
-<li>生产者尝试获取锁，并往队列中投放数据，并调用条件变量的
-<code>notify_one</code> 唤醒潜在的阻塞线程。</li>
+<li>如果没有，则调用条件变量的 <code>wait</code> 陷入阻塞<strong>并释放锁</strong>。</li>
+</ol>
+</li>
+<li>生产者尝试获取锁，并往队列中投放数据，并调用条件变量的 <code>notify_one</code> 唤醒潜在的阻塞线程。</li>
 </ol>
 <pre class="mermaid">flowchart LR
     A[生产者] -->|添加数据| B[队列]
@@ -162,43 +137,27 @@ target="_blank" rel="noopener" href="https://crates.io/crates/atomic-wait">atomi
     C -->|wait| A</pre>
 <h2 id="读完本篇你能学到什么">读完本篇你能学到什么</h2>
 <p>你是否在多线程编程中遇到过这些令人头疼的问题：</p>
-<p>🤔
-<strong>性能浪费问题</strong>：消费者线程需要不断轮询检查数据是否就绪，即使没有数据也要持续占用
-CPU，这种"忙等待"让程序效率低下？</p>
-<p>🤔
-<strong>复杂的同步逻辑</strong>：在生产者-消费者模式中，如何让消费者在没有数据时优雅地进入休眠，而不是无休止地检查？</p>
-<p>🤔
-<strong>竞态条件的困扰</strong>：如何确保在多线程环境下，唤醒操作不会丢失，线程不会因丢失唤醒而永远沉睡？</p>
-<p>🤔
-<strong>性能优化的疑惑</strong>：系统调用开销很大，如何避免在没有等待线程时进行无意义的唤醒操作？</p>
-<p>🤔 <strong>内存顺序的选择</strong>：在实现同步原语时，到底该用
-<code>Acquire</code>、<code>Release</code> 还是
-<code>Relaxed</code>？如何分析 happens-before 关系？</p>
+<p>🤔 <strong>性能浪费问题</strong>：消费者线程需要不断轮询检查数据是否就绪，即使没有数据也要持续占用 CPU，这种&quot;忙等待&quot;让程序效率低下？</p>
+<p>🤔 <strong>复杂的同步逻辑</strong>：在生产者-消费者模式中，如何让消费者在没有数据时优雅地进入休眠，而不是无休止地检查？</p>
+<p>🤔 <strong>竞态条件的困扰</strong>：如何确保在多线程环境下，唤醒操作不会丢失，线程不会因丢失唤醒而永远沉睡？</p>
+<p>🤔 <strong>性能优化的疑惑</strong>：系统调用开销很大，如何避免在没有等待线程时进行无意义的唤醒操作？</p>
+<p>🤔 <strong>内存顺序的选择</strong>：在实现同步原语时，到底该用 <code>Acquire</code>、<code>Release</code> 还是 <code>Relaxed</code>？如何分析 happens-before 关系？</p>
 <p>如果这些问题曾经让你困惑，那么本文正是为你准备的。下面我们就正式开始从零开始构建一个条件变量（Condvar），用最直观的方式解答这些并发编程中的经典难题。</p>
-<h2 id="v1基础实现">v1：基础实现</h2>
-<p>先来思考一下如何定义 <code>Condvar</code>
-这个数据结构，参考标准库，它会有 3 个方法：</p>
+<h2 id="v1：基础实现">v1：基础实现</h2>
+<p>先来思考一下如何定义 <code>Condvar</code> 这个数据结构，参考标准库，它会有 3 个方法：</p>
 <ul>
 <li><code>wait(MutexGuard)</code>: 释放 MutexGuard 并陷入等待。</li>
 <li><code>notify_one()</code>: 唤醒一个 <code>wait</code> 的线程。</li>
 <li><code>notify_all()</code>: 唤醒所有 <code>wait</code> 的线程。</li>
 </ul>
-<p>看过本系列前面几篇的读者应该可以敏锐觉察到，这里就是对应了
-<code>atomic-wait</code> 中的 <code>wait/wake_one/wake_all</code>。</p>
-<p>那局势就比较明朗了，我们可以在 <code>condvar.wait(guard)</code>
-的时候调用 <code>atomic_wait::wait(&amp;atomic)</code> ，然后在
-<code>condvar.notify_one()</code> 的时候修改 <code>&amp;atomic</code>
-然后调用 <code>atomic_wait::wake_one()</code>
-唤醒线程，<code>condvar.notify_all()</code> 也同理。</p>
-<p>因此 <code>Condvar</code> 需要有一个 <code>AtomicU32</code>
-类型的属性，这里我们称为 <code>counter</code>。故 <code>Condvar</code>
-结构暂且定义如下：</p>
+<p>看过本系列前面几篇的读者应该可以敏锐觉察到，这里就是对应了 <code>atomic-wait</code> 中的 <code>wait/wake_one/wake_all</code>。</p>
+<p>那局势就比较明朗了，我们可以在 <code>condvar.wait(guard)</code> 的时候调用 <code>atomic_wait::wait(&amp;atomic)</code> ，然后在 <code>condvar.notify_one()</code> 的时候修改 <code>&amp;atomic</code> 然后调用 <code>atomic_wait::wake_one()</code> 唤醒线程，<code>condvar.notify_all()</code> 也同理。</p>
+<p>因此 <code>Condvar</code> 需要有一个 <code>AtomicU32</code> 类型的属性，这里我们称为 <code>counter</code>。故 <code>Condvar</code> 结构暂且定义如下：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">Condvar</span> &#123;</span><br><span class="line">    counter: AtomicU32,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> <span class="title class_">Condvar</span> &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">new</span>() <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        <span class="keyword">Self</span> &#123;</span><br><span class="line">            counter: AtomicU32::<span class="title function_ invoke__">new</span>(<span class="number">0</span>),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><code>notify_one</code> 和 <code>notify_all</code>
-所上所述，就非常简单了：</p>
+<p><code>notify_one</code> 和 <code>notify_all</code> 所上所述，就非常简单了：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span> <span class="title class_">Condvar</span> &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">notify_one</span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">self</span>.counter.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Relaxed);</span><br><span class="line">        <span class="title function_ invoke__">wake_one</span>(&amp;<span class="keyword">self</span>.counter);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">notify_all</span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">self</span>.counter.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Relaxed);</span><br><span class="line">        <span class="title function_ invoke__">wake_all</span>(&amp;<span class="keyword">self</span>.counter);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>现在就剩下 <code>wait</code> 了，它的基本原理：</p>
-<ol type="1">
+<ol>
 <li>接收一个 MutexGuard；</li>
 <li>释放 MutexGuard；</li>
 <li>陷入等待，等待唤醒；</li>
@@ -206,60 +165,34 @@ CPU，这种"忙等待"让程序效率低下？</p>
 </ol>
 <p>综上，我们可以有以下实现：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">MutexGuard</span>&lt;<span class="symbol">&#x27;a</span>, T&gt; &#123;</span><br><span class="line">    <span class="title function_ invoke__">pub</span>(<span class="keyword">crate</span>) mutex: &amp;<span class="symbol">&#x27;a</span> Mutex&lt;T&gt;,  <span class="comment">// &lt;---- 需要公开 mutex 字段，这里使用 pub(crate) 限制 crate 外部访问</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> <span class="title class_">Condvar</span> &#123;</span><br><span class="line">   	<span class="comment">//...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">wait</span>&lt;<span class="symbol">&#x27;a</span>, T&gt;(&amp;<span class="keyword">self</span>, guard: MutexGuard&lt;<span class="symbol">&#x27;a</span>, T&gt;) <span class="punctuation">-&gt;</span> MutexGuard&lt;<span class="symbol">&#x27;a</span>, T&gt; &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">counter_value</span> = <span class="keyword">self</span>.counter.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Unlock the mutex by dropping the guard,</span></span><br><span class="line">        <span class="comment">// but remember the mutex so we can lock it again.</span></span><br><span class="line">        <span class="keyword">let</span> <span class="variable">mutex</span> = guard.mutex;</span><br><span class="line">        <span class="title function_ invoke__">drop</span>(guard);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Wait, but only if the counter hasn&#x27;t changed since unlocking.</span></span><br><span class="line">        <span class="title function_ invoke__">wait</span>(&amp;<span class="keyword">self</span>.counter, counter_value);</span><br><span class="line"></span><br><span class="line">        mutex.<span class="title function_ invoke__">lock</span>()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>注意，为了访问
-<code>guard.mutex</code>，这里我们使用的是之前自己手写的 <a
-target="_blank" rel="noopener" href="https://github.com/hedon-rust-road/conutils/blob/main/src/mutex.rs">MutexGuard</a>，并将
-<code>mutex</code> 字段的私有程度修改为
-<code>pub(crate)</code>。代码比较简单，这里就不赘述了，完整流程可参考下图理解。</p>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250610230511147.png" /></p>
+<p>注意，为了访问 <code>guard.mutex</code>，这里我们使用的是之前自己手写的 <a target="_blank" rel="noopener" href="https://github.com/hedon-rust-road/conutils/blob/main/src/mutex.rs">MutexGuard</a>，并将 <code>mutex</code> 字段的私有程度修改为 <code>pub(crate)</code>。代码比较简单，这里就不赘述了，完整流程可参考下图理解。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250610230511147.png" alt=""></p>
 <p>我们修改一下测试用例，运行后发现也是可以通过的！</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[cfg(test)]</span></span><br><span class="line"><span class="keyword">mod</span> tests &#123;</span><br><span class="line">    <span class="keyword">use</span> std::&#123;collections::VecDeque, thread, time::Duration&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">use</span> crate::&#123;condvar::Condvar, mutex::Mutex&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="meta">#[test]</span></span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">condvar_usage</span>() &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">queue</span> = Mutex::<span class="title function_ invoke__">new</span>(VecDeque::<span class="title function_ invoke__">new</span>());</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">not_empty</span> = Condvar::<span class="title function_ invoke__">new</span>();</span><br><span class="line"></span><br><span class="line">        thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">            s.<span class="title function_ invoke__">spawn</span>(|| <span class="keyword">loop</span> &#123;</span><br><span class="line">                <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">q</span> = queue.<span class="title function_ invoke__">lock</span>();</span><br><span class="line">                <span class="keyword">let</span> <span class="variable">item</span> = <span class="keyword">loop</span> &#123;</span><br><span class="line">                    <span class="keyword">if</span> <span class="keyword">let</span> <span class="variable">Some</span>(item) = q.<span class="title function_ invoke__">pop_front</span>() &#123;</span><br><span class="line">                        <span class="keyword">break</span> item;</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        q = not_empty.<span class="title function_ invoke__">wait</span>(q);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;;</span><br><span class="line">                <span class="title function_ invoke__">drop</span>(q);</span><br><span class="line">                dbg!(item);</span><br><span class="line">            &#125;);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="number">0</span>..<span class="number">10</span> &#123;</span><br><span class="line">                queue.<span class="title function_ invoke__">lock</span>().<span class="title function_ invoke__">push_back</span>(i);</span><br><span class="line">                not_empty.<span class="title function_ invoke__">notify_one</span>();</span><br><span class="line">                thread::<span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_secs</span>(<span class="number">1</span>));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="v2减少不必要的系统调用">v2：减少不必要的系统调用</h2>
-<p>第 1 个版本中，我们在 <code>notify_one</code> 和
-<code>notify_all</code> 分别都无条件调用了 <code>wake_one</code> 和
-<code>wake_all</code>
-尝试唤醒潜在的线程，但是这个时候可能并没有线程被阻塞着，那这个系统调用就白白浪费了。</p>
-<p>所以在这个版本中，我们尝试来优化这一点。为此，我们需要记录当前阻塞中的线程的数量，所以需要给
-<code>Condvar</code> 加一个属性 <code>num_waiters</code>：</p>
+<h2 id="v2：减少不必要的系统调用">v2：减少不必要的系统调用</h2>
+<p>第 1 个版本中，我们在 <code>notify_one</code> 和 <code>notify_all</code> 分别都无条件调用了 <code>wake_one</code> 和 <code>wake_all</code> 尝试唤醒潜在的线程，但是这个时候可能并没有线程被阻塞着，那这个系统调用就白白浪费了。</p>
+<p>所以在这个版本中，我们尝试来优化这一点。为此，我们需要记录当前阻塞中的线程的数量，所以需要给 <code>Condvar</code> 加一个属性 <code>num_waiters</code>：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">Condvar</span> &#123;</span><br><span class="line">    counter: AtomicU32,</span><br><span class="line">    num_waiters: AtomicUsize,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> <span class="title class_">Condvar</span> &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">new</span>() <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        <span class="keyword">Self</span> &#123;</span><br><span class="line">            counter: AtomicU32::<span class="title function_ invoke__">new</span>(<span class="number">0</span>),</span><br><span class="line">            num_waiters: AtomicUsize::<span class="title function_ invoke__">new</span>(<span class="number">0</span>),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在 <code>notify_one</code> 和 <code>notify_all</code>
-的时候，我们仅当 <code>num_waiters&gt;0</code>
-的时候，才进行系统调用：</p>
+<p>在 <code>notify_one</code> 和 <code>notify_all</code> 的时候，我们仅当 <code>num_waiters&gt;0</code> 的时候，才进行系统调用：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span> <span class="title class_">Condvar</span> &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">notify_one</span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span>.num_waiters.<span class="title function_ invoke__">load</span>(Relaxed) &gt; <span class="number">0</span> &#123;</span><br><span class="line">            <span class="keyword">self</span>.counter.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Relaxed); <span class="comment">// <span class="doctag">TODO:</span> memory order</span></span><br><span class="line">            <span class="title function_ invoke__">wake_one</span>(&amp;<span class="keyword">self</span>.counter);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">notify_all</span>(&amp;<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span>.num_waiters.<span class="title function_ invoke__">load</span>(Relaxed) &gt; <span class="number">0</span> &#123;</span><br><span class="line">            <span class="keyword">self</span>.counter.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Relaxed); <span class="comment">// <span class="doctag">TODO:</span> memory order</span></span><br><span class="line">            <span class="title function_ invoke__">wake_all</span>(&amp;<span class="keyword">self</span>.counter);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在 <code>wait</code> 的时候，我们先标记自己是等待的，即
-<code>num_waiters++</code>，然后在被唤醒后，解除这个标记，即
-<code>num_waiters--</code>：</p>
+<p>在 <code>wait</code> 的时候，我们先标记自己是等待的，即 <code>num_waiters++</code>，然后在被唤醒后，解除这个标记，即 <code>num_waiters--</code>：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span> <span class="title class_">Condvar</span> &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">wait</span>&lt;<span class="symbol">&#x27;a</span>, T&gt;(&amp;<span class="keyword">self</span>, guard: MutexGuard&lt;<span class="symbol">&#x27;a</span>, T&gt;) <span class="punctuation">-&gt;</span> MutexGuard&lt;<span class="symbol">&#x27;a</span>, T&gt; &#123;</span><br><span class="line">        <span class="keyword">self</span>.num_waiters.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Relaxed); <span class="comment">// <span class="doctag">TODO:</span> memory order  &lt;----  New!!!</span></span><br><span class="line"></span><br><span class="line">      	<span class="keyword">let</span> <span class="variable">counter_value</span> = <span class="keyword">self</span>.counter.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Unlock the mutex by dropping the guard,</span></span><br><span class="line">        <span class="comment">// but remember the mutex so we can lock it again.</span></span><br><span class="line">        <span class="keyword">let</span> <span class="variable">mutex</span> = guard.mutex;</span><br><span class="line">        <span class="title function_ invoke__">drop</span>(guard);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Wait, but only if the counter hasn&#x27;t changed since unlocking.</span></span><br><span class="line">        <span class="title function_ invoke__">wait</span>(&amp;<span class="keyword">self</span>.counter, counter_value);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">self</span>.num_waiters.<span class="title function_ invoke__">fetch_sub</span>(<span class="number">1</span>, Relaxed); <span class="comment">//<span class="doctag">TODO:</span> memory order   &lt;----  New!!!</span></span><br><span class="line"></span><br><span class="line">        mutex.<span class="title function_ invoke__">lock</span>()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>OK，这里又到了最关键的问题了：<strong><font color="red">操作
-num_waiters 时该用什么内存顺序？</font></strong></p>
-<p>这个关键的问题的关键是什么呢？是要<strong><font color="green">确定哪些地方需要建立
-happens-before 关系！</font></strong></p>
-<p>很明显，我们这里的关键就是要<strong><font color="red">防止
-<code>wake_one</code>
-的丢失</font></strong>，即确保如果一个线程即将进入等待状态，那么后续的通知操作能够看到这个等待者的存在。所以这里我们需要
-<code>notify_one()</code> 中的 <code>load</code> 和
-<code>condvar.wait()</code> 中的 <code>fetch_add</code> 建立
-happens-before 关系。至于 <code>fetch_sub</code>
-就无所谓了，因为这个时候已经被唤醒了，丢失或者重复唤醒都无所谓了。</p>
-<p>不过这里其实可以省掉这对 <code>Release</code> 和
-<code>Acquire</code>，直接用 <code>Relaxed</code>！为什么呢？</p>
-<ol type="1">
-<li><p>在 <code>condvar.wait</code> 的 <code>fetch_add</code>
-之前，我们必须先拿到 MutexGuard，即通过 <code>lock()</code>
-抢占到锁，<code>lock()</code> 里面是啥操作？是一个
-<strong><code>Acquire</code></strong>!</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; Mutex&lt;T&gt; &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">lock</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> MutexGuard&lt;T&gt; &#123;</span><br><span class="line">        <span class="title function_ invoke__">lock_contended</span>(&amp;<span class="keyword">self</span>.state);</span><br><span class="line">        <span class="comment">// Swap successfully, means locked.</span></span><br><span class="line">        MutexGuard &#123; mutex: <span class="keyword">self</span> &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">lock_contended</span>(state: &amp;AtomicU32) &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">spin_count</span> = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span> <span class="keyword">let</span> <span class="variable">Err</span>(s) = state.<span class="title function_ invoke__">compare_exchange</span>(<span class="number">0</span>, <span class="number">1</span>, Ordering::Acquire, Ordering::Relaxed) &#123;</span><br><span class="line">        <span class="keyword">if</span> s == <span class="number">1</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> spin_count &lt; <span class="number">100</span> &#123;</span><br><span class="line">                spin_count += <span class="number">1</span>;</span><br><span class="line">                std::hint::<span class="title function_ invoke__">spin_loop</span>();</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            _ = state.<span class="title function_ invoke__">compare_exchange</span>(<span class="number">1</span>, <span class="number">2</span>, Ordering::Acquire, Ordering::Relaxed);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="title function_ invoke__">wait</span>(state, <span class="number">2</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-<li><p>我们在调用 <code>atomic-wait::wait</code> 陷入等待之前，要先
-<code>drop(guard</code>)，别忘了，<code>drop(guard)</code>
-里面是啥操作？是一个 <strong><code>Release</code></strong>！</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">MutexGuard</span>&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="comment">// If there are threads waiting for the lock, wait one of them.</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span>.mutex.state.<span class="title function_ invoke__">swap</span>(<span class="number">0</span>, Ordering::Release) == <span class="number">2</span> &#123;</span><br><span class="line">            <span class="title function_ invoke__">wake_one</span>(&amp;<span class="keyword">self</span>.mutex.state);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<p>OK，这里又到了最关键的问题了：<strong><font color="red">操作 num_waiters 时该用什么内存顺序？</font></strong></p>
+<p>这个关键的问题的关键是什么呢？是要**<font color="green">确定哪些地方需要建立 happens-before 关系！</font>**</p>
+<p>很明显，我们这里的关键就是要**<font color="red">防止 <code>wake_one</code> 的丢失</font>**，即确保如果一个线程即将进入等待状态，那么后续的通知操作能够看到这个等待者的存在。所以这里我们需要 <code>notify_one()</code> 中的 <code>load</code> 和 <code>condvar.wait()</code> 中的 <code>fetch_add</code> 建立 happens-before 关系。至于 <code>fetch_sub</code> 就无所谓了，因为这个时候已经被唤醒了，丢失或者重复唤醒都无所谓了。</p>
+<p>不过这里其实可以省掉这对 <code>Release</code> 和 <code>Acquire</code>，直接用 <code>Relaxed</code>！为什么呢？</p>
+<ol>
+<li>
+<p>在 <code>condvar.wait</code> 的 <code>fetch_add</code> 之前，我们必须先拿到 MutexGuard，即通过 <code>lock()</code> 抢占到锁，<code>lock()</code> 里面是啥操作？是一个 <strong><code>Acquire</code></strong>!</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; Mutex&lt;T&gt; &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">lock</span>(&amp;<span class="keyword">self</span>) <span class="punctuation">-&gt;</span> MutexGuard&lt;T&gt; &#123;</span><br><span class="line">        <span class="title function_ invoke__">lock_contended</span>(&amp;<span class="keyword">self</span>.state);</span><br><span class="line">        <span class="comment">// Swap successfully, means locked.</span></span><br><span class="line">        MutexGuard &#123; mutex: <span class="keyword">self</span> &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">lock_contended</span>(state: &amp;AtomicU32) &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">spin_count</span> = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span> <span class="keyword">let</span> <span class="variable">Err</span>(s) = state.<span class="title function_ invoke__">compare_exchange</span>(<span class="number">0</span>, <span class="number">1</span>, Ordering::Acquire, Ordering::Relaxed) &#123;</span><br><span class="line">        <span class="keyword">if</span> s == <span class="number">1</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> spin_count &lt; <span class="number">100</span> &#123;</span><br><span class="line">                spin_count += <span class="number">1</span>;</span><br><span class="line">                std::hint::<span class="title function_ invoke__">spin_loop</span>();</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            _ = state.<span class="title function_ invoke__">compare_exchange</span>(<span class="number">1</span>, <span class="number">2</span>, Ordering::Acquire, Ordering::Relaxed);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="title function_ invoke__">wait</span>(state, <span class="number">2</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>我们在调用 <code>atomic-wait::wait</code> 陷入等待之前，要先 <code>drop(guard</code>)，别忘了，<code>drop(guard)</code> 里面是啥操作？是一个 <strong><code>Release</code></strong>！</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T&gt; <span class="built_in">Drop</span> <span class="keyword">for</span> <span class="title class_">MutexGuard</span>&lt;<span class="symbol">&#x27;_</span>, T&gt; &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">drop</span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="comment">// If there are threads waiting for the lock, wait one of them.</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span>.mutex.state.<span class="title function_ invoke__">swap</span>(<span class="number">0</span>, Ordering::Release) == <span class="number">2</span> &#123;</span><br><span class="line">            <span class="title function_ invoke__">wake_one</span>(&amp;<span class="keyword">self</span>.mutex.state);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
 </ol>
-<p>所以呀，这里其实天然就已经有一对 <code>Release</code> 和
-<code>Acquire</code> 了！happens-before
-关系是成立的！所以我们之前的代码就已经满足要求了，再次运行前面的测试用例，依旧是顺利通过的！</p>
-<p>完整代码可参考：<a
-target="_blank" rel="noopener" href="https://github.com/hedon-rust-road/conutils/blob/main/src/condvar.rs">conutils/condvar</a>。具体流程你可以参考下图辅助理解。</p>
+<p>所以呀，这里其实天然就已经有一对 <code>Release</code> 和 <code>Acquire</code> 了！happens-before 关系是成立的！所以我们之前的代码就已经满足要求了，再次运行前面的测试用例，依旧是顺利通过的！</p>
+<p>完整代码可参考：<a target="_blank" rel="noopener" href="https://github.com/hedon-rust-road/conutils/blob/main/src/condvar.rs">conutils/condvar</a>。具体流程你可以参考下图辅助理解。</p>
 <pre class="mermaid">sequenceDiagram
     participant Consumer as 消费者线程
     participant Producer as 生产者线程
@@ -286,30 +219,24 @@ target="_blank" rel="noopener" href="https://github.com/hedon-rust-road/conutils
     Consumer->>Mutex: lock() [Acquire]
     Consumer->>NumWaiters: fetch_sub(1) [Relaxed]</pre>
 <blockquote>
-<p>另外，即使 <code>notify_one()</code> 在 <code>wait()</code>
-之前调用，<code>atomic_wait::wait()</code> 的语义也能保证正确性。因为
-<code>wait(&amp;counter, expected_value)</code> 只有在
-<code>counter</code> 的值等于 <code>expected_value</code>
-时才会阻塞，如果 <code>counter</code> 已经被修改，<code>wait</code>
-会立即返回。</p>
+<p>另外，即使 <code>notify_one()</code> 在 <code>wait()</code> 之前调用，<code>atomic_wait::wait()</code> 的语义也能保证正确性。因为 <code>wait(&amp;counter, expected_value)</code> 只有在 <code>counter</code> 的值等于 <code>expected_value</code> 时才会阻塞，如果 <code>counter</code> 已经被修改，<code>wait</code> 会立即返回。</p>
 </blockquote>
 <h2 id="总结">总结</h2>
 <p>通过本文的学习，我们从零开始实现了一个功能完整的条件变量（Condvar），并在这个过程中解决了多个重要问题：</p>
-<ol type="1">
-<li><p><strong>理解条件变量的本质</strong>：Condvar 本质上是一个配合
-Mutex
-使用的线程同步工具，它解决了"如何让线程在条件不满足时休眠，条件满足时被唤醒"这一经典并发编程问题。</p></li>
-<li><p><strong>掌握两种实现策略</strong>：</p>
+<ol>
+<li>
+<p><strong>理解条件变量的本质</strong>：Condvar 本质上是一个配合 Mutex 使用的线程同步工具，它解决了&quot;如何让线程在条件不满足时休眠，条件满足时被唤醒&quot;这一经典并发编程问题。</p>
+</li>
+<li>
+<p><strong>掌握两种实现策略</strong>：</p>
 <ul>
-<li><strong>v1 基础版本</strong>：直接使用 <code>atomic-wait</code>
-实现等待与唤醒机制</li>
-<li><strong>v2 优化版本</strong>：通过 <code>num_waiters</code>
-计数器避免不必要的系统调用</li>
-</ul></li>
-<li><p><strong>深入理解内存顺序</strong>：通过分析 happens-before
-关系，我们发现可以使用 <code>Relaxed</code> 内存顺序，因为 Mutex 的
-<code>Release</code>/<code>Acquire</code>
-操作已经提供了必要的同步保障。</p></li>
+<li><strong>v1 基础版本</strong>：直接使用 <code>atomic-wait</code> 实现等待与唤醒机制</li>
+<li><strong>v2 优化版本</strong>：通过 <code>num_waiters</code> 计数器避免不必要的系统调用</li>
+</ul>
+</li>
+<li>
+<p><strong>深入理解内存顺序</strong>：通过分析 happens-before 关系，我们发现可以使用 <code>Relaxed</code> 内存顺序，因为 Mutex 的 <code>Release</code>/<code>Acquire</code> 操作已经提供了必要的同步保障。</p>
+</li>
 </ol>
 <p>掌握了这些知识后，你可以：</p>
 <ul>
@@ -319,9 +246,7 @@ Mutex
 <li>识别并避免并发编程中的常见陷阱</li>
 </ul>
 <p>条件变量虽然概念简单，但其背后涉及的原子操作、内存顺序、操作系统原语等知识却相当深入。通过亲手实现，我们不仅掌握了工具的使用，更重要的是理解了其背后的设计思想，这为我们后续学习更复杂的并发编程技巧打下了坚实基础。</p>
-<p>下篇，我们将完成 <a
-target="_blank" rel="noopener" href="https://marabos.nl/atomics/building-locks.html#reader-writer-lock">Rust
-Atomics and Locks</a> 的最后一个实战案例：手写一个读写锁（RwLock）！</p>
+<p>下篇，我们将完成 <a target="_blank" rel="noopener" href="https://marabos.nl/atomics/building-locks.html#reader-writer-lock">Rust Atomics and Locks</a> 的最后一个实战案例：手写一个读写锁（RwLock）！</p>
 <p>Happy Coding! Peace~</p>
 
 <div class="article-footer fs14">
@@ -335,51 +260,42 @@ Atomics and Locks</a> 的最后一个实战案例：手写一个读写锁（RwLo
         </li>
         
         <li class="post-title">
-          <p><a target="_blank" rel="noopener" href="https://doc.rust-lang.org/book/">Rust Programming
-Language</a></p>
+          <p><a target="_blank" rel="noopener" href="https://doc.rust-lang.org/book/">Rust Programming Language</a></p>
 
         </li>
         
         <li class="post-title">
-          <p><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust
-原理丨聊一聊 Rust 的 Atomic 和内存顺序</a></p>
+          <p><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</a></p>
 
         </li>
         
         <li class="post-title">
-          <p><a href="https://hedon.top/2025/06/05/rust-atomic-in-processor/">Rust
-原理丨从汇编角度看原子操作</a></p>
+          <p><a href="https://hedon.top/2025/06/05/rust-atomic-in-processor/">Rust 原理丨从汇编角度看原子操作</a></p>
 
         </li>
         
         <li class="post-title">
-          <p><a href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust
-实战丨手写一个 SpinLock</a></p>
+          <p><a href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust 实战丨手写一个 SpinLock</a></p>
 
         </li>
         
         <li class="post-title">
-          <p><a
-href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust
-实战丨手写一个 oneshot channel</a></p>
+          <p><a href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust 实战丨手写一个 oneshot channel</a></p>
 
         </li>
         
         <li class="post-title">
-          <p><a href="https://hedon.top/2025/06/03/rust-action-arc/">Rust
-实战丨手写一个 Arc</a></p>
+          <p><a href="https://hedon.top/2025/06/03/rust-action-arc/">Rust 实战丨手写一个 Arc</a></p>
 
         </li>
         
         <li class="post-title">
-          <p><a href="https://hedon.top/2025/06/08/rust-os-primitives/">Rust
-原理丨操作系统并发原语</a></p>
+          <p><a href="https://hedon.top/2025/06/08/rust-os-primitives/">Rust 原理丨操作系统并发原语</a></p>
 
         </li>
         
         <li class="post-title">
-          <p><a href="https://hedon.top/2025/06/09/rust-action-mutex/">Rust
-实战丨手写一个 Mutex</a></p>
+          <p><a href="https://hedon.top/2025/06/09/rust-action-mutex/">Rust 实战丨手写一个 Mutex</a></p>
 
         </li>
         </ul>
@@ -388,9 +304,7 @@ href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust
     
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -430,18 +344,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%BB%E5%AE%8C%E6%9C%AC%E7%AF%87%E4%BD%A0%E8%83%BD%E5%AD%A6%E5%88%B0%E4%BB%80%E4%B9%88"><span class="toc-text">读完本篇你能学到什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#v1%E5%9F%BA%E7%A1%80%E5%AE%9E%E7%8E%B0"><span class="toc-text">v1：基础实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#v2%E5%87%8F%E5%B0%91%E4%B8%8D%E5%BF%85%E8%A6%81%E7%9A%84%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8"><span class="toc-text">v2：减少不必要的系统调用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%BB%E5%AE%8C%E6%9C%AC%E7%AF%87%E4%BD%A0%E8%83%BD%E5%AD%A6%E5%88%B0%E4%BB%80%E4%B9%88"><span class="toc-text">读完本篇你能学到什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#v1%EF%BC%9A%E5%9F%BA%E7%A1%80%E5%AE%9E%E7%8E%B0"><span class="toc-text">v1：基础实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#v2%EF%BC%9A%E5%87%8F%E5%B0%91%E4%B8%8D%E5%BF%85%E8%A6%81%E7%9A%84%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8"><span class="toc-text">v2：减少不必要的系统调用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
