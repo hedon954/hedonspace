@@ -27,19 +27,17 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="整理阅读《解密 QUIC&#x2F;HTTP3：未来互联网的基石》笔记。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250122195252117.png">
 <meta property="article:published_time" content="2025-01-15T11:17:20.000Z">
 <meta property="article:modified_time" content="2025-06-05T00:39:15.037Z">
 <meta property="article:author" content="Hedon Wang">
-<meta property="article:tag" content="计算机网络">
 <meta property="article:tag" content="quic">
 <meta property="article:tag" content="http3">
+<meta property="article:tag" content="计算机网络">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250122195252117.png">
   
   
   
-  <meta name="keywords" content="计算机网络,quic,http3">
+  <meta name="keywords" content="quic,http3,计算机网络">
 
   <!-- feed -->
   
@@ -97,143 +95,166 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><h1>1. QUIC 产生背景</h1>
+  </div><article class="md-text content"><h1 id="quic-产生背景">1. QUIC 产生背景</h1>
 <h2 id="常见网络协议">常见网络协议</h2>
 <ul>
 <li><code>UDP</code></li>
 <li><code>TCP</code></li>
-<li><code>SCTP</code>（Stream Control Transmission Protocol）：用于电话网络。</li>
-<li><code>KCP</code>：基于 UDP 在应用层实现可靠性传输，牺牲带宽换取效率。</li>
-<li><code>RTP</code>（Real-time Transport Protocol）：与 RTCP 配合传输实时数据，如交互式音频和视频数据。
+<li><code>SCTP</code>（Stream Control Transmission
+Protocol）：用于电话网络。</li>
+<li><code>KCP</code>：基于 UDP
+在应用层实现可靠性传输，牺牲带宽换取效率。</li>
+<li><code>RTP</code>（Real-time Transport Protocol）：与 RTCP
+配合传输实时数据，如交互式音频和视频数据。
 <ul>
 <li>RTCP：传输控制信息</li>
 <li>RTP：传输实时数据</li>
+</ul></li>
 </ul>
-</li>
-</ul>
-<h2 id="TSL-版本演化">TSL 版本演化</h2>
+<h2 id="tsl-版本演化">TSL 版本演化</h2>
 <ul>
-<li>
-<p><code>SSLv2</code>：安全性低</p>
-</li>
-<li>
-<p><code>SSLv3</code>：分为握手阶段和数据传输阶段。</p>
+<li><p><code>SSLv2</code>：安全性低</p></li>
+<li><p><code>SSLv3</code>：分为握手阶段和数据传输阶段。</p>
 <ul>
 <li>握手阶段完成对端点的认证和确定保护数据传输的密钥。</li>
-<li>一旦确定了密钥，后面的数据传输和 SSL 协议过程都受到加密和完整性保护。</li>
-</ul>
-</li>
-<li>
-<p><code>TSL1.0</code>：基于 SSLv3，存在 CBC（Cipher Block Chaining，密文分组链接）加密和解密模式漏洞，使得主动攻击者可以观察到当前记录的 IV（Intiallization Vector，初始化向量），猜测一个数据库，进行数据注入。</p>
-</li>
-<li>
-<p><code>TSL1.1</code>：修复了 TSL1.0 的一些关键安全问题：</p>
+<li>一旦确定了密钥，后面的数据传输和 SSL
+协议过程都受到加密和完整性保护。</li>
+</ul></li>
+<li><p><code>TSL1.0</code>：基于 SSLv3，存在 CBC（Cipher Block
+Chaining，密文分组链接）加密和解密模式漏洞，使得主动攻击者可以观察到当前记录的
+IV（Intiallization
+Vector，初始化向量），猜测一个数据库，进行数据注入。</p></li>
+<li><p><code>TSL1.1</code>：修复了 TSL1.0 的一些关键安全问题：</p>
 <ul>
 <li>BC 加密使用每条记录一个的显式 IV；</li>
-<li>为了防止 CBC 填充攻击，使用 bad_record_mac 错误码代替 decryption_failed 回复填充错误；</li>
-<li>支持传输参数的 IANA（Internet Assigned Numbers Authority，互联网数字分配机构）注册，增加了传输参数的灵活性；</li>
+<li>为了防止 CBC 填充攻击，使用 bad_record_mac 错误码代替
+decryption_failed 回复填充错误；</li>
+<li>支持传输参数的 IANA（Internet Assigned Numbers
+Authority，互联网数字分配机构）注册，增加了传输参数的灵活性；</li>
 <li>改进了连接关闭过早情况下的连接恢复问题。</li>
 </ul>
-<p>有些加密算法还是存在安全漏洞，使用的 MD5 也不安全。</p>
-</li>
-<li>
-<p><code>TSL1.2</code>：主要关注了架构灵活性和安全问题。</p>
+<p>有些加密算法还是存在安全漏洞，使用的 MD5 也不安全。</p></li>
+<li><p><code>TSL1.2</code>：主要关注了架构灵活性和安全问题。</p>
 <ul>
 <li>架构：
 <ul>
 <li>客户端可以指定自己支持的签名和 hash 算法列表；</li>
 <li>支持非协议固定的算法；</li>
-</ul>
-</li>
+</ul></li>
 <li>安全：
 <ul>
-<li>增加了对 AEAD（Authenticated Encryption with Associated Data 关联数据认证加密）的支持，可以在加密中认证没有加密部分的关键数据，甚至是不在报文中的关键数据，可以保护更大的范围。</li>
+<li>增加了对 AEAD（Authenticated Encryption with Associated Data
+关联数据认证加密）的支持，可以在加密中认证没有加密部分的关键数据，甚至是不在报文中的关键数据，可以保护更大的范围。</li>
 <li>规定必须实现密码套件 TLS_RSA_WITH_AES_128_CBC_SHA。</li>
 <li>增加了 HMAC-SHA256 密码套件。</li>
 <li>删除了包含已废弃算法的 IDEA 和 DES 密码套件。</li>
 <li>对 EncryptedPreMasterSecret 版本号进行了更严格的检查。</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><code>TSL1.3</code>：除了增加安全性，重点改进了连接速度，首次连接发送数据最低可以 1-RTT，恢复连接发送数据最低可以 0-RTT。</p>
+</ul></li>
+</ul></li>
+<li><p><code>TSL1.3</code>：除了增加安全性，重点改进了连接速度，首次连接发送数据最低可以
+1-RTT，恢复连接发送数据最低可以 0-RTT。</p>
 <ul>
 <li>安全：
 <ul>
-<li>删除了所有被证明有问题的对称加密算法，只保留了 AEAD 的加密套件。密码套件的概念也已经改变，将认证和密钥交换机制与加密算法和散列（用于密钥导出函数和握手消息认证码）分离。</li>
-<li>删除 RSA 和静态 DH 密码套件，因为静态 RSA 加密预主密钥的方式和使用静态 DH 私钥都不能保证前向安全性，很容易泄露密钥。只保留能保证前向安全的密钥交换算法，如使用临时私钥的 ECDHE（Elliptic Curve Diffie-Hellman Ephemeral，椭圆曲线 DH 临时密钥交换算法）和 DHE（Diffie-Hellman Ephemeral, DH 临时密钥交换算法）。</li>
+<li>删除了所有被证明有问题的对称加密算法，只保留了 AEAD
+的加密套件。密码套件的概念也已经改变，将认证和密钥交换机制与加密算法和散列（用于密钥导出函数和握手消息认证码）分离。</li>
+<li>删除 RSA 和静态 DH 密码套件，因为静态 RSA
+加密预主密钥的方式和使用静态 DH
+私钥都不能保证前向安全性，很容易泄露密钥。只保留能保证前向安全的密钥交换算法，如使用临时私钥的
+ECDHE（Elliptic Curve Diffie-Hellman Ephemeral，椭圆曲线 DH
+临时密钥交换算法）和 DHE（Diffie-Hellman Ephemeral, DH
+临时密钥交换算法）。</li>
 <li>ServerHello 之后的消息都加密传输。</li>
-<li>删除了压缩功能。之前版本的压缩功能由于存在被攻击的风险实际上很少使用，而且现代的压缩基本都在应用层实现，比如 HTTP 就自己实现的压缩。</li>
+<li>删除了压缩功能。之前版本的压缩功能由于存在被攻击的风险实际上很少使用，而且现代的压缩基本都在应用层实现，比如
+HTTP 就自己实现的压缩。</li>
+</ul></li>
+</ul></li>
 </ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="HTTP-版本演化">HTTP 版本演化</h2>
+<h2 id="http-版本演化">HTTP 版本演化</h2>
 <ul>
-<li>
-<p><code>HTTP0.9</code>：仅支持简单的请求响应，只能访问<strong>简单的文本</strong>文档。</p>
-</li>
-<li>
-<p><code>HTTP1.0</code>：HTTP1 中引入了<strong>请求头和响应头</strong>，请求时可以指定 HTTP 版本号、用户代理、接收类型等，响应可以指明响应状态、内容长度、内容类型等。</p>
-</li>
-<li>
-<p><code>HTTP1.1</code>：增加了<strong>重用 TCP 连接</strong>（keep-alive）的方法，默认保持连接，除非显式通知关闭连接[插图]。这样可以在一个 TCP 连接上完成多个请求-响应，消除了 TCP 建立的延迟，也避免了新建立的 TCP 连接的慢启动过程。</p>
+<li><p><code>HTTP0.9</code>：仅支持简单的请求响应，只能访问<strong>简单的文本</strong>文档。</p></li>
+<li><p><code>HTTP1.0</code>：HTTP1
+中引入了<strong>请求头和响应头</strong>，请求时可以指定 HTTP
+版本号、用户代理、接收类型等，响应可以指明响应状态、内容长度、内容类型等。</p></li>
+<li><p><code>HTTP1.1</code>：增加了<strong>重用 TCP
+连接</strong>（keep-alive）的方法，默认保持连接，除非显式通知关闭连接[插图]。这样可以在一个
+TCP 连接上完成多个请求-响应，消除了 TCP 建立的延迟，也避免了新建立的 TCP
+连接的慢启动过程。</p>
 <ul>
-<li>HTTP1.1 在 HTTP 请求首部中增加了 Host 字段，用来支持共享 IP 地址的虚拟主机服务器。</li>
+<li>HTTP1.1 在 HTTP 请求首部中增加了 Host 字段，用来支持共享 IP
+地址的虚拟主机服务器。</li>
 <li>同时支持了更多的方法，如 PUT、PATCH、DELETE、OPTIONS。</li>
 <li>引入分块传输支持动态内容。</li>
 <li>引入了更多的缓存控制策略。</li>
 <li>支持请求部分内容。</li>
-</ul>
-</li>
-<li>
-<p><code>HTTP2</code>：修改了 HTTP1.1 的封装格式，增加了一个二进制分帧层。基于二进制分层，HTTP2 实现了 HTTP 的<strong>多路复用</strong>。HTTP2 为每个请求分配了一个流标识，服务器响应时带上相同的流标识，客户端就可以方便地将响应与请求关联起来，而不用依赖顺序，从而可以降低延迟和提高吞吐量。</p>
+</ul></li>
+<li><p><code>HTTP2</code>：修改了 HTTP1.1
+的封装格式，增加了一个二进制分帧层。基于二进制分层，HTTP2 实现了 HTTP
+的<strong>多路复用</strong>。HTTP2
+为每个请求分配了一个流标识，服务器响应时带上相同的流标识，客户端就可以方便地将响应与请求关联起来，而不用依赖顺序，从而可以降低延迟和提高吞吐量。</p>
 <ul>
-<li>HTTP2 还增加了首部压缩 HPACK（Header Compression for HTTP2，HTTP2 首部压缩算法）。</li>
+<li>HTTP2 还增加了首部压缩 HPACK（Header Compression for HTTP2，HTTP2
+首部压缩算法）。</li>
 <li>支持请求优先级。</li>
 <li>支持服务器主动推送。</li>
-<li>增加了 ALPN（Application-Layer Protocol Negotiation，应用层协议协商）。</li>
+<li>增加了 ALPN（Application-Layer Protocol
+Negotiation，应用层协议协商）。</li>
 <li>支持认证、加密和完整性保护，即 <code>HTTPS</code>。</li>
 </ul>
-<p>但多个请求或响应在同一个 TCP 上发送时，仍然受制于 TCP 的队首阻塞问题。</p>
-</li>
-<li>
-<p><code>HTTP3</code>：基于 <code>QUIC</code> 协议，底层使用 UDP 实现，摆脱了 TCP 的队首阻塞问题。同时改进了 TCP 中存在的一些其他问题，比如拥塞控制、协议僵化、启动慢、重连慢、安全弱等。</p>
+<p>但多个请求或响应在同一个 TCP 上发送时，仍然受制于 TCP
+的队首阻塞问题。</p></li>
+<li><p><code>HTTP3</code>：基于 <code>QUIC</code> 协议，底层使用 UDP
+实现，摆脱了 TCP 的队首阻塞问题。同时改进了 TCP
+中存在的一些其他问题，比如拥塞控制、协议僵化、启动慢、重连慢、安全弱等。</p>
 <ul>
-<li>实现了没有队首阻塞的并发。如果 QUIC 丢了一个报文，仅仅影响对应流的交付，不会阻塞其他流。</li>
-<li>与 TLS1.3 紧密合作，尽可能的加密。还增加了 QUIC 报文的首部加密，除保证了报文安全性，提高了攻击门槛，还避免了协议僵化。</li>
-<li>选择 UDP 作为底层实现。一方面避免了 TCP 的首部阻塞，另一方面互联网中绝大部分的主机和中间件都是 TCP 和 UDP 的天下，所以天然支持。</li>
+<li>实现了没有队首阻塞的并发。如果 QUIC
+丢了一个报文，仅仅影响对应流的交付，不会阻塞其他流。</li>
+<li>与 TLS1.3 紧密合作，尽可能的加密。还增加了 QUIC
+报文的首部加密，除保证了报文安全性，提高了攻击门槛，还避免了协议僵化。</li>
+<li>选择 UDP 作为底层实现。一方面避免了 TCP
+的首部阻塞，另一方面互联网中绝大部分的主机和中间件都是 TCP 和 UDP
+的天下，所以天然支持。</li>
 <li>用户态实现。不依赖于内核，容易单独升级。</li>
-<li>低延迟的建立。实现了首次最低 1-RTT 发送应用数据，恢复连接时发送应用数据最低只需 0-RTT。</li>
-<li>无缝的连接迁移。QUIC 的连接基于连接标识，改变 IP 或者 UDP 端口号并不影响连接的识别，因此可以实现无缝的连接迁移。但是负载均衡就麻烦了。</li>
+<li>低延迟的建立。实现了首次最低 1-RTT
+发送应用数据，恢复连接时发送应用数据最低只需 0-RTT。</li>
+<li>无缝的连接迁移。QUIC 的连接基于连接标识，改变 IP 或者 UDP
+端口号并不影响连接的识别，因此可以实现无缝的连接迁移。但是负载均衡就麻烦了。</li>
 <li>改进的流量控制。</li>
 <li>协议行为作为负载。</li>
+</ul></li>
 </ul>
-</li>
-</ul>
-<h1>2. QUIC 报文</h1>
+<h1 id="quic-报文">2. QUIC 报文</h1>
 <ul>
 <li>长首部报文：用于建立 QUIC 连接和建立连接前发送应用数据。</li>
-<li>短首部报文：用于在 QUIC 连接建立后发送应用数据和 QUIC 协议内容。</li>
+<li>短首部报文：用于在 QUIC 连接建立后发送应用数据和 QUIC
+协议内容。</li>
 <li>无状态重置报文：当服务器丢失了连接状态但仍然收到该连接的数据包时，可以发送无状态重置报文通知客户端立即终止连接。</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250122195252117.png" alt="QUIC 报文类型"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250122195252117.png"
+alt="QUIC 报文类型" />
+<figcaption aria-hidden="true">QUIC 报文类型</figcaption>
+</figure>
 <p>初始报文：客户端使用初始报文来发起连接，服务器使用初始报文和握手报文回应客户端的请求。</p>
-<p>0-RTT 报文：用于承载 QUIC 连接之前想要发送的数据，一般用于恢复连接后立即发送数据。</p>
-<p>握手报文：用来携带服务器和客户端的 TLS 加密握手信息和确认，载荷一般是 CRYPTO 帧和 ACK 帧。</p>
+<p>0-RTT 报文：用于承载 QUIC
+连接之前想要发送的数据，一般用于恢复连接后立即发送数据。</p>
+<p>握手报文：用来携带服务器和客户端的 TLS 加密握手信息和确认，载荷一般是
+CRYPTO 帧和 ACK 帧。</p>
 <p>重试报文：是服务器用来验证客户端地址的报文，可以防止源地址欺骗。</p>
 <blockquote>
 <p>服务器使用重试报文通知客户端按照要求重新发送初始报文，在重试报文中携带重试令牌给客户端，并使用服务器选择的连接标识作为重试报文的源连接标识；客户端需要使用服务器指定的连接标识作为目的连接标识，携带服务器指定的重试令牌，构建新的初始报文，重新发送给服务器。</p>
 </blockquote>
 <p>版本协商报文：当服务器收到包含自己不支持的版本号的初始报文时，就会发送版本协商报文。客户端收到版本协商报文后需要在其中选择一个自己支持的版本号，重新以新版本号发送初始报文。</p>
-<p>短首部报文：一般也叫作 1-RTT 报文，连接在协商出 1-RTT 密钥后就可以发送短首部报文，用于携带应用数据。</p>
+<p>短首部报文：一般也叫作 1-RTT 报文，连接在协商出 1-RTT
+密钥后就可以发送短首部报文，用于携带应用数据。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -273,15 +294,18 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">1. QUIC 产生背景</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE"><span class="toc-text">常见网络协议</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#TSL-%E7%89%88%E6%9C%AC%E6%BC%94%E5%8C%96"><span class="toc-text">TSL 版本演化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#HTTP-%E7%89%88%E6%9C%AC%E6%BC%94%E5%8C%96"><span class="toc-text">HTTP 版本演化</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">2. QUIC 报文</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#quic-%E4%BA%A7%E7%94%9F%E8%83%8C%E6%99%AF"><span class="toc-text">1. QUIC 产生背景</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE"><span class="toc-text">常见网络协议</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#tsl-%E7%89%88%E6%9C%AC%E6%BC%94%E5%8C%96"><span class="toc-text">TSL 版本演化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#http-%E7%89%88%E6%9C%AC%E6%BC%94%E5%8C%96"><span class="toc-text">HTTP 版本演化</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#quic-%E6%8A%A5%E6%96%87"><span class="toc-text">2. QUIC 报文</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
