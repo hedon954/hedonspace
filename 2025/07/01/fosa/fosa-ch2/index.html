@@ -27,6 +27,9 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本篇通过回答《Fundamentals of Software Architecture》第二章的课后思考题，深入探讨传统架构方法的局限性、知识三角的三个层次、架构师技术广度与深度的平衡，以及架构师保持技术敏锐度的实践方法，帮助理解现代架构师应具备的思维模式。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250701102459269.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250701102918334.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250701103512872.png">
 <meta property="article:published_time" content="2025-07-01T03:00:26.000Z">
 <meta property="article:modified_time" content="2025-07-27T04:29:14.328Z">
 <meta property="article:author" content="Hedon Wang">
@@ -34,6 +37,7 @@
 <meta property="article:tag" content="软件架构">
 <meta property="article:tag" content="fosa">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250701102459269.png">
   
   
   
@@ -71,7 +75,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/23/linux-io-epoll/"><span class="title">从第一性原理理解 epoll</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/25/clash-fake-ip/"><span class="title">为什么 traceroute 返回的全是 * * *？</span></a><a class="item title" href="/2025/11/23/linux-io-epoll/"><span class="title">从第一性原理理解 epoll</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -95,35 +99,30 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>本系列文章通过逐章回答<a
-target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of
-Software Architecture》</a>（下文简称
-FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第二章</u>内容。</p>
+  </div><article class="md-text content"><p>本系列文章通过逐章回答<a target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of Software Architecture》</a>（下文简称 FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第二章</u>内容。</p>
 <p>本章的课后题是：</p>
-<ol type="1">
-<li><p>Describe the traditional approach of architecture versus
-development and explain why that approach no longer works.</p>
-<p>描述传统意义上的架构与开发的方法，并解释为什么这种方法不再适用。</p></li>
-<li><p>List the three levels of knowledge in the knowledge triangle and
-provide an example of each.</p>
-<p>列出知识三角中的三个层次，并为每个层次提供一个示例。</p></li>
-<li><p>Why is it more important for an architect to focus on technical
-breadth rather than technical depth?</p>
-<p>为什么对于一位架构师而言，注重技术的广度而非深度会显得更为重要呢？</p></li>
-<li><p>What are some of the ways of maintaining your technical depth and
-remaining hands-on as an architect?</p>
-<p>作为架构师，有哪些方法可以保持技术深度并保持动手能力呢？</p></li>
+<ol>
+<li>
+<p>Describe the traditional approach of architecture versus development and explain why that approach no longer works.</p>
+<p>描述传统意义上的架构与开发的方法，并解释为什么这种方法不再适用。</p>
+</li>
+<li>
+<p>List the three levels of knowledge in the knowledge triangle and provide an example of each.</p>
+<p>列出知识三角中的三个层次，并为每个层次提供一个示例。</p>
+</li>
+<li>
+<p>Why is it more important for an architect to focus on technical breadth rather than technical depth?</p>
+<p>为什么对于一位架构师而言，注重技术的广度而非深度会显得更为重要呢？</p>
+</li>
+<li>
+<p>What are some of the ways of maintaining your technical depth and remaining hands-on as an architect?</p>
+<p>作为架构师，有哪些方法可以保持技术深度并保持动手能力呢？</p>
+</li>
 </ol>
-<hr />
-<h1 id="架构与开发方法">1. 架构与开发方法</h1>
+<hr>
+<h1>1. 架构与开发方法</h1>
 <p>在传统方法中，架构师与开发人员的职责是分离的，如下图所示：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250701102459269.png"
-alt="FOSA Figure 2-1. Traditional view of architecture versus design" />
-<figcaption aria-hidden="true">FOSA Figure 2-1. Traditional view of
-architecture versus design</figcaption>
-</figure>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250701102459269.png" alt="FOSA Figure 2-1. Traditional view of architecture versus design"></p>
 <p>架构师的职责：</p>
 <ul>
 <li>分析业务逻辑，以提取和定义架构特征</li>
@@ -136,97 +135,50 @@ architecture versus design</figcaption>
 <li>构建用户界面</li>
 <li>开发和测试源代码</li>
 </ul>
-<p>这种传统方法的问题在于它是一种单向的"移交"模式。架构师在设计完成后将产物移交给开发团队，但架构师与开发人员之间存在物理和虚拟的障碍。这种方法不再适用的原因主要有以下几点：</p>
-<ol type="1">
+<p>这种传统方法的问题在于它是一种单向的&quot;移交&quot;模式。架构师在设计完成后将产物移交给开发团队，但架构师与开发人员之间存在物理和虚拟的障碍。这种方法不再适用的原因主要有以下几点：</p>
+<ol>
 <li><strong>信息丢失和脱节</strong>：架构师的决策有时无法有效传达给开发团队，而开发团队在实现过程中对架构产生的改变也鲜有反馈给架构师。</li>
 <li><strong>缺乏协作与同步</strong>：唯一不变的就是变，业务是不断发展的，系统架构也是不断演进和迭代的。这种单向模式导致双方缺乏紧密、双向的合作，无法及时响应业务和技术变化，导致架构变得脆弱且难以维护。</li>
 </ol>
 <p>更适合现代软件开发的方法应如下图所示：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250701102918334.png"
-alt="FOSA Figure 2.2. Making architecture work through collaboration" />
-<figcaption aria-hidden="true">FOSA Figure 2.2. Making architecture work
-through collaboration</figcaption>
-</figure>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250701102918334.png" alt="FOSA Figure 2.2. Making architecture work through collaboration"></p>
 <p>在这种双向交互的方式中，架构师不再仅仅是交付设计产出，而是在整个软件生命周期中，不断对开发团队进行领导和指导，开发团队在实现过程也，也不断将遇到的问题和改变返回给架构师时，双方紧密合作、互通有无、共同前进。</p>
-<h1 id="知识三角">2. 知识三角</h1>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250701103512872.png"
-alt="FOSA Figure 2-3. The pyramid representing all knowledge" />
-<figcaption aria-hidden="true">FOSA Figure 2-3. The pyramid representing
-all knowledge</figcaption>
-</figure>
-<p><strong>第一层 (底层)：你知道你知道的 (Stuff you know you
-know)</strong>
-这是你知识体系的基石，是你明确掌握、能够熟练运用的技能和知识。它们是你的"舒适区"和核心竞争力。比如掌握编程语言（Go/Rust）的基本语法和常见框架。</p>
-<p><strong>第二层 (中层)：你知道你不知道的 (Stuff you know you don't
-know)</strong>
-这是你已经意识到但尚未掌握的领域。你可能听说过某个技术、某个概念，知道它的存在和价值，但还没有系统学习或实践过。这是你明确的学习目标和成长方向。比如编程语言（Go/Rust）的编译原理和编译期优化技术。</p>
-<p><strong>第三层 (顶层)：你不知道你不知道的 (Stuff you don't know you
-don't know)</strong>
-这是你的认知盲区。你甚至不知道这些知识、技术或方法论的存在。它们往往是突破瓶颈、实现认知跃迁的关键，也是最大的风险和机遇所在。一个人的成长，很大程度上就是不断将第三层的
-"未知未知"转化为第二层的"已知未知"的过程。比如 AI
-领域中的各种新兴技术。</p>
-<h1 id="广度还是深度">3. 广度还是深度</h1>
+<h1>2. 知识三角</h1>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250701103512872.png" alt="FOSA Figure 2-3. The pyramid representing all knowledge"></p>
+<p><strong>第一层 (底层)：你知道你知道的 (Stuff you know you know)</strong> 这是你知识体系的基石，是你明确掌握、能够熟练运用的技能和知识。它们是你的&quot;舒适区&quot;和核心竞争力。比如掌握编程语言（Go/Rust）的基本语法和常见框架。</p>
+<p><strong>第二层 (中层)：你知道你不知道的 (Stuff you know you don’t know)</strong> 这是你已经意识到但尚未掌握的领域。你可能听说过某个技术、某个概念，知道它的存在和价值，但还没有系统学习或实践过。这是你明确的学习目标和成长方向。比如编程语言（Go/Rust）的编译原理和编译期优化技术。</p>
+<p><strong>第三层 (顶层)：你不知道你不知道的 (Stuff you don’t know you don’t know)</strong> 这是你的认知盲区。你甚至不知道这些知识、技术或方法论的存在。它们往往是突破瓶颈、实现认知跃迁的关键，也是最大的风险和机遇所在。一个人的成长，很大程度上就是不断将第三层的 &quot;未知未知&quot;转化为第二层的&quot;已知未知&quot;的过程。比如 AI 领域中的各种新兴技术。</p>
+<h1>3. 广度还是深度</h1>
 <p>对于架构师而言，广度比深度要更重要，原因如下：</p>
-<ol type="1">
-<li>架构师的职责不是"做"，而是"选择怎么做"。只有当架构师拥有广泛的知识宽度时，能在不同的业务场景中，通过权衡对比，选择出最适合当前业务的架构模式。</li>
-<li>每个人的时间和精力是有限的，我们不可能同时精通所有的技术，所以架构师必须在广度和深度之间有所侧重。为了避免"过时专业知识"，架构师需要保持学习最新前沿技术，试图在多个领域保持深度会导致精力耗尽，只能牺牲部分深度以换取更大的广度。</li>
-<li>软件架构中一切都是"权衡"。只知道一种解决方案的架构师是做不出权衡的，只有当知道多种解决方案，并清楚其中的优劣，才能在充满各种限制的现实场景中做出"最不坏"的架构设计。</li>
+<ol>
+<li>架构师的职责不是&quot;做&quot;，而是&quot;选择怎么做&quot;。只有当架构师拥有广泛的知识宽度时，能在不同的业务场景中，通过权衡对比，选择出最适合当前业务的架构模式。</li>
+<li>每个人的时间和精力是有限的，我们不可能同时精通所有的技术，所以架构师必须在广度和深度之间有所侧重。为了避免&quot;过时专业知识&quot;，架构师需要保持学习最新前沿技术，试图在多个领域保持深度会导致精力耗尽，只能牺牲部分深度以换取更大的广度。</li>
+<li>软件架构中一切都是&quot;权衡&quot;。只知道一种解决方案的架构师是做不出权衡的，只有当知道多种解决方案，并清楚其中的优劣，才能在充满各种限制的现实场景中做出&quot;最不坏&quot;的架构设计。</li>
 </ol>
-<p>在笔者看来，为了后期可以更快、更扎实的扩展我们的广度，前期的"深度探索"尤为重要。拥有一个深度的知识领域，就像在浩瀚的知识海洋中打下了一个坚实的"锚"。当你学习新知识时，可以把它关联到你的“锚点”上，而不是让它漂浮在空中。正所谓：<strong>一通百通</strong>。</p>
-<p>如果你深度研究过 Go 的 GMP 调度模型、goroutine 的实现、channel
-的底层结构，你不仅仅是学会了 Go
-的并发。你真正理解了<strong>用户态线程、M:N 调度、CSP (Communicating
-Sequential Processes) 模型</strong> 等核心概念。当你再去学习 Rust 的
-<code>async/await</code> 和 <code>tokio</code>
-时，你会发现虽然语法和所有权规则完全不同，但其背后的<strong>异步运行时、任务调度、Future/Executor
-模型</strong>
-等思想，都与你已有的知识体系遥相呼应。你的学习过程不再是死记硬背，而是<strong>比较、关联和迁移</strong>，效率极高。</p>
+<p>在笔者看来，为了后期可以更快、更扎实的扩展我们的广度，前期的&quot;深度探索&quot;尤为重要。拥有一个深度的知识领域，就像在浩瀚的知识海洋中打下了一个坚实的&quot;锚&quot;。当你学习新知识时，可以把它关联到你的“锚点”上，而不是让它漂浮在空中。正所谓：<strong>一通百通</strong>。</p>
+<p>如果你深度研究过 Go 的 GMP 调度模型、goroutine 的实现、channel 的底层结构，你不仅仅是学会了 Go 的并发。你真正理解了<strong>用户态线程、M:N 调度、CSP (Communicating Sequential Processes) 模型</strong> 等核心概念。当你再去学习 Rust 的 <code>async/await</code> 和 <code>tokio</code> 时，你会发现虽然语法和所有权规则完全不同，但其背后的<strong>异步运行时、任务调度、Future/Executor 模型</strong> 等思想，都与你已有的知识体系遥相呼应。你的学习过程不再是死记硬背，而是<strong>比较、关联和迁移</strong>，效率极高。</p>
 <p>所以，一个更完整、更理想的技术人员成长路径应该是：</p>
-<ol type="1">
-<li><strong>职业前期 (深耕期)：</strong>
-<strong>深度优先，广度为辅。</strong>
-选择一个你感兴趣且有前景的主航道（如 Go/Rust 后端开发），投入 80%
-的精力向下猛扎，直到成为该领域的专家。用 20%
-的精力保持对周边领域的关注。这个阶段的目标是
-<strong>"立足"</strong>。</li>
-<li><strong>职业中期 (拓展期)：</strong>
-<strong>深度与广度并重。</strong>
-在你的根据地已经非常扎实之后，开始有意识地、系统性地拓展你的知识广度，将深耕期遇到的问题和知识点串联起来，形成体系。从
-"I 型人才" 向 "T 型人才" 转变。这个阶段的目标是
-<strong>"连接"</strong>。</li>
-<li><strong>职业后期 (整合期)：</strong>
-<strong>广度优先，深度为基。</strong>
-当你需要承担架构师、技术负责人等角色时，你的主要价值来自于广阔的视野和权衡决策能力。你过往的深度积累，则为你的决策提供了坚实的支撑和深刻的洞察力。这个阶段的目标是
-<strong>"引领"</strong>。</li>
+<ol>
+<li><strong>职业前期 (深耕期)：</strong> <strong>深度优先，广度为辅。</strong> 选择一个你感兴趣且有前景的主航道（如 Go/Rust 后端开发），投入 80% 的精力向下猛扎，直到成为该领域的专家。用 20% 的精力保持对周边领域的关注。这个阶段的目标是 <strong>“立足”</strong>。</li>
+<li><strong>职业中期 (拓展期)：</strong> <strong>深度与广度并重。</strong> 在你的根据地已经非常扎实之后，开始有意识地、系统性地拓展你的知识广度，将深耕期遇到的问题和知识点串联起来，形成体系。从 “I 型人才” 向 “T 型人才” 转变。这个阶段的目标是 <strong>“连接”</strong>。</li>
+<li><strong>职业后期 (整合期)：</strong> <strong>广度优先，深度为基。</strong> 当你需要承担架构师、技术负责人等角色时，你的主要价值来自于广阔的视野和权衡决策能力。你过往的深度积累，则为你的决策提供了坚实的支撑和深刻的洞察力。这个阶段的目标是 <strong>“引领”</strong>。</li>
 </ol>
-<h1 id="维持动手能力">4. 维持动手能力</h1>
+<h1>4. 维持动手能力</h1>
 <p>很多架构师与开发团队的协议日益疏远，很大程度源于架构师脱离一线开发环境太久了，以下是一些简单且有效保持技术深度和动手能力的方法：</p>
-<ol type="1">
-<li><strong>避免"瓶颈陷阱（bottleneck
-trap）"并委派核心代码</strong>：架构师不应独自承担关键路径或框架代码的开发，因为这会使其成为团队的瓶颈。应将这些核心代码委派给开发团队。架构师可以专注于编码一到三个迭代后的业务功能（例如，一个服务或一个屏幕），从而既能获得实践经验，又能让开发团队拥有核心代码的所有权，并更好地理解他们在开发过程中可能遇到的问题。</li>
-<li><strong>持续做概念验证（POCs）</strong>：POC
-不仅要求架构师编写代码，还能通过实践验证架构决策。在这个过程中，架构师需要严格要求自己产出高质量的代码，因为开发团队后续的工作，很大程度会在
-POC 的基础上进行扩展。</li>
+<ol>
+<li><strong>避免&quot;瓶颈陷阱（bottleneck trap）&quot;并委派核心代码</strong>：架构师不应独自承担关键路径或框架代码的开发，因为这会使其成为团队的瓶颈。应将这些核心代码委派给开发团队。架构师可以专注于编码一到三个迭代后的业务功能（例如，一个服务或一个屏幕），从而既能获得实践经验，又能让开发团队拥有核心代码的所有权，并更好地理解他们在开发过程中可能遇到的问题。</li>
+<li><strong>持续做概念验证（POCs）</strong>：POC 不仅要求架构师编写代码，还能通过实践验证架构决策。在这个过程中，架构师需要严格要求自己产出高质量的代码，因为开发团队后续的工作，很大程度会在 POC 的基础上进行扩展。</li>
 <li><strong>处理技术债务</strong>：通常这些任务优先级较低，即使未能在一个迭代内完成，也不会对项目造成严重影响。这能让架构师获得实践编码经验，同时解放开发团队去处理关键功能用户故事。</li>
-<li><strong>参与修复非紧急漏洞</strong>：处理 BUG
-能够帮助架构师识别代码库乃至架构中的问题和弱点。</li>
+<li><strong>参与修复非紧急漏洞</strong>：处理 BUG 能够帮助架构师识别代码库乃至架构中的问题和弱点。</li>
 <li><strong>构建效率提升工具</strong>：开发一些提升效率的小工具，一方面可以帮助开发团队更高效率地开展工作，另一方面也可以有效维持架构师的动手能力。</li>
-<li><strong>编写适应性函数（Fitness
-Functions）</strong>：辅助编写单元测试、集成测试等自动化测试，一来能帮助架构师维持动手能力，二来能帮助架构师更深入理解项目细节，三来可以提高项目架构的健壮性。</li>
-<li><strong>参与代码评审（Code
-Review）</strong>：代码评审能让架构师保持对代码库的参与度，同时确保架构合规性，并发现团队中的指导和辅导机会。</li>
+<li><strong>编写适应性函数（Fitness Functions）</strong>：辅助编写单元测试、集成测试等自动化测试，一来能帮助架构师维持动手能力，二来能帮助架构师更深入理解项目细节，三来可以提高项目架构的健壮性。</li>
+<li><strong>参与代码评审（Code Review）</strong>：代码评审能让架构师保持对代码库的参与度，同时确保架构合规性，并发现团队中的指导和辅导机会。</li>
 </ol>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -266,18 +218,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E4%B8%8E%E5%BC%80%E5%8F%91%E6%96%B9%E6%B3%95"><span class="toc-text">1. 架构与开发方法</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%9F%A5%E8%AF%86%E4%B8%89%E8%A7%92"><span class="toc-text">2. 知识三角</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%B9%BF%E5%BA%A6%E8%BF%98%E6%98%AF%E6%B7%B1%E5%BA%A6"><span class="toc-text">3. 广度还是深度</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%BB%B4%E6%8C%81%E5%8A%A8%E6%89%8B%E8%83%BD%E5%8A%9B"><span class="toc-text">4. 维持动手能力</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">1. 架构与开发方法</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">2. 知识三角</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">3. 广度还是深度</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">4. 维持动手能力</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

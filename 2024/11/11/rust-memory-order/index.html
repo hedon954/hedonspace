@@ -30,6 +30,8 @@
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241111160041436.png">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241111164259913.png">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241111165714772.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250612094505443.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241112113535084.png">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251122100410416.png">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241112125023036.png">
 <meta property="article:published_time" content="2024-11-11T05:06:49.000Z">
@@ -81,7 +83,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/23/linux-io-epoll/"><span class="title">从第一性原理理解 epoll</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/25/clash-fake-ip/"><span class="title">为什么 traceroute 返回的全是 * * *？</span></a><a class="item title" href="/2025/11/23/linux-io-epoll/"><span class="title">从第一性原理理解 epoll</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/06/08/rust-os-primitives/"><span class="title">Rust 原理丨操作系统并发原语</span></a><a class="item title" href="/2024/11/11/rust-memory-order/"><span class="title">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -107,43 +109,25 @@
   </div>
   </div><article class="md-text content"><p>系列文章：</p>
 <ul>
-<li><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust
-原理丨聊一聊 Rust 的 Atomic 和内存顺序</a> 👈 本篇</li>
-<li><a
-href="https://hedon.top/2025/06/05/rust-atomic-in-processor/">Rust
-原理丨从汇编角度看原子操作</a></li>
-<li><a href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust
-实战丨手写一个 SpinLock</a></li>
-<li><a
-href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust
-实战丨手写一个 oneshot channel</a></li>
-<li><a href="https://hedon.top/2025/06/03/rust-action-arc/">Rust
-实战丨手写一个 Arc</a></li>
-<li><a href="https://hedon.top/2025/06/08/rust-os-primitives/">Rust
-原理丨操作系统并发原语</a></li>
-<li><a href="https://hedon.top/2025/06/09/rust-action-mutex/">Rust
-实战丨手写一个 Mutex</a></li>
-<li><a href="https://hedon.top/2025/06/09/rust-action-condvar/">Rust
-实战丨手写一个 Condvar</a></li>
-<li><a href="https://hedon.top/2025/06/11/rust-action-rwlock/">Rust
-实战丨手写一个 RwLock</a></li>
+<li><a href="https://hedon.top/2024/11/11/rust-memory-order/">Rust 原理丨聊一聊 Rust 的 Atomic 和内存顺序</a> 👈 本篇</li>
+<li><a href="https://hedon.top/2025/06/05/rust-atomic-in-processor/">Rust 原理丨从汇编角度看原子操作</a></li>
+<li><a href="https://hedon.top/2025/05/13/rust-action-spinlock/">Rust 实战丨手写一个 SpinLock</a></li>
+<li><a href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust 实战丨手写一个 oneshot channel</a></li>
+<li><a href="https://hedon.top/2025/06/03/rust-action-arc/">Rust 实战丨手写一个 Arc</a></li>
+<li><a href="https://hedon.top/2025/06/08/rust-os-primitives/">Rust 原理丨操作系统并发原语</a></li>
+<li><a href="https://hedon.top/2025/06/09/rust-action-mutex/">Rust 实战丨手写一个 Mutex</a></li>
+<li><a href="https://hedon.top/2025/06/09/rust-action-condvar/">Rust 实战丨手写一个 Condvar</a></li>
+<li><a href="https://hedon.top/2025/06/11/rust-action-rwlock/">Rust 实战丨手写一个 RwLock</a></li>
 </ul>
-<hr />
-<h1 id="atomic">Atomic</h1>
-<p>在 Rust 的 <code>std::sync::atomic</code>
-模块中包含了无锁并发编程的原子化类型，与通常的算术运算符和逻辑运算符不同，原子化类型会暴露执行原子化操作的方法，单独的加载、存储、交换和算术运算都会作为一个单元安全地进行，哪怕其他线程也在执行操作同一内存的原子化操作也没问题。</p>
+<hr>
+<h1>Atomic</h1>
+<p>在 Rust 的 <code>std::sync::atomic</code> 模块中包含了无锁并发编程的原子化类型，与通常的算术运算符和逻辑运算符不同，原子化类型会暴露执行原子化操作的方法，单独的加载、存储、交换和算术运算都会作为一个单元安全地进行，哪怕其他线程也在执行操作同一内存的原子化操作也没问题。</p>
 <p>Rust 提供了以下几种原子化类型：</p>
 <ul>
-<li><code>AtomicIsize</code> 和 <code>AtomicUsize</code> 是与单线程
-<code>isize</code> 类型和 <code>usize</code>
-类型对应的共享整数类型。</li>
-<li><code>AtomicI8</code>、<code>AtomicI16</code>、<code>AtomicI32</code>、<code>AtomicI64</code>
-及其无符号变体（如
-<code>AtomicU8</code>）是共享整数类型，对应于单线程中的类型
-<code>i8</code>、<code>i16</code> 等。</li>
+<li><code>AtomicIsize</code> 和 <code>AtomicUsize</code> 是与单线程 <code>isize</code> 类型和 <code>usize</code> 类型对应的共享整数类型。</li>
+<li><code>AtomicI8</code>、<code>AtomicI16</code>、<code>AtomicI32</code>、<code>AtomicI64</code> 及其无符号变体（如 <code>AtomicU8</code>）是共享整数类型，对应于单线程中的类型 <code>i8</code>、<code>i16</code> 等。</li>
 <li><code>AtomicBool</code> 是一个共享的 <code>bool</code> 值。</li>
-<li><code>AtomicPtr</code> 是不安全指针类型 <code>*mut T</code>
-的共享值。</li>
+<li><code>AtomicPtr</code> 是不安全指针类型 <code>*mut T</code> 的共享值。</li>
 </ul>
 <p>这些类型都会以下几类核心功能：</p>
 <ul>
@@ -152,67 +136,44 @@ href="https://hedon.top/2025/05/29/rust-action-oneshot-channel/">Rust
 <li><code>Compare-and-Exchange</code>: 比较并交换</li>
 </ul>
 <p>下面我们对上述提到的几种核心功能进行举例。</p>
-<h2 id="load-store">Load &amp; Store</h2>
+<h2 id="Load-Store">Load &amp; Store</h2>
 <ul>
-<li><strong>load</strong>:
-从原子化类型中获取起对应的基本数据类型的值。</li>
-<li><strong>store</strong>:
-将一个基本数据类型的值存储到其对应的原子化类型中。</li>
+<li><strong>load</strong>: 从原子化类型中获取起对应的基本数据类型的值。</li>
+<li><strong>store</strong>: 将一个基本数据类型的值存储到其对应的原子化类型中。</li>
 </ul>
-<p>在下面的例子中，我们使用 <code>AtomicUsize::new(0)</code>
-初始化了一个原子类型，它对应的基本数据类型是 <code>usize</code>。</p>
-<p>我们起了一个子线程，在 for 循环中不断地使用 <code>store</code>
-函数修改 <code>num_done</code> 的值，然后在主线程中使用
-<code>load</code> 获取起对应的值，当发现值为 <code>100</code>
-时，就退出循环，进程结束。</p>
-<p>得益于原子化类型的并发安全特性，所以这里两个线程对
-<code>num_done</code> 进行并发读写都是安全的。</p>
+<p>在下面的例子中，我们使用 <code>AtomicUsize::new(0)</code> 初始化了一个原子类型，它对应的基本数据类型是 <code>usize</code>。</p>
+<p>我们起了一个子线程，在 for 循环中不断地使用 <code>store</code> 函数修改 <code>num_done</code> 的值，然后在主线程中使用 <code>load</code> 获取起对应的值，当发现值为 <code>100</code> 时，就退出循环，进程结束。</p>
+<p>得益于原子化类型的并发安全特性，所以这里两个线程对 <code>num_done</code> 进行并发读写都是安全的。</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">num_done</span> = AtomicUsize::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">main_thread</span> = thread::<span class="title function_ invoke__">current</span>();</span><br><span class="line"></span><br><span class="line">    thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="keyword">for</span> <span class="variable">i</span> <span class="keyword">in</span> <span class="number">0</span>..<span class="number">100</span> &#123;</span><br><span class="line">                <span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_millis</span>(<span class="number">10</span>));</span><br><span class="line">                num_done.<span class="title function_ invoke__">store</span>(i + <span class="number">1</span>, std::sync::atomic::Ordering::Relaxed);  <span class="comment">// store 存储</span></span><br><span class="line">                main_thread.<span class="title function_ invoke__">unpark</span>();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">loop</span> &#123;</span><br><span class="line">            <span class="keyword">let</span> <span class="variable">n</span> = num_done.<span class="title function_ invoke__">load</span>(std::sync::atomic::Ordering::Relaxed); <span class="comment">// load 获取</span></span><br><span class="line">            <span class="keyword">if</span> n == <span class="number">100</span> &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;Working... &#123;n&#125;/100 done&quot;</span>);</span><br><span class="line">            thread::<span class="title function_ invoke__">park_timeout</span>(Duration::<span class="title function_ invoke__">from_millis</span>(<span class="number">1</span>));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Done!&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <blockquote>
-<p>这里我们暂且忽略 <code>std::sync::atomic::Ordering::Relaxed</code>
-这个参数的含义，在后续的「内存顺序」章节会进行详细阐述。</p>
+<p>这里我们暂且忽略 <code>std::sync::atomic::Ordering::Relaxed</code> 这个参数的含义，在后续的「内存顺序」章节会进行详细阐述。</p>
 </blockquote>
-<h2 id="fetch-and-modify">Fetch-and-Modify</h2>
-<p><strong>Fetch-and-Modify</strong>
-操作用于在获取当前值的同时对其进行修改。这类操作包括
-<code>fetch_add</code>、<code>fetch_sub</code>、<code>fetch_and</code>、<code>fetch_or</code>、<code>fetch_xor</code>
-等。</p>
-<p>我们将上面的例子修改一下，不再是直接 <code>store</code>
-一个值，而是不断进行加 1 操作：</p>
+<h2 id="Fetch-and-Modify">Fetch-and-Modify</h2>
+<p><strong>Fetch-and-Modify</strong> 操作用于在获取当前值的同时对其进行修改。这类操作包括 <code>fetch_add</code>、<code>fetch_sub</code>、<code>fetch_and</code>、<code>fetch_or</code>、<code>fetch_xor</code> 等。</p>
+<p>我们将上面的例子修改一下，不再是直接 <code>store</code> 一个值，而是不断进行加 1 操作：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">num_done</span> = &amp;AtomicUsize::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="keyword">for</span> <span class="variable">_</span> <span class="keyword">in</span> <span class="number">0</span>..<span class="number">100</span> &#123;</span><br><span class="line">                num_done.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, std::sync::atomic::Ordering::Relaxed); <span class="comment">// 使用 fetch_add 进行加 1</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">loop</span> &#123;</span><br><span class="line">            <span class="keyword">let</span> <span class="variable">n</span> = num_done.<span class="title function_ invoke__">load</span>(std::sync::atomic::Ordering::Relaxed);</span><br><span class="line">            <span class="keyword">if</span> n == <span class="number">100</span> &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;Working... &#123;n&#125;/100 done&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Done!&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="compare-and-exchange">Compare-and-Exchange</h2>
-<p><strong>Compare-and-Exchange</strong>
-是一种条件更新操作，只有在当前值等于预期值时才会更新。</p>
-<p>下面的例子中我们实现了一个函数
-<code>allocate_new_id</code>，它支持在并发环境下分配新的
-<code>id</code>，这里我们使用了 <code>compare_exchange(id, id+1)</code>
-进行条件更新，只有当 <code>id</code>
-没有发生变化的时候，才运行对其进行加
-1，这就保证了在并发下，只有一个线程可以成功执行该语句，从而保证
-<code>id</code> 的递增性和唯一性。</p>
+<h2 id="Compare-and-Exchange">Compare-and-Exchange</h2>
+<p><strong>Compare-and-Exchange</strong> 是一种条件更新操作，只有在当前值等于预期值时才会更新。</p>
+<p>下面的例子中我们实现了一个函数 <code>allocate_new_id</code>，它支持在并发环境下分配新的 <code>id</code>，这里我们使用了 <code>compare_exchange(id, id+1)</code> 进行条件更新，只有当 <code>id</code> 没有发生变化的时候，才运行对其进行加 1，这就保证了在并发下，只有一个线程可以成功执行该语句，从而保证 <code>id</code> 的递增性和唯一性。</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">allocate_new_id</span>() <span class="punctuation">-&gt;</span> <span class="type">u32</span> &#123;</span><br><span class="line">    <span class="keyword">static</span> NEXT_ID: AtomicU32 = AtomicU32::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">id</span> = NEXT_ID.<span class="title function_ invoke__">load</span>(std::sync::atomic::Ordering::Relaxed);</span><br><span class="line">    <span class="keyword">loop</span> &#123;</span><br><span class="line">        <span class="built_in">assert!</span>(id &lt; <span class="number">1000</span>, <span class="string">&quot;Too many IDs!&quot;</span>);</span><br><span class="line">        <span class="keyword">match</span> NEXT_ID.<span class="title function_ invoke__">compare_exchange</span>(  <span class="comment">// 只有 id 没有发生变化，才允许进行加 1</span></span><br><span class="line">            id,</span><br><span class="line">            id + <span class="number">1</span>,</span><br><span class="line">            std::sync::atomic::Ordering::Relaxed,</span><br><span class="line">            std::sync::atomic::Ordering::Relaxed,</span><br><span class="line">        ) &#123;</span><br><span class="line">            <span class="title function_ invoke__">Ok</span>(_) =&gt; <span class="keyword">return</span> id,</span><br><span class="line">            <span class="title function_ invoke__">Err</span>(v) =&gt; id = v,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<details class="tag-plugin colorful folding" color="blue" open><summary><p>在 Rust
-中，原子化类型还提供了另外一个函数：<code>compare_exchange_weak</code>，它与
-<code>compare_exchange</code>
-的主要区别在于它们在<strong>失败时</strong>的行为：</p>
-</summary><div class="body"><p><strong>compare_exchange</strong>:</p><ul><li>只会在实际值不等于期望值时失败。</li><li>提供更强的保证，但可能性能较低。</li><li>适用于不在循环中的单次比较交换操作。</li></ul><p><strong>compare_exchange_weak</strong>:</p><ul><li>即使实际值等于期望值时也可能失败（称为“虚假失败”或“spuriousfailure”）。</li><li>性能可能更好，因为允许在某些架构上生成更高效的代码。</li><li>最适合在循环中使用，因为需要处理可能的虚假失败。</li></ul><p>在实际应用中:</p><ul><li>如果操作在循环中,使用 <code>compare_exchange_weak</code>通常更好。</li><li>如果是单次操作,使用 <code>compare_exchange</code> 更合适。</li><li>在某些平台上，这两个操作可能没有性能差异,但<code>compare_exchange_weak</code> 的行为仍然可能不同。</li></ul><p>这种区别的存在是因为在某些 CPU架构上,允许虚假失败可以生成更高效的机器码。比如在 ARM架构上，<code>compare_exchange_weak</code> 可以直接映射到单个LL/SC（Load-Link/Store-Conditional）指令。</p></div></details>
+<details class="tag-plugin colorful folding" color="blue" open><summary><p>在 Rust 中，原子化类型还提供了另外一个函数：<code>compare_exchange_weak</code>，它与 <code>compare_exchange</code> 的主要区别在于它们在<strong>失败时</strong>的行为：</p>
+</summary><div class="body"><p><strong>compare_exchange</strong>:</p><ul><li>只会在实际值不等于期望值时失败。</li><li>提供更强的保证，但可能性能较低。</li><li>适用于不在循环中的单次比较交换操作。</li></ul><p><strong>compare_exchange_weak</strong>:</p><ul><li>即使实际值等于期望值时也可能失败（称为“虚假失败”或“spurious failure”）。</li><li>性能可能更好，因为允许在某些架构上生成更高效的代码。</li><li>最适合在循环中使用，因为需要处理可能的虚假失败。</li></ul><p>在实际应用中:</p><ul><li>如果操作在循环中,使用 <code>compare_exchange_weak</code> 通常更好。</li><li>如果是单次操作,使用 <code>compare_exchange</code> 更合适。</li><li>在某些平台上，这两个操作可能没有性能差异,但 <code>compare_exchange_weak</code> 的行为仍然可能不同。</li></ul><p>这种区别的存在是因为在某些 CPU 架构上,允许虚假失败可以生成更高效的机器码。比如在 ARM 架构上，<code>compare_exchange_weak</code> 可以直接映射到单个 LL/SC（Load-Link/Store-Conditional）指令。</p></div></details>
 <h2 id="硬件原理">硬件原理</h2>
-<p>在一些处理器架构中，当一个 CPU
-执行需要原子性的操作时，它可以通过锁定内存总线来确保在操作完成之前，其他
-CPU 无法访问相关的内存地址。</p>
+<p>在一些处理器架构中，当一个 CPU 执行需要原子性的操作时，它可以通过锁定内存总线来确保在操作完成之前，其他 CPU 无法访问相关的内存地址。</p>
 <p>基本工作流程如下：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">CPU 发出 LOCK 信号</span><br><span class="line">   └── 激活处理器的 LOCK# 引脚</span><br><span class="line">      └── 获得总线的独占访问权</span><br><span class="line">          └── 执行原子操作</span><br><span class="line">              └── 释放 LOCK 信号</span><br><span class="line">                  └── 其他处理器可以访问内存</span><br></pre></td></tr></table></figure>
 <p>主流的有 2 种锁定机制：</p>
 <ul>
-<li><p><strong>总线锁定（Bus
-Locking）</strong>：总线锁定是一种机制，它通过锁定内存总线来确保在执行原子操作时，其他处理器无法访问内存。这种方法虽然简单，但会导致总线的其他操作被阻塞，从而影响系统性能。</p>
-<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">优点：</span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 绝对的原子性保证</span><br><span class="line"><span class="bullet">-</span> 适用于所有内存位置</span><br><span class="line"></span><br><span class="line">缺点：</span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 性能开销大</span><br><span class="line"><span class="bullet">-</span> 会阻塞其他 CPU 对内存的访问</span><br></pre></td></tr></table></figure></li>
-<li><p><strong>缓存锁定（Cache
-Locking）</strong>：现代处理器通常使用缓存锁定来实现原子操作。缓存锁定通过锁定处理器的缓存行来实现，而不是锁定整个总线。这种方法可以减少对总线的影响，提高系统的并发性能。</p>
-<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">优点：</span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 性能更好</span><br><span class="line"><span class="bullet">-</span> 不会完全阻塞内存访问</span><br><span class="line"></span><br><span class="line">条件：</span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 数据必须在缓存行中</span><br><span class="line"><span class="bullet">-</span> 缓存行必须是独占状态</span><br></pre></td></tr></table></figure></li>
+<li>
+<p><strong>总线锁定（Bus Locking）</strong>：总线锁定是一种机制，它通过锁定内存总线来确保在执行原子操作时，其他处理器无法访问内存。这种方法虽然简单，但会导致总线的其他操作被阻塞，从而影响系统性能。</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">优点：</span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 绝对的原子性保证</span><br><span class="line"><span class="bullet">-</span> 适用于所有内存位置</span><br><span class="line"></span><br><span class="line">缺点：</span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 性能开销大</span><br><span class="line"><span class="bullet">-</span> 会阻塞其他 CPU 对内存的访问</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>缓存锁定（Cache Locking）</strong>：现代处理器通常使用缓存锁定来实现原子操作。缓存锁定通过锁定处理器的缓存行来实现，而不是锁定整个总线。这种方法可以减少对总线的影响，提高系统的并发性能。</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">优点：</span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 性能更好</span><br><span class="line"><span class="bullet">-</span> 不会完全阻塞内存访问</span><br><span class="line"></span><br><span class="line">条件：</span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 数据必须在缓存行中</span><br><span class="line"><span class="bullet">-</span> 缓存行必须是独占状态</span><br></pre></td></tr></table></figure>
+</li>
 </ul>
-<p>缓存锁定通常依赖于缓存一致性协议（如 <strong>MESI</strong>
-协议）来确保在多个处理器之间的数据一致性。通过这些协议，处理器可以在本地缓存中执行原子操作，并在必要时与其他处理器同步。</p>
+<p>缓存锁定通常依赖于缓存一致性协议（如 <strong>MESI</strong> 协议）来确保在多个处理器之间的数据一致性。通过这些协议，处理器可以在本地缓存中执行原子操作，并在必要时与其他处理器同步。</p>
 <p><strong>MESI</strong> 协议即：</p>
 <figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">M (Modified)：已修改</span><br><span class="line">E (Exclusive)：独占</span><br><span class="line">S (Shared)：共享</span><br><span class="line">I (Invalid)：无效</span><br><span class="line"></span><br><span class="line">操作流程：</span><br><span class="line"></span><br><span class="line"><span class="bullet">1.</span> 检查数据是否在缓存中</span><br><span class="line"><span class="bullet">2.</span> 如果在，将状态改为 Exclusive</span><br><span class="line"><span class="bullet">3.</span> 执行原子操作</span><br><span class="line"><span class="bullet">4.</span> 通知其他 CPU 使其缓存失效</span><br></pre></td></tr></table></figure>
 <p>不同的架构有不同的锁定方式：</p>
@@ -225,126 +186,96 @@ Locking）</strong>：现代处理器通常使用缓存锁定来实现原子操�
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">; 原子加法操作</span><br><span class="line">lock add dword ptr [memory], 1</span><br><span class="line"></span><br><span class="line">; 比较并交换</span><br><span class="line">lock cmpxchg dword ptr [memory], eax</span><br></pre></td></tr></table></figure>
 <p>为了充分利用<strong>缓存锁定</strong>的优势，我们在编写代码时，可以有以下的性能考虑：</p>
 <ul>
-<li><p><strong>缓存行对齐，避免伪共享</strong></p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::sync::atomic::&#123;AtomicI32, Ordering&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 在 Rust 中，可以使用 #[repr(align(N))] 属性来确保结构体或变量的对齐方式，以避免伪共享。</span></span><br><span class="line"><span class="comment">// 伪共享是指多个线程访问不同的变量，但这些变量共享同一个缓存行，从而导致不必要的缓存一致性流量。</span></span><br><span class="line"><span class="meta">#[repr(align(64))]</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">AlignedCounter</span> &#123;</span><br><span class="line">    counter: AtomicI32,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">counter</span> = AlignedCounter &#123;</span><br><span class="line">        counter: AtomicI32::<span class="title function_ invoke__">new</span>(<span class="number">0</span>),</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="comment">// 使用 counter.counter.fetch_add(...) 进行操作</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-<li><p><strong>避免频繁的总线锁定</strong></p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::sync::atomic::&#123;AtomicI32, Ordering&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">counter</span> = AtomicI32::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 不好的做法：频繁的原子操作</span></span><br><span class="line">    <span class="keyword">for</span> <span class="variable">_</span> <span class="keyword">in</span> <span class="number">0</span>..<span class="number">1000</span> &#123;</span><br><span class="line">        counter.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Ordering::SeqCst);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 更好的做法：本地累加后一次性更新</span></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">local_sum</span> = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> <span class="variable">_</span> <span class="keyword">in</span> <span class="number">0</span>..<span class="number">1000</span> &#123;</span><br><span class="line">        local_sum += <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    counter.<span class="title function_ invoke__">fetch_add</span>(local_sum, Ordering::SeqCst);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>
+<p><strong>缓存行对齐，避免伪共享</strong></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::sync::atomic::&#123;AtomicI32, Ordering&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 在 Rust 中，可以使用 #[repr(align(N))] 属性来确保结构体或变量的对齐方式，以避免伪共享。</span></span><br><span class="line"><span class="comment">// 伪共享是指多个线程访问不同的变量，但这些变量共享同一个缓存行，从而导致不必要的缓存一致性流量。</span></span><br><span class="line"><span class="meta">#[repr(align(64))]</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">AlignedCounter</span> &#123;</span><br><span class="line">    counter: AtomicI32,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">counter</span> = AlignedCounter &#123;</span><br><span class="line">        counter: AtomicI32::<span class="title function_ invoke__">new</span>(<span class="number">0</span>),</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="comment">// 使用 counter.counter.fetch_add(...) 进行操作</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>避免频繁的总线锁定</strong></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::sync::atomic::&#123;AtomicI32, Ordering&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">counter</span> = AtomicI32::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 不好的做法：频繁的原子操作</span></span><br><span class="line">    <span class="keyword">for</span> <span class="variable">_</span> <span class="keyword">in</span> <span class="number">0</span>..<span class="number">1000</span> &#123;</span><br><span class="line">        counter.<span class="title function_ invoke__">fetch_add</span>(<span class="number">1</span>, Ordering::SeqCst);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 更好的做法：本地累加后一次性更新</span></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">local_sum</span> = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> <span class="variable">_</span> <span class="keyword">in</span> <span class="number">0</span>..<span class="number">1000</span> &#123;</span><br><span class="line">        local_sum += <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    counter.<span class="title function_ invoke__">fetch_add</span>(local_sum, Ordering::SeqCst);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
 </ul>
-<h3 id="rust-实战查看汇编">Rust 实战查看汇编</h3>
+<h3 id="Rust-实战查看汇编">Rust 实战查看汇编</h3>
 <blockquote>
 <p>笔者使用的是 ARM64 架构的 macbook。</p>
 </blockquote>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::sync::atomic::&#123;AtomicI64, Ordering&#125;;</span><br><span class="line"><span class="keyword">use</span> std::thread;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> ATOMIC: AtomicI64 = AtomicI64::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">t1</span> = thread::<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">        ATOMIC.<span class="title function_ invoke__">store</span>(<span class="number">10086</span>, Ordering::Release);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">t2</span> = thread::<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">val</span> = ATOMIC.<span class="title function_ invoke__">load</span>(Ordering::Acquire);</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;&#123;val&#125;&quot;</span>);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    t1.<span class="title function_ invoke__">join</span>().<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line">    t2.<span class="title function_ invoke__">join</span>().<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>使用 <code>rustc</code> 编译并输出汇编代码：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rustc -O --emit asm src/main.rs</span><br></pre></td></tr></table></figure>
-<p>代码中我特地设置了 <code>10086</code>
-这个特殊的值，这是为了可以在输出的 <code>main.s</code> 文件中快速找到
-<code>store</code> 对应的位置：</p>
+<p>代码中我特地设置了 <code>10086</code> 这个特殊的值，这是为了可以在输出的 <code>main.s</code> 文件中快速找到 <code>store</code> 对应的位置：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">__ZN3std3sys9backtrace28__rust_begin_short_backtrace17h750d7a3a9c81fc67E:</span><br><span class="line">	.cfi_startproc</span><br><span class="line">Lloh8:</span><br><span class="line">	adrp	x8, __ZN4main6ATOMIC17hd0b0dbf92e477148E.0@PAGE</span><br><span class="line">Lloh9:</span><br><span class="line">	add	x8, x8, __ZN4main6ATOMIC17hd0b0dbf92e477148E.0@PAGEOFF</span><br><span class="line">	mov	w9, #10086 ; 将值 10086 移入寄存器</span><br><span class="line">	stlr	x9, [x8] ; Store-Release 指令，原子地存储值</span><br><span class="line">	; InlineAsm Start</span><br><span class="line">	; InlineAsm End</span><br><span class="line">	ret</span><br><span class="line">	.loh AdrpAdd	Lloh8, Lloh9</span><br><span class="line">	.cfi_endproc</span><br></pre></td></tr></table></figure>
-<p>在这个代码中，<code>stlr</code> 就是 <code>Store Release</code>
-的意思，另外一个关键字是 <code>ladpr</code>，表示
-<code>Load Acquire</code> 的意思，通过这个关键字，你可以找到
-<code>load</code> 对应的汇编代码：</p>
+<p>在这个代码中，<code>stlr</code> 就是 <code>Store Release</code> 的意思，另外一个关键字是 <code>ladpr</code>，表示 <code>Load Acquire</code> 的意思，通过这个关键字，你可以找到 <code>load</code> 对应的汇编代码：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Lloh11:</span><br><span class="line">	add	x8, x8, __ZN4main6ATOMIC17hd0b0dbf92e477148E.0@PAGEOFF</span><br><span class="line">	ldapr	x8, [x8] ; ; Load-Acquire 指令，原子地加载值</span><br><span class="line">	str	x8, [sp, #8]</span><br></pre></td></tr></table></figure>
-<h3 id="go-实战查看汇编">Go 实战查看汇编</h3>
+<h3 id="Go-实战查看汇编">Go 实战查看汇编</h3>
 <blockquote>
 <p>笔者使用的是 ARM64 架构的 macbook。</p>
 </blockquote>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;sync/atomic&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	data := atomic.Int64&#123;&#125;</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		data.Store(<span class="number">10086</span>)</span><br><span class="line">	&#125;()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		a := data.Load()</span><br><span class="line">		<span class="built_in">println</span>(a)</span><br><span class="line">	&#125;()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>使用如下命令，可以输出优化后的汇编代码：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go build -gcflags=-S -ldflags=-w main.go 2&gt; assembly.txt</span><br></pre></td></tr></table></figure>
-<p>查看输出的文件，我们同样搜索 <code>10086</code>，可以快速找到
-<code>store</code> 的位置：</p>
+<p>查看输出的文件，我们同样搜索 <code>10086</code>，可以快速找到 <code>store</code> 的位置：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0x0008 00008 (/Users/wangjiahan/go/go1.23.2/src/sync/atomic/type.go:109)	MOVD	$10086, R1</span><br><span class="line">0x000c 00012 (/Users/wangjiahan/go/go1.23.2/src/sync/atomic/type.go:109)	STLR	R1, (R0)</span><br></pre></td></tr></table></figure>
-<p>可以看到，这里同样也是使用了 <code>STLR</code> 指令。接着我们看第 14
-行代码的位置对应的汇编：可以发现这里使用的 <code>LDAR</code>
-指令，也就是 <code>Load Acuqire</code>。</p>
+<p>可以看到，这里同样也是使用了 <code>STLR</code> 指令。接着我们看第 14 行代码的位置对应的汇编：可以发现这里使用的 <code>LDAR</code> 指令，也就是 <code>Load Acuqire</code>。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0x001c 00028 (/Users/wangjiahan/goStudy/go-atomic/main.go:14)	HINT	$0</span><br><span class="line">0x0020 00032 (/Users/wangjiahan/go/go1.23.2/src/sync/atomic/type.go:106)	LDAR	(R0), R0</span><br><span class="line">0x0024 00036 (/Users/wangjiahan/go/go1.23.2/src/sync/atomic/type.go:106)	MOVD	R0, main..autotmp_6-8(SP)</span><br></pre></td></tr></table></figure>
-<h1 id="内存顺序">内存顺序</h1>
-<p>在了解了 Rust Atomic
-的基本用法和基本原理之后，我们回过头来谈一谈原子操作参数中的
-<code>std::sync::atomic::Ordering::Relaxed</code>，这个就是本篇的主题：<strong>内存顺序</strong>。内存顺序要解决的核心问题是<u>如何合理地限制单一线程中的代码执行顺序，使得在不使用锁的情况下，既能最大化利用
-CPU 的计算能力，又能保证多线程环境下不会出现逻辑错误。</u></p>
+<h1>内存顺序</h1>
+<p>在了解了 Rust Atomic 的基本用法和基本原理之后，我们回过头来谈一谈原子操作参数中的 <code>std::sync::atomic::Ordering::Relaxed</code>，这个就是本篇的主题：<strong>内存顺序</strong>。内存顺序要解决的核心问题是<u>如何合理地限制单一线程中的代码执行顺序，使得在不使用锁的情况下，既能最大化利用 CPU 的计算能力，又能保证多线程环境下不会出现逻辑错误。</u></p>
 <h2 id="指令乱序">指令乱序</h2>
-<p>CPU
-和编译器都会在保证程序运行结果不发生改变的前提下，尽一切可能让我们的程序运行得尽可能快。</p>
+<p>CPU 和编译器都会在保证程序运行结果不发生改变的前提下，尽一切可能让我们的程序运行得尽可能快。</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">f</span>(a: &amp;<span class="keyword">mut</span> <span class="type">i32</span>, b: &amp;<span class="keyword">mut</span> <span class="type">i32</span>) &#123;</span><br><span class="line">  *a += <span class="number">1</span>;</span><br><span class="line">  *b += <span class="number">1</span>;</span><br><span class="line">  *a += <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>像上述代码，编译器完全可以优化成下面的代码，从而提高程序的运行效率：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">f</span>(a: &amp;<span class="keyword">mut</span> <span class="type">i32</span>, b: &amp;<span class="keyword">mut</span> <span class="type">i32</span>) &#123;</span><br><span class="line">  *a += <span class="number">2</span>;</span><br><span class="line">  *b += <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>在这个过程中，就可能会出现<strong>指令重排</strong>，甚至是<strong>代码重写</strong>，不过这带来了指令乱序的问题，即<u>程序的实际执行顺序跟我们的代码顺序是不一致的</u>。</p>
 <p>不过，编译器保证的是<strong>在单线程环境下，执行的结果最终一致</strong>，所以，指令乱序在单线程环境下完全是允许的。对于编译器来说，它只知道：在当前线程中，数据的读写以及数据之间的依赖关系。但是，<strong>编译器并不知道哪些数据是在线程间共享，而且是有可能会被修改的</strong>。而这些是需要开发人员去保证的。</p>
 <h2 id="内存模型">内存模型</h2>
-<p>为了解决指令乱序带来的并发问题，Rust 采用了内存模型（Memory
-Model）这一概念。这个概念主要借鉴自 C++11
-中引入的内存模型，它定义了在多线程环境下内存访问的行为规范。</p>
+<p>为了解决指令乱序带来的并发问题，Rust 采用了内存模型（Memory Model）这一概念。这个概念主要借鉴自 C++11 中引入的内存模型，它定义了在多线程环境下内存访问的行为规范。</p>
 <p>内存模型的核心目标是在以下三方面之间取得平衡：</p>
-<ol type="1">
+<ol>
 <li><strong>正确性保证</strong>：确保多线程程序的行为是可预测和一致的。</li>
-<li><strong>性能优化</strong>：允许编译器和 CPU
-在不违反正确性的前提下进行优化。</li>
+<li><strong>性能优化</strong>：允许编译器和 CPU 在不违反正确性的前提下进行优化。</li>
 <li><strong>跨平台兼容</strong>：提供一个统一的抽象层，使代码可以在不同的硬件架构上正确运行。</li>
 </ol>
 <p>具体来说，内存模型：</p>
 <ul>
 <li>为开发者提供了清晰的规则，说明在多线程环境下，什么样的内存访问行为是合法的，什么样的行为会导致未定义行为。</li>
 <li>为编译器开发者提供了明确的标准，指导他们在不同平台上实现必要的内存同步原语。</li>
-<li>通过定义不同的内存顺序级别（如 Relaxed、Release/Acquire、SeqCst
-等），让开发者可以根据需要选择合适的同步强度。</li>
+<li>通过定义不同的内存顺序级别（如 Relaxed、Release/Acquire、SeqCst 等），让开发者可以根据需要选择合适的同步强度。</li>
 </ul>
-<p>这种抽象让开发者可以专注于并发逻辑本身，而不必过分关
+<p>这种抽象让开发者可以专注于并发逻辑本身，而不必过分关<br>
 注底层硬件的具体实现细节。</p>
-<h2 id="sequenced-before">Sequenced-Before</h2>
-<p>在讨论内存顺序之前，我们需要先对 2 个重要关系术语进行简单阐述，分别是
-<code>Sequenced-Before</code> 和 <code>Happens-Before</code>。</p>
-<p><strong>Sequenced-Before</strong>
-描述的是<strong>单个线程内</strong>的操作顺序。它基于程序的源代码顺序，表示在同一线程中，一个操作在程序中出现在另一个操作之前。</p>
+<h2 id="Sequenced-Before">Sequenced-Before</h2>
+<p>在讨论内存顺序之前，我们需要先对 2 个重要关系术语进行简单阐述，分别是 <code>Sequenced-Before</code> 和 <code>Happens-Before</code>。</p>
+<p><strong>Sequenced-Before</strong> 描述的是<strong>单个线程内</strong>的操作顺序。它基于程序的源代码顺序，表示在同一线程中，一个操作在程序中出现在另一个操作之前。</p>
 <p>具体来说，如果操作 A sequenced-before 操作 B，那么：</p>
-<ol type="1">
-<li><p><strong>数据依赖关系</strong>：如果 B 依赖于 A 的结果，那么 A
-一定会在 B 之前执行。例如：</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">x</span> = <span class="number">1</span>;      <span class="comment">// 操作 A</span></span><br><span class="line"><span class="keyword">let</span> <span class="variable">y</span> = x + <span class="number">1</span>;  <span class="comment">// 操作 B - 依赖于 A 的结果</span></span><br></pre></td></tr></table></figure></li>
-<li><p><strong>原子操作的顺序</strong>：对同一个原子变量的操作会保持程序顺序。例如：</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">X.<span class="title function_ invoke__">fetch_add</span>(<span class="number">5</span>, Relaxed);    <span class="comment">// 一定先执行</span></span><br><span class="line">X.<span class="title function_ invoke__">fetch_add</span>(<span class="number">10</span>, Relaxed);   <span class="comment">// 一定后执行</span></span><br></pre></td></tr></table></figure></li>
-<li><p><strong>独立操作的可重排性</strong>：如果两个操作之间没有数据依赖关系，且操作的是不同的变量，那么它们可能会被重排序。例如：
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">X.<span class="title function_ invoke__">store</span>(<span class="number">1</span>, Relaxed);  <span class="comment">// 这两个操作可能会被重排序</span></span><br><span class="line">Y.<span class="title function_ invoke__">store</span>(<span class="number">2</span>, Relaxed);  <span class="comment">// 因为它们操作的是不同的变量</span></span><br></pre></td></tr></table></figure></p></li>
+<ol>
+<li>
+<p><strong>数据依赖关系</strong>：如果 B 依赖于 A 的结果，那么 A 一定会在 B 之前执行。例如：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> <span class="variable">x</span> = <span class="number">1</span>;      <span class="comment">// 操作 A</span></span><br><span class="line"><span class="keyword">let</span> <span class="variable">y</span> = x + <span class="number">1</span>;  <span class="comment">// 操作 B - 依赖于 A 的结果</span></span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>原子操作的顺序</strong>：对同一个原子变量的操作会保持程序顺序。例如：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">X.<span class="title function_ invoke__">fetch_add</span>(<span class="number">5</span>, Relaxed);    <span class="comment">// 一定先执行</span></span><br><span class="line">X.<span class="title function_ invoke__">fetch_add</span>(<span class="number">10</span>, Relaxed);   <span class="comment">// 一定后执行</span></span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>独立操作的可重排性</strong>：如果两个操作之间没有数据依赖关系，且操作的是不同的变量，那么它们可能会被重排序。例如：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">X.<span class="title function_ invoke__">store</span>(<span class="number">1</span>, Relaxed);  <span class="comment">// 这两个操作可能会被重排序</span></span><br><span class="line">Y.<span class="title function_ invoke__">store</span>(<span class="number">2</span>, Relaxed);  <span class="comment">// 因为它们操作的是不同的变量</span></span><br></pre></td></tr></table></figure>
+</li>
 </ol>
-<h2 id="happens-before">Happens-Before</h2>
-<p><strong>Happens-Before</strong>
-则描述了<strong>跨线程</strong>的操作顺序。它定义了不同线程中的操作之间的可见性和顺序关系。如果操作
-A Happens-Before 操作 B，那么 A 的内存写入对 B 是可见的。</p>
+<h2 id="Happens-Before">Happens-Before</h2>
+<p><strong>Happens-Before</strong> 则描述了<strong>跨线程</strong>的操作顺序。它定义了不同线程中的操作之间的可见性和顺序关系。如果操作 A Happens-Before 操作 B，那么 A 的内存写入对 B 是可见的。</p>
 <p>典型的 Happens-Before 有：</p>
-<ol type="1">
-<li>同一线程内，如果先调用 <code>f()</code>，再调佣 <code>g()</code>，则
-<code>f()</code> happens-before <code>g()</code>，其实这就是
-<code>sequenced-before</code>。</li>
+<ol>
+<li>同一线程内，如果先调用 <code>f()</code>，再调佣 <code>g()</code>，则 <code>f()</code> happens-before <code>g()</code>，其实这就是 <code>sequenced-before</code>。</li>
 <li><code>spawing</code> happens-before <code>joining</code>。</li>
 <li><code>lock</code> happens-before <code>unlock</code>。</li>
 </ol>
 <p>举个例子：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> X: AtomicI32 = AtomicI32::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    X.<span class="title function_ invoke__">store</span>(<span class="number">1</span>, Relaxed);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">t</span> = thread::<span class="title function_ invoke__">spawn</span>(f);</span><br><span class="line">    X.<span class="title function_ invoke__">store</span>(<span class="number">2</span>, Relaxed);</span><br><span class="line">    t.<span class="title function_ invoke__">join</span>().<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line">    X.<span class="title function_ invoke__">store</span>(<span class="number">3</span>, Relaxed);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">f</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">x</span> = X.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line">    <span class="built_in">assert!</span>(x == <span class="number">1</span> || x == <span class="number">2</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>上面这个例子的执行顺序如下图所示，因为 <code>spawn</code>
-happens-before
-<code>join</code>，所以我们可以确定的执行顺序是：<strong>“store 1 to
-X”→“store 2 to X”→“store 3 to X”</strong>。而 <strong>load from
-X</strong> 介于 spawn 和 join
-之间，且没有进行任何其他的内存顺序限制，所以它和 <strong>store 2 to
-X</strong> 之间的顺序是不确定的，但是可以肯定的是，它一定在
-<strong>store 3 to X</strong> 之前，所以
-<code>assert!(x == 1 || x == 2);</code> 是永远成立的。</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241111160041436.png" alt="spawn-happens-before-join" style="zoom:33%;" /></p>
-<p>到这里，相信不少读者已经能够理解为什么需要内存顺序这个东西了，核心问题就是在于
-<strong>store 2 to X</strong> 和 <strong>load from X</strong>
-的执行顺序是否会影响我们的业务逻辑，如果不会，那么我们可以指定最松散的内存顺序要求，如果会，那么我们就要利用指定合适的内存顺序来使得其按照我们的预期顺序进行执行，从而保证业务逻的正确。</p>
-<h2 id="rust-内存顺序">Rust 内存顺序</h2>
+<p>上面这个例子的执行顺序如下图所示，因为 <code>spawn</code> happens-before <code>join</code>，所以我们可以确定的执行顺序是：<strong>“store 1 to X”→“store 2 to X”→“store 3 to X”</strong>。而 <strong>load from X</strong> 介于 spawn 和 join 之间，且没有进行任何其他的内存顺序限制，所以它和 <strong>store 2 to X</strong> 之间的顺序是不确定的，但是可以肯定的是，它一定在 <strong>store 3 to X</strong> 之前，所以 <code>assert!(x == 1 || x == 2);</code> 是永远成立的。</p>
+<img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241111160041436.png" alt="spawn-happens-before-join" style="zoom:33%;" />
+<p>到这里，相信不少读者已经能够理解为什么需要内存顺序这个东西了，核心问题就是在于 <strong>store 2 to X</strong> 和 <strong>load from X</strong> 的执行顺序是否会影响我们的业务逻辑，如果不会，那么我们可以指定最松散的内存顺序要求，如果会，那么我们就要利用指定合适的内存顺序来使得其按照我们的预期顺序进行执行，从而保证业务逻的正确。</p>
+<h2 id="Rust-内存顺序">Rust 内存顺序</h2>
 <p>Rust 支持五种内存顺序（Ordering），从最松散到最严格依次为：</p>
 <table>
-<colgroup>
-<col style="width: 3%" />
-<col style="width: 12%" />
-<col style="width: 37%" />
-<col style="width: 29%" />
-<col style="width: 16%" />
-</colgroup>
 <thead>
 <tr>
 <th>内存顺序</th>
@@ -358,25 +289,21 @@ X</strong> 之间的顺序是不确定的，但是可以肯定的是，它一定
 <tr>
 <td>Relaxed</td>
 <td>最宽松的内存顺序</td>
-<td>- 仅保证操作的原子性<br>- 不提供任何同步保证<br>- 不建立
-happens-before 关系</td>
-<td>- 简单计数器<br>- 性能要求极高且确定不需要同步<br>-
-已通过其他方式确保同步</td>
+<td>- 仅保证操作的原子性<br>- 不提供任何同步保证<br>- 不建立 happens-before 关系</td>
+<td>- 简单计数器<br>- 性能要求极高且确定不需要同步<br>- 已通过其他方式确保同步</td>
 <td><code>counter.fetch_add(1, Ordering::Relaxed)</code></td>
 </tr>
 <tr>
 <td>Release</td>
 <td>用于存储操作</td>
-<td>- 之前的内存访问不会被重排到此操作之后<br>- 与 Acquire
-配对使用可建立 happens-before 关系</td>
+<td>- 之前的内存访问不会被重排到此操作之后<br>- 与 Acquire 配对使用可建立 happens-before 关系</td>
 <td>- 生产者-消费者模式<br>- 发布共享数据<br>- 初始化完成标志</td>
 <td><code>data.store(42, Ordering::Release)</code></td>
 </tr>
 <tr>
 <td>Acquire</td>
 <td>用于加载操作</td>
-<td>- 之后的内存访问不会被重排到此操作之前<br>- 与 Release
-配对使用可建立 happens-before 关系</td>
+<td>- 之后的内存访问不会被重排到此操作之前<br>- 与 Release 配对使用可建立 happens-before 关系</td>
 <td>- 生产者-消费者模式<br>- 获取共享数据<br>- 检查初始化标志</td>
 <td><code>data.load(Ordering::Acquire)</code></td>
 </tr>
@@ -390,233 +317,166 @@ happens-before 关系</td>
 <tr>
 <td>SeqCst</td>
 <td>最严格的内存顺序</td>
-<td>- 包含 AcqRel 的所有保证<br>- 所有线程看到的所有 SeqCst
-操作顺序一致<br>- 提供全局的顺序一致性</td>
-<td>- 需要严格的全局顺序<br>- 不确定使用哪种顺序时<br>-
-对性能要求不高的场景</td>
+<td>- 包含 AcqRel 的所有保证<br>- 所有线程看到的所有 SeqCst 操作顺序一致<br>- 提供全局的顺序一致性</td>
+<td>- 需要严格的全局顺序<br>- 不确定使用哪种顺序时<br>- 对性能要求不高的场景</td>
 <td><code>flag.store(true, Ordering::SeqCst)</code></td>
 </tr>
 </tbody>
 </table>
-<p>在 C++ 中，其实还有另外一种内存顺序 <code>Consume</code>，它是
-<code>Acquire</code> 的一个更弱的版本：</p>
+<p>在 C++ 中，其实还有另外一种内存顺序 <code>Consume</code>，它是 <code>Acquire</code> 的一个更弱的版本：</p>
 <ul>
-<li><p><strong>Acquire</strong>:
-保证后续的所有读写操作不会重排到这个操作前面</p></li>
-<li><p><strong>Consume</strong>:
-只保证后续与这个操作结果相关的读写操作不会重排到这个操作前面</p></li>
+<li>
+<p><strong>Acquire</strong>: 保证后续的所有读写操作不会重排到这个操作前面</p>
+</li>
+<li>
+<p><strong>Consume</strong>: 只保证后续与这个操作结果相关的读写操作不会重排到这个操作前面</p>
+</li>
 </ul>
-<p>理论上，Consume 在某些架构上可以提供比 Acquire
-更好的性能，因为它只需要对数据依赖的操作进行同步。</p>
+<p>理论上，Consume 在某些架构上可以提供比 Acquire 更好的性能，因为它只需要对数据依赖的操作进行同步。</p>
 <p>然而，由于以下原因，Rust 选择不支持 Consume 顺序：</p>
-<ol type="1">
-<li><strong>实现复杂性</strong>：很多编译器实现者发现正确实现 Consume
-语义非常困难。</li>
-<li><strong>性能收益不确定</strong>：在实践中，大多数编译器都将 Consume
-视为 Acquire 来处理。</li>
-<li><strong>标准困惑</strong>：C++ 标准委员会也承认当前的 Consume
-语义定义存在问题，正在考虑重新设计。</li>
+<ol>
+<li><strong>实现复杂性</strong>：很多编译器实现者发现正确实现 Consume 语义非常困难。</li>
+<li><strong>性能收益不确定</strong>：在实践中，大多数编译器都将 Consume 视为 Acquire 来处理。</li>
+<li><strong>标准困惑</strong>：C++ 标准委员会也承认当前的 Consume 语义定义存在问题，正在考虑重新设计。</li>
 </ol>
 <details class="tag-plugin colorful folding" color="blue" open><summary><p>选择建议：</p>
-</summary><div class="body"><ol type="1"><li><strong>不确定选择哪种顺序时</strong>：<ul><li>使用 SeqCst（最安全但性能最低）</li><li>或咨询有经验的开发者</li></ul></li><li><strong>性能优化时</strong>：<ul><li>先使用 SeqCst 开发</li><li>在性能测试后，根据需要降低到 Release/Acquire</li><li>只有在确实需要时才使用 Relaxed</li></ul></li><li><strong>常见组合</strong>：<ul><li>Release 写 + Acquire 读：最常见的生产者-消费者模式</li><li>AcqRel：用于原子的读改写操作</li><li>Relaxed：用于简单的计数器场景</li></ul></li></ol></div></details>
+</summary><div class="body"><ol><li><strong>不确定选择哪种顺序时</strong>：<ul><li>使用 SeqCst（最安全但性能最低）</li><li>或咨询有经验的开发者</li></ul></li><li><strong>性能优化时</strong>：<ul><li>先使用 SeqCst 开发</li><li>在性能测试后，根据需要降低到 Release/Acquire</li><li>只有在确实需要时才使用 Relaxed</li></ul></li><li><strong>常见组合</strong>：<ul><li>Release 写 + Acquire 读：最常见的生产者-消费者模式</li><li>AcqRel：用于原子的读改写操作</li><li>Relaxed：用于简单的计数器场景</li></ul></li></ol></div></details>
 <p>下面我们来对每种内存顺序进行举例阐述。</p>
-<h3 id="relaxed">Relaxed</h3>
-<p><code>Relaxed</code>
-是最宽松的内存顺序，它只保证了原子操作在并发下的安全性，但不保证执行顺序。</p>
+<h3 id="Relaxed">Relaxed</h3>
+<p><code>Relaxed</code> 是最宽松的内存顺序，它只保证了原子操作在并发下的安全性，但不保证执行顺序。</p>
 <p>考虑如下代码：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> X: AtomicI32 = AtomicI32::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">a</span>() &#123;</span><br><span class="line">    X.<span class="title function_ invoke__">fetch_add</span>(<span class="number">5</span>, Relaxed);</span><br><span class="line">    X.<span class="title function_ invoke__">fetch_add</span>(<span class="number">10</span>, Relaxed);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">b</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">a</span> = X.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">b</span> = X.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">c</span> = X.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">d</span> = X.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;a&#125; &#123;b&#125; &#123;c&#125; &#123;d&#125;&quot;</span>);  <span class="comment">// 这个输出不一定</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(a);</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(b);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, X.<span class="title function_ invoke__">load</span>(Relaxed)); <span class="comment">// 最终结果一定是 15</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>基于我们上面提到的 <code>sequenced-before</code> 规则，我们可以确定
-<code>a</code> 和 <code>b</code> 两个线程内的
-<code>happens-before</code> 规则，但是二者之间的
-<code>happens-before</code> 是无法确定的，但是我们可以确定最后的结果是
-<code>15</code>。下图展示了上述代码的执行顺序示意图：</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241111164259913.png" alt="relaxed-ordering" style="zoom:50%;" /></p>
-<p>虽然两个线程之间的 <code>happens-before</code>
-是无法确定的，但是我们可以确定 <code>X</code>
-的变化顺序：0→5→15。所以线程 <code>b</code> 输出
-<code>0 0 0 0</code>、<code>0 0 5 15</code> 和 <code>0 15 15 15</code>
-都是可能的，而永远不可能输出 <code>0 5 0 15</code> 或
-<code>0 0 10 15</code> 类似的结果。</p>
+<p>基于我们上面提到的 <code>sequenced-before</code> 规则，我们可以确定 <code>a</code> 和 <code>b</code> 两个线程内的 <code>happens-before</code> 规则，但是二者之间的 <code>happens-before</code> 是无法确定的，但是我们可以确定最后的结果是 <code>15</code>。下图展示了上述代码的执行顺序示意图：</p>
+<img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241111164259913.png" alt="relaxed-ordering" style="zoom:50%;" />
+<p>虽然两个线程之间的 <code>happens-before</code> 是无法确定的，但是我们可以确定 <code>X</code> 的变化顺序：0→5→15。所以线程 <code>b</code> 输出 <code>0 0 0 0</code>、<code>0 0 5 15</code> 和 <code>0 15 15 15</code> 都是可能的，而永远不可能输出 <code>0 5 0 15</code> 或 <code>0 0 10 15</code> 类似的结果。</p>
 <p>但是如果是这样子的话，就不一定了：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> X: AtomicI32 = AtomicI32::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">a1</span>() &#123;</span><br><span class="line">    X.<span class="title function_ invoke__">fetch_add</span>(<span class="number">5</span>, Relaxed);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">a2</span>() &#123;</span><br><span class="line">    X.<span class="title function_ invoke__">fetch_add</span>(<span class="number">10</span>, Relaxed);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">b</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">a</span> = X.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">b</span> = X.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">c</span> = X.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">d</span> = X.<span class="title function_ invoke__">load</span>(Relaxed);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;a&#125; &#123;b&#125; &#123;c&#125; &#123;d&#125;&quot;</span>);  <span class="comment">// 这个输出不一定</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(a1);</span><br><span class="line">      	s.<span class="title function_ invoke__">apawn</span>(a2);</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(b);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, X.<span class="title function_ invoke__">load</span>(Relaxed)); <span class="comment">// 最终结果一定是 15</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>上面这个例子，<code>X</code> 的变化顺序可以是 0→5→15，也可以是
-0→10→15，这取决于哪个 <code>fetch_add</code> 先被执行。</p>
+<p>上面这个例子，<code>X</code> 的变化顺序可以是 0→5→15，也可以是 0→10→15，这取决于哪个 <code>fetch_add</code> 先被执行。</p>
 <p>再举个例子：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> DATA: AtomicI32 = AtomicI32::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line"><span class="keyword">static</span> READY: AtomicBool = AtomicBool::<span class="title function_ invoke__">new</span>(<span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">        <span class="comment">// 线程 A - 写入者</span></span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            DATA.<span class="title function_ invoke__">store</span>(<span class="number">123</span>, Ordering::Relaxed);     <span class="comment">// ① 准备数据</span></span><br><span class="line">            READY.<span class="title function_ invoke__">store</span>(<span class="literal">true</span>, Ordering::Relaxed);   <span class="comment">// ② 发出数据就绪信号</span></span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 线程 B - 读取者</span></span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="keyword">while</span> !READY.<span class="title function_ invoke__">load</span>(Ordering::Relaxed) &#123;  <span class="comment">// ③ 等待数据就绪信号</span></span><br><span class="line">                thread::<span class="title function_ invoke__">yield_now</span>();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="built_in">assert_eq!</span>(DATA.<span class="title function_ invoke__">load</span>(Ordering::Relaxed), <span class="number">123</span>); <span class="comment">// ④ 获取数据，这里断言一定成功吗？</span></span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>上面这个例子中，线程 A 执行了：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">DATA.<span class="title function_ invoke__">store</span>(<span class="number">123</span>, Ordering::Relaxed);     <span class="comment">// 准备数据</span></span><br><span class="line">READY.<span class="title function_ invoke__">store</span>(<span class="literal">true</span>, Ordering::Relaxed);   <span class="comment">// 发出数据就绪信号</span></span><br></pre></td></tr></table></figure>
-<p>这是 2 个没有依赖关系的原子操作，且使用的是 <code>Relaxed</code>
-内存顺序，所以对于线程 B 来说，这 2
-个操作的顺序是不确定的。所以是很可能在
-<code>READY.load(Ordering::Relaxed)</code> 返回 <code>true</code>
-的时候，<code>DATA.load(Ordering::Relaxed)</code> 依旧还是
-<code>0</code>。</p>
-<p>那如何确保这个断言一定成功呢？那就需要“升级”一下了~ 这个时候就轮到
-<code>Release</code> 和 <code>Acquire</code> 的出场了。</p>
-<h3 id="release-acquire">Release &amp; Acquire</h3>
-<p><code>Release</code> 和 <code>Acquire</code>
-一般成对出现，它们共同建立了线程间的同步关系：</p>
+<p>这是 2 个没有依赖关系的原子操作，且使用的是 <code>Relaxed</code> 内存顺序，所以对于线程 B 来说，这 2 个操作的顺序是不确定的。所以是很可能在 <code>READY.load(Ordering::Relaxed)</code> 返回 <code>true</code> 的时候，<code>DATA.load(Ordering::Relaxed)</code> 依旧还是 <code>0</code>。</p>
+<p>那如何确保这个断言一定成功呢？那就需要“升级”一下了~ 这个时候就轮到 <code>Release</code> 和 <code>Acquire</code> 的出场了。</p>
+<h3 id="Release-Acquire">Release &amp; Acquire</h3>
+<p><code>Release</code> 和 <code>Acquire</code> 一般成对出现，它们共同建立了线程间的同步关系：</p>
 <ul>
-<li><code>Release</code>:
-作用于写操作（store），确保该操作之前的所有内存访问不会被重排到这个
-Release 操作之后。</li>
-<li><code>Acquire</code>:
-作用于读操作（load），确保该操作之后的所有内存访问不会被重排到这个
-Acquire 操作之前。</li>
+<li><code>Release</code>: 作用于写操作（store），确保该操作之前的所有内存访问不会被重排到这个 Release 操作之后。</li>
+<li><code>Acquire</code>: 作用于读操作（load），确保该操作之后的所有内存访问不会被重排到这个 Acquire 操作之前。</li>
 </ul>
-<p>当一个线程通过 <code>Acquire</code> 读取到另一个线程通过
-<code>Release</code> 写入的值时，会建立一个 happens-before
-关系：<strong><font color="orange">线程 A 中 Release
-写入之前的所有内存写操作，对于线程 B 中 Acquire
-读取之后的所有内存读操作都是可见的</font></strong>。</p>
+<p>当一个线程通过 <code>Acquire</code> 读取到另一个线程通过 <code>Release</code> 写入的值时，会建立一个 happens-before 关系：<strong><font color="orange">线程 A 中 Release 写入之前的所有内存写操作，对于线程 B 中 Acquire 读取之后的所有内存读操作都是可见的</font></strong>。</p>
 <p>修改一下上面的例子：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> DATA: AtomicI32 = AtomicI32::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line"><span class="keyword">static</span> READY: AtomicBool = AtomicBool::<span class="title function_ invoke__">new</span>(<span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            DATA.<span class="title function_ invoke__">store</span>(<span class="number">123</span>, Ordering::Relaxed);</span><br><span class="line">            READY.<span class="title function_ invoke__">store</span>(<span class="literal">true</span>, Ordering::Release);   <span class="comment">// 这里改为 release</span></span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">            <span class="keyword">while</span> !READY.<span class="title function_ invoke__">load</span>(Ordering::Acquire) &#123;  <span class="comment">// 这里改为 acquire</span></span><br><span class="line">                thread::<span class="title function_ invoke__">yield_now</span>();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="built_in">assert_eq!</span>(DATA.<span class="title function_ invoke__">load</span>(Ordering::Relaxed), <span class="number">123</span>); <span class="comment">// 必定成功</span></span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241111165714772.png" alt="release-acquire-ordering" style="zoom:50%;" /></p>
+<img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241111165714772.png" alt="release-acquire-ordering" style="zoom:50%;" />
 <p>如上图所示，在这个例子中：</p>
-<ol type="1">
-<li>Release-Acquire 同步确保了 <code>READY</code> 的写入和读取之间建立了
-happens-before 关系</li>
-<li>由于 <code>DATA</code> 的写入在 <code>READY</code> 的 Release
-写入之前，而 <code>DATA</code> 的读取在 <code>READY</code> 的 Acquire
-读取之后</li>
+<ol>
+<li>Release-Acquire 同步确保了 <code>READY</code> 的写入和读取之间建立了 happens-before 关系</li>
+<li>由于 <code>DATA</code> 的写入在 <code>READY</code> 的 Release 写入之前，而 <code>DATA</code> 的读取在 <code>READY</code> 的 Acquire 读取之后</li>
 <li>因此可以保证线程 B 一定能看到线程 A 写入的值 123</li>
 </ol>
-<p>更进一步，我们通过观察，可以发现 <code>DATA</code> 都没必要使用
-<code>Atomic</code> 类型，因为由 <code>READY</code> 建议的
-<code>happens-before</code> 规则已经能保证对 <code>DATA</code>
-的读写不可能并发执行了。不过因为 Rust
-的类型系统并不允许跨线程进行非原子类型的读写操作，所以这里我们需要使用
-<code>unsafe</code>
-才能使编译通过，但通过我们之前的分析，我们可以确保下面这段代码是安全的：</p>
+<p>更进一步，我们通过观察，可以发现 <code>DATA</code> 都没必要使用 <code>Atomic</code> 类型，因为由 <code>READY</code> 建议的 <code>happens-before</code> 规则已经能保证对 <code>DATA</code> 的读写不可能并发执行了。不过因为 Rust 的类型系统并不允许跨线程进行非原子类型的读写操作，所以这里我们需要使用 <code>unsafe</code> 才能使编译通过，但通过我们之前的分析，我们可以确保下面这段代码是安全的：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">mut</span> DATA: <span class="type">u64</span> = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">static</span> READY: AtomicBool = AtomicBool::<span class="title function_ invoke__">new</span>(<span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    thread::<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">        <span class="comment">// Safety: 此时没有其他线程访问 DATA，</span></span><br><span class="line">        <span class="comment">// 因为我们还没有设置 READY 标志</span></span><br><span class="line">        <span class="keyword">unsafe</span> &#123; DATA = <span class="number">123</span> &#125;;</span><br><span class="line">        READY.<span class="title function_ invoke__">store</span>(<span class="literal">true</span>, Release); <span class="comment">// 在这个存储操作之前的所有内存操作 ..</span></span><br><span class="line">    &#125;);</span><br><span class="line">    <span class="keyword">while</span> !READY.<span class="title function_ invoke__">load</span>(Acquire) &#123; <span class="comment">// .. 在这个加载操作返回 true 后都是可见的</span></span><br><span class="line">        thread::<span class="title function_ invoke__">sleep</span>(Duration::<span class="title function_ invoke__">from_millis</span>(<span class="number">100</span>));</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;waiting...&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Safety: 没有线程会修改 DATA，因为 READY 已经被设置</span></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, <span class="keyword">unsafe</span> &#123; DATA &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <details class="tag-plugin colorful folding" color="blue" open><summary><p>释放序列（Release Sequence）</p>
-</summary><div class="body"><p>我们再来看一段代码示例：</p><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::&#123;sync::atomic::AtomicU8, thread&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">mut</span> DATA: <span class="type">Vec</span>&lt;<span class="type">i64</span>&gt; = <span class="built_in">vec!</span>[];</span><br><span class="line"><span class="keyword">static</span> FLAG: AtomicU8 = AtomicU8::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">thread_1</span>() &#123;</span><br><span class="line">    <span class="keyword">unsafe</span> &#123;</span><br><span class="line">        DATA.<span class="title function_ invoke__">push</span>(<span class="number">42</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    FLAG.<span class="title function_ invoke__">store</span>(<span class="number">1</span>, std::sync::atomic::Ordering::Release);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">thread_2</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">expected</span> = <span class="number">1</span>;</span><br><span class="line">    <span class="comment">// memory_order_relaxed is okay because this is an RMW,</span></span><br><span class="line">    <span class="comment">// and RMWs (with any ordering) following a release form a release sequence</span></span><br><span class="line">    <span class="keyword">while</span> FLAG</span><br><span class="line">        .<span class="title function_ invoke__">compare_exchange</span>(</span><br><span class="line">            expected,</span><br><span class="line">            <span class="number">2</span>,</span><br><span class="line">            std::sync::atomic::Ordering::Relaxed,</span><br><span class="line">            std::sync::atomic::Ordering::Relaxed,</span><br><span class="line">        )</span><br><span class="line">        .<span class="title function_ invoke__">is_err</span>()</span><br><span class="line">    &#123;</span><br><span class="line">        expected = <span class="number">1</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">thread_3</span>() &#123;</span><br><span class="line">    <span class="keyword">while</span> FLAG.<span class="title function_ invoke__">load</span>(std::sync::atomic::Ordering::Acquire) &lt; <span class="number">2</span> &#123;&#125;</span><br><span class="line">    <span class="comment">// if we read the value 2 from the atomic flag, we see 42 in the vector</span></span><br><span class="line">    <span class="keyword">unsafe</span> &#123;</span><br><span class="line">        <span class="built_in">assert_eq!</span>(DATA[<span class="number">0</span>], <span class="number">42</span>); <span class="comment">// will never fire</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(thread_1);</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(thread_2);</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(thread_3);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>这段代码是参考 <ahref="https://en.cppreference.com/w/cpp/atomic/memory_order">cppreference</a>而翻译成 Rust 代码的，在上述代码中，即使 <code>thread_2</code>中我们使用的是 <code>Relaxed</code>， 这段代码中的<code>assert_eq!(DATA[0], 42)</code>也是一定成功的。为什么呢？这涉及到一个重要的概念——<strong>释放序列（ReleaseSequence）</strong>：</p><p>对某个<strong>原子对象</strong> M的一段<strong>连续修改</strong>序列的定义，用于保证<code>acquire-加载</code> 能够同步到对应的<code>release-存储</code>，形成 <em>happens-before</em>关系。具体来说：</p><ol type="1"><li><p><strong>起始于一次释放操作（release operation）</strong></p><p>该释放操作是对原子对象 M 的一次写操作，且其内存语义为<code>release</code>、<code>acq_rel</code> 或 <code>seq_cst</code>。</p><p>这条操作在修改顺序（modificationorder）中作为释放序列的头部。</p></li><li><p><strong>后续紧随其后的所有修改</strong></p><p>自头部释放操作之后，凡是在 M的修改顺序中紧跟出现的原子操作，且满足以下之一，皆被纳入同一释放序列：</p><ol type="1"><li><strong>同一线程</strong>对 M 执行的任意原子写操作；</li><li><strong>任意线程</strong>对 M 执行的“读-改-写”（RMW）原子操作（如<code>fetch_add</code>、<code>compare_exchange</code> 等）。</li></ol><p>只要序列中没有出现其它线程的普通（非RMW）store，就形成一个<strong>最大连续子序列</strong>，这就是完整的释放序列。</p></li></ol><p>序列中继发的这些写或 RMW 操作本身无需再指定<code>memory_order_release</code>（它们即便是relaxed），也都被“挂到”最初那次 release 操作上，从而被后续的 acquire加载所“看到”。</p><p>在这段代码中：当 <code>thread_2</code> 的 <code>RMW</code>操作成功的时候，说明 <code>FLAG</code> 是 <code>1</code>，即<code>thread_1</code> 已经执行了 <code>release</code>操作，这个时候：</p><ol type="1"><li><code>thread_1</code> 的 <code>release</code> 操作建立了同步点</li><li><code>thread_2</code> 的 <code>RMW</code>操作自动成为释放序列的一部分</li><li>当 <code>thread_3</code> 通过 <code>acquire</code> 看到值 2时，它能看到整个释放序列的所有修改。</li><li>因此能保证看到 <code>DATA</code> 中的 42。</li></ol><p><img class=""src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250612094505443.png lazy" /></p><p>所以在这种场景下使用 <code>relaxed</code> 既安全又高效，因为：</p><ul><li>它是释放序列的一部分</li><li>不需要额外的同步开销</li><li>仍然能保证正确的内存顺序</li></ul><p>为什么这样设计呢？</p><ul><li><strong>原子性保证</strong>：RMW操作本身就是原子的，不会产生数据竞争</li><li><strong>连续性</strong>：每个 RMW操作都直接或间接地基于前一个操作的结果</li><li><strong>因果关系</strong>：形成了一个清晰的修改链条</li><li><strong>性能考虑</strong>：中间的 RMW 操作不需要额外的同步开销</li></ul></div></details>
-<h3 id="sequentially-consistent">Sequentially Consistent</h3>
-<p><code>SeqCst</code> 是最严格的内存顺序，它包括获取
-<code>release</code> 和 <code>acquire</code>
-的所有保证，还保证了全局一致的操作顺序。简单理解就是，你代码的顺序是怎么样，实际的执行顺序就是什么样。</p>
+</summary><div class="body"><p>我们再来看一段代码示例：</p><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::&#123;sync::atomic::AtomicU8, thread&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">mut</span> DATA: <span class="type">Vec</span>&lt;<span class="type">i64</span>&gt; = <span class="built_in">vec!</span>[];</span><br><span class="line"><span class="keyword">static</span> FLAG: AtomicU8 = AtomicU8::<span class="title function_ invoke__">new</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">thread_1</span>() &#123;</span><br><span class="line">    <span class="keyword">unsafe</span> &#123;</span><br><span class="line">        DATA.<span class="title function_ invoke__">push</span>(<span class="number">42</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    FLAG.<span class="title function_ invoke__">store</span>(<span class="number">1</span>, std::sync::atomic::Ordering::Release);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">thread_2</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">expected</span> = <span class="number">1</span>;</span><br><span class="line">    <span class="comment">// memory_order_relaxed is okay because this is an RMW,</span></span><br><span class="line">    <span class="comment">// and RMWs (with any ordering) following a release form a release sequence</span></span><br><span class="line">    <span class="keyword">while</span> FLAG</span><br><span class="line">        .<span class="title function_ invoke__">compare_exchange</span>(</span><br><span class="line">            expected,</span><br><span class="line">            <span class="number">2</span>,</span><br><span class="line">            std::sync::atomic::Ordering::Relaxed,</span><br><span class="line">            std::sync::atomic::Ordering::Relaxed,</span><br><span class="line">        )</span><br><span class="line">        .<span class="title function_ invoke__">is_err</span>()</span><br><span class="line">    &#123;</span><br><span class="line">        expected = <span class="number">1</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">thread_3</span>() &#123;</span><br><span class="line">    <span class="keyword">while</span> FLAG.<span class="title function_ invoke__">load</span>(std::sync::atomic::Ordering::Acquire) &lt; <span class="number">2</span> &#123;&#125;</span><br><span class="line">    <span class="comment">// if we read the value 2 from the atomic flag, we see 42 in the vector</span></span><br><span class="line">    <span class="keyword">unsafe</span> &#123;</span><br><span class="line">        <span class="built_in">assert_eq!</span>(DATA[<span class="number">0</span>], <span class="number">42</span>); <span class="comment">// will never fire</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    thread::<span class="title function_ invoke__">scope</span>(|s| &#123;</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(thread_1);</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(thread_2);</span><br><span class="line">        s.<span class="title function_ invoke__">spawn</span>(thread_3);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>这段代码是参考 <a target="_blank" rel="noopener" href="https://en.cppreference.com/w/cpp/atomic/memory_order">cppreference</a> 而翻译成 Rust 代码的，在上述代码中，即使 <code>thread_2</code> 中我们使用的是 <code>Relaxed</code>， 这段代码中的 <code>assert_eq!(DATA[0], 42)</code> 也是一定成功的。为什么呢？这涉及到一个重要的概念——<strong>释放序列（Release Sequence）</strong>：</p><p>对某个<strong>原子对象</strong> M 的一段<strong>连续修改</strong>序列的定义，用于保证 <code>acquire-加载</code> 能够同步到对应的 <code>release-存储</code>，形成 <em>happens-before</em> 关系。具体来说：</p><ol><li><p><strong>起始于一次释放操作（release operation）</strong></p><p>该释放操作是对原子对象 M 的一次写操作，且其内存语义为 <code>release</code>、<code>acq_rel</code> 或 <code>seq_cst</code>。</p><p>这条操作在修改顺序（modification order）中作为释放序列的头部。</p></li><li><p><strong>后续紧随其后的所有修改</strong></p><p>自头部释放操作之后，凡是在 M 的修改顺序中紧跟出现的原子操作，且满足以下之一，皆被纳入同一释放序列：</p><ol><li><strong>同一线程</strong>对 M 执行的任意原子写操作；</li><li><strong>任意线程</strong>对 M 执行的“读-改-写”（RMW）原子操作（如 <code>fetch_add</code>、<code>compare_exchange</code> 等）。</li></ol><p>只要序列中没有出现其它线程的普通（非 RMW）store，就形成一个<strong>最大连续子序列</strong>，这就是完整的释放序列。</p></li></ol><p>序列中继发的这些写或 RMW 操作本身无需再指定 <code>memory_order_release</code>（它们即便是 relaxed），也都被“挂到”最初那次 release 操作上，从而被后续的 acquire 加载所“看到”。</p><p>在这段代码中：当 <code>thread_2</code> 的 <code>RMW</code> 操作成功的时候，说明 <code>FLAG</code> 是 <code>1</code>，即 <code>thread_1</code> 已经执行了 <code>release</code> 操作，这个时候：</p><ol><li><code>thread_1</code> 的 <code>release</code> 操作建立了同步点</li><li><code>thread_2</code> 的 <code>RMW</code> 操作自动成为释放序列的一部分</li><li>当 <code>thread_3</code> 通过 <code>acquire</code> 看到值 2 时，它能看到整个释放序列的所有修改。</li><li>因此能保证看到 <code>DATA</code> 中的 42。</li></ol><p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250612094505443.png" alt=""></p><p>所以在这种场景下使用 <code>relaxed</code> 既安全又高效，因为：</p><ul><li>它是释放序列的一部分</li><li>不需要额外的同步开销</li><li>仍然能保证正确的内存顺序</li></ul><p>为什么这样设计呢？</p><ul><li><strong>原子性保证</strong>：RMW 操作本身就是原子的，不会产生数据竞争</li><li><strong>连续性</strong>：每个 RMW 操作都直接或间接地基于前一个操作的结果</li><li><strong>因果关系</strong>：形成了一个清晰的修改链条</li><li><strong>性能考虑</strong>：中间的 RMW 操作不需要额外的同步开销</li></ul></div></details>
+<h3 id="Sequentially-Consistent">Sequentially Consistent</h3>
+<p><code>SeqCst</code> 是最严格的内存顺序，它包括获取 <code>release</code> 和 <code>acquire</code> 的所有保证，还保证了全局一致的操作顺序。简单理解就是，你代码的顺序是怎么样，实际的执行顺序就是什么样。</p>
 <p>我们来看一段代码：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::sync::atomic::Ordering::SeqCst;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> A: AtomicBool = AtomicBool::<span class="title function_ invoke__">new</span>(<span class="literal">false</span>);</span><br><span class="line"><span class="keyword">static</span> B: AtomicBool = AtomicBool::<span class="title function_ invoke__">new</span>(<span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">mut</span> S: <span class="type">String</span> = <span class="type">String</span>::<span class="title function_ invoke__">new</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">a</span> = thread::<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">        A.<span class="title function_ invoke__">store</span>(<span class="literal">true</span>, SeqCst);</span><br><span class="line">        <span class="keyword">if</span> !B.<span class="title function_ invoke__">load</span>(SeqCst) &#123;</span><br><span class="line">            <span class="keyword">unsafe</span> &#123; S.<span class="title function_ invoke__">push</span>(<span class="string">&#x27;!&#x27;</span>) &#125;;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">b</span> = thread::<span class="title function_ invoke__">spawn</span>(|| &#123;</span><br><span class="line">        B.<span class="title function_ invoke__">store</span>(<span class="literal">true</span>, SeqCst);</span><br><span class="line">        <span class="keyword">if</span> !A.<span class="title function_ invoke__">load</span>(SeqCst) &#123;</span><br><span class="line">            <span class="keyword">unsafe</span> &#123; S.<span class="title function_ invoke__">push</span>(<span class="string">&#x27;!&#x27;</span>) &#125;;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    a.<span class="title function_ invoke__">join</span>().<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line">    b.<span class="title function_ invoke__">join</span>().<span class="title function_ invoke__">unwrap</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在这段代码中，两个线程都是希望将自己的原子变量设置为
-<code>true</code>，从而阻止另外一个线程对 <code>S</code> 进行
-<code>push</code> 操作，其实就类似于锁。因为这里使用了
-<code>SeqCst</code>，所以代码的执行顺序是跟代码编写顺序是一致的，那么就可能出现以下
-3 种执行情况：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241112113535084.png"
-alt="seqcst-memory-order" />
-<figcaption aria-hidden="true">seqcst-memory-order</figcaption>
-</figure>
-<p>即：同一时刻，<strong>最多</strong>只可能有一个线程会对
-<code>S</code> 进行操作。</p>
-<h1 id="内存屏障">内存屏障</h1>
-<p>除了内存顺序（Memory
-Order），还有另外一种方式可以控制程序的执行顺序，就是内存屏障（Memory
-Barrier）。内存屏障是一种底层的同步原语，它能强制处理器按照特定的顺序执行内存操作。内存屏障通过阻止或限制指令重排序，来确保内存操作的可见性和顺序性。</p>
+<p>在这段代码中，两个线程都是希望将自己的原子变量设置为 <code>true</code>，从而阻止另外一个线程对 <code>S</code> 进行 <code>push</code> 操作，其实就类似于锁。因为这里使用了 <code>SeqCst</code>，所以代码的执行顺序是跟代码编写顺序是一致的，那么就可能出现以下 3 种执行情况：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241112113535084.png" alt="seqcst-memory-order"></p>
+<p>即：同一时刻，<strong>最多</strong>只可能有一个线程会对 <code>S</code> 进行操作。</p>
+<h1>内存屏障</h1>
+<p>除了内存顺序（Memory Order），还有另外一种方式可以控制程序的执行顺序，就是内存屏障（Memory Barrier）。内存屏障是一种底层的同步原语，它能强制处理器按照特定的顺序执行内存操作。内存屏障通过阻止或限制指令重排序，来确保内存操作的可见性和顺序性。</p>
 <h2 id="基本概念">基本概念</h2>
 <p>内存屏障主要分为以下几种类型：</p>
-<ol type="1">
-<li><p><strong>Load Barrier（读屏障）</strong></p>
+<ol>
+<li>
+<p><strong>Load Barrier（读屏障）</strong></p>
 <ul>
 <li>确保在屏障之前的所有读操作都执行完成</li>
 <li>防止后续读操作被重排到屏障之前</li>
 <li>对应 Acquire 语义</li>
-</ul></li>
-<li><p><strong>Store Barrier（写屏障）</strong></p>
+</ul>
+</li>
+<li>
+<p><strong>Store Barrier（写屏障）</strong></p>
 <ul>
 <li>确保在屏障之前的所有写操作都执行完成</li>
 <li>防止后续写操作被重排到屏障之前</li>
 <li>对应 Release 语义</li>
-</ul></li>
-<li><p><strong>Full Barrier（全屏障）</strong></p>
+</ul>
+</li>
+<li>
+<p><strong>Full Barrier（全屏障）</strong></p>
 <ul>
 <li>同时包含读屏障和写屏障的功能</li>
 <li>防止任何内存操作的重排序</li>
 <li>对应 SeqCst 语义</li>
-</ul></li>
+</ul>
+</li>
 </ol>
 <p>即下面这 2 种实现方式是等价的：</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251122100410416.png" style="zoom: 33%;" /></p>
-<p>所以到这里，我们可以更好地理解<strong>为什么 <code>release</code>
-是阻止其前面的内存访问越过它，而 <code>acquire</code>
-是阻止其后面的内存访问越过它了</strong>。因为有个 <code>fence</code>
-在前面或后面拦着！</p>
-<p>但是一般来说，下面的写法相比上面的写法会有一丢丢的性能损失，因为这会增加一些额外的处理指令。那
-<code>fence</code> 的用武之地是什么呢？</p>
-<ol type="1">
+<img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251122100410416.png" style="zoom: 33%;" />
+<p>所以到这里，我们可以更好地理解<strong>为什么 <code>release</code> 是阻止其前面的内存访问越过它，而 <code>acquire</code> 是阻止其后面的内存访问越过它了</strong>。因为有个 <code>fence</code> 在前面或后面拦着！</p>
+<p>但是一般来说，下面的写法相比上面的写法会有一丢丢的性能损失，因为这会增加一些额外的处理指令。那 <code>fence</code> 的用武之地是什么呢？</p>
+<ol>
 <li>可以同时对多个原子操作进行 <code>fench</code>；</li>
 <li>可以根据条件判断，选择是否进行 <code>fench</code>。</li>
 </ol>
 <p>举个例子：</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241112125023036.png" alt="fence-multi-atomics" style="zoom:50%;" /></p>
+<img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20241112125023036.png" alt="fence-multi-atomics" style="zoom:50%;" />
 <p>这个例子的关键点是：</p>
-<ol type="1">
-<li><p>如果线程 2 中的任何一个 load 操作观察到了线程 1 中对应的 store
-操作的值：</p>
+<ol>
+<li>
+<p>如果线程 2 中的任何一个 load 操作观察到了线程 1 中对应的 store 操作的值：</p>
 <ul>
 <li>比如 A.load() 读到了值 1，或</li>
 <li>B.load() 读到了值 2，或</li>
 <li>C.load() 读到了值 3</li>
-</ul></li>
-<li><p>那么：线程 1 中的 release fence 就会 happens-before 线程 2 中的
-acquire fence。这意味着线程 1 中 release fence 之前的所有内存操作对线程
-2 中 acquire fence 之后的操作都是可见的。</p></li>
+</ul>
+</li>
+<li>
+<p>那么：线程 1 中的 release fence 就会 happens-before 线程 2 中的 acquire fence。这意味着线程 1 中 release fence 之前的所有内存操作对线程 2 中 acquire fence 之后的操作都是可见的。</p>
+</li>
 </ol>
-<p>这展示了内存屏障的一个重要优势：<strong>一个屏障可以同时为多个原子操作建立同步关系，而不需要在每个原子操作上都使用
-Release/Acquire 内存序。这在某些场景下可能会更高效。</strong></p>
-<p>用更通俗的话说：这就像在线程 1 设置了一个"检查点"（release
-fence），在线程 2 也设置了一个"检查点"（acquire fence），只要线程 2
-看到了线程 1 在其检查点之后做的任何一个改动，那么线程 1
-检查点之前的所有操作对线程 2 的检查点之后都是可见的。</p>
+<p>这展示了内存屏障的一个重要优势：<strong>一个屏障可以同时为多个原子操作建立同步关系，而不需要在每个原子操作上都使用 Release/Acquire 内存序。这在某些场景下可能会更高效。</strong></p>
+<p>用更通俗的话说：这就像在线程 1 设置了一个&quot;检查点&quot;（release fence），在线程 2 也设置了一个&quot;检查点&quot;（acquire fence），只要线程 2 看到了线程 1 在其检查点之后做的任何一个改动，那么线程 1 检查点之前的所有操作对线程 2 的检查点之后都是可见的。</p>
 <h2 id="硬件实现">硬件实现</h2>
 <p>不同的处理器架构实现内存屏障的方式不同：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">; x86/x64</span><br><span class="line">MFENCE  ; 全屏障</span><br><span class="line">LFENCE  ; 读屏障</span><br><span class="line">SFENCE  ; 写屏障</span><br><span class="line"></span><br><span class="line">; ARM</span><br><span class="line">DMB     ; 数据内存屏障</span><br><span class="line">DSB     ; 数据同步屏障</span><br><span class="line">ISB     ; 指令同步屏障</span><br></pre></td></tr></table></figure>
 <h2 id="与内存顺序的关系">与内存顺序的关系</h2>
 <p>Rust 的内存顺序实际上是通过内存屏障来实现的：</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Release 写入会插入 Store Barrier</span></span><br><span class="line">atomic.<span class="title function_ invoke__">store</span>(<span class="number">42</span>, Ordering::Release);  <span class="comment">// 编译器会在此处插入 Store Barrier</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Acquire 读取会插入 Load Barrier</span></span><br><span class="line"><span class="keyword">let</span> <span class="variable">x</span> = atomic.<span class="title function_ invoke__">load</span>(Ordering::Acquire);  <span class="comment">// 编译器会在此处插入 Load Barrier</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// SeqCst 操作会插入 Full Barrier</span></span><br><span class="line">atomic.<span class="title function_ invoke__">store</span>(<span class="number">42</span>, Ordering::SeqCst);  <span class="comment">// 编译器会在此处插入 Full Barrier</span></span><br></pre></td></tr></table></figure>
-<details class="tag-plugin colorful folding" color="red" open><summary>
-</summary><div class="body"><p>注意：直接使用内存屏障是非常底层的操作，通常我们应该使用 Rust提供的高级抽象（如原子类型和它们的内存顺序）来实现同步。内存屏障的知识主要用于理解这些高级抽象的工作原理。</p></div></details>
-<h1 id="go-atomic">Go Atomic</h1>
-<p>熟悉 Go 语言的读者应该会意识到在使用 Go
-语言的原子类型的时候，好像都没见过 Memory Order 这个东西，如下：</p>
+<details class="tag-plugin colorful folding" color="red" open><summary></summary><div class="body"><p>注意：直接使用内存屏障是非常底层的操作，通常我们应该使用 Rust 提供的高级抽象（如原子类型和它们的内存顺序）来实现同步。内存屏障的知识主要用于理解这些高级抽象的工作原理。</p></div></details>
+<h1>Go Atomic</h1>
+<p>熟悉 Go 语言的读者应该会意识到在使用 Go 语言的原子类型的时候，好像都没见过 Memory Order 这个东西，如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;sync/atomic&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	data := atomic.Int64&#123;&#125;</span><br><span class="line">	data.Add(<span class="number">1</span>)</span><br><span class="line">	data.And(<span class="number">2</span>)</span><br><span class="line">	data.Or(<span class="number">3</span>)</span><br><span class="line">	data.Swap(<span class="number">4</span>)</span><br><span class="line">	data.Store(<span class="number">5</span>)</span><br><span class="line">	data.Load()</span><br><span class="line">	data.CompareAndSwap(<span class="number">6</span>, <span class="number">7</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在 <a
-target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.23/src/sync/atomic/doc.go">atomic/doc.go</a>
-源码中我们可以看到这段话：</p>
+<p>在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.23/src/sync/atomic/doc.go">atomic/doc.go</a> 源码中我们可以看到这段话：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// The load and store operations, implemented by the LoadT and StoreT</span></span><br><span class="line"><span class="comment">// functions, are the atomic equivalents of &quot;return *addr&quot; and</span></span><br><span class="line"><span class="comment">// &quot;*addr = val&quot;.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// In the terminology of [the Go memory model], if the effect of</span></span><br><span class="line"><span class="comment">// an atomic operation A is observed by atomic operation B,</span></span><br><span class="line"><span class="comment">// then A “synchronizes before” B.</span></span><br><span class="line"><span class="comment">// Additionally, all the atomic operations executed in a program</span></span><br><span class="line"><span class="comment">// behave as though executed in some sequentially consistent order.</span></span><br><span class="line"><span class="comment">// This definition provides the same semantics as</span></span><br><span class="line"><span class="comment">// C++&#x27;s sequentially consistent atomics and Java&#x27;s volatile variables.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// [the Go memory model]: https://go.dev/ref/mem</span></span><br></pre></td></tr></table></figure>
-<p>Go
-语言设计者认为让程序员选择内存序会增加复杂性和出错的可能，所以为了程序的简单性和可预测性，直接就<strong>使用了最安全的
-<code>Seq-Cst</code> 内存顺序</strong>了。</p>
-<p><a target="_blank" rel="noopener" href="https://go.dev/ref/mem">the Go memory model</a>
-中还提了一句：</p>
+<p>Go 语言设计者认为让程序员选择内存序会增加复杂性和出错的可能，所以为了程序的简单性和可预测性，直接就<strong>使用了最安全的 <code>Seq-Cst</code> 内存顺序</strong>了。</p>
+<p><a target="_blank" rel="noopener" href="https://go.dev/ref/mem">the Go memory model</a> 中还提了一句：</p>
 <figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">If you must read the rest of this document to understand the behavior of your program, you are being too clever.</span><br><span class="line">Don&#x27;t be clever.</span><br></pre></td></tr></table></figure>
 <p>这也呼应了 Go 的设计理念：</p>
 <figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Share memory by communicating; don&#x27;t communicate by sharing memory.</span><br></pre></td></tr></table></figure>
 <p>所以总结一下：</p>
-<ol type="1">
+<ol>
 <li>Go 的原子操作采用了最强的顺序一致性内存序；</li>
 <li>这是一个有意识的设计选择，为了简单性和可预测性；</li>
 <li>如果你需要更细粒度的内存序控制，那么 Go 可能不是最佳选择；</li>
 <li>Go 更推荐使用 channels 和其他同步原语来进行并发控制。</li>
 </ol>
-<h1 id="参考">参考</h1>
+<h1>参考</h1>
 <ul>
-<li><a target="_blank" rel="noopener" href="https://marabos.nl/atomics/memory-ordering.html">Rust
-Atomics And Lock</a></li>
-<li><a
-target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/t5_Up2YZEZt1NLbvgYz9FQ">聊一聊内存模型与内存序</a></li>
-<li><a
-target="_blank" rel="noopener" href="https://en.cppreference.com/w/cpp/atomic/memory_order">cppreference</a></li>
+<li><a target="_blank" rel="noopener" href="https://marabos.nl/atomics/memory-ordering.html">Rust Atomics And Lock</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/t5_Up2YZEZt1NLbvgYz9FQ">聊一聊内存模型与内存序</a></li>
+<li><a target="_blank" rel="noopener" href="https://en.cppreference.com/w/cpp/atomic/memory_order">cppreference</a></li>
 <li><a target="_blank" rel="noopener" href="https://go.dev/ref/mem">the Go memory model</a></li>
 </ul>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -656,18 +516,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#atomic"><span class="toc-text">Atomic</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#load-store"><span class="toc-text">Load &amp; Store</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#fetch-and-modify"><span class="toc-text">Fetch-and-Modify</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#compare-and-exchange"><span class="toc-text">Compare-and-Exchange</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A1%AC%E4%BB%B6%E5%8E%9F%E7%90%86"><span class="toc-text">硬件原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#rust-%E5%AE%9E%E6%88%98%E6%9F%A5%E7%9C%8B%E6%B1%87%E7%BC%96"><span class="toc-text">Rust 实战查看汇编</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#go-%E5%AE%9E%E6%88%98%E6%9F%A5%E7%9C%8B%E6%B1%87%E7%BC%96"><span class="toc-text">Go 实战查看汇编</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E9%A1%BA%E5%BA%8F"><span class="toc-text">内存顺序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8C%87%E4%BB%A4%E4%B9%B1%E5%BA%8F"><span class="toc-text">指令乱序</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B"><span class="toc-text">内存模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#sequenced-before"><span class="toc-text">Sequenced-Before</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#happens-before"><span class="toc-text">Happens-Before</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#rust-%E5%86%85%E5%AD%98%E9%A1%BA%E5%BA%8F"><span class="toc-text">Rust 内存顺序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#relaxed"><span class="toc-text">Relaxed</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#release-acquire"><span class="toc-text">Release &amp; Acquire</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#sequentially-consistent"><span class="toc-text">Sequentially Consistent</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C"><span class="toc-text">内存屏障</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="toc-text">基本概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A1%AC%E4%BB%B6%E5%AE%9E%E7%8E%B0"><span class="toc-text">硬件实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8E%E5%86%85%E5%AD%98%E9%A1%BA%E5%BA%8F%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-text">与内存顺序的关系</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#go-atomic"><span class="toc-text">Go Atomic</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-text">参考</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">Atomic</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Load-Store"><span class="toc-text">Load &amp; Store</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Fetch-and-Modify"><span class="toc-text">Fetch-and-Modify</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Compare-and-Exchange"><span class="toc-text">Compare-and-Exchange</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A1%AC%E4%BB%B6%E5%8E%9F%E7%90%86"><span class="toc-text">硬件原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Rust-%E5%AE%9E%E6%88%98%E6%9F%A5%E7%9C%8B%E6%B1%87%E7%BC%96"><span class="toc-text">Rust 实战查看汇编</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Go-%E5%AE%9E%E6%88%98%E6%9F%A5%E7%9C%8B%E6%B1%87%E7%BC%96"><span class="toc-text">Go 实战查看汇编</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">内存顺序</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8C%87%E4%BB%A4%E4%B9%B1%E5%BA%8F"><span class="toc-text">指令乱序</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B"><span class="toc-text">内存模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sequenced-Before"><span class="toc-text">Sequenced-Before</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Happens-Before"><span class="toc-text">Happens-Before</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Rust-%E5%86%85%E5%AD%98%E9%A1%BA%E5%BA%8F"><span class="toc-text">Rust 内存顺序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Relaxed"><span class="toc-text">Relaxed</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Release-Acquire"><span class="toc-text">Release &amp; Acquire</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Sequentially-Consistent"><span class="toc-text">Sequentially Consistent</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">内存屏障</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="toc-text">基本概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A1%AC%E4%BB%B6%E5%AE%9E%E7%8E%B0"><span class="toc-text">硬件实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8E%E5%86%85%E5%AD%98%E9%A1%BA%E5%BA%8F%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-text">与内存顺序的关系</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">Go Atomic</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">参考</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
