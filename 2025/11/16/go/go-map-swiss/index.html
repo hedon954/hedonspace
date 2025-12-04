@@ -28,7 +28,7 @@
 <meta property="og:description" content="本文系统解析 Go map（Swiss Table 版本）的底层实现，涵盖控制字并行匹配、开放寻址探测、可扩展哈希、细粒度并发控制，并对比 sync.Map 的 HashTrieMap 实现。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-11-16T08:00:00.000Z">
-<meta property="article:modified_time" content="2025-11-16T13:34:52.376Z">
+<meta property="article:modified_time" content="2025-12-04T05:58:55.970Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="Go">
 <meta name="twitter:card" content="summary">
@@ -69,7 +69,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/16/go/go-map-no-swiss/"><span class="title">Go 底层原理丨map（非 swiss 版本）</span></a><a class="item title" href="/2025/11/16/go/go-slice/"><span class="title">Go 底层原理丨slice 从第一性原理到实现细节</span></a><a class="item title" href="/2025/12/01/computer-net/net-grpc/"><span class="title">gRPC 原理与应用场景深度解析</span></a><a class="item title" href="/2025/12/01/computer-net/net-http-sse-ws-grpc/"><span class="title">HTTP、SSE、WebSocket、gRPC、Streamable HTTP：原理与场景全方位对比分析</span></a><a class="item title" href="/2025/11/29/computer-net/net-http/"><span class="title">从 HTTP1.0 到 HTTP3 的演化</span></a><a class="item title" href="/2025/11/26/computer-net/net-udp-tcp-kcp-quic/"><span class="title">从第一性原理掌握 UDP/TCP/KCP/QUIC</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/25/clash-fake-ip/"><span class="title">traceroute 故障排查：Clash Fake IP 及其他 4 种常见原因</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a><a class="item title" href="/2025/11/16/go/go-map-no-swiss/"><span class="title">Go 底层原理丨map（非 swiss 版本）</span></a><a class="item title" href="/2025/11/16/go/go-slice/"><span class="title">Go 底层原理丨slice 从第一性原理到实现细节</span></a><a class="item title" href="/2025/12/01/computer-net/net-grpc/"><span class="title">gRPC 原理与应用场景深度解析</span></a><a class="item title" href="/2025/12/01/computer-net/net-http-sse-ws-grpc/"><span class="title">HTTP、SSE、WebSocket、gRPC、Streamable HTTP：原理与场景全方位对比分析</span></a><a class="item title" href="/2025/11/29/computer-net/net-http/"><span class="title">从 HTTP1.0 到 HTTP3 的演化</span></a><a class="item title" href="/2025/11/26/computer-net/net-udp-tcp-kcp-quic/"><span class="title">从第一性原理掌握 UDP/TCP/KCP/QUIC</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -82,7 +82,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/Go/">Go</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-11-16T08:00:00.000Z">2025-11-16</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-11-16T13:34:52.376Z">2025-11-16</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-11-16T08:00:00.000Z">2025-11-16</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-12-04T05:58:55.970Z">2025-12-04</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -93,7 +93,9 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><h2 id="一整体设计思想">一、整体设计思想</h2>
+  </div><article class="md-text content"><p>特此声明，本篇是笔者与 Google Gemini 3Pro 共创所作，非常庆幸在当今 AI
+时代下获取知识已是如此便利，且也为学习者从第一性原理理解所学知识大大降低了门槛。不过本篇的篇章安排和叙述逻辑，均由笔者把控和审阅，欢迎放心阅读。</p>
+<h2 id="整体设计思想">1. 整体设计思想</h2>
 <p>Go map（Swiss Table 版本）是基于 <strong>Google Abseil 的 "Swiss
 Table"</strong> 设计的现代化哈希表实现，采用以下核心设计：</p>
 <ol type="1">
@@ -105,53 +107,56 @@ Table"</strong> 设计的现代化哈希表实现，采用以下核心设计：<
 <li><strong>SIMD 加速</strong>：AMD64 架构使用 SIMD
 指令并行比较控制字</li>
 </ol>
-<p><strong>设计灵感来源</strong>：<a
+<blockquote>
+<p>设计灵感来源：<a
 target="_blank" rel="noopener" href="https://abseil.io/about/design/swisstables">Abseil Swiss
 Tables</a></p>
-<h2 id="二核心数据结构">二、核心数据结构</h2>
+</blockquote>
+<h2 id="核心数据结构">2. 核心数据结构</h2>
 <p>本篇以 Go1.25 版本的源码为基准，完整源码参考： - Runtime 封装：<a
 target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.25/src/runtime/map_swiss.go">map_swiss.go</a>
 - 核心实现：<a
 target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.25/src/internal/runtime/maps/">internal/runtime/maps/</a></p>
-<h3 id="map顶层结构">1. Map（顶层结构）</h3>
+<h3 id="map顶层结构">2.1 Map（顶层结构）</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Map <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// 元素总数（必须在第一位，供 len() 使用）</span></span><br><span class="line">    used <span class="type">uint64</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 哈希种子（每个 map 独立随机）</span></span><br><span class="line">    seed <span class="type">uintptr</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 目录指针：指向 table 数组或单个 group</span></span><br><span class="line">    <span class="comment">// 小 map 优化：≤8 个元素时，dirPtr 直接指向单个 group</span></span><br><span class="line">    <span class="comment">// 大 map：dirPtr 指向 *[dirLen]*table</span></span><br><span class="line">    dirPtr unsafe.Pointer</span><br><span class="line">    dirLen <span class="type">int</span>  <span class="comment">// 目录长度 = 1 &lt;&lt; globalDepth</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 可扩展哈希的全局深度（使用哈希高位的 bit 数）</span></span><br><span class="line">    globalDepth <span class="type">uint8</span></span><br><span class="line">    globalShift <span class="type">uint8</span>  <span class="comment">// 64 - globalDepth（用于快速计算索引）</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 并发写检测标志</span></span><br><span class="line">    writing <span class="type">uint8</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 墓碑存在标记</span></span><br><span class="line">    tombstonePossible <span class="type">bool</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 清空序列号（用于检测迭代中的 clear）</span></span><br><span class="line">    clearSeq <span class="type">uint64</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><strong>关键字段说明</strong>：</p>
+<p>关键字段说明：</p>
 <ul>
 <li><code>dirPtr</code> +
 <code>dirLen</code>：实现可扩展哈希的目录结构</li>
 <li><code>globalDepth</code>：当前使用哈希高位的 bit 数</li>
 <li>小 map 优化：≤8 个元素时无需分配 table</li>
 </ul>
-<h3 id="table哈希表">2. Table（哈希表）</h3>
+<h3 id="table哈希表">2.2 Table（哈希表）</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> table <span class="keyword">struct</span> &#123;</span><br><span class="line">    used     <span class="type">uint16</span>  <span class="comment">// 已使用槽位数</span></span><br><span class="line">    capacity <span class="type">uint16</span>  <span class="comment">// 总槽位数（= groups数 × 8）</span></span><br><span class="line">    growthLeft <span class="type">uint16</span>  <span class="comment">// 剩余可填充槽位</span></span><br><span class="line"></span><br><span class="line">    localDepth <span class="type">uint8</span>  <span class="comment">// 表的局部深度</span></span><br><span class="line">    index <span class="type">int</span>  <span class="comment">// 在目录中的索引</span></span><br><span class="line"></span><br><span class="line">    groups groupsReference  <span class="comment">// group 数组</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><strong>单表最大容量</strong>：1024 个槽位（限制单次扩容开销）</p>
-<h3 id="group组结构">3. Group（组结构）</h3>
+<h3 id="group组结构">2.3 Group（组结构）</h3>
 <p>每个 group 包含： - <strong>1 个控制字</strong>（8
 字节）：每字节对应一个槽位的状态 - <strong>8
 个槽位</strong>：每个槽位存储一个 key-value 对</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> groupReference <span class="keyword">struct</span> &#123;</span><br><span class="line">    data unsafe.Pointer  <span class="comment">// 指向实际的 group 内存</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 内存布局</span></span><br><span class="line"><span class="keyword">type</span> group <span class="keyword">struct</span> &#123;</span><br><span class="line">    ctrls ctrlGroup  <span class="comment">// 8 字节控制字</span></span><br><span class="line">    slots [<span class="number">8</span>]<span class="keyword">struct</span> &#123;</span><br><span class="line">        key  K</span><br><span class="line">        elem V</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><strong>控制字编码</strong>： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">  empty: 1000 0000  (0x80)</span><br><span class="line">deleted: 1111 1110  (0xFE) - 墓碑标记</span><br><span class="line">   full: 0xxx xxxx  (0x00-0x7F) - 低 7 位存储 H2 哈希值</span><br></pre></td></tr></table></figure></p>
-<h3 id="总结图">4. 总结图</h3>
+<p><strong>控制字编码</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">  empty: 1000 0000  (0x80)</span><br><span class="line">deleted: 1111 1110  (0xFE) - 墓碑标记</span><br><span class="line">   full: 0xxx xxxx  (0x00-0x7F) - 低 7 位存储 H2 哈希值</span><br></pre></td></tr></table></figure>
+<h3 id="总结图">2.4 总结图</h3>
 <p><img
 src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251116170218340.png" /></p>
-<h2 id="三核心算法">三、核心算法</h2>
-<h3 id="哈希值分割">1. 哈希值分割</h3>
+<h2 id="核心算法">3. 核心算法</h2>
+<h3 id="哈希值分割">3.1 哈希值分割</h3>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">64 位哈希值分为两部分：</span><br><span class="line">┌─────────────────────────────────────────────┬───────────┐</span><br><span class="line">│           H1 (高 57 位)                      │ H2 (低7位) │</span><br><span class="line">└─────────────────────────────────────────────┴───────────┘</span><br><span class="line">      用于定位 group                           存储在控制字中</span><br></pre></td></tr></table></figure>
 <p><strong>H1</strong>：用于定位 group（二次探测）
 <strong>H2</strong>：存储在控制字中，用于快速过滤</p>
-<h3 id="并行匹配算法">2. 并行匹配算法</h3>
+<h3 id="并行匹配算法">3.2 并行匹配算法</h3>
 <p>传统方式（non-Swiss）： <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">8</span>; i++ &#123;</span><br><span class="line">    <span class="keyword">if</span> tophash[i] == target &#123;</span><br><span class="line">        <span class="comment">// 逐个串行比较</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>Swiss 方式： <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 一次操作检查所有 8 个槽位！</span></span><br><span class="line">matches := ctrlGroup.matchH2(target)</span><br><span class="line"><span class="comment">// matches 是 bitset，每位表示一个槽位是否匹配</span></span><br></pre></td></tr></table></figure></p>
 <p>实现原理：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ctrlGroupMatchH2</span><span class="params">(g ctrlGroup, h <span class="type">uintptr</span>)</span></span> bitset &#123;</span><br><span class="line">    <span class="comment">// 1. XOR：将匹配的字节变为 0x00</span></span><br><span class="line">    v := <span class="type">uint64</span>(g) ^ (<span class="number">0x0101010101010101</span> * <span class="type">uint64</span>(h))</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 2. 减法技巧：0x00 - 0x01 会借位变成 0xFF</span></span><br><span class="line">    <span class="comment">//    其他值减 0x01 不会设置最高位</span></span><br><span class="line">    result := (v - <span class="number">0x0101010101010101</span>) &amp;^ v</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 3. 提取每字节的最高位</span></span><br><span class="line">    <span class="keyword">return</span> bitset(result &amp; <span class="number">0x8080808080808080</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><strong>AMD64 优化</strong>：使用 SIMD 指令（SSE2
 PCMPEQB）进一步加速</p>
-<h3 id="二次探测序列">3. 二次探测序列</h3>
+<h3 id="二次探测序列">3.3 二次探测序列</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> probeSeq <span class="keyword">struct</span> &#123;</span><br><span class="line">    mask   <span class="type">uint64</span>  <span class="comment">// 组数 - 1</span></span><br><span class="line">    offset <span class="type">uint64</span>  <span class="comment">// 当前偏移</span></span><br><span class="line">    index  <span class="type">uint64</span>  <span class="comment">// 探测索引</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s probeSeq)</span></span> next() probeSeq &#123;</span><br><span class="line">    s.index++</span><br><span class="line">    <span class="comment">// 三角数序列：offset[i+1] = offset[i] + i + 1</span></span><br><span class="line">    s.offset = (s.offset + s.index) &amp; s.mask</span><br><span class="line">    <span class="keyword">return</span> s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><strong>探测公式</strong>：<code>p(i) = (i² + i)/2 + hash (mod 组数)</code></p>
 <p><strong>优势</strong>： - 当组数为 2 的幂时，保证遍历所有组 -
 跳跃式分布，减少聚集（clustering） - 缓存友好性优于线性探测</p>
-<h3 id="查找流程">4. 查找流程</h3>
+<h3 id="查找流程">3.4 查找流程</h3>
 <p>底层调用了 <code>runtime/maps/runtime_swiss.go</code> 中的
 <code>mapaccess1()</code> 或者 <code>mapaccess2</code> 函数：</p>
 <ul>
@@ -216,7 +221,7 @@ target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-b
     style KeyCompare fill:#4caf50,stroke:#2e7d32,stroke-width:2px
     style Return3 fill:#2196f3,stroke:#1565c0,stroke-width:2px
     style Return4 fill:#f44336,stroke:#c62828,stroke-width:2px</pre>
-<h3 id="插入流程">5. 插入流程</h3>
+<h3 id="插入流程">3.5 插入流程</h3>
 <p>插入底层调用了 <code>runtime/maps/runtime_swiss.go</code> 中的 <a
 target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.25/src/internal/runtime/maps/runtime_swiss.go#L188">runtime_mapassign()</a>
 函数：</p>
@@ -285,7 +290,7 @@ target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-b
     style InsertNew fill:#4caf50,stroke:#2e7d32,stroke-width:2px
     style UpdateKey fill:#2196f3,stroke:#1565c0,stroke-width:2px
     style Rehash fill:#ff9800,stroke:#e65100,stroke-width:2px</pre>
-<h3 id="删除操作墓碑机制">6. 删除操作（墓碑机制）</h3>
+<h3 id="删除操作墓碑机制">3.6 删除操作（墓碑机制）</h3>
 <p>删除操作底层调用了 <code>runtime/map_swiss.go</code> 中的 <a
 target="_blank" rel="noopener" href="http://github.com/golang/go/blob/release-branch.go1.25/src/runtime/map_swiss.go#L139">mapdelete()</a>
 函数：</p>
@@ -403,13 +408,13 @@ m, hash, key)</a>：</p>
 </tr>
 </tbody>
 </table>
-<h2 id="四可扩展哈希与增量扩容">四、可扩展哈希与增量扩容</h2>
-<h3 id="可扩展哈希原理">1. 可扩展哈希原理</h3>
+<h2 id="可扩展哈希与增量扩容">4. 可扩展哈希与增量扩容</h2>
+<h3 id="可扩展哈希原理">4.1 可扩展哈希原理</h3>
 <p>传统单表扩容的问题： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Table (100万元素) → Table (200万元素)</span><br><span class="line">                    ↑ 延迟峰值！</span><br></pre></td></tr></table></figure></p>
 <p>Swiss map 的解决方案： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">将大 map 拆分成多个小 table</span><br><span class="line">每个 table 独立扩容</span><br></pre></td></tr></table></figure></p>
 <p><strong>目录结构</strong>：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Hash = 0x1A2B3C4D</span><br><span class="line"></span><br><span class="line">globalDepth = 2 (使用高 2 位)</span><br><span class="line">┌────────────────────┐</span><br><span class="line">│ Directory (size=4) │</span><br><span class="line">├────────────────────┤</span><br><span class="line">│ [00] → Table0      │ ← localDepth=1</span><br><span class="line">│ [01] → Table0      │ ← 同一个 table</span><br><span class="line">│ [10] → Table1      │ ← localDepth=2</span><br><span class="line">│ [11] → Table2      │ ← localDepth=2</span><br><span class="line">└────────────────────┘</span><br><span class="line"></span><br><span class="line">hash &gt;&gt; (64-2) = 00  → 索引 Table0</span><br></pre></td></tr></table></figure>
-<h3 id="表分裂过程">2. 表分裂过程</h3>
+<h3 id="表分裂过程">4.2 表分裂过程</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> maxTableCapacity = <span class="number">1024</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *table)</span></span> rehash(typ *abi.SwissMapType, m *Map) &#123;</span><br><span class="line">	newCapacity := <span class="number">2</span> * t.capacity</span><br><span class="line">	<span class="keyword">if</span> newCapacity &lt;= maxTableCapacity &#123;</span><br><span class="line">		t.grow(typ, m, newCapacity) <span class="comment">// 表内扩容</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	t.split(typ, m) <span class="comment">// 分裂</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><strong>触发条件</strong>：</p>
 <ul>
@@ -419,14 +424,14 @@ m, hash, key)</a>：</p>
 </ul>
 <p><strong>分裂示例</strong>： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">初始状态 (globalDepth=1):</span><br><span class="line">Directory: [0] → Table0 (localDepth=1, 容量=1024)</span><br><span class="line">           [1] → Table1 (localDepth=1, 容量=1024)</span><br><span class="line"></span><br><span class="line">Table1 满了，需要分裂：</span><br><span class="line">1. Table1 分裂为 Table1a 和 Table1b</span><br><span class="line">2. globalDepth 增加到 2</span><br><span class="line">3. 目录扩展：</span><br><span class="line">   Directory: [00] → Table0  (localDepth=1)</span><br><span class="line">              [01] → Table0  (同一个)</span><br><span class="line">              [10] → Table1a (localDepth=2)</span><br><span class="line">              [11] → Table1b (localDepth=2)</span><br></pre></td></tr></table></figure></p>
 <p><strong>分裂规则</strong>： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">旧 table 的元素根据哈希的新 bit 分流：</span><br><span class="line">hash &amp; newbit == 0 → Table1a (低位)</span><br><span class="line">hash &amp; newbit != 0 → Table1b (高位)</span><br></pre></td></tr></table></figure></p>
-<h3 id="负载因子">3. 负载因子</h3>
+<h3 id="负载因子">4.3 负载因子</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> maxAvgGroupLoad = <span class="number">7</span>  <span class="comment">// 7/8 = 87.5%</span></span><br></pre></td></tr></table></figure>
 <ul>
 <li>Non-Swiss：6.5（约 81%）</li>
 <li>Swiss：7/8（87.5%）</li>
 </ul>
 <p><strong>更高的原因</strong>：开放寻址 + 墓碑重用提高空间利用率</p>
-<h2 id="五与-non-swiss-对比">五、与 Non-Swiss 对比</h2>
+<h2 id="与-non-swiss-对比">5. 与 Non-Swiss 对比</h2>
 <table>
 <thead>
 <tr>
@@ -488,13 +493,12 @@ m, hash, key)</a>：</p>
 更高负载因子：空间利用率提升</p>
 <p><strong>Swiss 的劣势</strong>： 1. ❌ 墓碑管理：需要定期清理 2. ❌
 实现复杂：位运算 + SIMD 内联 3. ❌ 目录开销：大 map 需要额外目录</p>
-<h2 id="六从源头理解-swiss-table-版本">六、从源头理解 Swiss Table
-版本</h2>
+<h2 id="从源头理解-swiss-table-版本">6. 从源头理解 Swiss Table 版本</h2>
 <p>swiss table 版本的 map
 实现对笔者来说还是比较新奇的，我一开始一直无法彻底这种这种实现思路。因为它的核心思想确实与我们教科书上常见的拉链法（Chaining）或线性探测法（Linear
 Probing）有很大不同。好在现在有 LLM，所以笔者跟 Gemini
 进行了一番探讨，才对 swiss table 的底层原理有了更深的理解。</p>
-<h3 id="传统-hashmap-的问题">1. 传统 HashMap 的问题</h3>
+<h3 id="传统-hashmap-的问题">6.1 传统 HashMap 的问题</h3>
 <p>要从根本上理解 swiss table 版本的
 HashMap，我们必须回归到<strong>第一性原理</strong>：HashMap 的目标是在
 O(1) 的时间复杂度内完成插入、查找和删除。而这个 <code>1</code> 在现代
@@ -527,7 +531,7 @@ Miss</strong>（这被称为指针追逐 pointer chasing）。</li>
 </ul>
 <p>所以：传统拉链法的主要瓶颈不在于 CPU
 计算，而在于<strong>内存访问延迟</strong>。</p>
-<h3 id="swiss-table-的创新">2. Swiss Table 的创新</h3>
+<h3 id="swiss-table-的创新">6.2 Swiss Table 的创新</h3>
 <p>Swiss Table
 的核心思想是<strong>用密集的计算换取稀疏的内存访问</strong>。它属于开放寻址法（Open
 Addressing）的一种，但又做出了革命性的优化。它同时解决了两个层面的核心问题：</p>
@@ -538,7 +542,7 @@ Addressing）的一种，但又做出了革命性的优化。它同时解决了�
 变得巨大时，实现<strong>低延迟</strong>的扩容？（解决内存访问和延迟抖动）</li>
 </ol>
 <p>在我看来，Swiss Table 有 3 点最重要的核心创新：</p>
-<h4 id="核心创新一控制字-ctrls-与并行匹配">2.1 核心创新一：控制字
+<h4 id="核心创新一控制字-ctrls-与并行匹配">6.2.1 核心创新一：控制字
 (ctrls) 与并行匹配</h4>
 <p>这是 Swiss Map 对缓存为王的极致应用。</p>
 <ul>
@@ -548,9 +552,9 @@ Addressing）的一种，但又做出了革命性的优化。它同时解决了�
 的无效比较。</p></li>
 <li><p><strong>理论：</strong></p>
 <ol type="1">
-<li><strong>数据结构：</strong> <code>group</code> 结构包含一个
-<strong>8 字节的 <code>ctrls</code> 控制字</strong> 和 8 个
-<code>slots</code> (key/elem 对)。</li>
+<li><strong>数据结构：</strong> <code>group</code> 结构包含一个 8 字节的
+<code>ctrls</code> 控制字 和 8 个 <code>slots</code> (key/elem
+对)。</li>
 <li><strong>哈希分割：</strong> 64 位哈希被分为 H1（高 57
 位，用于定位）和 <strong>H2（低 7 位，用于匹配）</strong>。</li>
 <li><strong>控制字编码：</strong> 这 8 字节的 <code>ctrls</code>
@@ -580,7 +584,7 @@ H2 值为 target_h2）时，我们不再需要 for 循环 8 次。Go (Abseil)
 <code>key</code>"。这使得查找 8 个槽位的开销，从 <strong>O(8)
 次比较</strong> 降低到了 <strong>O(1) 次并行比较</strong>。</p></li>
 </ul>
-<h4 id="核心创新二开放寻址与二次探测">2.2
+<h4 id="核心创新二开放寻址与二次探测">6.2.2
 核心创新二：开放寻址与二次探测</h4>
 <p>这是 Swiss Map
 解决哈希冲突的方式，也是它优于传统拉链法的第二个关键点。</p>
@@ -612,7 +616,7 @@ H2 值为 target_h2）时，我们不再需要 for 循环 8 次。Go (Abseil)
 <code>empty (0x80)</code>，那么查找它后面的元素时，探测链会在这里错误地终止。因此，删除时必须留下墓碑
 (tombstone)，告诉查找操作："这里曾经有过人，请继续往后找"。</li>
 </ul>
-<h4 id="核心创新三可扩展哈希与表分裂">2.3
+<h4 id="核心创新三可扩展哈希与表分裂">6.2.3
 核心创新三：可扩展哈希与表分裂</h4>
 <p>这是 Swiss Map 解决宏观扩容问题的精妙之举。</p>
 <ul>
@@ -652,7 +656,7 @@ H2 值为 target_h2）时，我们不再需要 for 循环 8 次。Go (Abseil)
 1024 个元素</strong>，而不是 1 亿个。</li>
 </ol></li>
 </ul>
-<h4 id="总结">2.4 总结</h4>
+<h4 id="总结">6.2.4 总结</h4>
 <p>总的来说，Go Swiss Table 是三种先进技术的完美结合：</p>
 <ol type="1">
 <li><strong>微观 (Group 内)：</strong> <strong>并行匹配</strong>（基于
@@ -665,10 +669,11 @@ SIMD/位运算），实现 O(1) 的 8 槽位匹配。</li>
 <p>这套组合拳，从 L1 缓存、CPU
 指令集，一直优化到全局内存布局和延迟控制，是现代高性能 Hash Map
 的典范之作。</p>
-<h3 id="swiss-table-的演进猜想">3. Swiss Table 的演进猜想</h3>
+<h3 id="swiss-table-的演进猜想">6.3 Swiss Table 的演进猜想</h3>
 <p>理解了是什么（What）之后，追问为什么（Why）和如何演进（How）是掌握一个复杂系统最根本的方法。本小节我们尝试像一个系统设计师一样，从零开始推演
 Go Swiss Table 的实现过程。</p>
-<h4 id="第-0-步明确目标与核心矛盾">3.1 第 0 步：明确目标与核心矛盾</h4>
+<h4 id="第-0-步明确目标与核心矛盾">6.3.1 第 0
+步：明确目标与核心矛盾</h4>
 <ul>
 <li><strong>初始状态：</strong> 拉链法。</li>
 <li><strong>要解决的核心矛盾（第一性原理）：</strong>
@@ -688,7 +693,7 @@ Cache Miss（访问主内存）。</li>
 <li><strong>高吞吐：</strong> 查找、插入、删除操作要尽可能快。</li>
 </ol></li>
 </ul>
-<h4 id="第-1-步从拉链到开放寻址">3.2 第 1 步：从拉链到开放寻址</h4>
+<h4 id="第-1-步从拉链到开放寻址">6.3.2 第 1 步：从拉链到开放寻址</h4>
 <p><strong>为了实现目标 1（缓存友好）：</strong></p>
 <ul>
 <li><strong>设计师的决策：</strong>
@@ -704,7 +709,8 @@ Cache Miss（访问主内存）。</li>
 拉链法删除一个节点很简单，开放寻址法删除了一个元素，会不会中断探测链？</li>
 </ol></li>
 </ul>
-<h4 id="第-2-步解决冲突与查找效率">3.3 第 2 步：解决冲突与查找效率</h4>
+<h4 id="第-2-步解决冲突与查找效率">6.3.3 第 2
+步：解决冲突与查找效率</h4>
 <p><strong>为了解决第 1 步的新问题（冲突与查找）：</strong></p>
 <ul>
 <li><strong>决策 1 - 冲突解决：</strong> 采用<strong>二次探测</strong>
@@ -737,7 +743,8 @@ Word) 数组，它与 <code>slots</code> 数组平行。这个 <code>ctrls</code
 1 字节 H2 比较。</li>
 </ul></li>
 </ul>
-<h4 id="第-3-步将查找效率推向极致">3.4 第 3 步：将查找效率推向极致</h4>
+<h4 id="第-3-步将查找效率推向极致">6.3.4 第 3
+步：将查找效率推向极致</h4>
 <p><strong>为了解决第 2 步的遗留问题：</strong></p>
 <ul>
 <li><strong>新痛点：</strong> 查找
@@ -765,7 +772,8 @@ Line 里。</li>
 <strong>O(1)</strong>（并行）。</li>
 </ul></li>
 </ul>
-<h4 id="第-4-步解决删除的遗留问题">3.5 第 4 步：解决删除的遗留问题</h4>
+<h4 id="第-4-步解决删除的遗留问题">6.3.5 第 4
+步：解决删除的遗留问题</h4>
 <p><strong>为了解决第 1 步留下的删除问题：</strong></p>
 <ul>
 <li><strong>痛点：</strong> 在一个探测链 <code>A -&gt; B -&gt; C</code>
@@ -783,7 +791,8 @@ Line 里。</li>
 <li><code>full</code> (0x00-0x7F)：有数据（H2）。</li>
 </ol></li>
 </ul>
-<h4 id="第-5-步解决扩容的延迟目标">3.6 第 5 步：解决扩容的延迟目标</h4>
+<h4 id="第-5-步解决扩容的延迟目标">6.3.6 第 5
+步：解决扩容的延迟目标</h4>
 <p><strong>为了实现目标 2（低延迟）：</strong></p>
 <ul>
 <li><strong>痛点：</strong> 我们的开放寻址表（<code>group</code>
@@ -812,7 +821,7 @@ Hashing)。</li>
 1024，而不是 N（N 可能是 1 亿）。这完美解决了延迟抖动问题。</li>
 </ul></li>
 </ul>
-<h4 id="第-6-步锦上添花的优化">3.7 第 6 步：锦上添花的优化</h4>
+<h4 id="第-6-步锦上添花的优化">6.3.7 第 6 步：锦上添花的优化</h4>
 <ul>
 <li><strong>痛点：</strong> 如果用户只 <code>make(map[int]int)</code>
 并存了 3 个元素，我们也需要分配 <code>directory</code> 和
@@ -827,7 +836,7 @@ Hashing)。</li>
 map，内存开销极小，且无需任何 <code>table</code> 间接寻址。</li>
 </ul></li>
 </ul>
-<h4 id="总结从-0-到-1-的演进路径">3.8 总结：从 0 到 1 的演进路径</h4>
+<h4 id="总结从-0-到-1-的演进路径">6.3.8 总结：从 0 到 1 的演进路径</h4>
 <p>这个 0 到 1 的实现路径，清晰地展现了从第一性原理出发的思考：</p>
 <p><strong>缓存失效（问题）</strong> → <strong>1.
 开放寻址（方案）</strong> → <strong>2.
@@ -836,25 +845,25 @@ map，内存开销极小，且无需任何 <code>table</code> 间接寻址。</l
 墓碑（解决删除遗留问题）</strong> → <strong>5.
 可扩展哈希（解决扩容延迟）</strong> → <strong>6. 小 Map
 优化（解决小内存开销）</strong></p>
-<h2 id="七并发sync.map-的-hashtriemap-实现">七、并发：sync.Map 的
+<h2 id="并发sync.map-的-hashtriemap-实现">7. 并发：sync.Map 的
 HashTrieMap 实现</h2>
-<h3 id="为什么需要新实现">1. 为什么需要新实现？</h3>
+<h3 id="为什么需要新实现">7.1 为什么需要新实现？</h3>
 <p><strong>传统 sync.Map 的问题</strong>： - 全局锁：写操作竞争激烈 - 双
 map 开销：read + dirty 内存翻倍 - 提升机制：周期性全量拷贝</p>
 <p><strong>HashTrieMap 的解决方案</strong>： - <strong>Hash-Trie
 结构</strong>：树形结构，天然支持分区 -
 <strong>细粒度锁</strong>：每个节点独立锁，并发度高 -
 <strong>无需提升</strong>：没有 read/dirty 切换</p>
-<h3 id="hashtriemap-数据结构">2. HashTrieMap 数据结构</h3>
+<h3 id="hashtriemap-数据结构">7.2 HashTrieMap 数据结构</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> HashTrieMap[K comparable, V any] <span class="keyword">struct</span> &#123;</span><br><span class="line">    root     atomic.Pointer[indirect[K, V]]</span><br><span class="line">    keyHash  hashFunc</span><br><span class="line">    valEqual equalFunc</span><br><span class="line">    seed     <span class="type">uintptr</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 中间节点（indirect node）</span></span><br><span class="line"><span class="keyword">type</span> indirect[K, V] <span class="keyword">struct</span> &#123;</span><br><span class="line">    mu       Mutex                      <span class="comment">// 节点锁</span></span><br><span class="line">    dead     atomic.Bool                <span class="comment">// 节点是否已死</span></span><br><span class="line">    children [<span class="number">64</span>]atomic.Pointer[node]   <span class="comment">// 64 个子节点</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 叶子节点（entry node）</span></span><br><span class="line"><span class="keyword">type</span> entry[K, V] <span class="keyword">struct</span> &#123;</span><br><span class="line">    overflow *entry[K, V]  <span class="comment">// 哈希冲突链表</span></span><br><span class="line">    key      K</span><br><span class="line">    value    V</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><strong>Trie 结构</strong>（每层使用 6 位哈希）： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">               root</span><br><span class="line">              /    \</span><br><span class="line">      [0-63]        [64-127]</span><br><span class="line">      /    \            |</span><br><span class="line"> [0-15]  [16-31]      [...]</span><br><span class="line">   |       |</span><br><span class="line">entries entries</span><br></pre></td></tr></table></figure></p>
-<h3 id="查找流程-1">3. 查找流程</h3>
+<h3 id="查找流程-1">7.3 查找流程</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(ht *HashTrieMap[K, V])</span></span> Load(key K) (V, <span class="type">bool</span>) &#123;</span><br><span class="line">    hash := Hash(key)</span><br><span class="line">    i := ht.root.Load()</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 从根向下遍历，每次取 6 位哈希</span></span><br><span class="line">    <span class="keyword">for</span> shift := <span class="number">58</span>; shift &gt;= <span class="number">0</span>; shift -= <span class="number">6</span> &#123;</span><br><span class="line">        idx := (hash &gt;&gt; shift) &amp; <span class="number">0x3F</span>  <span class="comment">// 取 6 位</span></span><br><span class="line">        n := i.children[idx].Load()</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> n == <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> zero, <span class="literal">false</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> n.isEntry &#123;</span><br><span class="line">            <span class="keyword">return</span> n.entry().lookup(key)</span><br><span class="line">        &#125;</span><br><span class="line">        i = n.indirect()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><strong>无锁读取</strong>：读操作不需要加锁！</p>
-<h3 id="插入流程-1">4. 插入流程</h3>
+<h3 id="插入流程-1">7.4 插入流程</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(ht *HashTrieMap[K, V])</span></span> LoadOrStore(key K, value V) (V, <span class="type">bool</span>) &#123;</span><br><span class="line">    hash := Hash(key)</span><br><span class="line">    </span><br><span class="line">retry:</span><br><span class="line">    <span class="comment">// 无锁查找插入点</span></span><br><span class="line">    i, slot := ht.findInsertPoint(hash)</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 加锁（只锁一个节点）</span></span><br><span class="line">    i.mu.Lock()</span><br><span class="line">    <span class="keyword">defer</span> i.mu.Unlock()</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 双重检查</span></span><br><span class="line">    n := slot.Load()</span><br><span class="line">    <span class="keyword">if</span> n != <span class="literal">nil</span> &amp;&amp; n changed &#123;</span><br><span class="line">        <span class="keyword">goto</span> retry  <span class="comment">// 节点变化，重试</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 插入新 entry</span></span><br><span class="line">    newEntry := &amp;entry&#123;key: key, value: value&#125;</span><br><span class="line">    slot.Store(newEntry)</span><br><span class="line">    <span class="keyword">return</span> value, <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><strong>细粒度锁</strong>： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">      root (lock1)</span><br><span class="line">     /           \</span><br><span class="line"> indirect1    indirect2</span><br><span class="line"> (lock2)       (lock3)</span><br><span class="line">    ↓             ↓</span><br><span class="line">goroutine1  goroutine2</span><br><span class="line">可以同时修改不同子树！</span><br></pre></td></tr></table></figure></p>
-<h3 id="与传统-sync.map-对比">5. 与传统 sync.Map 对比</h3>
+<h3 id="与传统-sync.map-对比">7.5 与传统 sync.Map 对比</h3>
 <table>
 <colgroup>
 <col style="width: 15%" />
@@ -911,19 +920,19 @@ map 开销：read + dirty 内存翻倍 - 提升机制：周期性全量拷贝</p
 泛型支持：类型安全 4. ✅ 读无锁：始终无需加锁</p>
 <p><strong>适用场景</strong>： - 高并发写入 - 键空间大（Trie
 的空间优势） - 需要泛型支持</p>
-<h2 id="八总结">八、总结</h2>
-<h3 id="swiss-map-核心创新">Swiss Map 核心创新</h3>
+<h2 id="总结-1">8. 总结</h2>
+<h3 id="swiss-map-核心创新">8.1 Swiss Map 核心创新</h3>
 <ol type="1">
 <li><p><strong>并行匹配算法</strong>： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">传统：逐个比较 8 次</span><br><span class="line">Swiss：并行比较 1 次（8 倍提升）</span><br></pre></td></tr></table></figure></p></li>
 <li><p><strong>可扩展哈希</strong>： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">传统：单表扩容，延迟峰值</span><br><span class="line">Swiss：多表分裂，延迟可控</span><br></pre></td></tr></table></figure></p></li>
 <li><p><strong>SIMD 加速</strong>： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">AMD64：使用 SSE2 指令</span><br><span class="line">性能提升：2-3 倍</span><br></pre></td></tr></table></figure></p></li>
 </ol>
-<h3 id="设计权衡">设计权衡</h3>
+<h3 id="设计权衡">8.2 设计权衡</h3>
 <p><strong>优势</strong>： - ✅ 查找性能：并行匹配 + SIMD - ✅
 空间效率：87.5% 负载因子 - ✅ 增量扩容：表分裂控制延迟</p>
 <p><strong>劣势</strong>： - ❌ 墓碑管理：需要定期清理 - ❌
 实现复杂：位运算 + SIMD 内联 - ❌ 目录开销：大 map 需要额外结构</p>
-<h3 id="选择建议">选择建议</h3>
+<h3 id="选择建议">8.3 选择建议</h3>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────┐</span><br><span class="line">│ 需要并发？                           │</span><br><span class="line">│  ├─ 否 → 使用 map (Swiss 或 non-Swiss)|</span><br><span class="line">│  └─ 是 ↓                            │</span><br><span class="line">├─────────────────────────────────────┤</span><br><span class="line">│ 写多还是读多？                       │</span><br><span class="line">│  ├─ 读多 → sync.Map (Read-Write)    │</span><br><span class="line">│  └─ 写多 → sync.Map (HashTrieMap)   │</span><br><span class="line">└─────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
 <p><strong>最佳实践</strong>：</p>
 <ol type="1">
@@ -995,12 +1004,16 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E6%95%B4%E4%BD%93%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3"><span class="toc-text">一、整体设计思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E6%A0%B8%E5%BF%83%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-text">二、核心数据结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#map%E9%A1%B6%E5%B1%82%E7%BB%93%E6%9E%84"><span class="toc-text">1. Map（顶层结构）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#table%E5%93%88%E5%B8%8C%E8%A1%A8"><span class="toc-text">2. Table（哈希表）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#group%E7%BB%84%E7%BB%93%E6%9E%84"><span class="toc-text">3. Group（组结构）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93%E5%9B%BE"><span class="toc-text">4. 总结图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E6%A0%B8%E5%BF%83%E7%AE%97%E6%B3%95"><span class="toc-text">三、核心算法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%93%88%E5%B8%8C%E5%80%BC%E5%88%86%E5%89%B2"><span class="toc-text">1. 哈希值分割</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B9%B6%E8%A1%8C%E5%8C%B9%E9%85%8D%E7%AE%97%E6%B3%95"><span class="toc-text">2. 并行匹配算法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E6%AC%A1%E6%8E%A2%E6%B5%8B%E5%BA%8F%E5%88%97"><span class="toc-text">3. 二次探测序列</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9F%A5%E6%89%BE%E6%B5%81%E7%A8%8B"><span class="toc-text">4. 查找流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8F%92%E5%85%A5%E6%B5%81%E7%A8%8B"><span class="toc-text">5. 插入流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%A0%E9%99%A4%E6%93%8D%E4%BD%9C%E5%A2%93%E7%A2%91%E6%9C%BA%E5%88%B6"><span class="toc-text">6. 删除操作（墓碑机制）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E5%8F%AF%E6%89%A9%E5%B1%95%E5%93%88%E5%B8%8C%E4%B8%8E%E5%A2%9E%E9%87%8F%E6%89%A9%E5%AE%B9"><span class="toc-text">四、可扩展哈希与增量扩容</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AF%E6%89%A9%E5%B1%95%E5%93%88%E5%B8%8C%E5%8E%9F%E7%90%86"><span class="toc-text">1. 可扩展哈希原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A1%A8%E5%88%86%E8%A3%82%E8%BF%87%E7%A8%8B"><span class="toc-text">2. 表分裂过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B4%9F%E8%BD%BD%E5%9B%A0%E5%AD%90"><span class="toc-text">3. 负载因子</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E4%B8%8E-non-swiss-%E5%AF%B9%E6%AF%94"><span class="toc-text">五、与 Non-Swiss 对比</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E4%BB%8E%E6%BA%90%E5%A4%B4%E7%90%86%E8%A7%A3-swiss-table-%E7%89%88%E6%9C%AC"><span class="toc-text">六、从源头理解 Swiss Table
-版本</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%A0%E7%BB%9F-hashmap-%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">1. 传统 HashMap 的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#swiss-table-%E7%9A%84%E5%88%9B%E6%96%B0"><span class="toc-text">2. Swiss Table 的创新</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%88%9B%E6%96%B0%E4%B8%80%E6%8E%A7%E5%88%B6%E5%AD%97-ctrls-%E4%B8%8E%E5%B9%B6%E8%A1%8C%E5%8C%B9%E9%85%8D"><span class="toc-text">2.1 核心创新一：控制字
-(ctrls) 与并行匹配</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%88%9B%E6%96%B0%E4%BA%8C%E5%BC%80%E6%94%BE%E5%AF%BB%E5%9D%80%E4%B8%8E%E4%BA%8C%E6%AC%A1%E6%8E%A2%E6%B5%8B"><span class="toc-text">2.2
-核心创新二：开放寻址与二次探测</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%88%9B%E6%96%B0%E4%B8%89%E5%8F%AF%E6%89%A9%E5%B1%95%E5%93%88%E5%B8%8C%E4%B8%8E%E8%A1%A8%E5%88%86%E8%A3%82"><span class="toc-text">2.3
-核心创新三：可扩展哈希与表分裂</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">2.4 总结</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#swiss-table-%E7%9A%84%E6%BC%94%E8%BF%9B%E7%8C%9C%E6%83%B3"><span class="toc-text">3. Swiss Table 的演进猜想</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC-0-%E6%AD%A5%E6%98%8E%E7%A1%AE%E7%9B%AE%E6%A0%87%E4%B8%8E%E6%A0%B8%E5%BF%83%E7%9F%9B%E7%9B%BE"><span class="toc-text">3.1 第 0 步：明确目标与核心矛盾</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC-1-%E6%AD%A5%E4%BB%8E%E6%8B%89%E9%93%BE%E5%88%B0%E5%BC%80%E6%94%BE%E5%AF%BB%E5%9D%80"><span class="toc-text">3.2 第 1 步：从拉链到开放寻址</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC-2-%E6%AD%A5%E8%A7%A3%E5%86%B3%E5%86%B2%E7%AA%81%E4%B8%8E%E6%9F%A5%E6%89%BE%E6%95%88%E7%8E%87"><span class="toc-text">3.3 第 2 步：解决冲突与查找效率</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC-3-%E6%AD%A5%E5%B0%86%E6%9F%A5%E6%89%BE%E6%95%88%E7%8E%87%E6%8E%A8%E5%90%91%E6%9E%81%E8%87%B4"><span class="toc-text">3.4 第 3 步：将查找效率推向极致</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC-4-%E6%AD%A5%E8%A7%A3%E5%86%B3%E5%88%A0%E9%99%A4%E7%9A%84%E9%81%97%E7%95%99%E9%97%AE%E9%A2%98"><span class="toc-text">3.5 第 4 步：解决删除的遗留问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC-5-%E6%AD%A5%E8%A7%A3%E5%86%B3%E6%89%A9%E5%AE%B9%E7%9A%84%E5%BB%B6%E8%BF%9F%E7%9B%AE%E6%A0%87"><span class="toc-text">3.6 第 5 步：解决扩容的延迟目标</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC-6-%E6%AD%A5%E9%94%A6%E4%B8%8A%E6%B7%BB%E8%8A%B1%E7%9A%84%E4%BC%98%E5%8C%96"><span class="toc-text">3.7 第 6 步：锦上添花的优化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%BB%E7%BB%93%E4%BB%8E-0-%E5%88%B0-1-%E7%9A%84%E6%BC%94%E8%BF%9B%E8%B7%AF%E5%BE%84"><span class="toc-text">3.8 总结：从 0 到 1 的演进路径</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E5%B9%B6%E5%8F%91sync.map-%E7%9A%84-hashtriemap-%E5%AE%9E%E7%8E%B0"><span class="toc-text">七、并发：sync.Map 的
-HashTrieMap 实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E6%96%B0%E5%AE%9E%E7%8E%B0"><span class="toc-text">1. 为什么需要新实现？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#hashtriemap-%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-text">2. HashTrieMap 数据结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9F%A5%E6%89%BE%E6%B5%81%E7%A8%8B-1"><span class="toc-text">3. 查找流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8F%92%E5%85%A5%E6%B5%81%E7%A8%8B-1"><span class="toc-text">4. 插入流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8E%E4%BC%A0%E7%BB%9F-sync.map-%E5%AF%B9%E6%AF%94"><span class="toc-text">5. 与传统 sync.Map 对比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E6%80%BB%E7%BB%93"><span class="toc-text">八、总结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#swiss-map-%E6%A0%B8%E5%BF%83%E5%88%9B%E6%96%B0"><span class="toc-text">Swiss Map 核心创新</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E6%9D%83%E8%A1%A1"><span class="toc-text">设计权衡</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%89%E6%8B%A9%E5%BB%BA%E8%AE%AE"><span class="toc-text">选择建议</span></a></li></ol></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B4%E4%BD%93%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3"><span class="toc-text">1. 整体设计思想</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-text">2. 核心数据结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#map%E9%A1%B6%E5%B1%82%E7%BB%93%E6%9E%84"><span class="toc-text">2.1 Map（顶层结构）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#table%E5%93%88%E5%B8%8C%E8%A1%A8"><span class="toc-text">2.2 Table（哈希表）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#group%E7%BB%84%E7%BB%93%E6%9E%84"><span class="toc-text">2.3 Group（组结构）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93%E5%9B%BE"><span class="toc-text">2.4 总结图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E7%AE%97%E6%B3%95"><span class="toc-text">3. 核心算法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%93%88%E5%B8%8C%E5%80%BC%E5%88%86%E5%89%B2"><span class="toc-text">3.1 哈希值分割</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B9%B6%E8%A1%8C%E5%8C%B9%E9%85%8D%E7%AE%97%E6%B3%95"><span class="toc-text">3.2 并行匹配算法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E6%AC%A1%E6%8E%A2%E6%B5%8B%E5%BA%8F%E5%88%97"><span class="toc-text">3.3 二次探测序列</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9F%A5%E6%89%BE%E6%B5%81%E7%A8%8B"><span class="toc-text">3.4 查找流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8F%92%E5%85%A5%E6%B5%81%E7%A8%8B"><span class="toc-text">3.5 插入流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%A0%E9%99%A4%E6%93%8D%E4%BD%9C%E5%A2%93%E7%A2%91%E6%9C%BA%E5%88%B6"><span class="toc-text">3.6 删除操作（墓碑机制）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%AF%E6%89%A9%E5%B1%95%E5%93%88%E5%B8%8C%E4%B8%8E%E5%A2%9E%E9%87%8F%E6%89%A9%E5%AE%B9"><span class="toc-text">4. 可扩展哈希与增量扩容</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AF%E6%89%A9%E5%B1%95%E5%93%88%E5%B8%8C%E5%8E%9F%E7%90%86"><span class="toc-text">4.1 可扩展哈希原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A1%A8%E5%88%86%E8%A3%82%E8%BF%87%E7%A8%8B"><span class="toc-text">4.2 表分裂过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B4%9F%E8%BD%BD%E5%9B%A0%E5%AD%90"><span class="toc-text">4.3 负载因子</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8E-non-swiss-%E5%AF%B9%E6%AF%94"><span class="toc-text">5. 与 Non-Swiss 对比</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8E%E6%BA%90%E5%A4%B4%E7%90%86%E8%A7%A3-swiss-table-%E7%89%88%E6%9C%AC"><span class="toc-text">6. 从源头理解 Swiss Table 版本</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%A0%E7%BB%9F-hashmap-%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">6.1 传统 HashMap 的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#swiss-table-%E7%9A%84%E5%88%9B%E6%96%B0"><span class="toc-text">6.2 Swiss Table 的创新</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%88%9B%E6%96%B0%E4%B8%80%E6%8E%A7%E5%88%B6%E5%AD%97-ctrls-%E4%B8%8E%E5%B9%B6%E8%A1%8C%E5%8C%B9%E9%85%8D"><span class="toc-text">6.2.1 核心创新一：控制字
+(ctrls) 与并行匹配</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%88%9B%E6%96%B0%E4%BA%8C%E5%BC%80%E6%94%BE%E5%AF%BB%E5%9D%80%E4%B8%8E%E4%BA%8C%E6%AC%A1%E6%8E%A2%E6%B5%8B"><span class="toc-text">6.2.2
+核心创新二：开放寻址与二次探测</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%88%9B%E6%96%B0%E4%B8%89%E5%8F%AF%E6%89%A9%E5%B1%95%E5%93%88%E5%B8%8C%E4%B8%8E%E8%A1%A8%E5%88%86%E8%A3%82"><span class="toc-text">6.2.3
+核心创新三：可扩展哈希与表分裂</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">6.2.4 总结</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#swiss-table-%E7%9A%84%E6%BC%94%E8%BF%9B%E7%8C%9C%E6%83%B3"><span class="toc-text">6.3 Swiss Table 的演进猜想</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC-0-%E6%AD%A5%E6%98%8E%E7%A1%AE%E7%9B%AE%E6%A0%87%E4%B8%8E%E6%A0%B8%E5%BF%83%E7%9F%9B%E7%9B%BE"><span class="toc-text">6.3.1 第 0
+步：明确目标与核心矛盾</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC-1-%E6%AD%A5%E4%BB%8E%E6%8B%89%E9%93%BE%E5%88%B0%E5%BC%80%E6%94%BE%E5%AF%BB%E5%9D%80"><span class="toc-text">6.3.2 第 1 步：从拉链到开放寻址</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC-2-%E6%AD%A5%E8%A7%A3%E5%86%B3%E5%86%B2%E7%AA%81%E4%B8%8E%E6%9F%A5%E6%89%BE%E6%95%88%E7%8E%87"><span class="toc-text">6.3.3 第 2
+步：解决冲突与查找效率</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC-3-%E6%AD%A5%E5%B0%86%E6%9F%A5%E6%89%BE%E6%95%88%E7%8E%87%E6%8E%A8%E5%90%91%E6%9E%81%E8%87%B4"><span class="toc-text">6.3.4 第 3
+步：将查找效率推向极致</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC-4-%E6%AD%A5%E8%A7%A3%E5%86%B3%E5%88%A0%E9%99%A4%E7%9A%84%E9%81%97%E7%95%99%E9%97%AE%E9%A2%98"><span class="toc-text">6.3.5 第 4
+步：解决删除的遗留问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC-5-%E6%AD%A5%E8%A7%A3%E5%86%B3%E6%89%A9%E5%AE%B9%E7%9A%84%E5%BB%B6%E8%BF%9F%E7%9B%AE%E6%A0%87"><span class="toc-text">6.3.6 第 5
+步：解决扩容的延迟目标</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC-6-%E6%AD%A5%E9%94%A6%E4%B8%8A%E6%B7%BB%E8%8A%B1%E7%9A%84%E4%BC%98%E5%8C%96"><span class="toc-text">6.3.7 第 6 步：锦上添花的优化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%BB%E7%BB%93%E4%BB%8E-0-%E5%88%B0-1-%E7%9A%84%E6%BC%94%E8%BF%9B%E8%B7%AF%E5%BE%84"><span class="toc-text">6.3.8 总结：从 0 到 1 的演进路径</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B9%B6%E5%8F%91sync.map-%E7%9A%84-hashtriemap-%E5%AE%9E%E7%8E%B0"><span class="toc-text">7. 并发：sync.Map 的
+HashTrieMap 实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E6%96%B0%E5%AE%9E%E7%8E%B0"><span class="toc-text">7.1 为什么需要新实现？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#hashtriemap-%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-text">7.2 HashTrieMap 数据结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9F%A5%E6%89%BE%E6%B5%81%E7%A8%8B-1"><span class="toc-text">7.3 查找流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8F%92%E5%85%A5%E6%B5%81%E7%A8%8B-1"><span class="toc-text">7.4 插入流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8E%E4%BC%A0%E7%BB%9F-sync.map-%E5%AF%B9%E6%AF%94"><span class="toc-text">7.5 与传统 sync.Map 对比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93-1"><span class="toc-text">8. 总结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#swiss-map-%E6%A0%B8%E5%BF%83%E5%88%9B%E6%96%B0"><span class="toc-text">8.1 Swiss Map 核心创新</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E6%9D%83%E8%A1%A1"><span class="toc-text">8.2 设计权衡</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%89%E6%8B%A9%E5%BB%BA%E8%AE%AE"><span class="toc-text">8.3 选择建议</span></a></li></ol></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
