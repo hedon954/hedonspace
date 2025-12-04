@@ -36,7 +36,7 @@
 <meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
 <meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
 <meta property="article:published_time" content="2025-04-08T04:54:13.000Z">
-<meta property="article:modified_time" content="2025-04-15T16:25:59.245Z">
+<meta property="article:modified_time" content="2025-12-04T09:47:36.638Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="mysql">
 <meta name="twitter:card" content="summary_large_image">
@@ -78,7 +78,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a><a class="item title" href="/2025/11/16/go/go-map-no-swiss/"><span class="title">Go 底层原理丨map（非 swiss 版本）</span></a><a class="item title" href="/2025/11/16/go/go-slice/"><span class="title">Go 底层原理丨slice 从第一性原理到实现细节</span></a><a class="item title" href="/2025/12/01/computer-net/net-grpc/"><span class="title">gRPC 原理与应用场景深度解析</span></a><a class="item title" href="/2025/12/01/computer-net/net-http-sse-ws-grpc/"><span class="title">HTTP、SSE、WebSocket、gRPC、Streamable HTTP：原理与场景全方位对比分析</span></a><a class="item title" href="/2025/11/29/computer-net/net-http/"><span class="title">从 HTTP1.0 到 HTTP3 的演化</span></a><a class="item title" href="/2025/11/26/computer-net/net-udp-tcp-kcp-quic/"><span class="title">从第一性原理掌握 UDP/TCP/KCP/QUIC</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/04/08/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a><a class="item title" href="/2025/11/16/go/go-map-no-swiss/"><span class="title">Go 底层原理丨map（非 swiss 版本）</span></a><a class="item title" href="/2025/11/16/go/go-slice/"><span class="title">Go 底层原理丨slice 从第一性原理到实现细节</span></a><a class="item title" href="/2025/12/01/computer-net/net-grpc/"><span class="title">gRPC 原理与应用场景深度解析</span></a><a class="item title" href="/2025/12/01/computer-net/net-http-sse-ws-grpc/"><span class="title">HTTP、SSE、WebSocket、gRPC、Streamable HTTP：原理与场景全方位对比分析</span></a><a class="item title" href="/2025/11/29/computer-net/net-http/"><span class="title">从 HTTP1.0 到 HTTP3 的演化</span></a><a class="item title" href="/2025/11/26/computer-net/net-udp-tcp-kcp-quic/"><span class="title">从第一性原理掌握 UDP/TCP/KCP/QUIC</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -87,11 +87,11 @@
 
 
 
-<div class="article banner top"><img class="bg lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/banner/mysql-ibd.png">
+<div class="article banner top"><img class="bg lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/banner/mysql-ibd.jpg">
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/">mysql</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-04-08T04:54:13.000Z">2025-04-08</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-04-15T16:25:59.245Z">2025-04-16</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-04-08T04:54:13.000Z">2025-04-08</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-12-04T09:47:36.638Z">2025-12-04</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -131,11 +131,11 @@ src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250408130840634.
 <p>在最前面加 2 条特殊的记录：</p>
 <ul>
 <li><code>PAGE_NEW_INFIMUM</code>：指向最小记录。</li>
-<li><code>PAGE_NEW_SUPERMUM</code>：最大记录，最大的一个 id
+<li><code>PAGE_NEW_SUPREMUM</code>：最大记录，最大的一个 id
 会指向它。</li>
 </ul>
 <p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250408130825820.png" /></p>
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251204173438139.png" /></p>
 <p>第三个问题：</p>
 <div class="tag-plugin quot"><h4 class="content" id="每次 select * from t where id = ? 都要进行 I/O 操作吗？" type="icon"><img class="icon prefix lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://bu.dusays.com/2022/10/24/63567d3e07da3.png" /><span class="text">每次 select * from t where id = ? 都要进行 I/O 操作吗？</span><span class="empty"></span></h4></div>
 <p>很显然是不行的，效率太低了。这个相信绝大多数读者都知道 ，InnoDB 会以
@@ -184,7 +184,11 @@ src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250408132300926.
 <div class="tag-plugin quot"><h4 class="content" id="假设 a =15 的数据非常多，一个 page 放不下呢？" type="icon"><img class="icon prefix lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://bu.dusays.com/2022/10/24/63567d3e07da3.png" /><span class="text">假设 a =15 的数据非常多，一个 page 放不下呢？</span><span class="empty"></span></h4></div>
 <p><img
 src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250408132323227.png" /></p>
-<p>会加入主键 ID 作为二维排序来进行分裂：</p>
+<p>对于非唯一索引，InnoDB 会<strong>隐式地</strong>将主键 ID
+追加到索引列之后，构建成 <code>(索引列, 主键)</code>
+的组合键。这样在处理大量重复索引值（如 a=15）时，B+ 树依然可以利用主键
+ID
+的唯一性和有序性，确定记录在叶子节点中的位置，以及在页分裂时确定准确的分割点。</p>
 <p><img
 src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250408132350638.png" /></p>
 <div class="tag-plugin quot"><h4 class="content" id="估算一下一个三层的 B+ 树可以存储多少条数据？" type="icon"><img class="icon prefix lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://bu.dusays.com/2022/10/24/63567d3e07da3.png" /><span class="text">估算一下一个三层的 B+ 树可以存储多少条数据？</span><span class="empty"></span></h4></div>
@@ -217,7 +221,7 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
       <div class="header"><span>分享文章</span></div>
       <div class="body">
         <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://hedon.top/2025/04/08/mysql-ibd/" /></div>
-        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/04/08/mysql-ibd/&title=一步步推导出 MySQL 数据的底层存储结构 - HedonWang&pics=/banner/mysql-ibd.png&summary=本文从最简单的数据格式开始，通过不断解决一个个关键问题，最终推导出 MySQL 数据的底层存储结构，即 B+ 树。"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=一步步推导出 MySQL 数据的底层存储结构 - HedonWang&amp;body=https://hedon.top/2025/04/08/mysql-ibd/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
+        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/04/08/mysql-ibd/&title=一步步推导出 MySQL 数据的底层存储结构 - HedonWang&pics=/banner/mysql-ibd.jpg&summary=本文从最简单的数据格式开始，通过不断解决一个个关键问题，最终推导出 MySQL 数据的底层存储结构，即 B+ 树。"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=一步步推导出 MySQL 数据的底层存储结构 - HedonWang&amp;body=https://hedon.top/2025/04/08/mysql-ibd/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
         
         <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
           <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://hedon.top/2025/04/08/mysql-ibd/"/>
