@@ -17,34 +17,20 @@
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
   <meta name="theme-color" content="#f9fafb">
   
-  <title>一步步推导出 MySQL 数据的底层存储结构 - HedonWang</title>
+  <title>HedonWang</title>
 
   
-    <meta name="description" content="本文从最简单的数据格式开始，通过不断解决一个个关键问题，最终推导出 MySQL 数据的底层存储结构，即 B+ 树。">
-<meta property="og:type" content="article">
-<meta property="og:title" content="一步步推导出 MySQL 数据的底层存储结构">
-<meta property="og:url" content="https://hedon.top/2025/04/08/mysql-ibd/index.html">
+    <meta property="og:type" content="website">
+<meta property="og:title" content="HedonWang">
+<meta property="og:url" content="https://hedon.top/page/12/index.html">
 <meta property="og:site_name" content="HedonWang">
-<meta property="og:description" content="本文从最简单的数据格式开始，通过不断解决一个个关键问题，最终推导出 MySQL 数据的底层存储结构，即 B+ 树。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
-<meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
-<meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
-<meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
-<meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
-<meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
-<meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
-<meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
-<meta property="article:published_time" content="2025-04-08T04:54:13.000Z">
-<meta property="article:modified_time" content="2025-12-04T09:47:36.638Z">
 <meta property="article:author" content="Hedon Wang">
-<meta property="article:tag" content="mysql">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://bu.dusays.com/2022/10/24/63567d3e07da3.png">
+<meta name="twitter:card" content="summary">
   
   
   
-  <meta name="keywords" content="mysql">
+  
 
   <!-- feed -->
   
@@ -64,7 +50,7 @@
 </head>
 <body>
 
-<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+<div class="l_body s:aa index tech" id="start" layout="undefined" ><aside class="l_left"><div class="leftbar-container">
 
 
 <header class="header"><div class="logo-wrap"><div class="icon"><img no-lazy class="icon" src="/assets/favicon.png" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></div><a class="title" href="/"><div class="main" ff="title">HedonWang</div><div class="sub cap">君子求诸己，律己则安。</div></a></div></header>
@@ -76,181 +62,26 @@
 <nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="专栏" href="/topic/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a><a class="nav-item" title="关于我" href="/about/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a><a class="nav-item" title="思维导图" href="/html/mindmap.html" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
 </div>
 <div class="widgets">
-
-
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/04/09/note/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a><a class="item title" href="/2025/11/16/go/go-slice/"><span class="title">Go 底层原理丨slice 从第一性原理到实现细节</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a><a class="item title" href="/2025/11/16/go/go-map-no-swiss/"><span class="title">Go 底层原理丨map（非 swiss 版本）</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/06/mysql/sharding-id-generate/"><span class="title">分库分表 ID 生成方案</span></a><a class="item title" href="/2025/12/06/mysql/sharding-page-search/"><span class="title">分库分表后的分页查询思路总结</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a><a class="item title" href="/2025/11/16/go/go-slice/"><span class="title">Go 底层原理丨slice 从第一性原理到实现细节</span></a><a class="item title" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a><a class="item title" href="/2025/11/16/go/go-map-no-swiss/"><span class="title">Go 底层原理丨map（非 swiss 版本）</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
 
+<header class="header mobile-only"><div class="logo-wrap"><div class="icon"><img no-lazy class="icon" src="/assets/favicon.png" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></div><a class="title" href="/"><div class="main" ff="title">HedonWang</div><div class="sub cap">君子求诸己，律己则安。</div></a></div></header>
 
 
 
 
-<div class="article banner top"><img class="bg lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/banner/mysql-ibd.jpg">
-  <div class="content">
-    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
-<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/mysql/">mysql</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-04-08T04:54:13.000Z">2025-04-08</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-12-04T09:47:36.638Z">2025-12-04</time></span></div></div></div>
-    
-    <div class="bottom only-title">
-      
-      <div class="text-area">
-        <h1 class="text title"><span>一步步推导出 MySQL 数据的底层存储结构</span></h1>
-        
-      </div>
-    </div>
-    
+<div class="navbar top"><nav class="post"><a class="active" href="/">近期发布</a><a href="/categories/">分类</a><a href="/tags/">标签</a><a href="/topic/">专栏</a><a href="/archives/">归档</a></nav></div>
+<div class="post-list post"><a class="post-card post" href="/2023/11/22/kakfa-cluster-deploy/">
+<article class="md-text"><div class="post-cover"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/banner/kafka-cluster-deploy.jpg"/></div><h2 class="post-title">Kafka 集群部署</h2><div class="excerpt"><p>本文总结了在 Ubuntu18.04 虚拟机上部署 Kafka 集群的具体过程。</p></div><div class="meta cap"><span class="cap" id="post-meta"><svg style="margin-bottom:2px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M6.94 2c.416 0 .753.324.753.724v1.46c.668-.012 1.417-.012 2.26-.012h4.015c.842 0 1.591 0 2.259.013v-1.46c0-.4.337-.725.753-.725s.753.324.753.724V4.25c1.445.111 2.394.384 3.09 1.055c.698.67.982 1.582 1.097 2.972L22 9H2v-.724c.116-1.39.4-2.302 1.097-2.972c.697-.67 1.645-.944 3.09-1.055V2.724c0-.4.337-.724.753-.724"/><path fill="currentColor" d="M22 14v-2c0-.839-.004-2.335-.017-3H2.01c-.013.665-.01 2.161-.01 3v2c0 3.771 0 5.657 1.172 6.828C4.343 22 6.228 22 10 22h4c3.77 0 5.656 0 6.828-1.172C22 19.658 22 17.772 22 14" opacity=".5"/><path fill="currentColor" d="M18 17a1 1 0 1 1-2 0a1 1 0 0 1 2 0m0-4a1 1 0 1 1-2 0a1 1 0 0 1 2 0m-5 4a1 1 0 1 1-2 0a1 1 0 0 1 2 0m0-4a1 1 0 1 1-2 0a1 1 0 0 1 2 0m-5 4a1 1 0 1 1-2 0a1 1 0 0 1 2 0m0-4a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><time datetime="2023-11-21T16:28:59.000Z">2023-11-22</time></span><span class="cap breadcrumb"><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg><span>Kafka</span></span></div></article>
+</a><a class="post-card post" href="/2023/11/18/raft/">
+<article class="md-text"><div class="post-cover"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/banner/raft.jpg"/></div><h2 class="post-title">Raft-Extended 论文翻译</h2><div class="excerpt"><p>本文对 Raft-Extended 进行了一比一的翻译，其中有些地方加入了额外的注解，这些都是笔者在学习 Raft 算法时遇到的比较困惑的难点，希望这些注解能对其他读者有帮助。</p></div><div class="meta cap"><span class="cap" id="post-meta"><svg style="margin-bottom:2px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M6.94 2c.416 0 .753.324.753.724v1.46c.668-.012 1.417-.012 2.26-.012h4.015c.842 0 1.591 0 2.259.013v-1.46c0-.4.337-.725.753-.725s.753.324.753.724V4.25c1.445.111 2.394.384 3.09 1.055c.698.67.982 1.582 1.097 2.972L22 9H2v-.724c.116-1.39.4-2.302 1.097-2.972c.697-.67 1.645-.944 3.09-1.055V2.724c0-.4.337-.724.753-.724"/><path fill="currentColor" d="M22 14v-2c0-.839-.004-2.335-.017-3H2.01c-.013.665-.01 2.161-.01 3v2c0 3.771 0 5.657 1.172 6.828C4.343 22 6.228 22 10 22h4c3.77 0 5.656 0 6.828-1.172C22 19.658 22 17.772 22 14" opacity=".5"/><path fill="currentColor" d="M18 17a1 1 0 1 1-2 0a1 1 0 0 1 2 0m0-4a1 1 0 1 1-2 0a1 1 0 0 1 2 0m-5 4a1 1 0 1 1-2 0a1 1 0 0 1 2 0m0-4a1 1 0 1 1-2 0a1 1 0 0 1 2 0m-5 4a1 1 0 1 1-2 0a1 1 0 0 1 2 0m0-4a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><time datetime="2023-11-18T14:29:59.000Z">2023-11-18</time></span><span class="cap breadcrumb"><svg style="margin-bottom:1px" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6.95c0-.883 0-1.324.07-1.692A4 4 0 0 1 5.257 2.07C5.626 2 6.068 2 6.95 2c.386 0 .58 0 .766.017a4 4 0 0 1 2.18.904c.144.119.28.255.554.529L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .848.352C14.098 6 14.675 6 15.828 6h.374c2.632 0 3.949 0 4.804.77c.079.07.154.145.224.224c.77.855.77 2.172.77 4.804V14c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14z" opacity=".5"/><path fill="currentColor" d="M20 6.238c0-.298-.005-.475-.025-.63a3 3 0 0 0-2.583-2.582C17.197 3 16.965 3 16.5 3H9.988c.116.104.247.234.462.45L11 4c.816.816 1.224 1.224 1.712 1.495a4 4 0 0 0 .849.352C14.098 6 14.675 6 15.829 6h.373c1.78 0 2.957 0 3.798.238"/><path fill="currentColor" fill-rule="evenodd" d="M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" clip-rule="evenodd"/></svg><span>论文翻译</span></span></div></article>
+</a></div>
+
+  <div class='paginator-wrap dis-select'>
+  <a class="extend prev" rel="prev" href="/page/11/"></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/10/">10</a><a class="page-number" href="/page/11/">11</a><span class="page-number current">12</span><span class="extend next" rel="next"></span>
   </div>
-  </div><article class="md-text content"><p>以下均以 InnoDB 引擎为基础进行分析。假设我们现在有 3
-行数据，如下：</p>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250408125932725.png" /></p>
-<p>其中：</p>
-<ul>
-<li><code>id</code> 是主键索引。</li>
-<li><code>a</code> 和 <code>b</code> 都是数据字段。</li>
-<li><code>tx_id</code> 是隐藏字段，表示事务 id，用于实现 MVCC。</li>
-<li><code>rollback_ptr</code> 是回指针，用于 undo log。</li>
-</ul>
-<p>在将数据存储到文件的时候，我们会将这三行数据进行序列化，然后以二进制流的形式存储到文件中。</p>
-<p>现在我们要解决第一个问题：</p>
-<div class="tag-plugin quot"><h4 class="content" id="如何按照主键（id）排序？" type="icon"><img class="icon prefix lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://bu.dusays.com/2022/10/24/63567d3e07da3.png" /><span class="text">如何按照主键（id）排序？</span><span class="empty"></span></h4></div>
-<p>在 InnoDB 中，会在每一行的前面，加一个 <code>next_record</code>
-字段，用于指向比当前数据 id 大的下一条数据，我们假设一行数据占 20
-个字节，那么就如下图所示：</p>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250408130510505.png" /></p>
-<p>另外，为了便于定位每一行，InnoDB 会在每一行前面再加一个字段
-<code>heap_no</code>，它的规则很简单，就是自增，在内部会用于定位一行记录，方便上锁等各种操作。</p>
-<p>所以现在的存储结构如下图所示：</p>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250408130840634.png" /></p>
-<p>现在我们来解决解决第二个问题：</p>
-<div class="tag-plugin quot"><h4 class="content" id="如何快速定位到起点（最小）和终点（最大）？" type="icon"><img class="icon prefix lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://bu.dusays.com/2022/10/24/63567d3e07da3.png" /><span class="text">如何快速定位到起点（最小）和终点（最大）？</span><span class="empty"></span></h4></div>
-<p>在最前面加 2 条特殊的记录：</p>
-<ul>
-<li><code>PAGE_NEW_INFIMUM</code>：指向最小记录。</li>
-<li><code>PAGE_NEW_SUPREMUM</code>：最大记录，最大的一个 id
-会指向它。</li>
-</ul>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251204173438139.png" /></p>
-<p>第三个问题：</p>
-<div class="tag-plugin quot"><h4 class="content" id="每次 select * from t where id = ? 都要进行 I/O 操作吗？" type="icon"><img class="icon prefix lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://bu.dusays.com/2022/10/24/63567d3e07da3.png" /><span class="text">每次 select * from t where id = ? 都要进行 I/O 操作吗？</span><span class="empty"></span></h4></div>
-<p>很显然是不行的，效率太低了。这个相信绝大多数读者都知道 ，InnoDB 会以
-Page（默认
-16KB）为最小单位，一次性将数据从磁盘加载到内存中。为此，需要在最前面再加一条记录，且该记录的前三行分别为：</p>
-<ul>
-<li><code>page_no</code>：页号，自增，InnoDB 最多支持 32
-位页号，所以存储上限是 16KB * 2<sup>32</sup> = 64T。</li>
-<li><code>prev_page</code>：指向上一页。</li>
-<li><code>next_page</code>：指向下一页。</li>
-</ul>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250409000055738.png" /></p>
-<div class="tag-plugin quot"><h4 class="content" id="如果一个 Page 放不下呢？" type="icon"><img class="icon prefix lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://bu.dusays.com/2022/10/24/63567d3e07da3.png" /><span class="text">如果一个 Page 放不下呢？</span><span class="empty"></span></h4></div>
-<p>很显然，那就要进行分页，即按照 ID 的顺序进行一分为二，前者取范围
-<code>[a, b)</code>，后者取范围 <code>[b, c)</code>。</p>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250408131632390.png" /></p>
-<div class="tag-plugin quot"><h4 class="content" id="如何快速定位到数据在哪个 Page 上呢？" type="icon"><img class="icon prefix lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://bu.dusays.com/2022/10/24/63567d3e07da3.png" /><span class="text">如何快速定位到数据在哪个 Page 上呢？</span><span class="empty"></span></h4></div>
-<p>这个时候，我们需要新创建一个 Page，专门用于管理这些数据 Page 的，这个
-Page 我们这里暂且称为索引 Page。</p>
-<p>其中核心数据就是 2 个：</p>
-<ul>
-<li><code>min_id</code>：即当前页存储的最小主键 ID。</li>
-<li><code>page_no</code>：页号，用于定位到 Page。</li>
-</ul>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250408131810905.png" /></p>
-<p>这是什么呀？这其实就是 B+
-树！在文件层面的存储，是连续存储的，但是为了便于理解，我们可以在逻辑层面将其绘制成
-B+ 树的形态。如下图可以看到这其实就是一颗 B+ 树。</p>
-<p>在主键索引树上：</p>
-<ol type="1">
-<li>叶子节点存储的就是具体某一行的数据（聚簇索引）。</li>
-<li>非叶子节点存储的是索引。</li>
-<li>每一层的节点，都是一条有序的双向链表。</li>
-</ol>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250408132026228.png" /></p>
-<div class="tag-plugin quot"><h4 class="content" id="如果对非主键索引 a 创建索引呢？" type="icon"><img class="icon prefix lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://bu.dusays.com/2022/10/24/63567d3e07da3.png" /><span class="text">如果对非主键索引 a 创建索引呢？</span><span class="empty"></span></h4></div>
-<p>因为要建索引，所以需要先对 a 进行排序，然后针对 a 建立一颗 b+
-树。而且由于 a
-是非主键索引，即辅助索引，所以叶子节点存储的是主键的值，用于回表。</p>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250408132300926.png" /></p>
-<div class="tag-plugin quot"><h4 class="content" id="假设 a =15 的数据非常多，一个 page 放不下呢？" type="icon"><img class="icon prefix lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://bu.dusays.com/2022/10/24/63567d3e07da3.png" /><span class="text">假设 a =15 的数据非常多，一个 page 放不下呢？</span><span class="empty"></span></h4></div>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250408132323227.png" /></p>
-<p>对于非唯一索引，InnoDB 会<strong>隐式地</strong>将主键 ID
-追加到索引列之后，构建成 <code>(索引列, 主键)</code>
-的组合键。这样在处理大量重复索引值（如 a=15）时，B+ 树依然可以利用主键
-ID
-的唯一性和有序性，确定记录在叶子节点中的位置，以及在页分裂时确定准确的分割点。</p>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250408132350638.png" /></p>
-<div class="tag-plugin quot"><h4 class="content" id="估算一下一个三层的 B+ 树可以存储多少条数据？" type="icon"><img class="icon prefix lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://bu.dusays.com/2022/10/24/63567d3e07da3.png" /><span class="text">估算一下一个三层的 B+ 树可以存储多少条数据？</span><span class="empty"></span></h4></div>
-<ul>
-<li>一个 Page 是 16KB</li>
-<li>假设 1 个 Page 可以存放 1000 个 key</li>
-<li>假设 1 个 Page 可以存放 200 条记录</li>
-</ul>
-<p>基于这种估算：</p>
-<ul>
-<li>第 1 层：1 个节点是 1 个 Page，存放 1000 个 key，对应 1000
-个分叉</li>
-<li>第 2 层：1000 个节点 1000 个 Page，存放 1000*1000 个 Key，对应
-1000*1000 个分叉</li>
-<li>第 3 层：1000*1000 个 Page，每个 Page 200 条数据，共 1000*1000*200=2
-亿条数据 = 16KB*1000*1000=16GB</li>
-</ul>
-<p>🐂🐂🐂</p>
-
-<div class="article-footer fs14">
-    <section id="license">
-      <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
-</div>
-    </section>
-    
-    <section id="share">
-      <div class="header"><span>分享文章</span></div>
-      <div class="body">
-        <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://hedon.top/2025/04/08/mysql-ibd/" /></div>
-        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2025/04/08/mysql-ibd/&title=一步步推导出 MySQL 数据的底层存储结构 - HedonWang&pics=/banner/mysql-ibd.jpg&summary=本文从最简单的数据格式开始，通过不断解决一个个关键问题，最终推导出 MySQL 数据的底层存储结构，即 B+ 树。"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=一步步推导出 MySQL 数据的底层存储结构 - HedonWang&amp;body=https://hedon.top/2025/04/08/mysql-ibd/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
-        
-        <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
-          <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://hedon.top/2025/04/08/mysql-ibd/"/>
-        </div>
-        
-      </div>
-    </section>
-    </div>
-</article>
-<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2025/04/09/note/note-unit-testing-excerpt/">书籍摘抄丨《Unit Testing Principles, Practices, and Patterns》</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2025/03/17/mindmap-for-hexo/">在 Hexo 博客中优雅地集成 Markmap 思维导图</a></div></section></div>
-
-
-
-
-  <div class="related-wrap md-text" id="comments">
-    <section class='header cmt-title cap theme'>
-      <p>快来参与讨论吧~</p>
-
-    </section>
-    <section class='body cmt-body giscus'>
-      
-
-<svg class="loading" style="vertical-align:middle;fill:currentColor;overflow:hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2709"><path d="M832 512c0-176-144-320-320-320V128c211.2 0 384 172.8 384 384h-64zM192 512c0 176 144 320 320 320v64C300.8 896 128 723.2 128 512h64z" p-id="2710"></path></svg>
-
-<div id="giscus" src="https://giscus.app/client.js" data-repo="hedon954/hedonspace" data-repo-id="R_kgDOKt17sQ" data-category="Q&A" data-category-id="DIC_kwDOKt17sc4CbAt-" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="preferred_color_scheme" data-lang="zh-CN" data-loading="lazy" crossorigin="anonymous"></div>
-
-    </section>
-  </div>
-
 
 
 <footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
@@ -260,14 +91,7 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
-<div class="widgets">
-
-
-
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E6%8C%89%E7%85%A7%E4%B8%BB%E9%94%AE%EF%BC%88id%EF%BC%89%E6%8E%92%E5%BA%8F%EF%BC%9F"><span class="toc-text">如何按照主键（id）排序？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E5%BF%AB%E9%80%9F%E5%AE%9A%E4%BD%8D%E5%88%B0%E8%B5%B7%E7%82%B9%EF%BC%88%E6%9C%80%E5%B0%8F%EF%BC%89%E5%92%8C%E7%BB%88%E7%82%B9%EF%BC%88%E6%9C%80%E5%A4%A7%EF%BC%89%EF%BC%9F"><span class="toc-text">如何快速定位到起点（最小）和终点（最大）？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AF%8F%E6%AC%A1%20select%20*%20from%20t%20where%20id%20=%20?%20%E9%83%BD%E8%A6%81%E8%BF%9B%E8%A1%8C%20I/O%20%E6%93%8D%E4%BD%9C%E5%90%97%EF%BC%9F"><span class="toc-text">每次 select * from t where id &#x3D; ? 都要进行 I&#x2F;O 操作吗？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A6%82%E6%9E%9C%E4%B8%80%E4%B8%AA%20Page%20%E6%94%BE%E4%B8%8D%E4%B8%8B%E5%91%A2%EF%BC%9F"><span class="toc-text">如果一个 Page 放不下呢？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E5%BF%AB%E9%80%9F%E5%AE%9A%E4%BD%8D%E5%88%B0%E6%95%B0%E6%8D%AE%E5%9C%A8%E5%93%AA%E4%B8%AA%20Page%20%E4%B8%8A%E5%91%A2%EF%BC%9F"><span class="toc-text">如何快速定位到数据在哪个 Page 上呢？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A6%82%E6%9E%9C%E5%AF%B9%E9%9D%9E%E4%B8%BB%E9%94%AE%E7%B4%A2%E5%BC%95%20a%20%E5%88%9B%E5%BB%BA%E7%B4%A2%E5%BC%95%E5%91%A2%EF%BC%9F"><span class="toc-text">如果对非主键索引 a 创建索引呢？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%81%87%E8%AE%BE%20a%20=15%20%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9D%9E%E5%B8%B8%E5%A4%9A%EF%BC%8C%E4%B8%80%E4%B8%AA%20page%20%E6%94%BE%E4%B8%8D%E4%B8%8B%E5%91%A2%EF%BC%9F"><span class="toc-text">假设 a &#x3D;15 的数据非常多，一个 page 放不下呢？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BC%B0%E7%AE%97%E4%B8%80%E4%B8%8B%E4%B8%80%E4%B8%AA%E4%B8%89%E5%B1%82%E7%9A%84%20B+%20%E6%A0%91%E5%8F%AF%E4%BB%A5%E5%AD%98%E5%82%A8%E5%A4%9A%E5%B0%91%E6%9D%A1%E6%95%B0%E6%8D%AE%EF%BC%9F"><span class="toc-text">估算一下一个三层的 B+ 树可以存储多少条数据？</span></a></li></ol></div><div class="widget-footer">
-
-<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
-</div></aside><div class='float-panel blur'>
+</aside><div class='float-panel blur'>
   <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
   </button>
@@ -656,30 +480,6 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 <!-- optional -->
-
-  <script type="module">
-  const el = document.querySelector('#comments #giscus');
-  util.viewportLazyload(el, load_discus, false);
-
-  function load_discus() {
-    if (!el) return;
-    try {
-        el.innerHTML = '';
-      } catch (error) {
-        console.error(error);
-      }
-      const script = document.createElement('script');
-      script.async = true;
-      for (const key of Object.keys(el.attributes)) {
-        const attr = el.attributes[key];
-        if (['class', 'id'].includes(attr.name) === false) {
-          script.setAttribute(attr.name, attr.value);
-        }
-      }
-      el.appendChild(script);
-  }
-</script>
-
 
 
 
