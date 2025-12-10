@@ -95,94 +95,65 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>在当今的大模型时代，GPT 架构以其强大的能力席卷了整个 AI
-领域。当你深入探究其内部结构时，会发现许多精妙的设计。其中一个看似简单、却能带来巨大效益的工程技巧，就是我们今天要讨论的——<strong>权重共享（Weight
-Tying）</strong>。</p>
-<h2 id="什么是权重共享">1. 什么是权重共享？</h2>
+  </div><article class="md-text content"><p>在当今的大模型时代，GPT 架构以其强大的能力席卷了整个 AI 领域。当你深入探究其内部结构时，会发现许多精妙的设计。其中一个看似简单、却能带来巨大效益的工程技巧，就是我们今天要讨论的——<strong>权重共享（Weight Tying）</strong>。</p>
+<h2 id="1-什么是权重共享？">1. 什么是权重共享？</h2>
 <p>想象一下你在学习一门外语。有两个过程：</p>
-<ol type="1">
+<ol>
 <li><strong>听写</strong>：听到一个词后，你需要在脑海中构建它的意思。</li>
 <li><strong>表达</strong>：你想表达一个意思时，需要从词库中挑出最合适的词。</li>
 </ol>
 <p>一个高效的学习者会发现，这两个过程是相辅相成的。你对一个词理解得越深（听写），就越能准确地使用它（表达）。反之亦然。</p>
-<p>在 GPT 模型中，权重共享就是将这两个过程的"记忆"绑定在一起。</p>
+<p>在 GPT 模型中，权重共享就是将这两个过程的&quot;记忆&quot;绑定在一起。</p>
 <p>具体来说，模型有两个关键的权重矩阵：</p>
 <ul>
-<li><strong>输入嵌入（Input Embedding）</strong>：将输入的离散
-Token（如单词 "cat"）转换成连续的向量表示。这就像是你的"听写记忆"。</li>
-<li><strong>输出线性层（Output Linear
-Layer）</strong>：将模型内部的向量表示转换回离散的
-Token，用于预测下一个词。这就像是你的"表达记忆"。</li>
+<li><strong>输入嵌入（Input Embedding）</strong>：将输入的离散 Token（如单词 “cat”）转换成连续的向量表示。这就像是你的&quot;听写记忆&quot;。</li>
+<li><strong>输出线性层（Output Linear Layer）</strong>：将模型内部的向量表示转换回离散的 Token，用于预测下一个词。这就像是你的&quot;表达记忆&quot;。</li>
 </ul>
 <p>更具体来说：</p>
 <ul>
-<li><strong>输入嵌入矩阵（Input Embedding Matrix）
-Wemb</strong>：这是一个将离散的 Token（词汇表中的
-ID）映射到连续向量空间（Token Embedding）的矩阵。它的维度是
-<code>[词汇表大小, 模型维度]</code>。当一个 Token ID 比如
-<code>5234</code> 进来时，模型会查找这个矩阵的第 <code>5234</code>
-行，将其作为这个 Token 的向量表示。</li>
-<li><strong>输出词表线性层（Output Vocabulary Linear
-Layer）Wout</strong>：这是模型在最后一步用来预测下一个 Token
-的矩阵。它的维度是 <code>[模型维度, 词汇表大小]</code>。模型经过一系列
-Transformer Block 处理后，会得到一个 <code>[1, 模型维度]</code>
-的输出向量，这个向量会与 Wout 进行矩阵乘法，得到一个
-<code>[1, 词汇表大小]</code> 的 Logits
-向量。这个向量的每个值代表了词汇表中相应 Token 的概率分数，通过 Softmax
-归一化后，就可以得到下一个词的概率分布。</li>
+<li><strong>输入嵌入矩阵（Input Embedding Matrix） Wemb</strong>：这是一个将离散的 Token（词汇表中的 ID）映射到连续向量空间（Token Embedding）的矩阵。它的维度是 <code>[词汇表大小, 模型维度]</code>。当一个 Token ID 比如 <code>5234</code> 进来时，模型会查找这个矩阵的第 <code>5234</code> 行，将其作为这个 Token 的向量表示。</li>
+<li><strong>输出词表线性层（Output Vocabulary Linear Layer）Wout</strong>：这是模型在最后一步用来预测下一个 Token 的矩阵。它的维度是 <code>[模型维度, 词汇表大小]</code>。模型经过一系列 Transformer Block 处理后，会得到一个 <code>[1, 模型维度]</code> 的输出向量，这个向量会与 Wout 进行矩阵乘法，得到一个 <code>[1, 词汇表大小]</code> 的 Logits 向量。这个向量的每个值代表了词汇表中相应 Token 的概率分数，通过 Softmax 归一化后，就可以得到下一个词的概率分布。</li>
 </ul>
 <p>权重共享的精髓在于，它<strong>将输出线性层的权重矩阵，设置为输入嵌入矩阵的转置</strong>。这意味着，模型在学习如何编码（理解）一个词时，也在同步学习如何解码（生成）这个词。</p>
-<h2 id="为什么要这样做">2. 为什么要这样做？</h2>
-<h3 id="浅层原因参数效率">浅层原因：参数效率</h3>
-<p>这是最直观的好处。一个典型的 GPT 模型，词汇表大小可能达到 5
-万，模型维度（<code>d_model</code>）可能达到 4096。</p>
+<h2 id="2-为什么要这样做？">2. 为什么要这样做？</h2>
+<h3 id="浅层原因：参数效率">浅层原因：参数效率</h3>
+<p>这是最直观的好处。一个典型的 GPT 模型，词汇表大小可能达到 5 万，模型维度（<code>d_model</code>）可能达到 4096。</p>
 <ul>
 <li><strong>不共享参数</strong>：
 <ul>
 <li>输入嵌入矩阵参数量：<code>50000 * 4096</code></li>
 <li>输出线性层参数量：<code>4096 * 50000</code></li>
 <li>总参数量：<code>2 * 50000 * 4096 ≈ 4.1 亿</code></li>
-</ul></li>
+</ul>
+</li>
 <li><strong>共享参数</strong>：
 <ul>
 <li>总参数量：<code>50000 * 4096 ≈ 2.05 亿</code></li>
-</ul></li>
+</ul>
+</li>
 </ul>
 <p>通过共享参数，我们直接将这两部分的参数量减少了一半。这对于模型整体的参数规模来说，是一个显著的节省。在大规模模型中，这能有效降低显存占用，让训练和部署更具可行性。</p>
-<h3
-id="深层原因泛化能力与语义对称性">深层原因：泛化能力与语义对称性</h3>
-<p><strong>更好的梯度信号</strong>：当模型学习将一个 Token
-映射为有意义的向量时（输入嵌入），这些向量也会通过转置操作，影响到模型对下一个
-Token 的预测（输出线性层）。反之，当模型预测某个 Token
-概率的梯度回传时，也会同时更新输入嵌入矩阵。</p>
-<p>这形成了一种"双向学习"的机制：模型在学习如何编码 Token
-的同时，也在学习如何解码
-Token，这两个过程相互强化。这就像一个人在学习如何说一个词（输出）时，也在不断加深对这个词的理解（输入）。</p>
+<h3 id="深层原因：泛化能力与语义对称性">深层原因：泛化能力与语义对称性</h3>
+<p><strong>更好的梯度信号</strong>：当模型学习将一个 Token 映射为有意义的向量时（输入嵌入），这些向量也会通过转置操作，影响到模型对下一个 Token 的预测（输出线性层）。反之，当模型预测某个 Token 概率的梯度回传时，也会同时更新输入嵌入矩阵。</p>
+<p>这形成了一种&quot;双向学习&quot;的机制：模型在学习如何编码 Token 的同时，也在学习如何解码 Token，这两个过程相互强化。这就像一个人在学习如何说一个词（输出）时，也在不断加深对这个词的理解（输入）。</p>
 <p><strong>增强泛化能力</strong>：</p>
 <ul>
-<li><strong>处理生僻词</strong>：对于训练语料中出现频率很低的词，模型可能没有足够的样本来学习其精确的向量表示。但通过权重共享，如果这个词作为"输出"被预测过，它的梯度也会回传到输入嵌入矩阵，让其向量表示得到更新。反之亦然。这使得模型对低频词的理解能力和预测能力都能得到提升，从而增强了模型的泛化能力。</li>
-<li><strong>语义对称性</strong>：权重共享本质上假设了 Token
-的"编码"和"解码"过程应该具有某种对称性。一个 Token
-的向量表示，应该直接反映其作为输出时的"预测向量"。这可以看作是一种正则化，迫使模型学习更紧凑、更高效、更具语义一致性的向量空间。</li>
+<li><strong>处理生僻词</strong>：对于训练语料中出现频率很低的词，模型可能没有足够的样本来学习其精确的向量表示。但通过权重共享，如果这个词作为&quot;输出&quot;被预测过，它的梯度也会回传到输入嵌入矩阵，让其向量表示得到更新。反之亦然。这使得模型对低频词的理解能力和预测能力都能得到提升，从而增强了模型的泛化能力。</li>
+<li><strong>语义对称性</strong>：权重共享本质上假设了 Token 的&quot;编码&quot;和&quot;解码&quot;过程应该具有某种对称性。一个 Token 的向量表示，应该直接反映其作为输出时的&quot;预测向量&quot;。这可以看作是一种正则化，迫使模型学习更紧凑、更高效、更具语义一致性的向量空间。</li>
 </ul>
-<h2 id="落地实践要点与启示">3. 落地实践要点与启示</h2>
-<p>在实际的 GPT 实现中，权重共享是一个常见的技巧。例如，OpenAI 的 GPT-2
-和许多基于其架构的开源模型都采用了这种做法。</p>
+<h2 id="3-落地实践要点与启示">3. 落地实践要点与启示</h2>
+<p>在实际的 GPT 实现中，权重共享是一个常见的技巧。例如，OpenAI 的 GPT-2 和许多基于其架构的开源模型都采用了这种做法。</p>
 <ul>
-<li><p><strong>实现细节</strong>：在 PyTorch
-等深度学习框架中，实现非常简单，通常只需要将
-<code>nn.Linear(d_model, vocab_size)</code>层的 <code>weight</code>
-参数设置为 <code>nn.Embedding(vocab_size, d_model)</code> 层的
-<code>weight.T</code> 即可。</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 假设我们已经定义好了嵌入层</span></span><br><span class="line">embedding_layer = nn.Embedding(vocab_size, d_model)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义一个线性层，用于预测下一个词</span></span><br><span class="line">output_layer = nn.Linear(d_model, vocab_size, bias=<span class="literal">False</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 权重共享的魔法就在这里：</span></span><br><span class="line"><span class="comment"># 将输出层的权重，设置为嵌入层权重的转置</span></span><br><span class="line">output_layer.weight = embedding_layer.weight</span><br></pre></td></tr></table></figure></li>
-<li><p><strong>效果评估</strong>：在早期的研究中，例如在 Transformer
-架构中，研究人员就通过消融实验（ablation study）发现，权重共享能够带来约
-0.5 到 1
-个百分点的精度提升，同时大幅减少参数量。这证明了它在实践中的有效性。</p></li>
+<li>
+<p><strong>实现细节</strong>：在 PyTorch 等深度学习框架中，实现非常简单，通常只需要将 <code>nn.Linear(d_model, vocab_size)</code>层的 <code>weight</code> 参数设置为 <code>nn.Embedding(vocab_size, d_model)</code> 层的 <code>weight.T</code> 即可。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 假设我们已经定义好了嵌入层</span></span><br><span class="line">embedding_layer = nn.Embedding(vocab_size, d_model)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义一个线性层，用于预测下一个词</span></span><br><span class="line">output_layer = nn.Linear(d_model, vocab_size, bias=<span class="literal">False</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 权重共享的魔法就在这里：</span></span><br><span class="line"><span class="comment"># 将输出层的权重，设置为嵌入层权重的转置</span></span><br><span class="line">output_layer.weight = embedding_layer.weight</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>效果评估</strong>：在早期的研究中，例如在 Transformer 架构中，研究人员就通过消融实验（ablation study）发现，权重共享能够带来约 0.5 到 1 个百分点的精度提升，同时大幅减少参数量。这证明了它在实践中的有效性。</p>
+</li>
 </ul>
 <h2 id="总结">总结</h2>
-<p>权重共享并非 GPT
-的"核心"创新，但它是一个非常精巧且有效的工程与理论结合。它通过一个简单的参数绑定，实现了：</p>
+<p>权重共享并非 GPT 的&quot;核心&quot;创新，但它是一个非常精巧且有效的工程与理论结合。它通过一个简单的参数绑定，实现了：</p>
 <ul>
 <li><strong>工程上</strong>：显著减少模型参数量，提升训练和推理效率。</li>
 <li><strong>理论上</strong>：建立输入和输出之间的双向学习机制，增强了模型对词汇表（特别是低频词）的泛化能力，并鼓励模型学习更具语义一致性的向量表示。</li>
@@ -191,9 +162,7 @@ Token，这两个过程相互强化。这就像一个人在学习如何说一个
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -233,18 +202,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%9D%83%E9%87%8D%E5%85%B1%E4%BA%AB"><span class="toc-text">1. 什么是权重共享？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%BF%99%E6%A0%B7%E5%81%9A"><span class="toc-text">2. 为什么要这样做？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B5%85%E5%B1%82%E5%8E%9F%E5%9B%A0%E5%8F%82%E6%95%B0%E6%95%88%E7%8E%87"><span class="toc-text">浅层原因：参数效率</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B7%B1%E5%B1%82%E5%8E%9F%E5%9B%A0%E6%B3%9B%E5%8C%96%E8%83%BD%E5%8A%9B%E4%B8%8E%E8%AF%AD%E4%B9%89%E5%AF%B9%E7%A7%B0%E6%80%A7"><span class="toc-text">深层原因：泛化能力与语义对称性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%90%BD%E5%9C%B0%E5%AE%9E%E8%B7%B5%E8%A6%81%E7%82%B9%E4%B8%8E%E5%90%AF%E7%A4%BA"><span class="toc-text">3. 落地实践要点与启示</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E4%BB%80%E4%B9%88%E6%98%AF%E6%9D%83%E9%87%8D%E5%85%B1%E4%BA%AB%EF%BC%9F"><span class="toc-text">1. 什么是权重共享？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%BF%99%E6%A0%B7%E5%81%9A%EF%BC%9F"><span class="toc-text">2. 为什么要这样做？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B5%85%E5%B1%82%E5%8E%9F%E5%9B%A0%EF%BC%9A%E5%8F%82%E6%95%B0%E6%95%88%E7%8E%87"><span class="toc-text">浅层原因：参数效率</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B7%B1%E5%B1%82%E5%8E%9F%E5%9B%A0%EF%BC%9A%E6%B3%9B%E5%8C%96%E8%83%BD%E5%8A%9B%E4%B8%8E%E8%AF%AD%E4%B9%89%E5%AF%B9%E7%A7%B0%E6%80%A7"><span class="toc-text">深层原因：泛化能力与语义对称性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E8%90%BD%E5%9C%B0%E5%AE%9E%E8%B7%B5%E8%A6%81%E7%82%B9%E4%B8%8E%E5%90%AF%E7%A4%BA"><span class="toc-text">3. 落地实践要点与启示</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
