@@ -27,39 +27,15 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文对《Unit Testing》的关键观点进行了梳理总结。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%201.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%202.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%203.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%204.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%205.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%206.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%207.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%208.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%209.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2010.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2011.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2012.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2013.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2014.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2015.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2016.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2017.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2018.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2019.png">
 <meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e092ff.png">
 <meta property="og:image" content="https://bu.dusays.com/2022/10/24/63567d3e0ab55.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2020.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2021.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2022.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2023.png">
 <meta property="article:published_time" content="2025-04-09T04:52:14.000Z">
 <meta property="article:modified_time" content="2025-12-08T03:02:24.656Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="单元测试">
 <meta property="article:tag" content="书籍摘抄">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image.png">
+<meta name="twitter:image" content="https://bu.dusays.com/2022/10/24/63567d3e092ff.png">
   
   
   
@@ -121,58 +97,71 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>Learning unit testing doesn’t stop at mastering the technical bits of it, such as your favorite test framework, mocking library, and so on. There’s much more to unit testing than the act of writing tests. You always have to achieve the best return on the time you invest in unit testing, minimizing the effort you put into tests and maximizing the benefits they provide. Achieving both things isn’t an easy task.</p>
+  </div><article class="md-text content"><p>Learning unit testing doesn’t stop at mastering the technical bits of
+it, such as your favorite test framework, mocking library, and so on.
+There’s much more to unit testing than the act of writing tests. You
+always have to achieve the best return on the time you invest in unit
+testing, minimizing the effort you put into tests and maximizing the
+benefits they provide. Achieving both things isn’t an easy task.</p>
 <ul>
-<li>They grow effortlessly, don’t require much maintenance, and can quickly adapt to their customers’ ever-changing needs.</li>
+<li>They grow effortlessly, don’t require much maintenance, and can
+quickly adapt to their customers’ ever-changing needs.</li>
 </ul>
-<p>The ratio between the production code and the test code could be anywhere between <code>1:1</code> and <code>1:3</code>.</p>
-<h1>Coverage limitations</h1>
+<p>The ratio between the production code and the test code could be
+anywhere between <code>1:1</code> and <code>1:3</code>.</p>
+<h1 id="coverage-limitations">Coverage limitations</h1>
 <ul>
-<li>You can’t guarantee that the test verifies all the possible outcomes of the system under test.</li>
-<li>No coverage metric can take into account code paths in external libraries.</li>
+<li>You can’t guarantee that the test verifies all the possible outcomes
+of the system under test.</li>
+<li>No coverage metric can take into account code paths in external
+libraries.</li>
 </ul>
-<h1>The goal of unit testing</h1>
-<ol>
+<h1 id="the-goal-of-unit-testing">The goal of unit testing</h1>
+<ol type="1">
 <li>lead to a better code design</li>
 <li>enable sustainable(可持续的) growth of the software project</li>
 </ol>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image.png" alt=""></p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image.png" /></p>
 <p>the cost components of writing unit tests:</p>
-<ol>
+<ol type="1">
 <li>refactoring the test when you refactor the underlying code</li>
 <li>running the test on each code change</li>
 <li>dealing with false alarms raised by the test</li>
-<li>spending time reading the test when you’re trying to understanding how the underlying code behaves</li>
+<li>spending time reading the test when you’re trying to understanding
+how the underlying code behaves</li>
 </ol>
 <p>a successful test suite must:</p>
-<ol>
+<ol type="1">
 <li>integrated into the development cycle</li>
 <li>targets only the most important parts of the code base
-<ol>
+<ol type="1">
 <li>👉🏻 domain logic</li>
 <li>infrastructure code</li>
 <li>external services and dependencies</li>
 <li>code that glues everything together</li>
-</ol>
-</li>
+</ol></li>
 <li>provides maximum value with minimum maintenance costs
-<ol>
-<li>recognize a valuable test (and, by extension, a test of low value)</li>
+<ol type="1">
+<li>recognize a valuable test (and, by extension, a test of low
+value)</li>
 <li>write a valuable test</li>
+</ol></li>
 </ol>
-</li>
-</ol>
-<h1>What is a unit test?</h1>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%201.png" alt=""></p>
-<ol>
+<h1 id="what-is-a-unit-test">What is a unit test?</h1>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%201.png" /></p>
+<ol type="1">
 <li>verifies a single unit of behavior</li>
 <li>dose it quickly</li>
 <li>dost it in isolation from other tests</li>
 </ol>
-<p>An integration test, then, is a test that doesn’t meet one of these criteria.</p>
+<p>An integration test, then, is a test that doesn’t meet one of these
+criteria.</p>
 <p>End-to-end tests are a subset of integration tests.</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%202.png" alt=""></p>
-<h1>How to structure a unit test?</h1>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%202.png" /></p>
+<h1 id="how-to-structure-a-unit-test">How to structure a unit test?</h1>
 <table>
 <thead>
 <tr>
@@ -191,346 +180,459 @@
 </tr>
 </tbody>
 </table>
-<ol>
+<ol type="1">
 <li>avoid multiple arrange, act, and assert sections.</li>
 <li>avoid if statements in tests.</li>
-<li>name the test as if you were describing the scenario to a non-programmer who is familiar with the problem domain.</li>
+<li>name the test as if you were describing the scenario to a
+non-programmer who is familiar with the problem domain.</li>
 <li>separate words with underscores.</li>
-<li>structure a test is to make it tell a story about the problem domain</li>
+<li>structure a test is to make it tell a story about the problem
+domain</li>
 </ol>
-<h1>Four pillars of a good unit test</h1>
+<h1 id="four-pillars-of-a-good-unit-test">Four pillars of a good unit
+test</h1>
 <blockquote>
 <p><em>code is not an asset, it’s a liability.</em></p>
 </blockquote>
-<ol>
-<li>
-<p><strong>protection against regressions</strong></p>
-<ol>
+<ol type="1">
+<li><p><strong>protection against regressions</strong></p>
+<ol type="1">
 <li>the amount of code that is executed during the test</li>
 <li>the complexity of that code</li>
 <li>the code’s domain significance</li>
-</ol>
-</li>
-<li>
-<p><strong>resistance to refactoring</strong></p>
-<ol>
+</ol></li>
+<li><p><strong>resistance to refactoring</strong></p>
+<ol type="1">
 <li>the fewer false positives the test generates, the better</li>
-<li>tests provides an early warning when you break exisiting functionality</li>
-<li>you become confident that your code changes won’t lead to regressions</li>
-<li>the more the test is coupled to the implementation details of the system under set(SUT), the more false alarms it generates</li>
-<li>you need to make sure the test verifies the end result the SUT delivers: its observable behavior, not the steps it takes to do that.</li>
-<li>the best way to structure a test is to make it tell a story about the problem domain</li>
+<li>tests provides an early warning when you break exisiting
+functionality</li>
+<li>you become confident that your code changes won’t lead to
+regressions</li>
+<li>the more the test is coupled to the implementation details of the
+system under set(SUT), the more false alarms it generates</li>
+<li>you need to make sure the test verifies the end result the SUT
+delivers: its observable behavior, not the steps it takes to do
+that.</li>
+<li>the best way to structure a test is to make it tell a story about
+the problem domain</li>
 </ol>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%203.png" alt=""></p>
-</li>
-<li>
-<p><strong>fast feedback</strong></p>
-</li>
-<li>
-<p><strong>maintainability</strong></p>
-<ol>
-<li>how hard it is to understand the test, which is a function of the test’s size</li>
-<li>how hard it is to run the test, which is a function of how many out-of-process dependencies the test works with directly</li>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%203.png" /></p></li>
+<li><p><strong>fast feedback</strong></p></li>
+<li><p><strong>maintainability</strong></p>
+<ol type="1">
+<li>how hard it is to understand the test, which is a function of the
+test’s size</li>
+<li>how hard it is to run the test, which is a function of how many
+out-of-process dependencies the test works with directly</li>
+</ol></li>
 </ol>
-</li>
-</ol>
-<h2 id="The-intrinsic-connection-between-the-first-two-attributes">The intrinsic connection between the first two attributes</h2>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%204.png" alt=""></p>
+<h2 id="the-intrinsic-connection-between-the-first-two-attributes">The
+intrinsic connection between the first two attributes</h2>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%204.png" /></p>
 <p>Type II Error:</p>
 <ul>
-<li>if functionality is broken, the test should fail, but if the test also passed, means it is not a good unit test, should if it fails, means it offers protection against regressions.</li>
+<li>if functionality is broken, the test should fail, but if the test
+also passed, means it is not a good unit test, should if it fails, means
+it offers protection against regressions.</li>
 </ul>
 <p>Type I Error:</p>
 <ul>
-<li>if functionality is correct but the test fails, means that the test dose not test the nature of behavior. The good unit test should always pass when the functionality is correct. This would help us a lot when we try to do refactor. If we refactor the code correctly, but the unit tests always failed, means that the unit tests are not good enough, we need to optimize them.</li>
+<li>if functionality is correct but the test fails, means that the test
+dose not test the nature of behavior. The good unit test should always
+pass when the functionality is correct. This would help us a lot when we
+try to do refactor. If we refactor the code correctly, but the unit
+tests always failed, means that the unit tests are not good enough, we
+need to optimize them.</li>
 </ul>
-<h1>An ideal test</h1>
+<h1 id="an-ideal-test">An ideal test</h1>
 <ul>
-<li>value = <code>[0..1] * [0..1] * [0..1] * [0..1]</code>(corresponding to the four pillars)</li>
+<li>value = <code>[0..1] * [0..1] * [0..1] * [0..1]</code>(corresponding
+to the four pillars)</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%205.png" alt=""></p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%206.png" alt=""></p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%207.png" alt=""></p>
-<h2 id="black-box-and-white-box-testing">black-box and white-box testing</h2>
-<ol>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%205.png" /></p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%206.png" /></p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%207.png" /></p>
+<h2 id="black-box-and-white-box-testing">black-box and white-box
+testing</h2>
+<ol type="1">
 <li>choose black-box testing over white-box testing by default.</li>
-<li>the only exception is when the test covers utility code with high algorithmic complexity</li>
-<li>use code coverage tools to see which code branches are not exercised, but then turn around and test them as if you know nothing about the code’s internal structure.</li>
+<li>the only exception is when the test covers utility code with high
+algorithmic complexity</li>
+<li>use code coverage tools to see which code branches are not
+exercised, but then turn around and test them as if you know nothing
+about the code’s internal structure.</li>
 </ol>
-<h1>Mock</h1>
+<h1 id="mock">Mock</h1>
 <h2 id="types-of-test-doubles">types of test doubles</h2>
 <ul>
-<li>mock: help to emulate and examine <code>outcoming</code> interactions —— change state
+<li>mock: help to emulate and examine <code>outcoming</code>
+interactions —— change state
 <ul>
 <li>mock: generated by tools</li>
 <li>spy: written manually</li>
-</ul>
-</li>
-<li>stub: help to emulate <code>incoming</code> interactions —— get input data
+</ul></li>
+<li>stub: help to emulate <code>incoming</code> interactions —— get
+input data
 <ul>
-<li>stub: can configure to return different values for different scenarios.</li>
-<li>dummy: a simple, hardcoded value such as a null value or a made-up string.</li>
-<li>fake: the same as a stub for most purposes, only except for its creation, it is usually implemented to replace a dependency that dose not yet exist</li>
+<li>stub: can configure to return different values for different
+scenarios.</li>
+<li>dummy: a simple, hardcoded value such as a null value or a made-up
+string.</li>
+<li>fake: the same as a stub for most purposes, only except for its
+creation, it is usually implemented to replace a dependency that dose
+not yet exist</li>
+</ul></li>
 </ul>
-</li>
-</ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%208.png" alt=""></p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%209.png" alt=""></p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%208.png" /></p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%209.png" /></p>
 <blockquote>
 <p>never asserting interactions with stubs.</p>
 </blockquote>
-<h2 id="Observable-behavior">Observable behavior</h2>
-<ol>
-<li>expose an <code>operation</code> that helps the client achieve one of its goals. An operation is a method that performs a calculation or incurs a side effect or both.</li>
-<li>expose a <code>state</code> that helps the client achieve one of its goals. State is the current condition of the system.</li>
+<h2 id="observable-behavior">Observable behavior</h2>
+<ol type="1">
+<li>expose an <code>operation</code> that helps the client achieve one
+of its goals. An operation is a method that performs a calculation or
+incurs a side effect or both.</li>
+<li>expose a <code>state</code> that helps the client achieve one of its
+goals. State is the current condition of the system.</li>
 </ol>
 <blockquote>
-<p>Whether the code is observable behavior depends on who its client is and what the goals of that client are.</p>
+<p>Whether the code is observable behavior depends on who its client is
+and what the goals of that client are.</p>
 </blockquote>
 <blockquote>
-<p>Ideally, the system’s public API surface should coincide with its observable behavior, and all its implementation details should be hidden from the eyes of the clients.</p>
+<p>Ideally, the system’s public API surface should coincide with its
+observable behavior, and all its implementation details should be hidden
+from the eyes of the clients.</p>
 </blockquote>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2010.png" alt=""></p>
-<h2 id="Mocks-and-test-fragility">Mocks and test fragility</h2>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2010.png" /></p>
+<h2 id="mocks-and-test-fragility">Mocks and test fragility</h2>
 <ul>
-<li><code>Intra-system</code> communications are communications between classes inside your application.</li>
-<li><code>Inter-system</code> communications are when your application talks to other applications.</li>
+<li><code>Intra-system</code> communications are communications between
+classes inside your application.</li>
+<li><code>Inter-system</code> communications are when your application
+talks to other applications.</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2011.png" alt=""></p>
-<ol>
-<li>The use of mocks is <code>beneficial</code> when verifying the communication pattern between your system and external applications.</li>
-<li>Using mocks to verify communications between classes inside your system results in tests that couple to implementation details and therefore fall short of the <code>resistance-to-refactoring</code> metric.</li>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2011.png" /></p>
+<ol type="1">
+<li>The use of mocks is <code>beneficial</code> when verifying the
+communication pattern between your system and external
+applications.</li>
+<li>Using mocks to verify communications between classes inside your
+system results in tests that couple to implementation details and
+therefore fall short of the <code>resistance-to-refactoring</code>
+metric.</li>
 </ol>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2012.png" alt=""></p>
-<h2 id="Types-of-dependencies">Types of dependencies</h2>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2012.png" /></p>
+<h2 id="types-of-dependencies">Types of dependencies</h2>
 <ul>
-<li><code>shared dependency</code>: a dependency shared by test (not production code)</li>
-<li><code>out-of-process dependency</code>: a dependency hosted by a process other than the program’s execution process (database, stmp server)</li>
-<li><code>private dependency</code>: any dependency that is not shared</li>
+<li><code>shared dependency</code>: a dependency shared by test (not
+production code)</li>
+<li><code>out-of-process dependency</code>: a dependency hosted by a
+process other than the program’s execution process (database, stmp
+server)</li>
+<li><code>private dependency</code>: any dependency that is not
+shared</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2013.png" alt=""></p>
-<h1>Styles of unit testing</h1>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2013.png" /></p>
+<h1 id="styles-of-unit-testing">Styles of unit testing</h1>
 <ul>
 <li><code>output-based</code>: only need to verify the output.</li>
-<li><code>state-based</code>: the underlying code changes its own state, the state of its collaborators, or the state of an out-of-process dependency.</li>
-<li><code>communication-based</code>: use mocks to verify communications between the SUT and its collaborators, to verify the communication situations.</li>
+<li><code>state-based</code>: the underlying code changes its own state,
+the state of its collaborators, or the state of an out-of-process
+dependency.</li>
+<li><code>communication-based</code>: use mocks to verify communications
+between the SUT and its collaborators, to verify the communication
+situations.</li>
 </ul>
 <h2 id="compare">compare</h2>
-<h3 id="protection-against-regressions">protection against regressions</h3>
+<h3 id="protection-against-regressions">protection against
+regressions</h3>
 <ul>
 <li>for the most part, they are not very different</li>
-<li>but overusing the <code>communication-based</code> style can result in shallow tests that verify only a thin slice of code and mock out everything else.</li>
+<li>but overusing the <code>communication-based</code> style can result
+in shallow tests that verify only a thin slice of code and mock out
+everything else.</li>
 </ul>
 <h3 id="fast-feedback">fast feedback</h3>
 <ul>
 <li>for the most part, they are not very different</li>
-<li><code>communication-based</code> testing can be slightly worse because the cost of mocks.</li>
+<li><code>communication-based</code> testing can be slightly worse
+because the cost of mocks.</li>
 </ul>
 <h3 id="resistance-to-refactoring">resistance to refactoring</h3>
 <ul>
 <li><code>state-based</code> is the best one.</li>
-<li><code>communication-based</code> is the worse one, because it is the most vulnerable to false alarms.</li>
+<li><code>communication-based</code> is the worse one, because it is the
+most vulnerable to false alarms.</li>
 </ul>
 <h3 id="maintainability">maintainability</h3>
 <ul>
-<li><code>output-based</code> is the best one, because they do not deal with out-of-process dependencies.</li>
-<li><code>state-based</code> is less maintainable because state verification takes up more space than output verification.</li>
-<li><code>communication-based</code> is the worst one, it requires setting up test doubles and interaction assertions, and that takes up a lot of space.</li>
+<li><code>output-based</code> is the best one, because they do not deal
+with out-of-process dependencies.</li>
+<li><code>state-based</code> is less maintainable because state
+verification takes up more space than output verification.</li>
+<li><code>communication-based</code> is the worst one, it requires
+setting up test doubles and interaction assertions, and that takes up a
+lot of space.</li>
 </ul>
 <h2 id="functional-architecture">functional architecture</h2>
-<p><code>*Functional architecture</code>* maximizes the amount of code written in a purely functional (immutable) way, while minimizing code that deals with side effects. <em>Immutable</em> means unchangeable: once an object is created, its state can’t be modified. This is in contrast to a *mutable* object (changeable object), which can be modified after it is created.</p>
+<p><code>*Functional architecture</code>* maximizes the amount of code
+written in a purely functional (immutable) way, while minimizing code
+that deals with side effects. <em>Immutable</em> means unchangeable:
+once an object is created, its state can’t be modified. This is in
+contrast to a *mutable* object (changeable object), which can be
+modified after it is created.</p>
 <p>Separate two kinds of code:</p>
 <ul>
 <li>code that make a decision</li>
 <li>code that acts upon that decision</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2014.png" alt=""></p>
-<h2 id="Tips">Tips</h2>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2014.png" /></p>
+<h2 id="tips">Tips</h2>
 <ul>
 <li>Moving from using an out-of-process dependency to using mocks.</li>
 <li>Moving from using mocks to using functional architecture</li>
 </ul>
-<h1>Four kinds of code</h1>
+<h1 id="four-kinds-of-code">Four kinds of code</h1>
 <ul>
 <li>Domain model and algorithms</li>
 <li>Trivial code</li>
 <li>Controllers</li>
 <li>Overcomplicated code</li>
 </ul>
-<h2 id="Tips-2">Tips</h2>
-<ol>
-<li>always write completed unit tests for <code>domain model the algorithms</code> code</li>
+<h2 id="tips-1">Tips</h2>
+<ol type="1">
+<li>always write completed unit tests for
+<code>domain model the algorithms</code> code</li>
 <li>never test <code>trivial code</code></li>
 <li>write integration test for <code>controllers</code></li>
-<li>do not write overcomplicated code, try to separate it into <code>domain model and algorithms</code> and <code>controllers</code></li>
+<li>do not write overcomplicated code, try to separate it into
+<code>domain model and algorithms</code> and
+<code>controllers</code></li>
 </ol>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2015.png" alt=""></p>
-<h2 id="Trade-off">Trade-off</h2>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2015.png" /></p>
+<h2 id="trade-off">Trade-off</h2>
 <ul>
 <li>domain model testability</li>
 <li>controller simplicity</li>
 <li>performance</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2016.png" alt=""></p>
-<ol>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2016.png" /></p>
+<ol type="1">
 <li>push all external reads and writes to the edges anyway</li>
 <li>inject the out-of-process dependencies into the domain model</li>
-<li><strong>split the decision-making process into more granular steps</strong> 👈
-<ol>
+<li><strong>split the decision-making process into more granular
+steps</strong> 👈
+<ol type="1">
 <li><code>CanExecute/Execute</code> pattern</li>
 <li>domain events</li>
+</ol></li>
 </ol>
-</li>
-</ol>
-<h2 id="CanExecute-Execute-pattern">CanExecute/Execute pattern</h2>
-<p>You can use <code>CanExecute/Execute</code> pattern to balance the <code>performance</code> and <code>testability</code> , but concedes controller simplicity, but it is manageable in most cases.</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2017.png" alt=""></p>
-<h2 id="Domain-events">Domain events</h2>
-<p>Domain events help track important changes in the domain model, and then convert those changes to calls to out-of-process dependencies. This pattern removes the tracking responsibility from the controller.</p>
+<h2 id="canexecuteexecute-pattern">CanExecute/Execute pattern</h2>
+<p>You can use <code>CanExecute/Execute</code> pattern to balance the
+<code>performance</code> and <code>testability</code> , but concedes
+controller simplicity, but it is manageable in most cases.</p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2017.png" /></p>
+<h2 id="domain-events">Domain events</h2>
+<p>Domain events help track important changes in the domain model, and
+then convert those changes to calls to out-of-process dependencies. This
+pattern removes the tracking responsibility from the controller.</p>
 <ul>
-<li>extract a <code>DomainEvent</code> base class and introduce a base class for all domain classes, which would contain a collection of such events: <code>List&lt;DomainEvent&gt; events</code></li>
+<li>extract a <code>DomainEvent</code> base class and introduce a base
+class for all domain classes, which would contain a collection of such
+events: <code>List&lt;DomainEvent&gt; events</code></li>
 </ul>
-<h1>Integration tests</h1>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2018.png" alt=""></p>
-<ol>
-<li>check as many of the business scenario’s edge cases as possible with unit tests</li>
-<li>use integration tests to cover one happy path, as well as any edge cases that can’t be covered by unit tests</li>
-<li>if there’s no one path that goes through all happy paths, write additional integration tests—as many as needed to capture communications with <strong>every</strong> external system</li>
-<li>attempt to apply the <code>fail-fast principle</code> as a viable alternative to integration test.</li>
+<h1 id="integration-tests">Integration tests</h1>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2018.png" /></p>
+<ol type="1">
+<li>check as many of the business scenario’s edge cases as possible with
+unit tests</li>
+<li>use integration tests to cover one happy path, as well as any edge
+cases that can’t be covered by unit tests</li>
+<li>if there’s no one path that goes through all happy paths, write
+additional integration tests—as many as needed to capture communications
+with <strong>every</strong> external system</li>
+<li>attempt to apply the <code>fail-fast principle</code> as a viable
+alternative to integration test.</li>
 </ol>
-<h2 id="two-types-of-out-of-process-dependencies">two types of out-of-process dependencies</h2>
+<h2 id="two-types-of-out-of-process-dependencies">two types of
+out-of-process dependencies</h2>
 <ul>
-<li><code>managed dependencies</code>: only accessible through your application. it is implement details and should not be mock.</li>
-<li><code>unmanaged dependencies</code>: you don’t have full control over it. It is observable behavior and you should mock it.</li>
+<li><code>managed dependencies</code>: only accessible through your
+application. it is implement details and should not be mock.</li>
+<li><code>unmanaged dependencies</code>: you don’t have full control
+over it. It is observable behavior and you should mock it.</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2019.png" alt=""></p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2019.png" /></p>
 <h2 id="interface-misunderstand">interface misunderstand</h2>
 <div class="tag-plugin quot"><p class="content" type="icon"><img class="icon prefix lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://bu.dusays.com/2022/10/24/63567d3e092ff.png" /><span class="text">🙋🏻‍♀️ Genuine abstractions are discovered, not invented.</span><img class="icon prefix lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://bu.dusays.com/2022/10/24/63567d3e0ab55.png" /></p></div>
-<p>👉🏻 For an interface to be a genuine abstraction, it must have at lease two implemtations.</p>
-<p>The common reasoning behind the use of interfaces is that they help to:</p>
-<ol>
-<li>Abstract out-of-process dependencies, thus achieving loose coupling.</li>
-<li>Add new functionality without changing the existing code, thus adhering to the <code>Open-Closed principle</code></li>
+<p>👉🏻 For an interface to be a genuine abstraction, it must have at
+lease two implemtations.</p>
+<p>The common reasoning behind the use of interfaces is that they help
+to:</p>
+<ol type="1">
+<li>Abstract out-of-process dependencies, thus achieving loose
+coupling.</li>
+<li>Add new functionality without changing the existing code, thus
+adhering to the <code>Open-Closed principle</code></li>
 </ol>
 <p>Misconceptions:</p>
-<ol>
-<li>Interfaces with a single implementation are not abstractions and don’t provide loose coupling any more than concrete classes that implement those interfaces.</li>
-<li>The second reason violates a more foundational principle: <code>YAGNI (You are not gonna need it)</code>.</li>
-<li>The only reason to use interfaces for out-of-process dependencies it is to <code>enable testing</code>!</li>
-<li>Do not introduce interfaces for out-of-process dependencies unless you need to mock out those dependencies.</li>
+<ol type="1">
+<li>Interfaces with a single implementation are not abstractions and
+don’t provide loose coupling any more than concrete classes that
+implement those interfaces.</li>
+<li>The second reason violates a more foundational principle:
+<code>YAGNI (You are not gonna need it)</code>.</li>
+<li>The only reason to use interfaces for out-of-process dependencies it
+is to <code>enable testing</code>!</li>
+<li>Do not introduce interfaces for out-of-process dependencies unless
+you need to mock out those dependencies.</li>
 </ol>
-<h2 id="integration-test-best-practices">integration test best practices</h2>
-<ol>
+<h2 id="integration-test-best-practices">integration test best
+practices</h2>
+<ol type="1">
 <li>making domain model boundaries explicit</li>
 <li>reducing the number of layers in the application</li>
 <li>eliminating circular dependencies</li>
 </ol>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2020.png" alt=""></p>
-<h2 id="maximozing-mock’s-value">maximozing mock’s value</h2>
-<ol>
-<li>
-<p>when mocking, always try to <strong>verify interactions with unmanaged dependencies at the very edges of your system</strong>.</p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2020.png" /></p>
+<h2 id="maximozing-mocks-value">maximozing mock’s value</h2>
+<ol type="1">
+<li><p>when mocking, always try to <strong>verify interactions with
+unmanaged dependencies at the very edges of your system</strong>.</p>
 <blockquote>
-<p>Mocking <code>IBus</code> instead of <code>IMessageBus</code> maximizes the mock’s protection against regressions.</p>
+<p>Mocking <code>IBus</code> instead of <code>IMessageBus</code>
+maximizes the mock’s protection against regressions.</p>
 </blockquote>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2021.png" alt=""></p>
-</li>
-<li>
-<p>A call to an unmanaged dependency goes through several stages before it leaves your application. <strong>Pick the last such stage</strong>. It is the best way to ensure backward compatibility with external systems, which is the goal that mocks help you achieve.</p>
-</li>
-<li>
-<p>In some cases, you can use <code>spy</code> instead of <code>mock</code> for more succinct and expressive.</p>
-<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[<span class="meta">Fact</span>]</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Changing_email_from_corporate_to_non_corporate</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">var</span> busSpy = <span class="keyword">new</span> BusSpy();</span><br><span class="line">    <span class="keyword">var</span> messageBus = <span class="keyword">new</span> MessageBus(busSpy);</span><br><span class="line">    <span class="keyword">var</span> loggerMock = <span class="keyword">new</span> Mock&lt;IDomainLogger&gt;();</span><br><span class="line">    <span class="keyword">var</span> sut = <span class="keyword">new</span> UserController(db, messageBus, loggerMock.Object);</span><br><span class="line">		<span class="comment">/* ... */</span></span><br><span class="line">    busSpy.ShouldSendNumberOfMessages(<span class="number">1</span>)</span><br><span class="line">        .WithEmailChangedMessage(user.UserId, <span class="string">&quot;new@gmail.com&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2021.png" /></p></li>
+<li><p>A call to an unmanaged dependency goes through several stages
+before it leaves your application. <strong>Pick the last such
+stage</strong>. It is the best way to ensure backward compatibility with
+external systems, which is the goal that mocks help you
+achieve.</p></li>
+<li><p>In some cases, you can use <code>spy</code> instead of
+<code>mock</code> for more succinct and expressive.</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[<span class="meta">Fact</span>]</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Changing_email_from_corporate_to_non_corporate</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">var</span> busSpy = <span class="keyword">new</span> BusSpy();</span><br><span class="line">    <span class="keyword">var</span> messageBus = <span class="keyword">new</span> MessageBus(busSpy);</span><br><span class="line">    <span class="keyword">var</span> loggerMock = <span class="keyword">new</span> Mock&lt;IDomainLogger&gt;();</span><br><span class="line">    <span class="keyword">var</span> sut = <span class="keyword">new</span> UserController(db, messageBus, loggerMock.Object);</span><br><span class="line">		<span class="comment">/* ... */</span></span><br><span class="line">    busSpy.ShouldSendNumberOfMessages(<span class="number">1</span>)</span><br><span class="line">        .WithEmailChangedMessage(user.UserId, <span class="string">&quot;new@gmail.com&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
 </ol>
 <h2 id="mocking-best-practices">mocking best practices</h2>
-<ol>
+<ol type="1">
 <li>applying mocks to unmanaged dependencies only</li>
-<li>verifying the interactions with those dependencies at the very edges of your system</li>
+<li>verifying the interactions with those dependencies at the very edges
+of your system</li>
 <li>using mocks in integration tests only, not in unit test</li>
 <li>always verifying the number of calls made to the mock</li>
-<li>do not rely on production code when making assertions. Use a separate set of literals and constants in tests.</li>
+<li>do not rely on production code when making assertions. Use a
+separate set of literals and constants in tests.</li>
 <li>mocking only types that you own
-<ol>
-<li>always write your own adapters on top of third-party libraries and mock those adapters instead of the underlying types.</li>
+<ol type="1">
+<li>always write your own adapters on top of third-party libraries and
+mock those adapters instead of the underlying types.</li>
 <li>only expose features you need from the library</li>
 <li>do that using your project’s domain language</li>
-<li>this guideline dose not apply to in-process dependencies. There is no need to abstract in-memory or managed dependencies. Similarly, there’s no need to abstract an ORM as long as it’s used for accessing a database that isn’t visible to external applications.</li>
+<li>this guideline dose not apply to in-process dependencies. There is
+no need to abstract in-memory or managed dependencies. Similarly,
+there’s no need to abstract an ORM as long as it’s used for accessing a
+database that isn’t visible to external applications.</li>
+</ol></li>
 </ol>
-</li>
-</ol>
-<h1>Testing the database</h1>
+<h1 id="testing-the-database">Testing the database</h1>
 <h2 id="prerequisites">prerequisites</h2>
-<ol>
-<li>
-<p>keeping the database in the source control system</p>
-<ol>
+<ol type="1">
+<li><p>keeping the database in the source control system</p>
+<ol type="1">
 <li>database schemas</li>
 <li>reference data</li>
-</ol>
-</li>
-<li>
-<p>using a separate database instance for every developer</p>
-</li>
-<li>
-<p>applying the migration-based approach to database delivery</p>
+</ol></li>
+<li><p>using a separate database instance for every developer</p></li>
+<li><p>applying the migration-based approach to database delivery</p>
 <blockquote>
-<p>applying every modification to the database schema (including reference data) through migrations. Do not modify migrations once they are committed to the source control. If a migration is incorrect, create a new migration instead of fixing the old one. Make exceptions to this rule only when the incorrect migration can lead to data loss.</p>
-</blockquote>
-</li>
+<p>applying every modification to the database schema (including
+reference data) through migrations. Do not modify migrations once they
+are committed to the source control. If a migration is incorrect, create
+a new migration instead of fixing the old one. Make exceptions to this
+rule only when the incorrect migration can lead to data loss.</p>
+</blockquote></li>
 </ol>
 <h2 id="transaction">transaction</h2>
-<p>split the <code>Database</code> class into <code>repositories</code> and a <code>transaction</code>:</p>
+<p>split the <code>Database</code> class into <code>repositories</code>
+and a <code>transaction</code>:</p>
 <ul>
-<li><code>repositories</code> are classes that enable access to and modification of the data in the database.</li>
-<li><code>transaction</code> is a class that either commits or rolls back data updates in full. This will be a custom class relying on the underlying database’s transactions to provide atomicity of data modification.</li>
+<li><code>repositories</code> are classes that enable access to and
+modification of the data in the database.</li>
+<li><code>transaction</code> is a class that either commits or rolls
+back data updates in full. This will be a custom class relying on the
+underlying database’s transactions to provide atomicity of data
+modification.</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2022.png" alt=""></p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2023.png" alt=""></p>
-<h2 id="tips">tips</h2>
-<ol>
-<li>use at least three transactions or units of work in an integrations test: one per each arrange, act and assert section.</li>
-<li>your tests should not depend on the state of the database. Your tests should bring that state to the required condition on their own.</li>
-<li>create two collections for unit and integrations, and then disable test parallelization in the collection with the integration test.</li>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2022.png" /></p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image%2023.png" /></p>
+<h2 id="tips-2">tips</h2>
+<ol type="1">
+<li>use at least three transactions or units of work in an integrations
+test: one per each arrange, act and assert section.</li>
+<li>your tests should not depend on the state of the database. Your
+tests should bring that state to the required condition on their
+own.</li>
+<li>create two collections for unit and integrations, and then disable
+test parallelization in the collection with the integration test.</li>
 <li>clean up data at the beginning of a test</li>
-<li>write the SQL script manually. It’s simpler and gives you more granular control over the deletion process.</li>
-<li>the best way to shorten integration is by extracting technical, non-business-related bits into private methods or helper classes.</li>
-<li>only the most complex or important read operations should be test, disregard the rest.</li>
-<li>do not test repositories directly, only as part of the overarching integration test suite.</li>
+<li>write the SQL script manually. It’s simpler and gives you more
+granular control over the deletion process.</li>
+<li>the best way to shorten integration is by extracting technical,
+non-business-related bits into private methods or helper classes.</li>
+<li>only the most complex or important read operations should be test,
+disregard the rest.</li>
+<li>do not test repositories directly, only as part of the overarching
+integration test suite.</li>
 </ol>
-<h1>Unit testing anti-patterns</h1>
+<h1 id="unit-testing-anti-patterns">Unit testing anti-patterns</h1>
 <blockquote>
 <p>⚠️ Do not do the things like below!</p>
 </blockquote>
-<ol>
-<li>
-<p>unit testing private methods</p>
+<ol type="1">
+<li><p>unit testing private methods</p>
 <blockquote>
-<p>Private methods are implementation details! Just test observable behaviors!</p>
+<p>Private methods are implementation details! Just test observable
+behaviors!</p>
 </blockquote>
 <blockquote>
-<p><strong>If the private method is too complex to be tested as part of the public API that uses it, that’s an indication of a missing abstraction. Extract this abstraction into a separate class instead of making the private method public.</strong></p>
-</blockquote>
-</li>
-<li>
-<p>expose private state</p>
-</li>
-<li>
-<p>leaking domain knowledges to tests</p>
-<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">CalculatorTests</span></span><br><span class="line">&#123;</span><br><span class="line">    [<span class="meta">Fact</span>]</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Adding_two_numbers</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">int</span> value1 = <span class="number">1</span>;</span><br><span class="line">        <span class="built_in">int</span> value2 = <span class="number">3</span>;</span><br><span class="line">        <span class="built_in">int</span> expected = value1 + value2;   <span class="comment">// &lt;-----The leakage</span></span><br><span class="line">        <span class="comment">// int expected = 4 // the better one</span></span><br><span class="line">        <span class="built_in">int</span> actual = Calculator.Add(value1, value2);</span><br><span class="line">        Assert.Equal(expected, actual);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li>
-<p>code pollution</p>
+<p><strong>If the private method is too complex to be tested as part of
+the public API that uses it, that’s an indication of a missing
+abstraction. Extract this abstraction into a separate class instead of
+making the private method public.</strong></p>
+</blockquote></li>
+<li><p>expose private state</p></li>
+<li><p>leaking domain knowledges to tests</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">CalculatorTests</span></span><br><span class="line">&#123;</span><br><span class="line">    [<span class="meta">Fact</span>]</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Adding_two_numbers</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">int</span> value1 = <span class="number">1</span>;</span><br><span class="line">        <span class="built_in">int</span> value2 = <span class="number">3</span>;</span><br><span class="line">        <span class="built_in">int</span> expected = value1 + value2;   <span class="comment">// &lt;-----The leakage</span></span><br><span class="line">        <span class="comment">// int expected = 4 // the better one</span></span><br><span class="line">        <span class="built_in">int</span> actual = Calculator.Add(value1, value2);</span><br><span class="line">        Assert.Equal(expected, actual);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>code pollution</p>
 <blockquote>
-<p>Code pollution is adding production code that’s only needed for testing.</p>
-</blockquote>
-</li>
-<li>
-<p>mocking concrete classes</p>
-</li>
-<li>
-<p>working with time</p>
-</li>
+<p>Code pollution is adding production code that’s only needed for
+testing.</p>
+</blockquote></li>
+<li><p>mocking concrete classes</p></li>
+<li><p>working with time</p></li>
 </ol>
 
 <div class="article-footer fs14">
@@ -539,7 +641,8 @@
       <div class="body">
         <ul>
         <li class="post-title">
-          <p><a target="_blank" rel="noopener" href="https://www.manning.com/books/unit-testing">Unit Testing Principles, Practices, and Patterns</a></p>
+          <p><a target="_blank" rel="noopener" href="https://www.manning.com/books/unit-testing">Unit Testing
+Principles, Practices, and Patterns</a></p>
 
         </li>
         </ul>
@@ -548,7 +651,9 @@
     
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -588,15 +693,24 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">Coverage limitations</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">The goal of unit testing</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">What is a unit test?</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">How to structure a unit test?</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">Four pillars of a good unit test</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#The-intrinsic-connection-between-the-first-two-attributes"><span class="toc-text">The intrinsic connection between the first two attributes</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">An ideal test</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#black-box-and-white-box-testing"><span class="toc-text">black-box and white-box testing</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">Mock</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#types-of-test-doubles"><span class="toc-text">types of test doubles</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Observable-behavior"><span class="toc-text">Observable behavior</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Mocks-and-test-fragility"><span class="toc-text">Mocks and test fragility</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Types-of-dependencies"><span class="toc-text">Types of dependencies</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">Styles of unit testing</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#compare"><span class="toc-text">compare</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#protection-against-regressions"><span class="toc-text">protection against regressions</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#fast-feedback"><span class="toc-text">fast feedback</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#resistance-to-refactoring"><span class="toc-text">resistance to refactoring</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#maintainability"><span class="toc-text">maintainability</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#functional-architecture"><span class="toc-text">functional architecture</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Tips"><span class="toc-text">Tips</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">Four kinds of code</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Tips-2"><span class="toc-text">Tips</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Trade-off"><span class="toc-text">Trade-off</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#CanExecute-Execute-pattern"><span class="toc-text">CanExecute&#x2F;Execute pattern</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Domain-events"><span class="toc-text">Domain events</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">Integration tests</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#two-types-of-out-of-process-dependencies"><span class="toc-text">two types of out-of-process dependencies</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#interface-misunderstand"><span class="toc-text">interface misunderstand</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#integration-test-best-practices"><span class="toc-text">integration test best practices</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#maximozing-mock%E2%80%99s-value"><span class="toc-text">maximozing mock’s value</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#mocking-best-practices"><span class="toc-text">mocking best practices</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">Testing the database</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#prerequisites"><span class="toc-text">prerequisites</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#transaction"><span class="toc-text">transaction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#tips"><span class="toc-text">tips</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">Unit testing anti-patterns</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#coverage-limitations"><span class="toc-text">Coverage limitations</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#the-goal-of-unit-testing"><span class="toc-text">The goal of unit testing</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#what-is-a-unit-test"><span class="toc-text">What is a unit test?</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#how-to-structure-a-unit-test"><span class="toc-text">How to structure a unit test?</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#four-pillars-of-a-good-unit-test"><span class="toc-text">Four pillars of a good unit
+test</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#the-intrinsic-connection-between-the-first-two-attributes"><span class="toc-text">The
+intrinsic connection between the first two attributes</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#an-ideal-test"><span class="toc-text">An ideal test</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#black-box-and-white-box-testing"><span class="toc-text">black-box and white-box
+testing</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#mock"><span class="toc-text">Mock</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#types-of-test-doubles"><span class="toc-text">types of test doubles</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#observable-behavior"><span class="toc-text">Observable behavior</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#mocks-and-test-fragility"><span class="toc-text">Mocks and test fragility</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#types-of-dependencies"><span class="toc-text">Types of dependencies</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#styles-of-unit-testing"><span class="toc-text">Styles of unit testing</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#compare"><span class="toc-text">compare</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#protection-against-regressions"><span class="toc-text">protection against
+regressions</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#fast-feedback"><span class="toc-text">fast feedback</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#resistance-to-refactoring"><span class="toc-text">resistance to refactoring</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#maintainability"><span class="toc-text">maintainability</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#functional-architecture"><span class="toc-text">functional architecture</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#tips"><span class="toc-text">Tips</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#four-kinds-of-code"><span class="toc-text">Four kinds of code</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#tips-1"><span class="toc-text">Tips</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#trade-off"><span class="toc-text">Trade-off</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#canexecuteexecute-pattern"><span class="toc-text">CanExecute&#x2F;Execute pattern</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#domain-events"><span class="toc-text">Domain events</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#integration-tests"><span class="toc-text">Integration tests</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#two-types-of-out-of-process-dependencies"><span class="toc-text">two types of
+out-of-process dependencies</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#interface-misunderstand"><span class="toc-text">interface misunderstand</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#integration-test-best-practices"><span class="toc-text">integration test best
+practices</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#maximozing-mocks-value"><span class="toc-text">maximozing mock’s value</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#mocking-best-practices"><span class="toc-text">mocking best practices</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#testing-the-database"><span class="toc-text">Testing the database</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#prerequisites"><span class="toc-text">prerequisites</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#transaction"><span class="toc-text">transaction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#tips-2"><span class="toc-text">tips</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#unit-testing-anti-patterns"><span class="toc-text">Unit testing anti-patterns</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

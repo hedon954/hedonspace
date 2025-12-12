@@ -27,18 +27,12 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文深入剖析 gRPC 的核心设计原理、性能优势、应用场景及其与传统 REST 架构的差异，助你真正理解它在现代分布式系统中的不可或缺地位。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201121921362.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201124042969.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201125109843.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201125118197.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201132124198.png">
 <meta property="article:published_time" content="2025-12-01T03:08:00.000Z">
 <meta property="article:modified_time" content="2025-12-01T05:43:12.847Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="计算机网络">
 <meta property="article:tag" content="gRPC">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201121921362.png">
   
   
   
@@ -105,18 +99,31 @@
     </iframe>
     </div>
     
-<h2 id="1-gRPC">1. gRPC</h2>
-<p>要彻底掌握 gRPC，我们不能仅停留在会写 <code>.proto</code> 文件和生成代码的层面。我们需要从 <strong>第一性原理</strong> 出发，理解它到底解决了什么问题，它是如何构建在网络协议之上的，以及在生产环境中会遇到哪些真实挑战。</p>
-<p>特此声明，本篇是笔者与 Google Gemini 3Pro 共创所作，非常庆幸在当今 AI 时代下获取知识已是如此便利，且也为学习者从第一性原理理解所学知识大大降低了门槛。不过本篇的篇章安排和叙述逻辑，均由笔者把控和审阅，欢迎放心阅读。</p>
-<h3 id="1-1-为什么需要-gRPC">1.1 为什么需要 gRPC</h3>
-<p>在深入技术细节前，必须理解 gRPC 诞生的背景。它本质上是 <strong>RPC (Remote Procedure Call)</strong> 技术的一种现代演进</p>
-<p>RPC 的核心愿景是：<strong>让调用远程服务就像调用本地函数一样简单。</strong></p>
+<h2 id="grpc">1. gRPC</h2>
+<p>要彻底掌握 gRPC，我们不能仅停留在会写 <code>.proto</code>
+文件和生成代码的层面。我们需要从 <strong>第一性原理</strong>
+出发，理解它到底解决了什么问题，它是如何构建在网络协议之上的，以及在生产环境中会遇到哪些真实挑战。</p>
+<p>特此声明，本篇是笔者与 Google Gemini 3Pro 共创所作，非常庆幸在当今 AI
+时代下获取知识已是如此便利，且也为学习者从第一性原理理解所学知识大大降低了门槛。不过本篇的篇章安排和叙述逻辑，均由笔者把控和审阅，欢迎放心阅读。</p>
+<h3 id="为什么需要-grpc">1.1 为什么需要 gRPC</h3>
+<p>在深入技术细节前，必须理解 gRPC 诞生的背景。它本质上是 <strong>RPC
+(Remote Procedure Call)</strong> 技术的一种现代演进</p>
+<p>RPC
+的核心愿景是：<strong>让调用远程服务就像调用本地函数一样简单。</strong></p>
 <ul>
-<li><strong>本地函数：</strong> <code>result = calculator.add(a, b)</code>，在内存中跳转，极快。</li>
-<li><strong>远程调用：</strong> <code>result = request(&quot;http://api/add&quot;, &#123;a, b&#125;)</code>，需要跨越网络，面临延迟、丢包、序列化开销。</li>
+<li><strong>本地函数：</strong>
+<code>result = calculator.add(a, b)</code>，在内存中跳转，极快。</li>
+<li><strong>远程调用：</strong>
+<code>result = request("http://api/add", &#123;a, b&#125;)</code>，需要跨越网络，面临延迟、丢包、序列化开销。</li>
 </ul>
 <p>要掌握 gRPC，首先要明白它为什么要革 REST 的命：</p>
 <table>
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 22%" />
+<col style="width: 25%" />
+<col style="width: 46%" />
+</colgroup>
 <thead>
 <tr>
 <th><strong>特性</strong></th>
@@ -136,13 +143,15 @@
 <td><strong>传输</strong></td>
 <td>请求/响应模型，连接复用差</td>
 <td>多路复用 (Multiplexing)</td>
-<td>HTTP/2 允许在一个 TCP 连接上并行处理多个请求，解决了队头阻塞 (Head-of-Line Blocking)。</td>
+<td>HTTP/2 允许在一个 TCP 连接上并行处理多个请求，解决了队头阻塞
+(Head-of-Line Blocking)。</td>
 </tr>
 <tr>
 <td><strong>约束</strong></td>
 <td>弱类型，依赖文档 (OpenAPI)</td>
 <td>强类型，依赖 IDL (.proto)</td>
-<td><strong>IDL (Interface Definition Language)</strong> 是 gRPC 的核心，它是强契约，保证了客户端和服务端的数据结构绝对一致。</td>
+<td><strong>IDL (Interface Definition Language)</strong> 是 gRPC
+的核心，它是强契约，保证了客户端和服务端的数据结构绝对一致。</td>
 </tr>
 <tr>
 <td><strong>方向</strong></td>
@@ -153,67 +162,108 @@
 </tbody>
 </table>
 <blockquote>
-<p>gRPC 的高性能并非魔法，而是通过 <strong>空间效率</strong>（Protobuf 压缩率高）和 <strong>时间效率</strong>（HTTP/2 并发高、序列化快）的物理层优化换来的。</p>
+<p>gRPC 的高性能并非魔法，而是通过 <strong>空间效率</strong>（Protobuf
+压缩率高）和 <strong>时间效率</strong>（HTTP/2
+并发高、序列化快）的物理层优化换来的。</p>
 </blockquote>
-<h3 id="1-2-两大基石">1.2 两大基石</h3>
-<h4 id="1-2-1-Protocol-Buffers-Protobuf">1.2.1 Protocol Buffers (Protobuf)</h4>
-<p>不要只把它当作 XML/JSON 的替代品，要理解其 <strong>编码原理</strong>。</p>
+<h3 id="两大基石">1.2 两大基石</h3>
+<h4 id="protocol-buffers-protobuf">1.2.1 Protocol Buffers
+(Protobuf)</h4>
+<p>不要只把它当作 XML/JSON 的替代品，要理解其
+<strong>编码原理</strong>。</p>
 <ul>
-<li><strong>TLV 格式：</strong> Protobuf 采用 <code>Tag - Length - Value</code> 的紧凑存储方式，没有字段名（字段名在编译后的代码中），只有字段编号 (Field ID)。</li>
-<li><strong>Varint 编码：</strong> 对于整数，使用变长编码（Base 128 Varints）。例如数字 <code>1</code> 只需要 1 个字节存储，而不是标准的 4 个字节 (int32)。</li>
-<li><strong>向后兼容性：</strong> 掌握如何安全地增加、删除字段而不破坏现有的客户端（永远不要修改已存在的 Field ID）。</li>
+<li><strong>TLV 格式：</strong> Protobuf 采用
+<code>Tag - Length - Value</code>
+的紧凑存储方式，没有字段名（字段名在编译后的代码中），只有字段编号
+(Field ID)。</li>
+<li><strong>Varint 编码：</strong> 对于整数，使用变长编码（Base 128
+Varints）。例如数字 <code>1</code> 只需要 1 个字节存储，而不是标准的 4
+个字节 (int32)。</li>
+<li><strong>向后兼容性：</strong>
+掌握如何安全地增加、删除字段而不破坏现有的客户端（永远不要修改已存在的
+Field ID）。</li>
 </ul>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// The greeter service definition.</span></span><br><span class="line">service Greeter &#123;</span><br><span class="line">  <span class="comment">// Sends a greeting</span></span><br><span class="line">  rpc SayHello (HelloRequest) returns (HelloReply) &#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// The request message containing the user&#x27;s name.</span></span><br><span class="line">message HelloRequest &#123;</span><br><span class="line">  <span class="type">string</span> name = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// The response message containing the greetings</span></span><br><span class="line">message HelloReply &#123;</span><br><span class="line">  <span class="type">string</span> message = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="1-2-2-HTTP-2-传输机制">1.2.2 HTTP/2 传输机制</h4>
+<h4 id="http2-传输机制">1.2.2 HTTP/2 传输机制</h4>
 <p>gRPC 强依赖 HTTP/2。你需要理解以下概念在 gRPC 中如何映射：</p>
 <ul>
-<li><strong>Frame (帧)：</strong> HTTP/2 通信的最小单位。gRPC 的数据被封装在 DATA 帧中。</li>
+<li><strong>Frame (帧)：</strong> HTTP/2 通信的最小单位。gRPC
+的数据被封装在 DATA 帧中。</li>
 <li><strong>Stream (流)：</strong> 一个 RPC 调用对应一个 Stream。</li>
-<li><strong>HPACK：</strong> HTTP 头压缩。RPC 调用往往 Header 重复度高，HPACK 能极大减少带宽消耗。</li>
+<li><strong>HPACK：</strong> HTTP 头压缩。RPC 调用往往 Header
+重复度高，HPACK 能极大减少带宽消耗。</li>
 </ul>
-<h3 id="1-3-四种模式与工程化">1.3 四种模式与工程化</h3>
-<h4 id="1-3-1-四种通信模式">1.3.1 四种通信模式</h4>
+<h3 id="四种模式与工程化">1.3 四种模式与工程化</h3>
+<h4 id="四种通信模式">1.3.1 四种通信模式</h4>
 <ul>
 <li><strong>Unary RPC：</strong> 一问一答。适用于常规 API。</li>
-<li><strong>Server Streaming：</strong> 客户端发一个，服务端回一堆。适用于：<strong>大列表数据</strong>、<strong>实时行情推送</strong>。</li>
-<li><strong>Client Streaming：</strong> 客户端发一堆，服务端回一个。适用于：<strong>物联网传感器上报</strong>、<strong>大文件上传</strong>。</li>
-<li><strong>Bidirectional Streaming：</strong> 双向实时对话。适用于：<strong>聊天室</strong>、<strong>实时游戏同步</strong>。</li>
+<li><strong>Server Streaming：</strong>
+客户端发一个，服务端回一堆。适用于：<strong>大列表数据</strong>、<strong>实时行情推送</strong>。</li>
+<li><strong>Client Streaming：</strong>
+客户端发一堆，服务端回一个。适用于：<strong>物联网传感器上报</strong>、<strong>大文件上传</strong>。</li>
+<li><strong>Bidirectional Streaming：</strong>
+双向实时对话。适用于：<strong>聊天室</strong>、<strong>实时游戏同步</strong>。</li>
 </ul>
-<h4 id="1-3-2-Interceptor-拦截器">1.3.2 Interceptor (拦截器)</h4>
+<h4 id="interceptor-拦截器">1.3.2 Interceptor (拦截器)</h4>
 <p>这是 gRPC 的中间件机制。彻底掌握它是做架构设计的关键。</p>
 <ul>
-<li><strong>用途：</strong> 鉴权 (Auth)、日志 (Logging)、监控 (Metrics)、分布式追踪 (Tracing)。</li>
-<li><strong>实践：</strong> 学会编写一个 <code>UnaryServerInterceptor</code>，在其中计算每个请求的耗时并打印日志。</li>
+<li><strong>用途：</strong> 鉴权 (Auth)、日志 (Logging)、监控
+(Metrics)、分布式追踪 (Tracing)。</li>
+<li><strong>实践：</strong> 学会编写一个
+<code>UnaryServerInterceptor</code>，在其中计算每个请求的耗时并打印日志。</li>
 </ul>
 <blockquote>
-<p>笔者的开源项目 <a target="_blank" rel="noopener" href="https://github.com/hedon954/goapm">goapm</a> 中提供了 gRPC Server 和 Client 的链路追踪封装，有需要的读者可参考。</p>
+<p>笔者的开源项目 <a target="_blank" rel="noopener" href="https://github.com/hedon954/goapm">goapm</a>
+中提供了 gRPC Server 和 Client 的链路追踪封装，有需要的读者可参考。</p>
 </blockquote>
-<h4 id="1-3-3-Error-Handling-错误处理">1.3.3 Error Handling (错误处理)</h4>
+<h4 id="error-handling-错误处理">1.3.3 Error Handling (错误处理)</h4>
 <p>gRPC 的错误不是 HTTP Status Code（虽然底层映射了）。</p>
 <ul>
-<li><strong>gRPC Status Code：</strong> 掌握标准码的含义，如 <code>OK(0)</code>, <code>CANCELLED(1)</code>, <code>DEADLINE_EXCEEDED(4)</code>, <code>UNAVAILABLE(14)</code>。</li>
-<li><strong>Rich Error Model：</strong> 学会使用 <code>google.rpc.Status</code> 传递更详细的错误信息（如具体的字段校验错误），而不仅是一个简单的错误码。</li>
+<li><strong>gRPC Status Code：</strong> 掌握标准码的含义，如
+<code>OK(0)</code>, <code>CANCELLED(1)</code>,
+<code>DEADLINE_EXCEEDED(4)</code>, <code>UNAVAILABLE(14)</code>。</li>
+<li><strong>Rich Error Model：</strong> 学会使用
+<code>google.rpc.Status</code>
+传递更详细的错误信息（如具体的字段校验错误），而不仅是一个简单的错误码。</li>
 </ul>
-<h3 id="1-4-注意事项">1.4 注意事项</h3>
-<h4 id="1-4-1-负载均衡的陷阱">1.4.1 负载均衡的陷阱</h4>
+<h3 id="注意事项">1.4 注意事项</h3>
+<h4 id="负载均衡的陷阱">1.4.1 负载均衡的陷阱</h4>
 <ul>
-<li><strong>问题：</strong> gRPC 基于 HTTP/2，连接是 <strong>长连接 (Persistent Connection)</strong>。一旦连接建立，后续请求都在同一个 TCP 连接中复用。</li>
-<li><strong>后果：</strong> 传统的 L4 负载均衡器（如 AWS NLB、LVS）只在连接建立时起作用。结果就是：<strong>一个后端实例累死，其他实例闲死。</strong></li>
+<li><strong>问题：</strong> gRPC 基于 HTTP/2，连接是 <strong>长连接
+(Persistent Connection)</strong>。一旦连接建立，后续请求都在同一个 TCP
+连接中复用。</li>
+<li><strong>后果：</strong> 传统的 L4 负载均衡器（如 AWS
+NLB、LVS）只在连接建立时起作用。结果就是：<strong>一个后端实例累死，其他实例闲死。</strong></li>
 <li><strong>解决方案：</strong>
 <ul>
-<li><strong>客户端负载均衡 (Client-side LB)：</strong> 客户端感知所有后端 IP（需配合 Service Discovery，如 Consul/Etcd），自己做轮询。</li>
-<li><strong>代理负载均衡 (Proxy LB / L7 LB)：</strong> 使用支持 HTTP/2 的网关（如 Envoy, Nginx）来拆解请求并分发。</li>
+<li><strong>客户端负载均衡 (Client-side LB)：</strong>
+客户端感知所有后端 IP（需配合 Service Discovery，如
+Consul/Etcd），自己做轮询。</li>
+<li><strong>代理负载均衡 (Proxy LB / L7 LB)：</strong> 使用支持 HTTP/2
+的网关（如 Envoy, Nginx）来拆解请求并分发。</li>
+</ul></li>
 </ul>
-</li>
-</ul>
-<h4 id="14-2-Deadlines-超时控制">14.2 Deadlines (超时控制)</h4>
+<h4 id="deadlines-超时控制">14.2 Deadlines (超时控制)</h4>
 <ul>
 <li><strong>原则：</strong> 永远不要发起没有 Deadline 的 RPC 调用。</li>
-<li><strong>级联故障：</strong> 如果服务 A 调 B，B 调 C，A 必须设置超时，且该超时上下文 (Context) 应该传递给 B 和 C。如果 A 超时了，C 的运算也应该立即取消 (Context Cancel)，避免浪费资源。</li>
+<li><strong>级联故障：</strong> 如果服务 A 调 B，B 调 C，A
+必须设置超时，且该超时上下文 (Context) 应该传递给 B 和 C。如果 A
+超时了，C 的运算也应该立即取消 (Context Cancel)，避免浪费资源。</li>
 </ul>
-<h2 id="2-数据编码">2. 数据编码</h2>
-<p>为了更深入理解 gRPC 的高性能，从根本上掌握为什么 gRPC 要使用 Protobuf 编码格式。本篇将参考 <a target="_blank" rel="noopener" href="https://book.douban.com/subject/26197294/">Designing Data-Intensive Applications(DDIA)</a> 一书，对业内常用的数据编码格式进行统一梳理。</p>
+<h2 id="数据编码">2. 数据编码</h2>
+<p>为了更深入理解 gRPC 的高性能，从根本上掌握为什么 gRPC 要使用 Protobuf
+编码格式。本篇将参考 <a
+target="_blank" rel="noopener" href="https://book.douban.com/subject/26197294/">Designing
+Data-Intensive Applications(DDIA)</a>
+一书，对业内常用的数据编码格式进行统一梳理。</p>
 <table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 5%" />
+<col style="width: 15%" />
+<col style="width: 42%" />
+<col style="width: 25%" />
+</colgroup>
 <thead>
 <tr>
 <th><strong>协议</strong></th>
@@ -235,251 +285,386 @@
 <td><strong>MessagePack</strong></td>
 <td>二进制</td>
 <td>无 (Schema-less)</td>
-<td><strong>二进制版 JSON</strong>。旨在无缝替换 JSON 以换取更小的体积，无需预定义 IDL。</td>
+<td><strong>二进制版 JSON</strong>。旨在无缝替换 JSON
+以换取更小的体积，无需预定义 IDL。</td>
 <td>Redis 缓存存储、内部简单服务交互。</td>
 </tr>
 <tr>
 <td><strong>Protobuf</strong></td>
 <td>二进制</td>
 <td>强 (Static IDL)</td>
-<td><strong>微服务契约</strong>。强调字段编号 (Tag) 管理，极致的向后兼容性。</td>
+<td><strong>微服务契约</strong>。强调字段编号 (Tag)
+管理，极致的向后兼容性。</td>
 <td>gRPC、微服务内部通信。</td>
 </tr>
 <tr>
 <td><strong>Thrift</strong></td>
 <td>二进制</td>
 <td>强 (Static IDL)</td>
-<td><strong>全栈 RPC</strong>。不仅是序列化，还包含完整的 RPC 传输层和框架实现。</td>
+<td><strong>全栈 RPC</strong>。不仅是序列化，还包含完整的 RPC
+传输层和框架实现。</td>
 <td>早期大规模跨语言服务 (Facebook 系)。</td>
 </tr>
 <tr>
 <td><strong>Avro</strong></td>
 <td>二进制</td>
 <td>动态 (Schema w/ Data)</td>
-<td><strong>大数据吞吐</strong>。Schema 与数据分离或随数据头传输，去掉 Tag 冗余。</td>
+<td><strong>大数据吞吐</strong>。Schema 与数据分离或随数据头传输，去掉
+Tag 冗余。</td>
 <td>Hadoop、Kafka、数据湖 (Data Lake)。</td>
 </tr>
 </tbody>
 </table>
-<h3 id="2-1-JSON">2.1 JSON</h3>
+<h3 id="json">2.1 JSON</h3>
 <blockquote>
 <p>基于文本的、自描述 (Self-describing) 的键值对格式。</p>
 </blockquote>
 <div class="tag-plugin link dis-select"><a class="link-card rich" title="" href="https://www.json.org/json-en.html" target="_blank" rel="external nofollow noopener noreferrer" cardlink api="https://site-info-api-hedon.vercel.app/api/v1?url=https://www.json.org/json-en.html" autofill="title,icon,desc"><div class="top"><div class="lazy img" data-bg="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/link/8f277b4ee0ecd.svg"></div><span class="cap link footnote">https://www.json.org/json-en.html</span></div><div class="bottom"><span class="title">https://www.json.org/json-en.html</span><span class="cap desc footnote"></span></div></a></div>
 <p>JSON 实际上是一长串 <strong>Unicode 字符</strong>。</p>
 <ul>
-<li><strong>自描述性：</strong> 数据中包含了结构信息（<code>&#123;</code>, <code>&#125;</code>, <code>[</code>, <code>]</code>）和字段名称。这意味着接收端不需要任何预先的沟通，只要有一个标准的 JSON 解析器就能读懂。</li>
-<li><strong>编码方式：</strong> 数字存储为字符串（ASCII/UTF-8）。例如整数 <code>12345</code> 在内存中通常是 4 字节整数，但在 JSON 中变成了 5 个字符 <code>&quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;</code>，占用 5 个字节。</li>
+<li><strong>自描述性：</strong> 数据中包含了结构信息（<code>&#123;</code>,
+<code>&#125;</code>, <code>[</code>,
+<code>]</code>）和字段名称。这意味着接收端不需要任何预先的沟通，只要有一个标准的
+JSON 解析器就能读懂。</li>
+<li><strong>编码方式：</strong>
+数字存储为字符串（ASCII/UTF-8）。例如整数 <code>12345</code>
+在内存中通常是 4 字节整数，但在 JSON 中变成了 5 个字符
+<code>"1", "2", "3", "4", "5"</code>，占用 5 个字节。</li>
 </ul>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">	<span class="attr">&quot;userName&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Martin&quot;</span><span class="punctuation">,</span></span><br><span class="line">	<span class="attr">&quot;favoriteNumber&quot;</span><span class="punctuation">:</span> <span class="number">1337</span><span class="punctuation">,</span></span><br><span class="line">	<span class="attr">&quot;interests&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;daydreaming&quot;</span><span class="punctuation">,</span> <span class="string">&quot;hacking&quot;</span><span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-<p>对于上面的例子，去掉空格后，JSON 格式需要占用 <font color="red">81 bytes</font>。</p>
-<h3 id="2-2-Message-Pack">2.2 Message Pack</h3>
+<p>对于上面的例子，去掉空格后，JSON 格式需要占用 <font color="red">81
+bytes</font>。</p>
+<h3 id="message-pack">2.2 Message Pack</h3>
 <blockquote>
 <p>二进制的 JSON (Binary JSON)。</p>
 </blockquote>
 <div class="tag-plugin link dis-select"><a class="link-card rich" title="" href="https://msgpack.org/" target="_blank" rel="external nofollow noopener noreferrer" cardlink api="https://site-info-api-hedon.vercel.app/api/v1?url=https://msgpack.org/" autofill="title,icon,desc"><div class="top"><div class="lazy img" data-bg="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/link/8f277b4ee0ecd.svg"></div><span class="cap link footnote">https://msgpack.org/</span></div><div class="bottom"><span class="title">https://msgpack.org/</span><span class="cap desc footnote"></span></div></a></div>
-<p>MessagePack 的目标是：<strong>在保留 JSON 的灵活性的前提下，极致压缩体积和提升解析速度。</strong> 它不需要 Schema，依然存储 Key，但它引入了 <strong>类型前缀 (Type Prefix)</strong> 系统。</p>
-<p>对于 JSON <code>&#123;&quot;a&quot;: 1&#125;</code>，MessagePack 的二进制流可能如下：</p>
-<ol>
+<p>MessagePack 的目标是：<strong>在保留 JSON
+的灵活性的前提下，极致压缩体积和提升解析速度。</strong> 它不需要
+Schema，依然存储 Key，但它引入了 <strong>类型前缀 (Type Prefix)</strong>
+系统。</p>
+<p>对于 JSON <code>&#123;"a": 1&#125;</code>，MessagePack 的二进制流可能如下：</p>
+<ol type="1">
 <li><strong>Map 标记 (1 byte):</strong> <code>0x81</code>
 <ul>
 <li><code>0x8</code> 表示这是一个 Map。</li>
 <li><code>0x1</code> 表示这个 Map 有 1 个元素。</li>
-</ul>
-</li>
+</ul></li>
 <li><strong>Key 标记 (1 byte):</strong> <code>0xa1</code>
 <ul>
 <li><code>0xa</code> 表示这是一个 String。</li>
 <li><code>0x1</code> 表示字符串长度为 1。</li>
-</ul>
-</li>
-<li><strong>Key 内容 (1 byte):</strong> <code>0x61</code> (ASCII ‘a’)</li>
-<li><strong>Value (1 byte):</strong> <code>0x01</code>，MessagePack 使用 <code>FixInt</code>，对于小整数，直接用一个字节存值，不需要额外的类型标记。</li>
+</ul></li>
+<li><strong>Key 内容 (1 byte):</strong> <code>0x61</code> (ASCII
+'a')</li>
+<li><strong>Value (1 byte):</strong> <code>0x01</code>，MessagePack 使用
+<code>FixInt</code>，对于小整数，直接用一个字节存值，不需要额外的类型标记。</li>
 </ol>
 <p>与 JSON 的核心差异：</p>
 <ul>
-<li><strong>无分隔符：</strong> 它不需要 <code>&#123;</code> 或 <code>:</code>。解析器读到 <code>0xa1</code> 就知道接下来读 1 个字节作为字符串，<strong>无需扫描</strong>，直接进行内存拷贝，速度极快。</li>
-<li><strong>Key 依然存在：</strong> 它虽然压缩了结构，但 <code>&quot;userName&quot;</code> 这种字段名依然被完整地编码进去了。</li>
+<li><strong>无分隔符：</strong> 它不需要 <code>&#123;</code> 或
+<code>:</code>。解析器读到 <code>0xa1</code> 就知道接下来读 1
+个字节作为字符串，<strong>无需扫描</strong>，直接进行内存拷贝，速度极快。</li>
+<li><strong>Key 依然存在：</strong> 它虽然压缩了结构，但
+<code>"userName"</code> 这种字段名依然被完整地编码进去了。</li>
 </ul>
 <p>我们来看相同的例子：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">	<span class="attr">&quot;userName&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Martin&quot;</span><span class="punctuation">,</span></span><br><span class="line">	<span class="attr">&quot;favoriteNumber&quot;</span><span class="punctuation">:</span> <span class="number">1337</span><span class="punctuation">,</span></span><br><span class="line">	<span class="attr">&quot;interests&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;daydreaming&quot;</span><span class="punctuation">,</span> <span class="string">&quot;hacking&quot;</span><span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
 <p>对于上面列举的数据，MessagePack 会将其进行如下图所示编码：</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201121921362.png" alt=""></p>
-<ol>
-<li>第 1 个字节 <code>0x83</code>表示接下来是一个对象（顶部四位 = <code>0x80</code>），有三个字段（底部四位 = <code>0x03</code>）。（如果你想知道，如果一个对象有超过15个字段，字段数不适合四位，它会得到不同的类型指示器，字段数编码为两字节或四字节。）</li>
-<li>第 2 个字节 <code>0xa8</code> 表示接下来是一个字符串（顶部四位 = <code>0xa0</code>），长度为八字节（底部四位 = <code>0x08</code>）。</li>
-<li>接下来的 8 个字节是 ASCII 中的字段名 userName。既然之前已经标明了长度，就不需要任何标记来告诉我们弦的终点（或任何逸出点）。</li>
-<li>接下来的 7 个字节编码带有前缀 <code>0xa6</code> 的六字母字符串值 Martin，依此类推。</li>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201121921362.png" /></p>
+<ol type="1">
+<li>第 1 个字节 <code>0x83</code>表示接下来是一个对象（顶部四位 =
+<code>0x80</code>），有三个字段（底部四位 =
+<code>0x03</code>）。（如果你想知道，如果一个对象有超过15个字段，字段数不适合四位，它会得到不同的类型指示器，字段数编码为两字节或四字节。）</li>
+<li>第 2 个字节 <code>0xa8</code> 表示接下来是一个字符串（顶部四位 =
+<code>0xa0</code>），长度为八字节（底部四位 = <code>0x08</code>）。</li>
+<li>接下来的 8 个字节是 ASCII 中的字段名
+userName。既然之前已经标明了长度，就不需要任何标记来告诉我们弦的终点（或任何逸出点）。</li>
+<li>接下来的 7 个字节编码带有前缀 <code>0xa6</code> 的六字母字符串值
+Martin，依此类推。</li>
 </ol>
-<p>同样的数据，MessagePack 将数据大小压缩到了 <font color="red">66 bytes</font>。</p>
-<h3 id="2-3-Protocol-Buffer">2.3 Protocol Buffer</h3>
+<p>同样的数据，MessagePack 将数据大小压缩到了 <font color="red">66
+bytes</font>。</p>
+<h3 id="protocol-buffer">2.3 Protocol Buffer</h3>
 <blockquote>
 <p>基于 IDL (接口定义语言) 的 Tag-Length-Value (TLV) 协议。</p>
 </blockquote>
 <div class="tag-plugin link dis-select"><a class="link-card rich" title="" href="https://protobuf.dev/" target="_blank" rel="external nofollow noopener noreferrer" cardlink api="https://site-info-api-hedon.vercel.app/api/v1?url=https://protobuf.dev/" autofill="title,icon,desc"><div class="top"><div class="lazy img" data-bg="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/link/8f277b4ee0ecd.svg"></div><span class="cap link footnote">https://protobuf.dev/</span></div><div class="bottom"><span class="title">https://protobuf.dev/</span><span class="cap desc footnote"></span></div></a></div>
-<p>Protobuf 的核心哲学是 <strong>“约定优于配置”</strong>。通信双方必须预先持有 <code>.proto</code> 文件（契约）。 因为有了契约，数据包里 <strong>完全抛弃了字段名</strong>，只保留了字段编号 (Field ID)。</p>
+<p>Protobuf 的核心哲学是
+<strong>"约定优于配置"</strong>。通信双方必须预先持有
+<code>.proto</code> 文件（契约）。 因为有了契约，数据包里
+<strong>完全抛弃了字段名</strong>，只保留了字段编号 (Field ID)。</p>
 <p>其核心由三个机制组成：</p>
-<ol>
-<li><strong>Varint (Base 128):</strong> 用变长字节存储整数。数字 <code>1</code> 占 1 字节，数字 <code>300</code> 占 2 字节。</li>
-<li><strong>ZigZag:</strong> 将有符号整数映射为无符号整数，解决了负数 varint 编码效率低的问题。</li>
-<li><strong>TLV 结构:</strong> 每一个字段都是 $Tag + [Length] + Value$。$Tag$ 包含了 Field ID 和 Wire Type。</li>
+<ol type="1">
+<li><strong>Varint (Base 128):</strong> 用变长字节存储整数。数字
+<code>1</code> 占 1 字节，数字 <code>300</code> 占 2 字节。</li>
+<li><strong>ZigZag:</strong> 将有符号整数映射为无符号整数，解决了负数
+varint 编码效率低的问题。</li>
+<li><strong>TLV 结构:</strong> 每一个字段都是 <span
+class="math inline">\(Tag + [Length] + Value\)</span>。<span
+class="math inline">\(Tag\)</span> 包含了 Field ID 和 Wire Type。</li>
 </ol>
 <p>Protobuf 的关键是其兼容性：</p>
 <ul>
-<li><strong>向后兼容性</strong>：如果接收端的 <code>.proto</code> 是旧的，它读到了一个新的 Tag（例如 ID=5），它通过 Wire Type 知道这个字段的数据类型，因此它可以安全地 <strong>跳过</strong> 这段数据，继续解析下一个字段，而不会报错。</li>
-<li><strong>向前兼容性</strong>：如果接收端的 <code>.proto</code> 是新的，客户端没有传递新的字段，如果该字段被定义为 <code>optional</code> 可选的，则接收端依旧可以跳过该缺失的字段，继续解析下一个字段，而不会报错。</li>
+<li><strong>向后兼容性</strong>：如果接收端的 <code>.proto</code>
+是旧的，它读到了一个新的 Tag（例如 ID=5），它通过 Wire Type
+知道这个字段的数据类型，因此它可以安全地 <strong>跳过</strong>
+这段数据，继续解析下一个字段，而不会报错。</li>
+<li><strong>向前兼容性</strong>：如果接收端的 <code>.proto</code>
+是新的，客户端没有传递新的字段，如果该字段被定义为 <code>optional</code>
+可选的，则接收端依旧可以跳过该缺失的字段，继续解析下一个字段，而不会报错。</li>
 </ul>
 <p>对于上面给出的例子，<code>proto</code> 文件定义如下：</p>
 <figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">message </span><span class="title class_">Person</span> &#123;</span><br><span class="line">	<span class="keyword">required</span> <span class="type">string</span> user_name = <span class="number">1</span>;</span><br><span class="line">	<span class="keyword">optional</span> <span class="type">int64</span> favorite_number = <span class="number">2</span>;</span><br><span class="line">	<span class="keyword">repeated</span> <span class="type">string</span> interests = <span class="number">3</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201124042969.png" alt=""></p>
-<ol>
-<li>每一个字段都是 $Tag + [Length] + Value$。$Tag$ 包含了 Field ID 和 Wire Type。</li>
-<li>第 1 个字节 <code>0x0a</code> 的低 3 位 <code>010</code> 代表 <strong>Wire Type 2</strong>（Length-delimited，即后面跟着长度）。这告诉解析器：准备好读取一段指定长度的数据（通常是字符串或嵌套对象）。高 5 位 <code>00001</code> 代表 Field ID=1。</li>
-<li>第 2 个字节 <code>0x06</code> 表示接下来的数据长度为 6 字节。既然 Tag 里的 Wire Type 是 2，解析器就知道这里必须读一个 Varint 来确定长度。<code>06</code> 就是长度。</li>
-<li>接下来的 6 个字节 <code>4d 61 72 74 69 6e</code>  是 ASCII 编码的字符串值 <strong>“Martin”</strong>。解析器读完这 6 个字节后，知道当前字段结束，准备读取下一个 Tag。</li>
-<li>重点的对于数组，它们的 tag 是一样的，如上图都是 <code>0x1a</code>，Protobuf 会把一样的 <code>tag</code> 组成数组。</li>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201124042969.png" /></p>
+<ol type="1">
+<li>每一个字段都是 <span class="math inline">\(Tag + [Length] +
+Value\)</span>。<span class="math inline">\(Tag\)</span> 包含了 Field ID
+和 Wire Type。</li>
+<li>第 1 个字节 <code>0x0a</code> 的低 3 位 <code>010</code> 代表
+<strong>Wire Type
+2</strong>（Length-delimited，即后面跟着长度）。这告诉解析器：准备好读取一段指定长度的数据（通常是字符串或嵌套对象）。高
+5 位 <code>00001</code> 代表 Field ID=1。</li>
+<li>第 2 个字节 <code>0x06</code> 表示接下来的数据长度为 6 字节。既然
+Tag 里的 Wire Type 是 2，解析器就知道这里必须读一个 Varint
+来确定长度。<code>06</code> 就是长度。</li>
+<li>接下来的 6 个字节 <code>4d 61 72 74 69 6e</code> 是 ASCII
+编码的字符串值 <strong>"Martin"</strong>。解析器读完这 6
+个字节后，知道当前字段结束，准备读取下一个 Tag。</li>
+<li>重点的对于数组，它们的 tag 是一样的，如上图都是
+<code>0x1a</code>，Protobuf 会把一样的 <code>tag</code> 组成数组。</li>
 </ol>
-<p>同样的数据，Protobuf 将数据大小压缩到了 <font color="red">33 bytes</font>：</p>
-<ol>
-<li><strong>没有 Key：</strong> 整个流里你找不到 “userName” 这个单词，只有 <code>0x0a</code> (ID=1) 和 <code>0x10</code> (ID=2) 这样的编号。</li>
-<li><strong>紧凑的数字：</strong> 1337 这种数字被压缩成了变长格式，且低位在前（Little Endian 风格）。</li>
-<li><strong>无分隔符：</strong> 字符串没有结束符（如 <code>\0</code>），完全依靠前面的 Length (<code>06</code>, <code>0b</code>, <code>07</code>) 来精确定位边界。这使得解析过程可以利用内存拷贝（Memcpy），非常高效。</li>
+<p>同样的数据，Protobuf 将数据大小压缩到了 <font color="red">33
+bytes</font>：</p>
+<ol type="1">
+<li><strong>没有 Key：</strong> 整个流里你找不到 "userName"
+这个单词，只有 <code>0x0a</code> (ID=1) 和 <code>0x10</code> (ID=2)
+这样的编号。</li>
+<li><strong>紧凑的数字：</strong> 1337
+这种数字被压缩成了变长格式，且低位在前（Little Endian 风格）。</li>
+<li><strong>无分隔符：</strong> 字符串没有结束符（如
+<code>\0</code>），完全依靠前面的 Length (<code>06</code>,
+<code>0b</code>, <code>07</code>)
+来精确定位边界。这使得解析过程可以利用内存拷贝（Memcpy），非常高效。</li>
 </ol>
-<h3 id="2-4-Thrift">2.4 Thrift</h3>
+<h3 id="thrift">2.4 Thrift</h3>
 <blockquote>
 <p>全栈式的 RPC 框架与序列化协议。</p>
 </blockquote>
 <div class="tag-plugin link dis-select"><a class="link-card rich" title="" href="https://thrift.apache.org/docs/" target="_blank" rel="external nofollow noopener noreferrer" cardlink api="https://site-info-api-hedon.vercel.app/api/v1?url=https://thrift.apache.org/docs/" autofill="title,icon,desc"><div class="top"><div class="lazy img" data-bg="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/link/8f277b4ee0ecd.svg"></div><span class="cap link footnote">https://thrift.apache.org/docs/</span></div><div class="bottom"><span class="title">https://thrift.apache.org/docs/</span><span class="cap desc footnote"></span></div></a></div>
-<p>Thrift 是由 Facebook 开发的跨语言 RPC 框架。与 gRPC (Protobuf) 相比，Thrift 最显著的特点是它把&quot;传输格式&quot;抽象出来了：</p>
+<p>Thrift 是由 Facebook 开发的跨语言 RPC 框架。与 gRPC (Protobuf)
+相比，Thrift 最显著的特点是它把"传输格式"抽象出来了：</p>
 <ul>
-<li><strong>BinaryProtocol:</strong> 简单粗暴，不做压缩，解析速度极快，但占用带宽。</li>
-<li><strong>CompactProtocol:</strong> 极致压缩，逻辑复杂，节省带宽（类似 Protobuf）。</li>
+<li><strong>BinaryProtocol:</strong>
+简单粗暴，不做压缩，解析速度极快，但占用带宽。</li>
+<li><strong>CompactProtocol:</strong> 极致压缩，逻辑复杂，节省带宽（类似
+Protobuf）。</li>
 </ul>
 <blockquote>
-<p>其实还有 DenseProtocol，不过只支持 C++，不具备跨语言，所以暂不讨论。</p>
+<p>其实还有 DenseProtocol，不过只支持
+C++，不具备跨语言，所以暂不讨论。</p>
 </blockquote>
 <p>对于上面给出的例子，<code>thrift</code> 文件定义如下：</p>
 <figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">struct Person &#123;</span><br><span class="line">	<span class="number">1</span>: <span class="keyword">required</span> <span class="type">string</span> userName,</span><br><span class="line">	<span class="number">2</span>: <span class="keyword">optional</span> i64 favoriteNumber,</span><br><span class="line">	<span class="number">3</span>: <span class="keyword">optional</span> list&lt;<span class="type">string</span>&gt; interests</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="2-4-1-BinaryProtocol">2.4.1 BinaryProtocol</h4>
-<p><strong>核心特征：</strong> <strong>定长、豪横、浪费</strong>。它不喜欢做位运算，喜欢用标准的 4 字节（32位）或 8 字节（64位）来存储数字，哪怕数字很小。</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201125109843.png" alt=""></p>
-<p>我们看第一个字段 <code>userName=&quot;Martin&quot;</code>：</p>
-<ol>
-<li>第 1 个字节 <code>0b</code> （Type）用于表示数据类型（String）。</li>
-<li>第 2-3 个字节 <code>00 01</code> 表示 Field ID = 1。用了 2 个字节表示 ID，很奢侈啊！</li>
-<li>第 4-7 个字节 <code>00 00 00 06</code> 表示字符串长度为 6。用了 4 个字节表示长度，真奢侈啊！</li>
+<h4 id="binaryprotocol">2.4.1 BinaryProtocol</h4>
+<p><strong>核心特征：</strong>
+<strong>定长、豪横、浪费</strong>。它不喜欢做位运算，喜欢用标准的 4
+字节（32位）或 8 字节（64位）来存储数字，哪怕数字很小。</p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201125109843.png" /></p>
+<p>我们看第一个字段 <code>userName="Martin"</code>：</p>
+<ol type="1">
+<li>第 1 个字节 <code>0b</code>
+（Type）用于表示数据类型（String）。</li>
+<li>第 2-3 个字节 <code>00 01</code> 表示 Field ID = 1。用了 2
+个字节表示 ID，很奢侈啊！</li>
+<li>第 4-7 个字节 <code>00 00 00 06</code> 表示字符串长度为 6。用了 4
+个字节表示长度，真奢侈啊！</li>
 <li>第 8-13 个字节即为 <code>Martin</code> 的 ASCII 编码。</li>
 </ol>
 <p>再来看第二个字段 <code>favoriteNumber=1337</code>：</p>
-<ol>
-<li>第 1 个字节 <code>0a</code> （Type）表示数据类型 <code>I64</code>。</li>
+<ol type="1">
+<li>第 1 个字节 <code>0a</code> （Type）表示数据类型
+<code>I64</code>。</li>
 <li>第 2-3 个字节 <code>00 02</code> 表示 Field ID = 2。</li>
 <li>第 4-11 个字节，用 8 字节的定长证书来表示 1337，真是奢靡！</li>
 </ol>
 <p>接下来比较复杂的第三个字段 <code>interest(List)</code>：</p>
-<ol>
+<ol type="1">
 <li>第 1 个字节 <code>0f</code> （Type）表示接下来是一个 List。</li>
 <li>第 2-3 个字节 <code>00 03</code> 表示 Field ID = 3。</li>
 <li>第 4 个字节 <code>0b</code> 表示数组元素的数据类型的 String。</li>
-<li>第 5-8 个字节 <code>00 00 00 02</code> 表示数组列表长度是 2，又是豪横的 4 字节整数。</li>
+<li>第 5-8 个字节 <code>00 00 00 02</code> 表示数组列表长度是
+2，又是豪横的 4 字节整数。</li>
 <li>剩下的就是数组的两个元素的 Length + Value。</li>
 </ol>
-<p>最后还有一个结尾字符 <code>00</code>，类似于 C 语言字符串的 <code>\0</code>，表示整个 Struct 结束。</p>
-<p>同样的数据，Thrift Binary Protocol 用了 <font color="red">59 bytes</font>：</p>
-<h4 id="2-4-2-CompactProtocol">2.4.2 CompactProtocol</h4>
-<p><strong>核心特征：</strong> <strong>变长、紧凑、巧妙</strong>。这一张图的逻辑和 Protobuf 非常像，但有一个<strong>关键的区别</strong>（Delta Encoding）。</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201125118197.png" alt=""></p>
-<p>我们看第一个字段 <code>userName=&quot;Martin&quot;</code>：</p>
-<ol>
-<li>第 1 个字节 <code>0x18</code> （Tag）跟 Protobuf 一样，是一个组合字节，低 4 位 <code>1000</code> （Type）表示数据类型是 String，高 4 位 <code>0001</code> （Delta）表示 <strong>FieldID = 上一个 ID + 1</strong>。因为这是第一个字段，所以 ID=1。</li>
-<li>第 2 个字节 <code>06</code>（Length） 表示字符串长度为 6。Compact Protocol 使用 Varint 存储长度 6。只占 1 字节。</li>
+<p>最后还有一个结尾字符 <code>00</code>，类似于 C 语言字符串的
+<code>\0</code>，表示整个 Struct 结束。</p>
+<p>同样的数据，Thrift Binary Protocol 用了 <font color="red">59
+bytes</font>：</p>
+<h4 id="compactprotocol">2.4.2 CompactProtocol</h4>
+<p><strong>核心特征：</strong>
+<strong>变长、紧凑、巧妙</strong>。这一张图的逻辑和 Protobuf
+非常像，但有一个<strong>关键的区别</strong>（Delta Encoding）。</p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201125118197.png" /></p>
+<p>我们看第一个字段 <code>userName="Martin"</code>：</p>
+<ol type="1">
+<li>第 1 个字节 <code>0x18</code> （Tag）跟 Protobuf
+一样，是一个组合字节，低 4 位 <code>1000</code> （Type）表示数据类型是
+String，高 4 位 <code>0001</code> （Delta）表示 <strong>FieldID = 上一个
+ID + 1</strong>。因为这是第一个字段，所以 ID=1。</li>
+<li>第 2 个字节 <code>06</code>（Length） 表示字符串长度为 6。Compact
+Protocol 使用 Varint 存储长度 6。只占 1 字节。</li>
 <li>第 3-8 个字节即为 <code>Martin</code> 的 ASCII 编码。</li>
 </ol>
 <p>再来看第二个字段 <code>favoriteNumber=1337</code>：</p>
-<ol>
-<li>第 1 个字节 <code>0x16</code> （Tag）低 4 位 <code>0110</code> （Type）表示数据类型是 i64，高 4 位 <code>0001</code> （Delta）表示 <strong>FieldID = 上一个 ID + 1</strong>。因为这是第二个字段，所以 ID=1+1=2。</li>
-<li>第 2-3 个字节 <code>f2 14</code> 是 1337 的 <strong>ZigZag Varint</strong> 编码。和 Protobuf 一样，它把 1337 编码成了变长格式，只用了 2 个字节，而不是 BinaryProtocol 的 8 个字节。</li>
+<ol type="1">
+<li>第 1 个字节 <code>0x16</code> （Tag）低 4 位 <code>0110</code>
+（Type）表示数据类型是 i64，高 4 位 <code>0001</code> （Delta）表示
+<strong>FieldID = 上一个 ID + 1</strong>。因为这是第二个字段，所以
+ID=1+1=2。</li>
+<li>第 2-3 个字节 <code>f2 14</code> 是 1337 的 <strong>ZigZag
+Varint</strong> 编码。和 Protobuf 一样，它把 1337
+编码成了变长格式，只用了 2 个字节，而不是 BinaryProtocol 的 8
+个字节。</li>
 </ol>
 <p>接下来比较复杂的第三个字段 <code>interest(List)</code>：</p>
-<ol>
-<li>第 1 个字节 <code>0x19</code> （Tag）低 4 位 <code>1001</code>（Type）代表数据类型 List，高 4 位 <code>0001</code> （Delta）表示 FieldID=1+2=3。</li>
-<li>第 2 个字节 <code>28</code> 也是一个组合字节，低 4 位（ElemType）表示数组元素类型是 String，高 4 位（Size）代表有 2 个元组。</li>
+<ol type="1">
+<li>第 1 个字节 <code>0x19</code> （Tag）低 4 位
+<code>1001</code>（Type）代表数据类型 List，高 4 位 <code>0001</code>
+（Delta）表示 FieldID=1+2=3。</li>
+<li>第 2 个字节 <code>28</code> 也是一个组合字节，低 4
+位（ElemType）表示数组元素类型是 String，高 4 位（Size）代表有 2
+个元组。</li>
 <li>剩下的就是数组的两个元素的 Length + Value。</li>
 </ol>
 <p>最后一样有一个结尾字符 <code>00</code> 表示整个 Struct 结束。</p>
-<p>同样的数据，Thrift Compact Protocol 用了 <font color="red">34 bytes</font>：</p>
-<h3 id="2-5-Avro">2.5 Avro</h3>
+<p>同样的数据，Thrift Compact Protocol 用了 <font color="red">34
+bytes</font>：</p>
+<h3 id="avro">2.5 Avro</h3>
 <blockquote>
 <p>Schema 与数据分离的、面向大数据的序列化协议。</p>
 </blockquote>
 <div class="tag-plugin link dis-select"><a class="link-card rich" title="" href="https://avro.apache.org/" target="_blank" rel="external nofollow noopener noreferrer" cardlink api="https://site-info-api-hedon.vercel.app/api/v1?url=https://avro.apache.org/" autofill="title,icon,desc"><div class="top"><div class="lazy img" data-bg="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/link/8f277b4ee0ecd.svg"></div><span class="cap link footnote">https://avro.apache.org/</span></div><div class="bottom"><span class="title">https://avro.apache.org/</span><span class="cap desc footnote"></span></div></a></div>
-<p>Avro 是为 Hadoop 生态系统设计的。它的第一性原理假设是：<strong>一次定义 Schema，处理百万条数据。</strong> 因此，Avro 采取了最激进的策略：<strong>数据包里连 Field ID (Tag) 都不存。</strong></p>
+<p>Avro 是为 Hadoop
+生态系统设计的。它的第一性原理假设是：<strong>一次定义
+Schema，处理百万条数据。</strong> 因此，Avro
+采取了最激进的策略：<strong>数据包里连 Field ID (Tag)
+都不存。</strong></p>
 <p>假设 Schema 定义如下：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span> <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;record&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;fields&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span><span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;id&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;int&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="punctuation">&#123;</span><span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;name&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;string&quot;</span><span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">]</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-<p>对于数据 <code>id=10, name=&quot;foo&quot;</code>，Avro 的二进制流里只有： <code>[Varint 10]</code> + <code>[Length 3]</code> + <code>[Bytes 'foo']</code></p>
+<p>对于数据 <code>id=10, name="foo"</code>，Avro 的二进制流里只有：
+<code>[Varint 10]</code> + <code>[Length 3]</code> +
+<code>[Bytes 'foo']</code></p>
 <ul>
-<li><strong>没有 Key，没有 Tag：</strong> 没有任何标记告诉解析器 <code>10</code> 是 <code>id</code>。</li>
-<li><strong>依序解析：</strong> 解析器必须手里拿着 Schema，严格按照顺序读：“Schema 说第一个字段是 int，那我读一个 Varint；Schema 说第二个是 string，那我读一个 string…”。</li>
+<li><strong>没有 Key，没有 Tag：</strong> 没有任何标记告诉解析器
+<code>10</code> 是 <code>id</code>。</li>
+<li><strong>依序解析：</strong> 解析器必须手里拿着
+Schema，严格按照顺序读："Schema 说第一个字段是 int，那我读一个
+Varint；Schema 说第二个是 string，那我读一个 string..."。</li>
 </ul>
-<p>既然没有 ID，怎么处理 Schema 变更（比如加字段）？ Avro 引入了 <strong>Writer Schema</strong>（写数据时的格式）和 <strong>Reader Schema</strong>（读数据时的格式）。 在反序列化时，Avro 库会对比这两份 Schema：</p>
+<p>既然没有 ID，怎么处理 Schema 变更（比如加字段）？ Avro 引入了
+<strong>Writer Schema</strong>（写数据时的格式）和 <strong>Reader
+Schema</strong>（读数据时的格式）。 在反序列化时，Avro 库会对比这两份
+Schema：</p>
 <ul>
-<li>如果 Reader 想要字段 A，但 Writer 里没有，且 Reader 定义了默认值，则自动填入默认值。</li>
-<li>如果 Writer 有字段 B，但 Reader 不需要，则自动跳过。 这种 <strong>动态解析</strong> 能力使得它非常适合存储历史数据。</li>
+<li>如果 Reader 想要字段 A，但 Writer 里没有，且 Reader
+定义了默认值，则自动填入默认值。</li>
+<li>如果 Writer 有字段 B，但 Reader 不需要，则自动跳过。 这种
+<strong>动态解析</strong> 能力使得它非常适合存储历史数据。</li>
 </ul>
 <p>Avro 的优缺点也很明显：</p>
 <ul>
-<li><strong>优点：</strong> 对于大批量数据（数组、文件），体积最小（因为完全去除了每条记录的元数据）。支持动态 Schema。</li>
-<li><strong>缺点：</strong> 如果没有 Schema，数据完全是一堆乱码，无法解析。单条小数据传输时，如果还要带上 Schema，开销反而巨大。</li>
+<li><strong>优点：</strong>
+对于大批量数据（数组、文件），体积最小（因为完全去除了每条记录的元数据）。支持动态
+Schema。</li>
+<li><strong>缺点：</strong> 如果没有
+Schema，数据完全是一堆乱码，无法解析。单条小数据传输时，如果还要带上
+Schema，开销反而巨大。</li>
 </ul>
 <p>我们还是回到前面介绍的例子，它的 <code>avro</code> 定义如下：</p>
 <figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">record Person &#123;</span><br><span class="line">	<span class="type">string</span> userName;</span><br><span class="line">	union &#123; null, long &#125; favoriteNumber = null;</span><br><span class="line">	array&lt;<span class="type">string</span>&gt; interests;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>或者同等含义的 JSON 结构：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">	<span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;record&quot;</span><span class="punctuation">,</span></span><br><span class="line">	<span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Person&quot;</span><span class="punctuation">,</span></span><br><span class="line">	<span class="attr">&quot;fields&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">		<span class="punctuation">&#123;</span><span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;userName&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;string&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">		<span class="punctuation">&#123;</span><span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;favoriteNumber&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;null&quot;</span><span class="punctuation">,</span> <span class="string">&quot;long&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span> <span class="attr">&quot;default&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">null</span></span><span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">		<span class="punctuation">&#123;</span><span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;interests&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span><span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;array&quot;</span><span class="punctuation">,</span> <span class="attr">&quot;items&quot;</span><span class="punctuation">:</span> <span class="string">&quot;string&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span></span><br><span class="line">	<span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
 <p>对于上面的例子，Avro 会编码成如下图所示：</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201132124198.png" alt=""></p>
-<p>如前面所说的，在解析这张图之前，解析器必须先加载对应的 <code>schema</code>。</p>
-<p>我们看第一个字段 <code>userName=&quot;Martin&quot;</code>：</p>
-<ol>
-<li>第 1 个字节 <code>0c</code> （Length）表示字符串长度。那问题就来了，字符串 “Martin” 长度是 6，为什么这里是 12 (<code>0x0c</code>)？这是因为 Avro 对长度也使用了 ZigZag 编码。
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201132124198.png" /></p>
+<p>如前面所说的，在解析这张图之前，解析器必须先加载对应的
+<code>schema</code>。</p>
+<p>我们看第一个字段 <code>userName="Martin"</code>：</p>
+<ol type="1">
+<li>第 1 个字节 <code>0c</code>
+（Length）表示字符串长度。那问题就来了，字符串 "Martin" 长度是
+6，为什么这里是 12 (<code>0x0c</code>)？这是因为 Avro 对长度也使用了
+ZigZag 编码。
 <ul>
-<li><strong>Thrift/Protobuf</strong> 认为：长度永远是正数，所以用 <strong>无符号数 (Unsigned Varint)</strong>。</li>
-<li><strong>Avro</strong> 认为：为了统一简单的底层实现，所有整数都当 <strong>有符号数 (ZigZag Varint)</strong> 处理；而且在数组场景下，长度甚至 <strong>真的可以是负数</strong>（作为一个特殊标记）。所以 Avro **<u>最低位</u>**留给符号位，所以 <code>1100</code> 中，<code>110</code> 表示大小 6，而最后的 <code>0</code> 表示正数。</li>
-</ul>
-</li>
-<li>第 2-7 个字节即为 <code>Martin</code> 的 ASCII 编码。前面没有任何 Tag 告诉我们这是 <code>userName</code>，解析器只是因为这是第一个字段所以把它当字符串读。</li>
+<li><strong>Thrift/Protobuf</strong> 认为：长度永远是正数，所以用
+<strong>无符号数 (Unsigned Varint)</strong>。</li>
+<li><strong>Avro</strong> 认为：为了统一简单的底层实现，所有整数都当
+<strong>有符号数 (ZigZag Varint)</strong>
+处理；而且在数组场景下，长度甚至
+<strong>真的可以是负数</strong>（作为一个特殊标记）。所以 Avro
+<strong><u>最低位</u></strong>留给符号位，所以 <code>1100</code>
+中，<code>110</code> 表示大小 6，而最后的 <code>0</code> 表示正数。</li>
+</ul></li>
+<li>第 2-7 个字节即为 <code>Martin</code> 的 ASCII 编码。前面没有任何
+Tag 告诉我们这是
+<code>userName</code>，解析器只是因为这是第一个字段所以把它当字符串读。</li>
 </ol>
 <p>再来看第二个字段 <code>favoriteNumber=1337</code>：</p>
-<ol>
-<li>第 1 个字节 <code>02</code>  表示 Union Index，这是 Avro 的关键特性。 Schema 定义这个字段可能是 <code>null</code>，也可能是 <code>long</code>。数据流必须明确这次传的是哪个。由于 Schema 中定义的顺序是 <code>[null, long]</code>，所以 <code>index0=null</code>、<code>index1=long</code>。我们要选择 index1，又根据 ZigZag 编码，所以 $1×2=2=0x02$。</li>
-<li>第 2-3 个字节 <code>f2 14</code> 是 1337 的 ZigZag Varint 编码，跟 Protobuf/Thrift Compact 完全一致。</li>
+<ol type="1">
+<li>第 1 个字节 <code>02</code> 表示 Union Index，这是 Avro 的关键特性。
+Schema 定义这个字段可能是 <code>null</code>，也可能是
+<code>long</code>。数据流必须明确这次传的是哪个。由于 Schema
+中定义的顺序是 <code>[null, long]</code>，所以
+<code>index0=null</code>、<code>index1=long</code>。我们要选择
+index1，又根据 ZigZag 编码，所以 <span
+class="math inline">\(1×2=2=0x02\)</span>。</li>
+<li>第 2-3 个字节 <code>f2 14</code> 是 1337 的 ZigZag Varint 编码，跟
+Protobuf/Thrift Compact 完全一致。</li>
 </ol>
 <p>接下来比较复杂的第三个字段 <code>interest(List)</code>：</p>
-<ol>
-<li>第 1 个字节 <code>0x04</code> 表示接下来有 2 个元素（$2×2=4=0x04$)。</li>
+<ol type="1">
+<li>第 1 个字节 <code>0x04</code> 表示接下来有 2 个元素（<span
+class="math inline">\(2×2=4=0x04\)</span>)。</li>
 <li>剩下的就是数组的两个元素的 Length + Value。</li>
 <li>最后有一个 <code>00</code> 代表数组的结束标志。</li>
 </ol>
-<p>同样的数据，Avro 只用了 <font color="red">33 bytes</font>，这目前的最好成绩！</p>
-<p>通过上图的分析，我们可以清晰地看到 Avro 与 Protobuf/Thrift 的根本区别：</p>
-<ol>
+<p>同样的数据，Avro 只用了 <font color="red">33
+bytes</font>，这目前的最好成绩！</p>
+<p>通过上图的分析，我们可以清晰地看到 Avro 与 Protobuf/Thrift
+的根本区别：</p>
+<ol type="1">
 <li><strong>消失的 Tag：</strong>
 <ul>
 <li>Protobuf: <code>08</code> (Field ID=1) -&gt; Value</li>
 <li>Avro: 直接 Value</li>
-</ul>
-</li>
+</ul></li>
 <li><strong>Length 的 ZigZag 化：</strong>
 <ul>
 <li>Protobuf 的长度就是单纯的 Varint。</li>
-<li>Avro 连长度都要乘 2 (ZigZag)，这是为了保持整个协议整数编码的一致性。</li>
-</ul>
-</li>
-<li>**Union 的代价：**虽然省去了 Tag，但在处理 <code>Nullable</code> 字段时，Avro 需要一个额外的字节来标记非空。</li>
+<li>Avro 连长度都要乘 2
+(ZigZag)，这是为了保持整个协议整数编码的一致性。</li>
+</ul></li>
+<li><strong>Union 的代价：</strong>虽然省去了 Tag，但在处理
+<code>Nullable</code> 字段时，Avro 需要一个额外的字节来标记非空。</li>
 </ol>
-<h3 id="2-6-总结">2.6 总结</h3>
-<p>通过对同一个 <code>Person</code> 对象（包含 String, Int64, Array）的编码过程进行显微镜式的观察，我们可以从 <strong>空间效率</strong> 和 <strong>设计哲学</strong> 两个维度对这些数据编码协议进行最终的复盘。</p>
+<h3 id="总结">2.6 总结</h3>
+<p>通过对同一个 <code>Person</code> 对象（包含 String, Int64,
+Array）的编码过程进行显微镜式的观察，我们可以从
+<strong>空间效率</strong> 和 <strong>设计哲学</strong>
+两个维度对这些数据编码协议进行最终的复盘。</p>
 <p>在去除了所有不必要的空格和换行后，各协议的编码结果如下表所示：</p>
 <table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 8%" />
+<col style="width: 40%" />
+<col style="width: 40%" />
+</colgroup>
 <thead>
 <tr>
 <th><strong>协议</strong></th>
@@ -492,113 +677,161 @@
 <tr>
 <td><strong>JSON</strong></td>
 <td>81 bytes</td>
-<td><strong>文本冗余</strong>：包含完整的字段键名 (<code>&quot;userName&quot;</code>)、结构符号 (<code>&#123;</code>,<code>:</code>) 及数字的文本表示。</td>
+<td><strong>文本冗余</strong>：包含完整的字段键名
+(<code>"userName"</code>)、结构符号 (<code>&#123;</code>,<code>:</code>)
+及数字的文本表示。</td>
 <td><strong>极低效率</strong>：保留了完全的可读性与自描述性，但空间代价最高。</td>
 </tr>
 <tr>
 <td><strong>MessagePack</strong></td>
 <td>66 bytes</td>
 <td><strong>键名冗余</strong>：虽然移除了结构符号并对数字进行了二进制处理，但依然保留了完整的字段键名。</td>
-<td><strong>低效率</strong>：仅解决了 JSON 的解析速度与部分体积问题，未解决结构冗余。</td>
+<td><strong>低效率</strong>：仅解决了 JSON
+的解析速度与部分体积问题，未解决结构冗余。</td>
 </tr>
 <tr>
 <td><strong>Thrift Binary</strong></td>
 <td>59 bytes</td>
-<td><strong>定长编码</strong>：使用固定的 4 字节或 8 字节存储整数与长度，不进行 Varint 压缩。</td>
+<td><strong>定长编码</strong>：使用固定的 4 字节或 8
+字节存储整数与长度，不进行 Varint 压缩。</td>
 <td><strong>中等效率</strong>：以空间换时间，追求内存映射级别的解析速度。</td>
 </tr>
 <tr>
 <td><strong>Thrift Compact</strong></td>
 <td>34 bytes</td>
-<td><strong>Delta Encoding</strong>：字段 ID 采用差值存储；<strong>ZigZag</strong>：整数采用变长编码。</td>
+<td><strong>Delta Encoding</strong>：字段 ID
+采用差值存储；<strong>ZigZag</strong>：整数采用变长编码。</td>
 <td><strong>高效率</strong>：通过位运算极大降低了元数据占比。</td>
 </tr>
 <tr>
 <td><strong>Protobuf</strong></td>
 <td>33 bytes</td>
-<td><strong>Tag 机制</strong>：使用数字 ID 替代文本键名；<strong>Varint</strong>：整数变长压缩。</td>
-<td><strong>高效率</strong>：利用静态 IDL 契约，实现了极高的信噪比。</td>
+<td><strong>Tag 机制</strong>：使用数字 ID
+替代文本键名；<strong>Varint</strong>：整数变长压缩。</td>
+<td><strong>高效率</strong>：利用静态 IDL
+契约，实现了极高的信噪比。</td>
 </tr>
 <tr>
 <td><strong>Avro</strong></td>
 <td>32 bytes</td>
-<td><strong>Schema 分离</strong>：移除 Field ID (Tag)，仅保留数据值与必要的长度/索引信息。</td>
-<td><strong>极致效率</strong>：完全依赖 Schema 顺序解析，适合大批量数据存储。</td>
+<td><strong>Schema 分离</strong>：移除 Field ID
+(Tag)，仅保留数据值与必要的长度/索引信息。</td>
+<td><strong>极致效率</strong>：完全依赖 Schema
+顺序解析，适合大批量数据存储。</td>
 </tr>
 </tbody>
 </table>
 <p>从底层设计原理来看，这几种协议代表了三种不同的数据治理哲学：</p>
-<ol>
+<ol type="1">
 <li><strong>自描述模式 (Self-describing) —— JSON, MessagePack</strong>
 <ul>
-<li><strong>特征：</strong> 数据包内部自带 Schema 信息（键名、类型）。</li>
+<li><strong>特征：</strong> 数据包内部自带 Schema
+信息（键名、类型）。</li>
 <li><strong>优势：</strong> 灵活性极高，无需预定义 IDL，完全解耦。</li>
-<li><strong>劣势：</strong> 存在大量冗余信息，不适合高频或高吞吐场景。</li>
-</ul>
-</li>
+<li><strong>劣势：</strong>
+存在大量冗余信息，不适合高频或高吞吐场景。</li>
+</ul></li>
 <li><strong>静态契约模式 (Static IDL) —— Protobuf, Thrift</strong>
 <ul>
-<li><strong>特征：</strong> 依赖预定义的 IDL 文件（<code>.proto</code> / <code>.thrift</code>）。数据包通过 Field ID（Tag）与 IDL 映射。</li>
-<li><strong>优势：</strong> 实现了强类型约束与向后兼容性（Tag 机制），解析速度快。</li>
-<li><strong>劣势：</strong> 需要维护 IDL 文件，客户端与服务端需同步更新代码。</li>
-</ul>
-</li>
+<li><strong>特征：</strong> 依赖预定义的 IDL 文件（<code>.proto</code> /
+<code>.thrift</code>）。数据包通过 Field ID（Tag）与 IDL 映射。</li>
+<li><strong>优势：</strong> 实现了强类型约束与向后兼容性（Tag
+机制），解析速度快。</li>
+<li><strong>劣势：</strong> 需要维护 IDL
+文件，客户端与服务端需同步更新代码。</li>
+</ul></li>
 <li><strong>动态分离模式 (Schema-on-Read) —— Avro</strong>
 <ul>
-<li><strong>特征：</strong> 数据与 Schema 分离（或在文件头仅定义一次）。数据体中不包含任何字段标识，仅包含值。</li>
-<li><strong>优势：</strong> 在处理大规模数据集（如数仓文件）时，消除了每条记录的元数据开销。支持读写 Schema 动态演进。</li>
-<li><strong>劣势：</strong> 必须严格依赖 Schema 解析，单条数据传输时若需附带 Schema 则开销巨大。</li>
-</ul>
-</li>
+<li><strong>特征：</strong> 数据与 Schema
+分离（或在文件头仅定义一次）。数据体中不包含任何字段标识，仅包含值。</li>
+<li><strong>优势：</strong>
+在处理大规模数据集（如数仓文件）时，消除了每条记录的元数据开销。支持读写
+Schema 动态演进。</li>
+<li><strong>劣势：</strong> 必须严格依赖 Schema
+解析，单条数据传输时若需附带 Schema 则开销巨大。</li>
+</ul></li>
 </ol>
-<p>在实际架构设计中，应根据业务场景的 <strong>I/O 特性</strong> 与 <strong>协作模式</strong> 进行选择：</p>
+<p>在实际架构设计中，应根据业务场景的 <strong>I/O 特性</strong> 与
+<strong>协作模式</strong> 进行选择：</p>
 <ul>
-<li><strong>对外 API / 前端交互 / 调试接口</strong> $\rightarrow$ <strong>JSON</strong>
+<li><strong>对外 API / 前端交互 / 调试接口</strong> <span
+class="math inline">\(\rightarrow\)</span> <strong>JSON</strong>
 <ul>
 <li>优先考虑可读性与通用性，浏览器原生支持是其不可替代的优势。</li>
-</ul>
-</li>
-<li><strong>微服务内部通信 (RPC)</strong> $\rightarrow$ <strong>Protobuf (gRPC)</strong>
+</ul></li>
+<li><strong>微服务内部通信 (RPC)</strong> <span
+class="math inline">\(\rightarrow\)</span> <strong>Protobuf
+(gRPC)</strong>
 <ul>
-<li>强契约（IDL）能有效降低多人协作中的接口不一致风险，且 Google 生态支持完善。</li>
-</ul>
-</li>
-<li><strong>大数据存储与离线分析 (Data Lake)</strong> $\rightarrow$ <strong>Avro</strong>
+<li>强契约（IDL）能有效降低多人协作中的接口不一致风险，且 Google
+生态支持完善。</li>
+</ul></li>
+<li><strong>大数据存储与离线分析 (Data Lake)</strong> <span
+class="math inline">\(\rightarrow\)</span> <strong>Avro</strong>
 <ul>
-<li>在 HDFS/S3 存储 TB 级数据时，移除 Tag 带来的存储成本节省十分显著，且适合 Schema 频繁变更的 ETL 场景。</li>
-</ul>
-</li>
-<li><strong>遗留系统或特定语言栈</strong> $\rightarrow$ <strong>Thrift</strong>
+<li>在 HDFS/S3 存储 TB 级数据时，移除 Tag
+带来的存储成本节省十分显著，且适合 Schema 频繁变更的 ETL 场景。</li>
+</ul></li>
+<li><strong>遗留系统或特定语言栈</strong> <span
+class="math inline">\(\rightarrow\)</span> <strong>Thrift</strong>
 <ul>
-<li>如果需要完整的 RPC 框架且不仅限于序列化（如需要特定的 Server 模型），或者在 Protobuf 支持较弱的语言环境中使用。</li>
+<li>如果需要完整的 RPC 框架且不仅限于序列化（如需要特定的 Server
+模型），或者在 Protobuf 支持较弱的语言环境中使用。</li>
+</ul></li>
 </ul>
-</li>
-</ul>
-<h2 id="3-总结">3. 总结</h2>
-<p>回顾 gRPC 的设计架构，我们可以清晰地看到，其高性能并非源于单一技术的突破，而是源于 <strong>传输层 (HTTP/2)</strong> 与 <strong>表示层 (Protobuf)</strong> 两个维度的深度优化叠加。gRPC 从第一性原理出发，分别解决了网络通信中的&quot;拥塞&quot;与&quot;冗余&quot;问题。</p>
-<p>在表示层，gRPC 坚定地选择了 <strong>Protocol Buffers</strong>，这不仅仅是为了更小的体积，更是为了更严谨的契约。</p>
+<h2 id="总结-1">3. 总结</h2>
+<p>回顾 gRPC
+的设计架构，我们可以清晰地看到，其高性能并非源于单一技术的突破，而是源于
+<strong>传输层 (HTTP/2)</strong> 与 <strong>表示层 (Protobuf)</strong>
+两个维度的深度优化叠加。gRPC
+从第一性原理出发，分别解决了网络通信中的"拥塞"与"冗余"问题。</p>
+<p>在表示层，gRPC 坚定地选择了 <strong>Protocol
+Buffers</strong>，这不仅仅是为了更小的体积，更是为了更严谨的契约。</p>
 <ul>
-<li><strong>极高的信噪比</strong>：通过前文的字节级解剖，我们看到 Protobuf 将一个包含丰富信息的 <code>Person</code> 对象压缩至 <strong>33 bytes</strong>，仅为 JSON (81 bytes) 的 <strong>40%</strong>。它通过移除字段名（Keys）并使用 Varint/ZigZag 压缩数字，极大地减少了网络带宽的占用。</li>
+<li><strong>极高的信噪比</strong>：通过前文的字节级解剖，我们看到
+Protobuf 将一个包含丰富信息的 <code>Person</code> 对象压缩至 <strong>33
+bytes</strong>，仅为 JSON (81 bytes) 的
+<strong>40%</strong>。它通过移除字段名（Keys）并使用 Varint/ZigZag
+压缩数字，极大地减少了网络带宽的占用。</li>
 <li><strong>解析效率</strong>：二进制协议允许计算机通过位运算直接解析数据，避免了文本协议中昂贵的字符串匹配与浮点数转换开销。</li>
-<li><strong>强契约保证</strong>：IDL (<code>.proto</code>) 的存在使得通信双方必须遵守严格的类型约束，这种“静态”特性消除了运行时猜测数据类型的成本，同时也为大规模微服务治理提供了坚实的基础。</li>
+<li><strong>强契约保证</strong>：IDL (<code>.proto</code>)
+的存在使得通信双方必须遵守严格的类型约束，这种“静态”特性消除了运行时猜测数据类型的成本，同时也为大规模微服务治理提供了坚实的基础。</li>
 </ul>
-<p>在传输层，gRPC 摒弃了文本格式的 HTTP/1.1，全面拥抱二进制的 <strong>HTTP/2</strong>，这从物理上改变了连接的使用方式。</p>
+<p>在传输层，gRPC 摒弃了文本格式的 HTTP/1.1，全面拥抱二进制的
+<strong>HTTP/2</strong>，这从物理上改变了连接的使用方式。</p>
 <ul>
-<li><strong>多路复用 (Multiplexing)</strong>：这是 HTTP/2 最核心的优势。gRPC 允许在同一个 TCP 连接上并发处理多个请求（Stream）。每个 Request/Response 被拆分成多个二进制帧 (Frame) 并打乱发送，接收端根据 Stream ID 重新组装。这彻底解决了 HTTP/1.1 的 <strong>队头阻塞 (Head-of-Line Blocking)</strong> 问题，使得单一连接的吞吐量成倍提升。</li>
-<li><strong>头部压缩 (HPACK)</strong>：在微服务架构中，RPC 调用往往伴随着大量重复的 Header (如 Auth Token, Tracing ID)。HTTP/2 使用 HPACK 算法在客户端和服务端维护动态字典，对 Header 进行增量压缩，进一步减少了带宽消耗。</li>
-<li><strong>双向流 (Bi-directional Streaming)</strong>：得益于 HTTP/2 的流特性，gRPC 原生支持四种通信模式，使得实时推送、长连接对话等复杂业务场景的实现变得像普通函数调用一样简单。</li>
+<li><strong>多路复用 (Multiplexing)</strong>：这是 HTTP/2
+最核心的优势。gRPC 允许在同一个 TCP
+连接上并发处理多个请求（Stream）。每个 Request/Response
+被拆分成多个二进制帧 (Frame) 并打乱发送，接收端根据 Stream ID
+重新组装。这彻底解决了 HTTP/1.1 的 <strong>队头阻塞 (Head-of-Line
+Blocking)</strong> 问题，使得单一连接的吞吐量成倍提升。</li>
+<li><strong>头部压缩 (HPACK)</strong>：在微服务架构中，RPC
+调用往往伴随着大量重复的 Header (如 Auth Token, Tracing ID)。HTTP/2 使用
+HPACK 算法在客户端和服务端维护动态字典，对 Header
+进行增量压缩，进一步减少了带宽消耗。</li>
+<li><strong>双向流 (Bi-directional Streaming)</strong>：得益于 HTTP/2
+的流特性，gRPC
+原生支持四种通信模式，使得实时推送、长连接对话等复杂业务场景的实现变得像普通函数调用一样简单。</li>
 </ul>
-<p>最终，彻底掌握 gRPC 意味着理解它在 <strong>互操作性</strong> 与 <strong>性能</strong> 之间所做的权衡：</p>
-<ol>
-<li><strong>它不是万能的</strong>：在浏览器前端、简单的 CRUD 接口或对调试可读性要求极高的场景下，REST/JSON 依然是更优的选择。</li>
-<li><strong>它是云原生的通用语</strong>：在微服务内部通信、移动端与后端的长连接交互、以及低延迟高吞吐的系统中，gRPC 凭借其 <strong>Protobuf 的极致编码</strong> 与 <strong>HTTP/2 的高效传输</strong>，成为了现代分布式系统事实上的标准。</li>
+<p>最终，彻底掌握 gRPC 意味着理解它在 <strong>互操作性</strong> 与
+<strong>性能</strong> 之间所做的权衡：</p>
+<ol type="1">
+<li><strong>它不是万能的</strong>：在浏览器前端、简单的 CRUD
+接口或对调试可读性要求极高的场景下，REST/JSON 依然是更优的选择。</li>
+<li><strong>它是云原生的通用语</strong>：在微服务内部通信、移动端与后端的长连接交互、以及低延迟高吞吐的系统中，gRPC
+凭借其 <strong>Protobuf 的极致编码</strong> 与 <strong>HTTP/2
+的高效传输</strong>，成为了现代分布式系统事实上的标准。</li>
 </ol>
-<p>理解了这些底层原理，我们才能在架构选型时，不盲目跟风，而是根据业务的真实需求（是追求极致的 Bytes 节省，还是追求开发的灵活性），做出最准确的技术决策。</p>
+<p>理解了这些底层原理，我们才能在架构选型时，不盲目跟风，而是根据业务的真实需求（是追求极致的
+Bytes 节省，还是追求开发的灵活性），做出最准确的技术决策。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -638,15 +871,19 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-gRPC"><span class="toc-text">1. gRPC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-gRPC"><span class="toc-text">1.1 为什么需要 gRPC</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E4%B8%A4%E5%A4%A7%E5%9F%BA%E7%9F%B3"><span class="toc-text">1.2 两大基石</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-1-Protocol-Buffers-Protobuf"><span class="toc-text">1.2.1 Protocol Buffers (Protobuf)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-2-HTTP-2-%E4%BC%A0%E8%BE%93%E6%9C%BA%E5%88%B6"><span class="toc-text">1.2.2 HTTP&#x2F;2 传输机制</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E5%9B%9B%E7%A7%8D%E6%A8%A1%E5%BC%8F%E4%B8%8E%E5%B7%A5%E7%A8%8B%E5%8C%96"><span class="toc-text">1.3 四种模式与工程化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-1-%E5%9B%9B%E7%A7%8D%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%BC%8F"><span class="toc-text">1.3.1 四种通信模式</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-2-Interceptor-%E6%8B%A6%E6%88%AA%E5%99%A8"><span class="toc-text">1.3.2 Interceptor (拦截器)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-3-Error-Handling-%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86"><span class="toc-text">1.3.3 Error Handling (错误处理)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="toc-text">1.4 注意事项</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-4-1-%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%9A%84%E9%99%B7%E9%98%B1"><span class="toc-text">1.4.1 负载均衡的陷阱</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#14-2-Deadlines-%E8%B6%85%E6%97%B6%E6%8E%A7%E5%88%B6"><span class="toc-text">14.2 Deadlines (超时控制)</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81"><span class="toc-text">2. 数据编码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-JSON"><span class="toc-text">2.1 JSON</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-Message-Pack"><span class="toc-text">2.2 Message Pack</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-Protocol-Buffer"><span class="toc-text">2.3 Protocol Buffer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-Thrift"><span class="toc-text">2.4 Thrift</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-1-BinaryProtocol"><span class="toc-text">2.4.1 BinaryProtocol</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-2-CompactProtocol"><span class="toc-text">2.4.2 CompactProtocol</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-Avro"><span class="toc-text">2.5 Avro</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-6-%E6%80%BB%E7%BB%93"><span class="toc-text">2.6 总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E6%80%BB%E7%BB%93"><span class="toc-text">3. 总结</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#grpc"><span class="toc-text">1. gRPC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-grpc"><span class="toc-text">1.1 为什么需要 gRPC</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%A4%E5%A4%A7%E5%9F%BA%E7%9F%B3"><span class="toc-text">1.2 两大基石</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#protocol-buffers-protobuf"><span class="toc-text">1.2.1 Protocol Buffers
+(Protobuf)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#http2-%E4%BC%A0%E8%BE%93%E6%9C%BA%E5%88%B6"><span class="toc-text">1.2.2 HTTP&#x2F;2 传输机制</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E7%A7%8D%E6%A8%A1%E5%BC%8F%E4%B8%8E%E5%B7%A5%E7%A8%8B%E5%8C%96"><span class="toc-text">1.3 四种模式与工程化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9B%9B%E7%A7%8D%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%BC%8F"><span class="toc-text">1.3.1 四种通信模式</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#interceptor-%E6%8B%A6%E6%88%AA%E5%99%A8"><span class="toc-text">1.3.2 Interceptor (拦截器)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#error-handling-%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86"><span class="toc-text">1.3.3 Error Handling (错误处理)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="toc-text">1.4 注意事项</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%9A%84%E9%99%B7%E9%98%B1"><span class="toc-text">1.4.1 负载均衡的陷阱</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#deadlines-%E8%B6%85%E6%97%B6%E6%8E%A7%E5%88%B6"><span class="toc-text">14.2 Deadlines (超时控制)</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81"><span class="toc-text">2. 数据编码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#json"><span class="toc-text">2.1 JSON</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#message-pack"><span class="toc-text">2.2 Message Pack</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#protocol-buffer"><span class="toc-text">2.3 Protocol Buffer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#thrift"><span class="toc-text">2.4 Thrift</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#binaryprotocol"><span class="toc-text">2.4.1 BinaryProtocol</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#compactprotocol"><span class="toc-text">2.4.2 CompactProtocol</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#avro"><span class="toc-text">2.5 Avro</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">2.6 总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93-1"><span class="toc-text">3. 总结</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
