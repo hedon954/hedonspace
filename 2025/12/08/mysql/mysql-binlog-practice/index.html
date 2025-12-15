@@ -71,7 +71,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/12/09/redis/redis-datatype/"><span class="title">盘点 Redis 各种数据类型</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing-excerpt/"><span class="title">书籍摘抄丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/06/12/note/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/10/14/note/note-obsidian/"><span class="title">读书笔记丨《上头Obsidian：手把手教你用AI做好知识管理》</span></a><a class="item title" href="/2025/07/24/note/note-fosa/"><span class="title">读书笔记丨《Fundamentals of Software Architecture》</span></a><a class="item title" href="/2025/03/11/note/note-ddd-awareness/"><span class="title">读书笔记丨《悟道领域驱动设计》</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/12/09/redis/redis-datatype/"><span class="title">盘点 Redis 各种数据类型</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing-excerpt/"><span class="title">书籍摘抄丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/06/12/note/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/10/14/note/note-obsidian/"><span class="title">读书笔记丨《上头Obsidian：手把手教你用AI做好知识管理》</span></a><a class="item title" href="/2025/07/24/note/note-fosa/"><span class="title">读书笔记丨《Fundamentals of Software Architecture》</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -96,64 +96,57 @@
     
   </div>
   </div><article class="md-text content"><p>好的！这是一次非常棒的实战演练。</p>
-<p>我们要构建一个<strong>“微型分布式事务同步系统”</strong>。</p>
-<p>目标：当 MySQL 中的用户余额发生变更（充值）时，Go 程序自动捕获
-Binlog，并将最新的余额实时同步到 Redis 中，实现最终一致性。</p>
+<p>我们要构建一个**“微型分布式事务同步系统”**。</p>
+<p>目标：当 MySQL 中的用户余额发生变更（充值）时，Go 程序自动捕获 Binlog，并将最新的余额实时同步到 Redis 中，实现最终一致性。</p>
 <p>我们将全流程分为 <strong>四个步骤</strong>：</p>
-<ol type="1">
+<ol>
 <li><strong>环境准备 (MySQL &amp; Redis)</strong></li>
 <li><strong>Go 项目初始化</strong></li>
 <li><strong>编写核心代码 (main.go)</strong></li>
 <li><strong>运行与验证</strong></li>
 </ol>
-<hr />
-<h3 id="第一步环境准备-mysql-redis">🟢 第一步：环境准备 (MySQL &amp;
-Redis)</h3>
+<hr>
+<h3 id="🟢-第一步：环境准备-MySQL-Redis">🟢 第一步：环境准备 (MySQL &amp; Redis)</h3>
 <p>请确保你的本地或开发机已经启动了 MySQL 和 Redis。</p>
-<h4 id="mysql-建表与数据准备">1. MySQL 建表与数据准备</h4>
-<p>请在你的 MySQL 中执行以下 SQL。我们创建一个简单的
-<code>user_balance</code> 表。</p>
+<h4 id="1-MySQL-建表与数据准备">1. MySQL 建表与数据准备</h4>
+<p>请在你的 MySQL 中执行以下 SQL。我们创建一个简单的 <code>user_balance</code> 表。</p>
 <p>SQL</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">-- 1. 创建测试数据库</span><br><span class="line">CREATE DATABASE IF NOT EXISTS order_db;</span><br><span class="line">USE order_db;</span><br><span class="line"></span><br><span class="line">-- 2. 创建用户余额表</span><br><span class="line">CREATE TABLE IF NOT EXISTS user_balance (</span><br><span class="line">    uid INT PRIMARY KEY,</span><br><span class="line">    username VARCHAR(50),</span><br><span class="line">    balance INT DEFAULT 0 COMMENT &#x27;余额(分)&#x27;,</span><br><span class="line">    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</span><br><span class="line">) ENGINE=InnoDB;</span><br><span class="line"></span><br><span class="line">-- 3. 初始化一个用户 (uid=10086, 余额=0)</span><br><span class="line">INSERT INTO user_balance (uid, username, balance) VALUES (10086, &#x27;Hedon&#x27;, 0) </span><br><span class="line">ON DUPLICATE KEY UPDATE balance=0;</span><br><span class="line"></span><br><span class="line">-- 4. 确认 Binlog 格式为 ROW (必须!)</span><br><span class="line">SET SESSION binlog_format = &#x27;ROW&#x27;;</span><br></pre></td></tr></table></figure>
-<h4 id="创建拥有复制权限的用户-可选推荐">2. 创建拥有复制权限的用户
-(可选，推荐)</h4>
+<h4 id="2-创建拥有复制权限的用户-可选，推荐">2. 创建拥有复制权限的用户 (可选，推荐)</h4>
 <p>为了安全，通常创建一个专门用于同步的账号，而不是用 root。</p>
 <p>SQL</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">CREATE USER &#x27;canal_user&#x27;@&#x27;%&#x27; IDENTIFIED BY &#x27;canal_pass&#x27;;</span><br><span class="line">GRANT REPLICATION SLAVE, REPLICATION CLIENT, SELECT ON *.* TO &#x27;canal_user&#x27;@&#x27;%&#x27;;</span><br><span class="line">FLUSH PRIVILEGES;</span><br></pre></td></tr></table></figure>
-<hr />
-<h3 id="第二步go-项目初始化">🔵 第二步：Go 项目初始化</h3>
+<hr>
+<h3 id="🔵-第二步：Go-项目初始化">🔵 第二步：Go 项目初始化</h3>
 <p>在你的工作目录下创建一个新项目：</p>
 <p>Bash</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"># 1. 创建目录</span><br><span class="line">mkdir binlog-sync-demo</span><br><span class="line">cd binlog-sync-demo</span><br><span class="line"></span><br><span class="line"># 2. 初始化 go mod</span><br><span class="line">go mod init binlog-sync-demo</span><br><span class="line"></span><br><span class="line"># 3. 下载依赖库</span><br><span class="line"># go-mysql: 用于解析 Binlog</span><br><span class="line"># go-redis: 用于操作 Redis</span><br><span class="line">go get github.com/go-mysql-org/go-mysql/replication</span><br><span class="line">go get github.com/redis/go-redis/v9</span><br></pre></td></tr></table></figure>
-<hr />
-<h3 id="第三步编写核心代码-main.go">🟠 第三步：编写核心代码
-(main.go)</h3>
+<hr>
+<h3 id="🟠-第三步：编写核心代码-main-go">🟠 第三步：编写核心代码 (main.go)</h3>
 <p>这是整个系统的灵魂。我会加上详细的注释，帮助你理解每一行。</p>
 <p>创建一个 <code>main.go</code> 文件，将以下代码完整复制进去。</p>
 <blockquote>
-<p><strong>注意</strong>：请修改代码顶部的 <code>MySQL 配置</code> 和
-<code>Redis 配置</code>，适配你本地的环境。</p>
+<p><strong>注意</strong>：请修改代码顶部的 <code>MySQL 配置</code> 和 <code>Redis 配置</code>，适配你本地的环境。</p>
 </blockquote>
 <p>Go</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;context&quot;</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;os&quot;</span><br><span class="line">	&quot;time&quot;</span><br><span class="line"></span><br><span class="line">	&quot;github.com/go-mysql-org/go-mysql/replication&quot;</span><br><span class="line">	&quot;github.com/redis/go-redis/v9&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">// --- 配置区域 (请修改为你自己的配置) ---</span><br><span class="line">var (</span><br><span class="line">	// MySQL 配置</span><br><span class="line">	mysqlHost     = &quot;127.0.0.1&quot;</span><br><span class="line">	mysqlPort     = uint16(3306)</span><br><span class="line">	mysqlUser     = &quot;canal_user&quot; // 或者 root</span><br><span class="line">	mysqlPass     = &quot;canal_pass&quot; // 或者你的密码</span><br><span class="line">	targetDB      = &quot;order_db&quot;</span><br><span class="line">	targetTable   = &quot;user_balance&quot;</span><br><span class="line"></span><br><span class="line">	// Redis 配置</span><br><span class="line">	redisAddr     = &quot;127.0.0.1:6379&quot;</span><br><span class="line">	redisPass     = &quot;&quot; </span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">var ctx = context.Background()</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	// 1. 初始化 Redis 客户端</span><br><span class="line">	rdb := redis.NewClient(&amp;redis.Options&#123;</span><br><span class="line">		Addr:     redisAddr,</span><br><span class="line">		Password: redisPass,</span><br><span class="line">	&#125;)</span><br><span class="line">	if _, err := rdb.Ping(ctx).Result(); err != nil &#123;</span><br><span class="line">		fmt.Printf(&quot;❌ Redis 连接失败: %v\n&quot;, err)</span><br><span class="line">		os.Exit(1)</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Println(&quot;✅ Redis 连接成功！等待数据同步...&quot;)</span><br><span class="line"></span><br><span class="line">	// 2. 初始化 Binlog Syncer</span><br><span class="line">	cfg := replication.BinlogSyncerConfig&#123;</span><br><span class="line">		ServerID: 100, // 假装自己是一个从库，ID 必须唯一</span><br><span class="line">		Flavor:   &quot;mysql&quot;,</span><br><span class="line">		Host:     mysqlHost,</span><br><span class="line">		Port:     mysqlPort,</span><br><span class="line">		User:     mysqlUser,</span><br><span class="line">		Password: mysqlPass,</span><br><span class="line">	&#125;</span><br><span class="line">	syncer := replication.NewBinlogSyncer(cfg)</span><br><span class="line"></span><br><span class="line">	// 3. 开始同步</span><br><span class="line">	// 这里的 Position 设置为 File=&quot;&quot;, Pos=4 表示从当前最新的位置开始监听</span><br><span class="line">	// 生产环境需要从存储的 Checkpoint 读取</span><br><span class="line">	streamer, err := syncer.StartSync(replication.Position&#123;Name: &quot;&quot;, Pos: 4&#125;)</span><br><span class="line">	if err != nil &#123;</span><br><span class="line">		fmt.Printf(&quot;❌ 启动 Binlog 监听失败: %v\n&quot;, err)</span><br><span class="line">		os.Exit(1)</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Println(&quot;🚀 Binlog 监听器启动成功！正在监听 MySQL 变更...&quot;)</span><br><span class="line"></span><br><span class="line">	// 4. 进入事件循环</span><br><span class="line">	for &#123;</span><br><span class="line">		ev, err := streamer.GetEvent(context.Background())</span><br><span class="line">		if err != nil &#123;</span><br><span class="line">			fmt.Printf(&quot;❌ 获取事件错误: %v\n&quot;, err)</span><br><span class="line">			break</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		// 我们只关心 UPDATE 事件 (充值通常是 Update)</span><br><span class="line">		// 如果是新用户注册，还需要监听 WRITE_ROWS_EVENTv2</span><br><span class="line">		if ev.Header.EventType == replication.UPDATE_ROWS_EVENTv1 || ev.Header.EventType == replication.UPDATE_ROWS_EVENTv2 &#123;</span><br><span class="line">			handleUpdateEvent(ev, rdb)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 处理更新事件</span><br><span class="line">func handleUpdateEvent(ev *replication.BinlogEvent, rdb *redis.Client) &#123;</span><br><span class="line">	rowsEvent := ev.Event.(*replication.RowsEvent)</span><br><span class="line"></span><br><span class="line">	// 1. 过滤库名和表名 (我们只关心 user_balance 表)</span><br><span class="line">	// 注意：go-mysql 解析出来的 SchemaName 和 TableName 是 byte 数组</span><br><span class="line">	dbName := string(rowsEvent.Table.Schema)</span><br><span class="line">	tblName := string(rowsEvent.Table.Table)</span><br><span class="line"></span><br><span class="line">	if dbName != targetDB || tblName != targetTable &#123;</span><br><span class="line">		return // 不是我们要的表，跳过</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fmt.Printf(&quot;\n⚡ 捕获到 %s.%s 的更新事件！\n&quot;, dbName, tblName)</span><br><span class="line"></span><br><span class="line">	// 2. 解析行数据</span><br><span class="line">	// Update 事件的 Rows 数组结构：[旧行1, 新行1, 旧行2, 新行2, ...]</span><br><span class="line">	for i := 0; i &lt; len(rowsEvent.Rows); i += 2 &#123;</span><br><span class="line">		oldRow := rowsEvent.Rows[i]</span><br><span class="line">		newRow := rowsEvent.Rows[i+1]</span><br><span class="line"></span><br><span class="line">		// 根据你的表结构 user_balance (uid, username, balance, update_time)</span><br><span class="line">		// 对应的索引是: 0, 1, 2, 3</span><br><span class="line">		</span><br><span class="line">		// 提取 UID (主键)</span><br><span class="line">		uid := getInt(newRow[0])</span><br><span class="line">		</span><br><span class="line">		// 提取余额 Balance</span><br><span class="line">		oldBalance := getInt(oldRow[2])</span><br><span class="line">		newBalance := getInt(newRow[2])</span><br><span class="line"></span><br><span class="line">		fmt.Printf(&quot;   用户 UID: %d\n&quot;, uid)</span><br><span class="line">		fmt.Printf(&quot;   余额变更: %d -&gt; %d\n&quot;, oldBalance, newBalance)</span><br><span class="line"></span><br><span class="line">		// 3. 业务逻辑：同步到 Redis</span><br><span class="line">		// 只有余额真的变了才同步</span><br><span class="line">		if newBalance != oldBalance &#123;</span><br><span class="line">			redisKey := fmt.Sprintf(&quot;user:balance:%d&quot;, uid)</span><br><span class="line">			</span><br><span class="line">			// 模拟耗时，体现&quot;异步&quot;特性</span><br><span class="line">			// time.Sleep(10 * time.Millisecond) </span><br><span class="line">			</span><br><span class="line">			err := rdb.Set(ctx, redisKey, newBalance, 0).Err()</span><br><span class="line">			if err != nil &#123;</span><br><span class="line">				fmt.Printf(&quot;   ❌ Redis 同步失败: %v\n&quot;, err)</span><br><span class="line">				// 生产环境这里需要重试或报警</span><br><span class="line">			&#125; else &#123;</span><br><span class="line">				fmt.Printf(&quot;   ✅ Redis 同步成功！Key: %s, Value: %d\n&quot;, redisKey, newBalance)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125; else &#123;</span><br><span class="line">			fmt.Println(&quot;   ⚠️ 余额未发生实质变化，忽略同步。&quot;)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 辅助函数：处理 go-mysql 解析出来的 int 类型差异</span><br><span class="line">// go-mysql 可能会根据数值大小返回 int, int32, int64 等不同类型</span><br><span class="line">func getInt(v interface&#123;&#125;) int64 &#123;</span><br><span class="line">	switch val := v.(type) &#123;</span><br><span class="line">	case int:</span><br><span class="line">		return int64(val)</span><br><span class="line">	case int8:</span><br><span class="line">		return int64(val)</span><br><span class="line">	case int16:</span><br><span class="line">		return int64(val)</span><br><span class="line">	case int32:</span><br><span class="line">		return int64(val)</span><br><span class="line">	case int64:</span><br><span class="line">		return val</span><br><span class="line">	case uint:</span><br><span class="line">		return int64(val)</span><br><span class="line">	case uint32:</span><br><span class="line">		return int64(val)</span><br><span class="line">	case uint64:</span><br><span class="line">		return int64(val)</span><br><span class="line">	default:</span><br><span class="line">		return 0</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<hr />
-<h3 id="第四步运行与验证-见证奇迹的时刻">🟣 第四步：运行与验证
-(见证奇迹的时刻)</h3>
+<hr>
+<h3 id="🟣-第四步：运行与验证-见证奇迹的时刻">🟣 第四步：运行与验证 (见证奇迹的时刻)</h3>
 <p>现在我们打开两个终端窗口。</p>
-<h4 id="窗口-1运行-go-程序-同步器">窗口 1：运行 Go 程序 (同步器)</h4>
+<h4 id="窗口-1：运行-Go-程序-同步器">窗口 1：运行 Go 程序 (同步器)</h4>
 <p>Bash</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go run main.go</span><br></pre></td></tr></table></figure>
 <p>你会看到输出：</p>
 <blockquote>
-<p>✅ Redis 连接成功！等待数据同步...</p>
-<p>🚀 Binlog 监听器启动成功！正在监听 MySQL 变更...</p>
+<p>✅ Redis 连接成功！等待数据同步…</p>
+<p>🚀 Binlog 监听器启动成功！正在监听 MySQL 变更…</p>
 </blockquote>
 <p>程序现在处于<strong>阻塞监听</strong>状态。</p>
-<h4 id="窗口-2操作-mysql-模拟充值">窗口 2：操作 MySQL (模拟充值)</h4>
+<h4 id="窗口-2：操作-MySQL-模拟充值">窗口 2：操作 MySQL (模拟充值)</h4>
 <p>连接到你的 MySQL，执行充值操作。</p>
 <p>SQL</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">USE order_db;</span><br><span class="line"></span><br><span class="line">-- 模拟：给用户 10086 充值 100 块 (10000分)</span><br><span class="line">UPDATE user_balance SET balance = balance + 10000 WHERE uid = 10086;</span><br></pre></td></tr></table></figure>
-<h4 id="观察结果">👀 观察结果</h4>
+<h4 id="👀-观察结果">👀 观察结果</h4>
 <p><strong>回到窗口 1 (Go 程序)</strong>，你应该会立刻看到如下输出：</p>
 <p>Plaintext</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">⚡ 捕获到 order_db.user_balance 的更新事件！</span><br><span class="line">   用户 UID: 10086</span><br><span class="line">   余额变更: 0 -&gt; 10000</span><br><span class="line">   ✅ Redis 同步成功！Key: user:balance:10086, Value: 10000</span><br></pre></td></tr></table></figure>
@@ -161,151 +154,105 @@ Redis)</h3>
 <p>如果你有 Redis 客户端，可以去验证一下：</p>
 <p>Bash</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis-cli get user:balance:10086</span><br><span class="line"># 输出应该是 &quot;10000&quot;</span><br></pre></td></tr></table></figure>
-<hr />
-<h3 id="深度复盘这个-demo-里的架构点">🧠 深度复盘：这个 Demo
-里的架构点</h3>
-<p>通过这个实操，你实际上已经跑通了<strong>“异构数据同步”</strong>的最核心路径。</p>
-<ol type="1">
-<li><p>ROW 格式的威力：</p>
-<p>代码里的 oldRow 和 newRow 之所以能拿到，全靠 MySQL Binlog 的 ROW
-格式记录了镜像数据。</p></li>
-<li><p>准实时性：</p>
-<p>你会发现，当你敲下 SQL 回车的一瞬间，Go
-程序几乎同时输出了日志。这就是 Binlog 推送 的效率（通常在 10ms
-以内），足以满足绝大多数“最终一致性”的业务需求。</p></li>
-<li><p>解耦：</p>
-<p>你在操作 MySQL 时，完全不需要知道 Redis 的存在。是 Go
-程序作为“旁路”把数据搬运过去的。这就实现了业务代码与缓存逻辑的解耦。</p></li>
+<hr>
+<h3 id="🧠-深度复盘：这个-Demo-里的架构点">🧠 深度复盘：这个 Demo 里的架构点</h3>
+<p>通过这个实操，你实际上已经跑通了**“异构数据同步”**的最核心路径。</p>
+<ol>
+<li>
+<p>ROW 格式的威力：</p>
+<p>代码里的 oldRow 和 newRow 之所以能拿到，全靠 MySQL Binlog 的 ROW 格式记录了镜像数据。</p>
+</li>
+<li>
+<p>准实时性：</p>
+<p>你会发现，当你敲下 SQL 回车的一瞬间，Go 程序几乎同时输出了日志。这就是 Binlog 推送 的效率（通常在 10ms 以内），足以满足绝大多数“最终一致性”的业务需求。</p>
+</li>
+<li>
+<p>解耦：</p>
+<p>你在操作 MySQL 时，完全不需要知道 Redis 的存在。是 Go 程序作为“旁路”把数据搬运过去的。这就实现了业务代码与缓存逻辑的解耦。</p>
+</li>
 </ol>
 <p>去做一下这个实验吧！跑通的那一刻，你会对“分布式事务”有全新的实感。</p>
-<p>这是一个非常敏锐的架构问题！你能问出这个问题，说明你已经具备了<strong>“生产级架构”</strong>的思维，不再局限于写一个小
-Demo。</p>
+<p>这是一个非常敏锐的架构问题！你能问出这个问题，说明你已经具备了**“生产级架构”**的思维，不再局限于写一个小 Demo。</p>
 <p>结论先行：</p>
-<p>在刚才的 Demo 中，我跳过 Kafka
-是为了降低学习门槛和演示环境复杂度（避免让你在本地搭建 Zookeeper + Kafka
-集群）。</p>
-<p>但在<strong>真实的生产环境（高并发/大规模）中，引入 Kafka（或
-RocketMQ）几乎是必须的</strong>。</p>
-<p>我们来深度剖析一下：<strong>为什么在这个链路中，我们需要 Kafka
-做中间件？</strong> 它到底解决了什么“直连模式”解决不了的问题？</p>
-<hr />
-<h3 id="架构演进从直连到消息队列">1. 架构演进：从“直连”到“消息队列”</h3>
-<h4 id="阶段一直连模式-刚才的-demo">🔵 阶段一：直连模式 (刚才的
-Demo)</h4>
+<p>在刚才的 Demo 中，我跳过 Kafka 是为了降低学习门槛和演示环境复杂度（避免让你在本地搭建 Zookeeper + Kafka 集群）。</p>
+<p>但在<strong>真实的生产环境（高并发/大规模）中，引入 Kafka（或 RocketMQ）几乎是必须的</strong>。</p>
+<p>我们来深度剖析一下：<strong>为什么在这个链路中，我们需要 Kafka 做中间件？</strong> 它到底解决了什么“直连模式”解决不了的问题？</p>
+<hr>
+<h3 id="1-架构演进：从“直连”到“消息队列”">1. 架构演进：从“直连”到“消息队列”</h3>
+<h4 id="🔵-阶段一：直连模式-刚才的-Demo">🔵 阶段一：直连模式 (刚才的 Demo)</h4>
 <p><strong>架构</strong>：<code>MySQL -&gt; Binlog 监听程序 (Canal/Go) -&gt; Redis</code></p>
 <ul>
 <li><strong>优点</strong>：
 <ul>
 <li>简单，无中间件依赖。</li>
 <li>延迟极低（少了一次网络传输）。</li>
-</ul></li>
+</ul>
+</li>
 <li><strong>致命缺陷</strong>：
-<ol type="1">
-<li><strong>强耦合</strong>：Go 程序既要负责解析
-Binlog（复杂的协议），又要负责写 Redis（业务逻辑）。如果 Redis
-挂了，或者 Redis 写得太慢，会阻塞 Binlog
-的解析，导致<strong>主从延迟堆积</strong>。</li>
-<li><strong>无法复用</strong>：如果你的搜索团队说：“嘿，我也想要一份用户余额变更的数据写到
-Elasticsearch 里”。你就得改代码，或者再起一个 Binlog 监听（对 MySQL
-造成双倍压力）。</li>
-<li><strong>无削峰能力</strong>：如果 MySQL 瞬间爆发 10 万 TPS
-的写入，Go 程序会尝试向 Redis 发起 10 万次写入，Redis
-可能会直接崩掉（缓存雪崩）。</li>
-</ol></li>
+<ol>
+<li><strong>强耦合</strong>：Go 程序既要负责解析 Binlog（复杂的协议），又要负责写 Redis（业务逻辑）。如果 Redis 挂了，或者 Redis 写得太慢，会阻塞 Binlog 的解析，导致<strong>主从延迟堆积</strong>。</li>
+<li><strong>无法复用</strong>：如果你的搜索团队说：“嘿，我也想要一份用户余额变更的数据写到 Elasticsearch 里”。你就得改代码，或者再起一个 Binlog 监听（对 MySQL 造成双倍压力）。</li>
+<li><strong>无削峰能力</strong>：如果 MySQL 瞬间爆发 10 万 TPS 的写入，Go 程序会尝试向 Redis 发起 10 万次写入，Redis 可能会直接崩掉（缓存雪崩）。</li>
+</ol>
+</li>
 </ul>
-<h4 id="阶段二引入-kafka-生产标准">🟠 阶段二：引入 Kafka (生产标准)</h4>
+<h4 id="🟠-阶段二：引入-Kafka-生产标准">🟠 阶段二：引入 Kafka (生产标准)</h4>
 <p><strong>架构</strong>：<code>MySQL -&gt; Binlog 解析器 (Canal/Debezium) -&gt; Kafka -&gt; 消费者 (Go App) -&gt; Redis</code></p>
-<p>在这个架构中，<strong>Kafka</strong>
-扮演了最重要的“缓冲”和“解耦”角色。</p>
-<hr />
-<h3 id="kafka-在-cdc-链路中的四大核心价值">2. Kafka 在 CDC
-链路中的四大核心价值</h3>
+<p>在这个架构中，<strong>Kafka</strong> 扮演了最重要的“缓冲”和“解耦”角色。</p>
+<hr>
+<h3 id="2-Kafka-在-CDC-链路中的四大核心价值">2. Kafka 在 CDC 链路中的四大核心价值</h3>
 <p>如果你在面试中被问到“为什么要加 Kafka”，请抛出这四个关键词：</p>
-<h4 id="解耦-decoupling-各司其职">① 解耦 (Decoupling) —— 各司其职</h4>
+<h4 id="①-解耦-Decoupling-——-各司其职">① 解耦 (Decoupling) —— 各司其职</h4>
 <ul>
-<li><strong>Binlog 解析器 (Producer)</strong>：只负责把 Binlog 变成 JSON
-扔进 Kafka。它根本不关心下游是 Redis 还是
-ES，也不关心下游是不是挂了。它的任务就是<strong>快</strong>，紧跟 MySQL
-主库。</li>
-<li><strong>业务消费者 (Consumer)</strong>：只负责从 Kafka 拿消息写
-Redis。如果 Redis 挂了，消费者可以暂停，Kafka
-会帮我们保存进度（Offset）。等 Redis
-修好了，消费者重启，继续从断点消费。<strong>整个过程不影响 MySQL
-主库。</strong></li>
+<li><strong>Binlog 解析器 (Producer)</strong>：只负责把 Binlog 变成 JSON 扔进 Kafka。它根本不关心下游是 Redis 还是 ES，也不关心下游是不是挂了。它的任务就是<strong>快</strong>，紧跟 MySQL 主库。</li>
+<li><strong>业务消费者 (Consumer)</strong>：只负责从 Kafka 拿消息写 Redis。如果 Redis 挂了，消费者可以暂停，Kafka 会帮我们保存进度（Offset）。等 Redis 修好了，消费者重启，继续从断点消费。<strong>整个过程不影响 MySQL 主库。</strong></li>
 </ul>
-<h4 id="削峰填谷-traffic-shaping-保护下游">② 削峰填谷 (Traffic Shaping)
-—— 保护下游</h4>
+<h4 id="②-削峰填谷-Traffic-Shaping-——-保护下游">② 削峰填谷 (Traffic Shaping) —— 保护下游</h4>
 <ul>
-<li><strong>场景</strong>：大促期间，MySQL 瞬间涌入 5 万 QPS
-的充值请求。</li>
-<li><strong>作用</strong>：Kafka 极其能抗写（百万级
-TPS）。它能瞬间吞下这 5
-万条消息，像一个巨大的<strong>蓄水池</strong>。</li>
-<li><strong>下游</strong>：后端的 Go
-程序可以按照自己的节奏（比如每秒处理 2000 个），慢慢地从 Kafka
-里取数据更新 Redis。Redis 此时是非常安全的，不会被流量洪峰打死。</li>
+<li><strong>场景</strong>：大促期间，MySQL 瞬间涌入 5 万 QPS 的充值请求。</li>
+<li><strong>作用</strong>：Kafka 极其能抗写（百万级 TPS）。它能瞬间吞下这 5 万条消息，像一个巨大的<strong>蓄水池</strong>。</li>
+<li><strong>下游</strong>：后端的 Go 程序可以按照自己的节奏（比如每秒处理 2000 个），慢慢地从 Kafka 里取数据更新 Redis。Redis 此时是非常安全的，不会被流量洪峰打死。</li>
 </ul>
-<h4 id="广播多路分发-fan-out-数据资产化">③ 广播/多路分发 (Fan-out) ——
-数据资产化</h4>
+<h4 id="③-广播-多路分发-Fan-out-——-数据资产化">③ 广播/多路分发 (Fan-out) —— 数据资产化</h4>
 <ul>
 <li><strong>场景</strong>：一份数据，多处使用。</li>
-<li><strong>作用</strong>：Binlog 数据进入 Kafka 的
-<code>Topic: user_balance_update</code> 后：
+<li><strong>作用</strong>：Binlog 数据进入 Kafka 的 <code>Topic: user_balance_update</code> 后：
 <ul>
-<li><strong>Consumer Group A (缓存组)</strong>：读取数据 -&gt; 更新
-Redis。</li>
-<li><strong>Consumer Group B (搜索组)</strong>：读取同一份数据 -&gt;
-更新 Elasticsearch。</li>
-<li><strong>Consumer Group C (数仓组)</strong>：读取同一份数据 -&gt;
-存入 Hive/ClickHouse。</li>
-</ul></li>
-<li><strong>收益</strong>：MySQL 只需要承受一次 Binlog Dump
-的压力，实现了<strong>“一次生产，多次消费”</strong>。</li>
+<li><strong>Consumer Group A (缓存组)</strong>：读取数据 -&gt; 更新 Redis。</li>
+<li><strong>Consumer Group B (搜索组)</strong>：读取同一份数据 -&gt; 更新 Elasticsearch。</li>
+<li><strong>Consumer Group C (数仓组)</strong>：读取同一份数据 -&gt; 存入 Hive/ClickHouse。</li>
 </ul>
-<h4 id="数据回放-data-replay-容错后悔药">④ 数据回放 (Data Replay) ——
-容错后悔药</h4>
+</li>
+<li><strong>收益</strong>：MySQL 只需要承受一次 Binlog Dump 的压力，实现了**“一次生产，多次消费”**。</li>
+</ul>
+<h4 id="④-数据回放-Data-Replay-——-容错后悔药">④ 数据回放 (Data Replay) —— 容错后悔药</h4>
 <ul>
-<li><strong>场景</strong>：你写的更新 Redis 的代码有个
-Bug，把余额加错了。代码上线跑了 1 个小时你才发现。</li>
-<li><strong>作用</strong>：如果是直连模式，Binlog
-早就流过去了，难以重来。但在 Kafka 模式下，你可以把消费者的
-<strong>Offset (偏移量)</strong> 重置到 1 小时前。</li>
-<li><strong>结果</strong>：消费者会重新拉取过去 1
-小时的历史消息，重新计算并覆盖 Redis 中的错误数据。</li>
+<li><strong>场景</strong>：你写的更新 Redis 的代码有个 Bug，把余额加错了。代码上线跑了 1 个小时你才发现。</li>
+<li><strong>作用</strong>：如果是直连模式，Binlog 早就流过去了，难以重来。但在 Kafka 模式下，你可以把消费者的 <strong>Offset (偏移量)</strong> 重置到 1 小时前。</li>
+<li><strong>结果</strong>：消费者会重新拉取过去 1 小时的历史消息，重新计算并覆盖 Redis 中的错误数据。</li>
 </ul>
-<hr />
-<h3 id="代码层面的变化">3. 代码层面的变化</h3>
+<hr>
+<h3 id="3-代码层面的变化">3. 代码层面的变化</h3>
 <p>如果要上 Kafka，你的 Go 代码会拆分成两个独立的程序。</p>
-<h4 id="程序-aproducer-binlog---kafka">程序 A：Producer (Binlog -&gt;
-Kafka)</h4>
-<p>你可以继续用 <code>go-mysql</code>，或者直接部署开源的 <strong>Canal
-Deployer</strong> 或 <strong>Debezium</strong>（推荐，基于 Java/Kafka
-Connect）。它们配置一下就能用，不需要写代码。</p>
-<h4 id="程序-bconsumer-kafka---redis">程序 B：Consumer (Kafka -&gt;
-Redis)</h4>
+<h4 id="程序-A：Producer-Binlog-Kafka">程序 A：Producer (Binlog -&gt; Kafka)</h4>
+<p>你可以继续用 <code>go-mysql</code>，或者直接部署开源的 <strong>Canal Deployer</strong> 或 <strong>Debezium</strong>（推荐，基于 Java/Kafka Connect）。它们配置一下就能用，不需要写代码。</p>
+<h4 id="程序-B：Consumer-Kafka-Redis">程序 B：Consumer (Kafka -&gt; Redis)</h4>
 <p>这才是你需要写的业务代码：</p>
 <p>Go</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">// 伪代码：从 Kafka 消费</span><br><span class="line">func main() &#123;</span><br><span class="line">    reader := kafka.NewReader(kafka.ReaderConfig&#123;</span><br><span class="line">        Brokers: []string&#123;&quot;localhost:9092&quot;&#125;,</span><br><span class="line">        Topic:   &quot;mysql_binlog_user_balance&quot;,</span><br><span class="line">        GroupID: &quot;redis_updater_group&quot;, // 消费者组</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    for &#123;</span><br><span class="line">        m, _ := reader.ReadMessage(context.Background())</span><br><span class="line">        </span><br><span class="line">        // 1. 解析 Kafka 消息 (JSON)</span><br><span class="line">        var event BalanceUpdateEvent</span><br><span class="line">        json.Unmarshal(m.Value, &amp;event)</span><br><span class="line">        </span><br><span class="line">        // 2. 写入 Redis</span><br><span class="line">        redis.Set(&quot;user:&quot;+event.Uid, event.NewBalance)</span><br><span class="line">        </span><br><span class="line">        // 3. 提交 Offset (表示这条我处理完了)</span><br><span class="line">        reader.CommitMessages(context.Background(), m)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h3 id="总结">总结</h3>
 <p>你问得非常好。</p>
 <ul>
-<li><strong>学习/开发/小规模</strong>：直连模式（MySQL -&gt; App -&gt;
-Redis）完全 OK，简单粗暴，延迟最低。</li>
-<li><strong>生产/大规模/核心链路</strong>：<strong>必须上
-Kafka</strong>。不仅仅是为了解耦，更是为了数据的安全和系统的健壮性。</li>
+<li><strong>学习/开发/小规模</strong>：直连模式（MySQL -&gt; App -&gt; Redis）完全 OK，简单粗暴，延迟最低。</li>
+<li><strong>生产/大规模/核心链路</strong>：<strong>必须上 Kafka</strong>。不仅仅是为了解耦，更是为了数据的安全和系统的健壮性。</li>
 </ul>
 <p>建议：</p>
-<p>既然你已经跑通了直连。如果想挑战高阶，可以尝试在本地起一个
-Kafka，把刚才 Demo 里的 handleUpdateEvent 函数改成“发送 Kafka
-消息”，然后再写一个小程序去消费它。这就构成了一个完整的工业级 CDC
-链路。</p>
+<p>既然你已经跑通了直连。如果想挑战高阶，可以尝试在本地起一个 Kafka，把刚才 Demo 里的 handleUpdateEvent 函数改成“发送 Kafka 消息”，然后再写一个小程序去消费它。这就构成了一个完整的工业级 CDC 链路。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -345,30 +292,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87-mysql-redis"><span class="toc-text">🟢 第一步：环境准备 (MySQL &amp;
-Redis)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#mysql-%E5%BB%BA%E8%A1%A8%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%87%86%E5%A4%87"><span class="toc-text">1. MySQL 建表与数据准备</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E6%8B%A5%E6%9C%89%E5%A4%8D%E5%88%B6%E6%9D%83%E9%99%90%E7%9A%84%E7%94%A8%E6%88%B7-%E5%8F%AF%E9%80%89%E6%8E%A8%E8%8D%90"><span class="toc-text">2. 创建拥有复制权限的用户
-(可选，推荐)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5go-%E9%A1%B9%E7%9B%AE%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-text">🔵 第二步：Go 项目初始化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%E7%BC%96%E5%86%99%E6%A0%B8%E5%BF%83%E4%BB%A3%E7%A0%81-main.go"><span class="toc-text">🟠 第三步：编写核心代码
-(main.go)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%E8%BF%90%E8%A1%8C%E4%B8%8E%E9%AA%8C%E8%AF%81-%E8%A7%81%E8%AF%81%E5%A5%87%E8%BF%B9%E7%9A%84%E6%97%B6%E5%88%BB"><span class="toc-text">🟣 第四步：运行与验证
-(见证奇迹的时刻)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AA%97%E5%8F%A3-1%E8%BF%90%E8%A1%8C-go-%E7%A8%8B%E5%BA%8F-%E5%90%8C%E6%AD%A5%E5%99%A8"><span class="toc-text">窗口 1：运行 Go 程序 (同步器)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AA%97%E5%8F%A3-2%E6%93%8D%E4%BD%9C-mysql-%E6%A8%A1%E6%8B%9F%E5%85%85%E5%80%BC"><span class="toc-text">窗口 2：操作 MySQL (模拟充值)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%A7%82%E5%AF%9F%E7%BB%93%E6%9E%9C"><span class="toc-text">👀 观察结果</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B7%B1%E5%BA%A6%E5%A4%8D%E7%9B%98%E8%BF%99%E4%B8%AA-demo-%E9%87%8C%E7%9A%84%E6%9E%B6%E6%9E%84%E7%82%B9"><span class="toc-text">🧠 深度复盘：这个 Demo
-里的架构点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E6%BC%94%E8%BF%9B%E4%BB%8E%E7%9B%B4%E8%BF%9E%E5%88%B0%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97"><span class="toc-text">1. 架构演进：从“直连”到“消息队列”</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5%E4%B8%80%E7%9B%B4%E8%BF%9E%E6%A8%A1%E5%BC%8F-%E5%88%9A%E6%89%8D%E7%9A%84-demo"><span class="toc-text">🔵 阶段一：直连模式 (刚才的
-Demo)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5%E4%BA%8C%E5%BC%95%E5%85%A5-kafka-%E7%94%9F%E4%BA%A7%E6%A0%87%E5%87%86"><span class="toc-text">🟠 阶段二：引入 Kafka (生产标准)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#kafka-%E5%9C%A8-cdc-%E9%93%BE%E8%B7%AF%E4%B8%AD%E7%9A%84%E5%9B%9B%E5%A4%A7%E6%A0%B8%E5%BF%83%E4%BB%B7%E5%80%BC"><span class="toc-text">2. Kafka 在 CDC
-链路中的四大核心价值</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%A7%A3%E8%80%A6-decoupling-%E5%90%84%E5%8F%B8%E5%85%B6%E8%81%8C"><span class="toc-text">① 解耦 (Decoupling) —— 各司其职</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%89%8A%E5%B3%B0%E5%A1%AB%E8%B0%B7-traffic-shaping-%E4%BF%9D%E6%8A%A4%E4%B8%8B%E6%B8%B8"><span class="toc-text">② 削峰填谷 (Traffic Shaping)
-—— 保护下游</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B9%BF%E6%92%AD%E5%A4%9A%E8%B7%AF%E5%88%86%E5%8F%91-fan-out-%E6%95%B0%E6%8D%AE%E8%B5%84%E4%BA%A7%E5%8C%96"><span class="toc-text">③ 广播&#x2F;多路分发 (Fan-out) ——
-数据资产化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E5%9B%9E%E6%94%BE-data-replay-%E5%AE%B9%E9%94%99%E5%90%8E%E6%82%94%E8%8D%AF"><span class="toc-text">④ 数据回放 (Data Replay) ——
-容错后悔药</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E5%B1%82%E9%9D%A2%E7%9A%84%E5%8F%98%E5%8C%96"><span class="toc-text">3. 代码层面的变化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A8%8B%E5%BA%8F-aproducer-binlog---kafka"><span class="toc-text">程序 A：Producer (Binlog -&gt;
-Kafka)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A8%8B%E5%BA%8F-bconsumer-kafka---redis"><span class="toc-text">程序 B：Consumer (Kafka -&gt;
-Redis)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%F0%9F%9F%A2-%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87-MySQL-Redis"><span class="toc-text">🟢 第一步：环境准备 (MySQL &amp; Redis)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-MySQL-%E5%BB%BA%E8%A1%A8%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%87%86%E5%A4%87"><span class="toc-text">1. MySQL 建表与数据准备</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E5%88%9B%E5%BB%BA%E6%8B%A5%E6%9C%89%E5%A4%8D%E5%88%B6%E6%9D%83%E9%99%90%E7%9A%84%E7%94%A8%E6%88%B7-%E5%8F%AF%E9%80%89%EF%BC%8C%E6%8E%A8%E8%8D%90"><span class="toc-text">2. 创建拥有复制权限的用户 (可选，推荐)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%F0%9F%94%B5-%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9AGo-%E9%A1%B9%E7%9B%AE%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-text">🔵 第二步：Go 项目初始化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%F0%9F%9F%A0-%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E7%BC%96%E5%86%99%E6%A0%B8%E5%BF%83%E4%BB%A3%E7%A0%81-main-go"><span class="toc-text">🟠 第三步：编写核心代码 (main.go)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%F0%9F%9F%A3-%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E8%BF%90%E8%A1%8C%E4%B8%8E%E9%AA%8C%E8%AF%81-%E8%A7%81%E8%AF%81%E5%A5%87%E8%BF%B9%E7%9A%84%E6%97%B6%E5%88%BB"><span class="toc-text">🟣 第四步：运行与验证 (见证奇迹的时刻)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AA%97%E5%8F%A3-1%EF%BC%9A%E8%BF%90%E8%A1%8C-Go-%E7%A8%8B%E5%BA%8F-%E5%90%8C%E6%AD%A5%E5%99%A8"><span class="toc-text">窗口 1：运行 Go 程序 (同步器)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AA%97%E5%8F%A3-2%EF%BC%9A%E6%93%8D%E4%BD%9C-MySQL-%E6%A8%A1%E6%8B%9F%E5%85%85%E5%80%BC"><span class="toc-text">窗口 2：操作 MySQL (模拟充值)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%F0%9F%91%80-%E8%A7%82%E5%AF%9F%E7%BB%93%E6%9E%9C"><span class="toc-text">👀 观察结果</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%F0%9F%A7%A0-%E6%B7%B1%E5%BA%A6%E5%A4%8D%E7%9B%98%EF%BC%9A%E8%BF%99%E4%B8%AA-Demo-%E9%87%8C%E7%9A%84%E6%9E%B6%E6%9E%84%E7%82%B9"><span class="toc-text">🧠 深度复盘：这个 Demo 里的架构点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%9E%B6%E6%9E%84%E6%BC%94%E8%BF%9B%EF%BC%9A%E4%BB%8E%E2%80%9C%E7%9B%B4%E8%BF%9E%E2%80%9D%E5%88%B0%E2%80%9C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E2%80%9D"><span class="toc-text">1. 架构演进：从“直连”到“消息队列”</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%F0%9F%94%B5-%E9%98%B6%E6%AE%B5%E4%B8%80%EF%BC%9A%E7%9B%B4%E8%BF%9E%E6%A8%A1%E5%BC%8F-%E5%88%9A%E6%89%8D%E7%9A%84-Demo"><span class="toc-text">🔵 阶段一：直连模式 (刚才的 Demo)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%F0%9F%9F%A0-%E9%98%B6%E6%AE%B5%E4%BA%8C%EF%BC%9A%E5%BC%95%E5%85%A5-Kafka-%E7%94%9F%E4%BA%A7%E6%A0%87%E5%87%86"><span class="toc-text">🟠 阶段二：引入 Kafka (生产标准)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Kafka-%E5%9C%A8-CDC-%E9%93%BE%E8%B7%AF%E4%B8%AD%E7%9A%84%E5%9B%9B%E5%A4%A7%E6%A0%B8%E5%BF%83%E4%BB%B7%E5%80%BC"><span class="toc-text">2. Kafka 在 CDC 链路中的四大核心价值</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E2%91%A0-%E8%A7%A3%E8%80%A6-Decoupling-%E2%80%94%E2%80%94-%E5%90%84%E5%8F%B8%E5%85%B6%E8%81%8C"><span class="toc-text">① 解耦 (Decoupling) —— 各司其职</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E2%91%A1-%E5%89%8A%E5%B3%B0%E5%A1%AB%E8%B0%B7-Traffic-Shaping-%E2%80%94%E2%80%94-%E4%BF%9D%E6%8A%A4%E4%B8%8B%E6%B8%B8"><span class="toc-text">② 削峰填谷 (Traffic Shaping) —— 保护下游</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E2%91%A2-%E5%B9%BF%E6%92%AD-%E5%A4%9A%E8%B7%AF%E5%88%86%E5%8F%91-Fan-out-%E2%80%94%E2%80%94-%E6%95%B0%E6%8D%AE%E8%B5%84%E4%BA%A7%E5%8C%96"><span class="toc-text">③ 广播&#x2F;多路分发 (Fan-out) —— 数据资产化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E2%91%A3-%E6%95%B0%E6%8D%AE%E5%9B%9E%E6%94%BE-Data-Replay-%E2%80%94%E2%80%94-%E5%AE%B9%E9%94%99%E5%90%8E%E6%82%94%E8%8D%AF"><span class="toc-text">④ 数据回放 (Data Replay) —— 容错后悔药</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E4%BB%A3%E7%A0%81%E5%B1%82%E9%9D%A2%E7%9A%84%E5%8F%98%E5%8C%96"><span class="toc-text">3. 代码层面的变化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A8%8B%E5%BA%8F-A%EF%BC%9AProducer-Binlog-Kafka"><span class="toc-text">程序 A：Producer (Binlog -&gt; Kafka)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A8%8B%E5%BA%8F-B%EF%BC%9AConsumer-Kafka-Redis"><span class="toc-text">程序 B：Consumer (Kafka -&gt; Redis)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

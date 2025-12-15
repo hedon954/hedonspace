@@ -27,6 +27,7 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本篇通过回答《Fundamentals of Software Architecture》第十章的课后思考题，深入探讨分层架构中开放层与封闭层的核心差异、隔离层概念的重要价值、架构漏斗反模式的识别与防范，以及分层架构风格的主要驱动特性与局限性分析，帮助理解分层架构的设计原则和适用场景，提升架构师在选择和实施分层架构时的决策能力和风险评估意识。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250714113807168.png">
 <meta property="article:published_time" content="2025-07-14T02:20:00.000Z">
 <meta property="article:modified_time" content="2025-07-27T04:29:14.327Z">
 <meta property="article:author" content="Hedon Wang">
@@ -34,6 +35,7 @@
 <meta property="article:tag" content="软件架构">
 <meta property="article:tag" content="fosa">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250714113807168.png">
   
   
   
@@ -71,7 +73,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/12/09/redis/redis-datatype/"><span class="title">盘点 Redis 各种数据类型</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing-excerpt/"><span class="title">书籍摘抄丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/06/12/note/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/10/14/note/note-obsidian/"><span class="title">读书笔记丨《上头Obsidian：手把手教你用AI做好知识管理》</span></a><a class="item title" href="/2025/07/24/note/note-fosa/"><span class="title">读书笔记丨《Fundamentals of Software Architecture》</span></a><a class="item title" href="/2025/03/11/note/note-ddd-awareness/"><span class="title">读书笔记丨《悟道领域驱动设计》</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/12/09/redis/redis-datatype/"><span class="title">盘点 Redis 各种数据类型</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing-excerpt/"><span class="title">书籍摘抄丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/06/12/note/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/10/14/note/note-obsidian/"><span class="title">读书笔记丨《上头Obsidian：手把手教你用AI做好知识管理》</span></a><a class="item title" href="/2025/07/24/note/note-fosa/"><span class="title">读书笔记丨《Fundamentals of Software Architecture》</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -95,80 +97,64 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>本系列文章通过逐章回答<a
-target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of
-Software Architecture》</a>（下文简称
-FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第十章</u>内容。</p>
+  </div><article class="md-text content"><p>本系列文章通过逐章回答<a target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of Software Architecture》</a>（下文简称 FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第十章</u>内容。</p>
 <p>本章的课后题是：</p>
-<ol type="1">
-<li><p>What is the difference between an open layer and a closed
-layer?</p>
-<p>开放层和封闭层有何区别？</p></li>
-<li><p>Describe the layers of isolation concept and what the benefits
-are of this concept.</p>
-<p>隔离层概念及其益处是什么？</p></li>
-<li><p>What is the architecture sinkhole anti-pattern?</p>
-<p>架构漏斗反模式是什么？</p></li>
-<li><p>What are some of the main architecture characteristics that would
-drive you to use a layered architecture?</p>
-<p>驱动采用分层架构风格的主要架构特性有哪些？</p></li>
-<li><p>Why isn’t testability well supported in the layered architecture
-style?</p>
-<p>分层架构风格的可测试性为何不佳？</p></li>
-<li><p>Why isn’t agility well supported in the layered architecture
-style?</p>
-<p>分层架构风格的敏捷性为何不佳？</p></li>
+<ol>
+<li>
+<p>What is the difference between an open layer and a closed layer?</p>
+<p>开放层和封闭层有何区别？</p>
+</li>
+<li>
+<p>Describe the layers of isolation concept and what the benefits are of this concept.</p>
+<p>隔离层概念及其益处是什么？</p>
+</li>
+<li>
+<p>What is the architecture sinkhole anti-pattern?</p>
+<p>架构漏斗反模式是什么？</p>
+</li>
+<li>
+<p>What are some of the main architecture characteristics that would drive you to use a layered architecture?</p>
+<p>驱动采用分层架构风格的主要架构特性有哪些？</p>
+</li>
+<li>
+<p>Why isn’t testability well supported in the layered architecture style?</p>
+<p>分层架构风格的可测试性为何不佳？</p>
+</li>
+<li>
+<p>Why isn’t agility well supported in the layered architecture style?</p>
+<p>分层架构风格的敏捷性为何不佳？</p>
+</li>
 </ol>
-<hr />
+<hr>
 <h2 id="概念">概念</h2>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250714113807168.png"
-alt="FOSA Figure 10-2. Physical topology (deployment) variants" />
-<figcaption aria-hidden="true">FOSA Figure 10-2. Physical topology
-(deployment) variants</figcaption>
-</figure>
-<p>分层架构的<strong>核心驱动力</strong>是<strong>关注点分离（Separation
-of
-Concerns）</strong>。它将一个复杂的系统按照不同的职责或技术关注点，垂直地划分成若干个水平的“层（Layer）”。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250714113807168.png" alt="FOSA Figure 10-2. Physical topology (deployment) variants"></p>
+<p>分层架构的<strong>核心驱动力</strong>是<strong>关注点分离（Separation of Concerns）</strong>。它将一个复杂的系统按照不同的职责或技术关注点，垂直地划分成若干个水平的“层（Layer）”。</p>
 <p>每一层都有明确的职责：</p>
 <ul>
-<li><strong>表现层（Presentation
-Layer）</strong>：负责处理用户界面和交互，例如 Web 页面或 API
-端点。</li>
-<li><strong>业务逻辑层（Business Logic
-Layer）</strong>：实现核心的业务规则和流程，是应用的心脏。</li>
-<li><strong>持久化层（Persistence
-Layer）</strong>：负责数据的存储和检索，与数据库交互。</li>
-<li><strong>数据库层（Database
-Layer）</strong>：即实际的数据库系统。</li>
+<li><strong>表现层（Presentation Layer）</strong>：负责处理用户界面和交互，例如 Web 页面或 API 端点。</li>
+<li><strong>业务逻辑层（Business Logic Layer）</strong>：实现核心的业务规则和流程，是应用的心脏。</li>
+<li><strong>持久化层（Persistence Layer）</strong>：负责数据的存储和检索，与数据库交互。</li>
+<li><strong>数据库层（Database Layer）</strong>：即实际的数据库系统。</li>
 </ul>
 <p>这些层之间存在一个至关重要的约束：<strong>依赖关系是单向的</strong>。通常来说，上层可以依赖下层，但下层绝对不能依赖上层。例如，表现层可以调用业务逻辑层，但业务逻辑层不应该知道任何关于表现层的具体实现细节。</p>
 <h2 id="封闭层-vs-开放层">封闭层 vs 开放层</h2>
-<p><strong>封闭层（Closed
-Layer）</strong>：当一个请求从上层向下层传递时，它<strong>必须</strong>逐层通过。</p>
+<p><strong>封闭层（Closed Layer）</strong>：当一个请求从上层向下层传递时，它<strong>必须</strong>逐层通过。</p>
 <ul>
-<li><strong>优点</strong>：提供了最高程度的<strong>隔离</strong>。由于每一层都只与它的邻居交流，下层实现细节的变更对上上层的影响被完全隔离。这正是"隔离层"概念的基础。</li>
+<li><strong>优点</strong>：提供了最高程度的<strong>隔离</strong>。由于每一层都只与它的邻居交流，下层实现细节的变更对上上层的影响被完全隔离。这正是&quot;隔离层&quot;概念的基础。</li>
 <li><strong>缺点</strong>：可能会引入不必要的冗余代码和性能开销。</li>
 </ul>
-<p><strong>开放层（Open
-Layer）</strong>：这是一种更为灵活的模式，允许上层"跳过"一个或多个中间层，直接访问更下方的层。</p>
+<p><strong>开放层（Open Layer）</strong>：这是一种更为灵活的模式，允许上层&quot;跳过&quot;一个或多个中间层，直接访问更下方的层。</p>
 <ul>
 <li><strong>优点</strong>：当中间层对于某个特定请求没有任何业务逻辑需要添加时，开放该层可以避免编写无意义的传递（pass-through）代码，从而提高开发效率和运行效率。</li>
 <li><strong>缺点</strong>：破坏了层与层之间的强隔离性。如果滥用开放层，会导致层级关系混乱，上层与多个下层产生耦合，削弱分层架构带来的可维护性优势。</li>
 </ul>
 <h2 id="隔离">隔离</h2>
 <h3 id="概念及好处">概念及好处</h3>
-<p>隔离指的是<strong>一个层中的变更，应该被隔离在这一层以及与之直接相邻的层中，而不会向上"泄漏"到更远的层</strong>。</p>
-<p>想象一下，如果我们决定将数据库从 MySQL 迁移到
-PostgreSQL。这个变化发生在最底层的数据库层和持久化层。</p>
+<p>隔离指的是<strong>一个层中的变更，应该被隔离在这一层以及与之直接相邻的层中，而不会向上&quot;泄漏&quot;到更远的层</strong>。</p>
+<p>想象一下，如果我们决定将数据库从 MySQL 迁移到 PostgreSQL。这个变化发生在最底层的数据库层和持久化层。</p>
 <ul>
-<li><strong>理想情况（强隔离）</strong>：由于业务逻辑层只依赖于持久化层定义的接口（例如
-<code>UserRepository</code>），而不知道其背后是 MySQL 还是
-PostgreSQL，因此业务逻辑层代码<strong>完全不需要修改</strong>。表现层就更不受影响了。变更被成功"隔离"在了持久化层内部。</li>
-<li><strong>隔离被破坏的情况</strong>：如果持久化层的某些特定实现细节（例如特定的
-SQL
-方言）泄漏到了业务逻辑层，那么在迁移数据库时，业务逻辑层也必须跟着修改。这就是隔离性的失败。</li>
+<li><strong>理想情况（强隔离）</strong>：由于业务逻辑层只依赖于持久化层定义的接口（例如 <code>UserRepository</code>），而不知道其背后是 MySQL 还是 PostgreSQL，因此业务逻辑层代码<strong>完全不需要修改</strong>。表现层就更不受影响了。变更被成功&quot;隔离&quot;在了持久化层内部。</li>
+<li><strong>隔离被破坏的情况</strong>：如果持久化层的某些特定实现细节（例如特定的 SQL 方言）泄漏到了业务逻辑层，那么在迁移数据库时，业务逻辑层也必须跟着修改。这就是隔离性的失败。</li>
 </ul>
 <p>这样做的好处有：</p>
 <ul>
@@ -176,19 +162,16 @@ SQL
 <li>技术栈的独立性</li>
 <li>系统的可理解性</li>
 </ul>
-<h3 id="潜在的陷阱架构漏斗反模式">潜在的陷阱：架构漏斗反模式</h3>
-<p><strong>架构漏斗反模式</strong>描述了这样一种情况：一个请求在流经多个封闭层时，其中一些中间层<strong>没有执行任何有意义的逻辑</strong>，仅仅是将请求原封不动地传递给下一层。这些"只传话、不干活"的层就成为了架构的"漏斗"或"沉洞"，增加了不必要的复杂度和代码量。</p>
+<h3 id="潜在的陷阱：架构漏斗反模式">潜在的陷阱：架构漏斗反模式</h3>
+<p><strong>架构漏斗反模式</strong>描述了这样一种情况：一个请求在流经多个封闭层时，其中一些中间层<strong>没有执行任何有意义的逻辑</strong>，仅仅是将请求原封不动地传递给下一层。这些&quot;只传话、不干活&quot;的层就成为了架构的&quot;漏斗&quot;或&quot;沉洞&quot;，增加了不必要的复杂度和代码量。</p>
 <blockquote>
-<p>可以使用二八原则，允许 20% 的 sinkhole，如果过多的
-sinkhole，则说明分层架构很可能不适用于当前的业务场景。</p>
+<p>可以使用二八原则，允许 20% 的 sinkhole，如果过多的 sinkhole，则说明分层架构很可能不适用于当前的业务场景。</p>
 </blockquote>
 <h2 id="优点">优点</h2>
-<ol type="1">
-<li><strong>简单性（Simplicity）和低成本（Cost）</strong>：分层架构模式非常成熟，广为人知，开发团队的学习成本极低。对于中小型项目、预算有限的初创公司或内部管理系统，它是一个"足够好"的、性价比极高的起点。</li>
+<ol>
+<li><strong>简单性（Simplicity）和低成本（Cost）</strong>：分层架构模式非常成熟，广为人知，开发团队的学习成本极低。对于中小型项目、预算有限的初创公司或内部管理系统，它是一个&quot;足够好&quot;的、性价比极高的起点。</li>
 <li><strong>可维护性（Maintainability）</strong>：如前所述，只要遵循了隔离层原则，系统的维护和迭代会非常清晰。对于那些业务逻辑相对稳定、变更不频繁的系统，这是一个巨大的优势。</li>
-<li><strong>整体可部署性（Deployability）</strong>：分层架构天然倾向于构建<strong>单体应用（Monolith）</strong>。整个应用被打包成一个单元（例如一个
-WAR
-包或一个可执行文件）进行部署。这极大地简化了部署和运维的复杂度，尤其是在项目早期或运维能力有限的团队中。</li>
+<li><strong>整体可部署性（Deployability）</strong>：分层架构天然倾向于构建<strong>单体应用（Monolith）</strong>。整个应用被打包成一个单元（例如一个 WAR 包或一个可执行文件）进行部署。这极大地简化了部署和运维的复杂度，尤其是在项目早期或运维能力有限的团队中。</li>
 </ol>
 <h2 id="缺点">缺点</h2>
 <ul>
@@ -200,9 +183,7 @@ WAR
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -242,18 +223,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E5%BF%B5"><span class="toc-text">概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%81%E9%97%AD%E5%B1%82-vs-%E5%BC%80%E6%94%BE%E5%B1%82"><span class="toc-text">封闭层 vs 开放层</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9A%94%E7%A6%BB"><span class="toc-text">隔离</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A6%82%E5%BF%B5%E5%8F%8A%E5%A5%BD%E5%A4%84"><span class="toc-text">概念及好处</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BD%9C%E5%9C%A8%E7%9A%84%E9%99%B7%E9%98%B1%E6%9E%B6%E6%9E%84%E6%BC%8F%E6%96%97%E5%8F%8D%E6%A8%A1%E5%BC%8F"><span class="toc-text">潜在的陷阱：架构漏斗反模式</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BC%98%E7%82%B9"><span class="toc-text">优点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%BA%E7%82%B9"><span class="toc-text">缺点</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E5%BF%B5"><span class="toc-text">概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%81%E9%97%AD%E5%B1%82-vs-%E5%BC%80%E6%94%BE%E5%B1%82"><span class="toc-text">封闭层 vs 开放层</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9A%94%E7%A6%BB"><span class="toc-text">隔离</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A6%82%E5%BF%B5%E5%8F%8A%E5%A5%BD%E5%A4%84"><span class="toc-text">概念及好处</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BD%9C%E5%9C%A8%E7%9A%84%E9%99%B7%E9%98%B1%EF%BC%9A%E6%9E%B6%E6%9E%84%E6%BC%8F%E6%96%97%E5%8F%8D%E6%A8%A1%E5%BC%8F"><span class="toc-text">潜在的陷阱：架构漏斗反模式</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BC%98%E7%82%B9"><span class="toc-text">优点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%BA%E7%82%B9"><span class="toc-text">缺点</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

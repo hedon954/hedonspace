@@ -27,6 +27,11 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本篇通过回答《Fundamentals of Software Architecture》第十四章的课后思考题，深入探讨事件驱动架构中代理拓扑与中介者拓扑的设计差异、异步通信的优势机制、请求模式与事件模式的应用场景，以及事件类型分类、消息可靠性保障技术和架构特性支持分析，帮助理解事件驱动架构的核心设计原理和实施策略，提升架构师在构建响应式系统时的架构选择能力和事件化设计水平。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718110824820.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718113630056.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718111638117.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718113522146.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718132839093.png">
 <meta property="article:published_time" content="2025-07-18T02:30:00.000Z">
 <meta property="article:modified_time" content="2025-07-27T04:29:14.327Z">
 <meta property="article:author" content="Hedon Wang">
@@ -34,6 +39,7 @@
 <meta property="article:tag" content="软件架构">
 <meta property="article:tag" content="fosa">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718110824820.png">
   
   
   
@@ -71,7 +77,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/12/09/redis/redis-datatype/"><span class="title">盘点 Redis 各种数据类型</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing-excerpt/"><span class="title">书籍摘抄丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/06/12/note/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/10/14/note/note-obsidian/"><span class="title">读书笔记丨《上头Obsidian：手把手教你用AI做好知识管理》</span></a><a class="item title" href="/2025/07/24/note/note-fosa/"><span class="title">读书笔记丨《Fundamentals of Software Architecture》</span></a><a class="item title" href="/2025/03/11/note/note-ddd-awareness/"><span class="title">读书笔记丨《悟道领域驱动设计》</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item title" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item title" href="/2025/12/09/redis/redis-datatype/"><span class="title">盘点 Redis 各种数据类型</span></a><a class="item title" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing/"><span class="title">读书笔记丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/04/09/note/note-unit-testing-excerpt/"><span class="title">书籍摘抄丨《Unit Testing Principles, Practices, and Patterns》</span></a><a class="item title" href="/2025/06/12/note/note-rust-atomics-and-locks/"><span class="title">读书笔记丨《Rust Atomics and Locks》</span></a><a class="item title" href="/2025/10/14/note/note-obsidian/"><span class="title">读书笔记丨《上头Obsidian：手把手教你用AI做好知识管理》</span></a><a class="item title" href="/2025/07/24/note/note-fosa/"><span class="title">读书笔记丨《Fundamentals of Software Architecture》</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -95,60 +101,57 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>本系列文章通过逐章回答<a
-target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of
-Software Architecture》</a>（下文简称
-FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第十四章</u>内容。</p>
+  </div><article class="md-text content"><p>本系列文章通过逐章回答<a target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of Software Architecture》</a>（下文简称 FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第十四章</u>内容。</p>
 <p>本章的课后题是：</p>
-<ol type="1">
-<li><p>What are the primary differences between the broker and mediator
-topologies?</p>
-<p>代理拓扑（broker）和中介者拓扑（mediator）两种拓扑的根本区别是什么？</p></li>
-<li><p>For better workflow control, would you use the mediator or broker
-topology?</p>
-<p>为了更好的流程控制，你会选择代理拓扑还是中介者拓扑？</p></li>
-<li><p>Does the broker topology usually leverage a publish-and-subscribe
-model with topics or a point-to-point model with queues?</p>
-<p>在代理拓扑中，是经常使用基于主题的发布订阅模式还是基于队列的点到点模式？</p></li>
-<li><p>Name two primary advantage of asynchronous communications.</p>
-<p>列出 2 个异步通信的主要优势。</p></li>
-<li><p>Give an example of a typical request within the request-based
-model.</p>
-<p>举一个 request-based 模式的典型例子。</p></li>
-<li><p>Give an example of a typical request in an event-based model.</p>
-<p>举一个 event-based 模式的典型例子。</p></li>
-<li><p>What is the difference between an initiating event and a
-processing event in event-driven architecture?</p>
-<p>在事件驱动架构中，初始事件和处理中事件二者有什么不同？</p></li>
-<li><p>What are some of the techniques for preventing data loss when
-sending and receiving messages from a queue?</p>
-<p>有哪些技术可以防止在从队列发送和接收消息时丢失数据？</p></li>
-<li><p>What are three main driving architecture characteristics for
-using event-driven architecture?</p>
-<p>使用事件驱动架构的三个主要驱动架构特性是什么？</p></li>
-<li><p>What are some of the architecture characteristics that are not
-well supported in event-driven architecture?</p>
-<p>事件驱动架构不能很好地支持哪些架构特性？</p></li>
+<ol>
+<li>
+<p>What are the primary differences between the broker and mediator topologies?</p>
+<p>代理拓扑（broker）和中介者拓扑（mediator）两种拓扑的根本区别是什么？</p>
+</li>
+<li>
+<p>For better workflow control, would you use the mediator or broker topology?</p>
+<p>为了更好的流程控制，你会选择代理拓扑还是中介者拓扑？</p>
+</li>
+<li>
+<p>Does the broker topology usually leverage a publish-and-subscribe model with topics or a point-to-point model with queues?</p>
+<p>在代理拓扑中，是经常使用基于主题的发布订阅模式还是基于队列的点到点模式？</p>
+</li>
+<li>
+<p>Name two primary advantage of asynchronous communications.</p>
+<p>列出 2 个异步通信的主要优势。</p>
+</li>
+<li>
+<p>Give an example of a typical request within the request-based model.</p>
+<p>举一个 request-based 模式的典型例子。</p>
+</li>
+<li>
+<p>Give an example of a typical request in an event-based model.</p>
+<p>举一个 event-based 模式的典型例子。</p>
+</li>
+<li>
+<p>What is the difference between an initiating event and a processing event in event-driven architecture?</p>
+<p>在事件驱动架构中，初始事件和处理中事件二者有什么不同？</p>
+</li>
+<li>
+<p>What are some of the techniques for preventing data loss when sending and receiving messages from a queue?</p>
+<p>有哪些技术可以防止在从队列发送和接收消息时丢失数据？</p>
+</li>
+<li>
+<p>What are three main driving architecture characteristics for using event-driven architecture?</p>
+<p>使用事件驱动架构的三个主要驱动架构特性是什么？</p>
+</li>
+<li>
+<p>What are some of the architecture characteristics that are not well supported in event-driven architecture?</p>
+<p>事件驱动架构不能很好地支持哪些架构特性？</p>
+</li>
 </ol>
-<hr />
-<p>传统的软件设计如同一个等级森严的组织，组件 A 直接向组件 B
-<strong>下达命令</strong>（例如，调用一个函数或
-API）。而事件驱动架构则更像一个现代化的、扁平的协作网络。组件 A
-只是<strong>发布一个事实</strong>（嘿，我这里发生了一件事！），而其他对此事感兴趣的组件（B,
-C,
-D...）可以自行决定如何<strong>响应</strong>。这种从命令到响应的范式革命，是事件驱动架构（Event-Driven
-Architecture, EDA）的灵魂所在。</p>
+<hr>
+<p>传统的软件设计如同一个等级森严的组织，组件 A 直接向组件 B <strong>下达命令</strong>（例如，调用一个函数或 API）。而事件驱动架构则更像一个现代化的、扁平的协作网络。组件 A 只是<strong>发布一个事实</strong>（嘿，我这里发生了一件事！），而其他对此事感兴趣的组件（B, C, D…）可以自行决定如何<strong>响应</strong>。这种从命令到响应的范式革命，是事件驱动架构（Event-Driven Architecture, EDA）的灵魂所在。</p>
 <h2 id="异步通信">异步通信</h2>
 <p>EDA 的力量源泉来自于异步通信，它有以下优点：</p>
-<ol type="1">
-<li><strong>极高的系统韧性与可用性 (Resiliency and
-Availability)</strong>：在同步调用中，如果服务 B 宕机，服务 A
-的调用会立刻失败，导致整个链路中断。但在异步模式下，服务 A
-将事件发送给一个中间人（消息代理），然后就可继续自己的工作。即使服务 B
-此时宕机，事件也会被安全地存放在代理中，待 B
-恢复后再进行处理。这使得系统能够优雅地处理局部故障，整体可用性大大提高。</li>
-<li><strong>卓越的可伸缩性与弹性 (Scalability and
-Elasticity)</strong>：生产者和消费者被完全解耦，可以独立进行伸缩。如果事件产生的速度突然加快，我们只需要增加消费者实例的数量即可，而无需对生产者做任何改动。这种按需、独立伸缩的能力是构建高弹性系统的关键。</li>
+<ol>
+<li><strong>极高的系统韧性与可用性 (Resiliency and Availability)</strong>：在同步调用中，如果服务 B 宕机，服务 A 的调用会立刻失败，导致整个链路中断。但在异步模式下，服务 A 将事件发送给一个中间人（消息代理），然后就可继续自己的工作。即使服务 B 此时宕机，事件也会被安全地存放在代理中，待 B 恢复后再进行处理。这使得系统能够优雅地处理局部故障，整体可用性大大提高。</li>
+<li><strong>卓越的可伸缩性与弹性 (Scalability and Elasticity)</strong>：生产者和消费者被完全解耦，可以独立进行伸缩。如果事件产生的速度突然加快，我们只需要增加消费者实例的数量即可，而无需对生产者做任何改动。这种按需、独立伸缩的能力是构建高弹性系统的关键。</li>
 </ol>
 <h2 id="拓扑">拓扑</h2>
 <p>典型的 EDA 有 2 种拓扑，分别为：</p>
@@ -157,24 +160,13 @@ Elasticity)</strong>：生产者和消费者被完全解耦，可以独立进行
 <li>中介者拓扑（mediator）</li>
 </ul>
 <h3 id="broker">broker</h3>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718110824820.png"
-alt="FOSA Figure 14-2. Broker topology" />
-<figcaption aria-hidden="true">FOSA Figure 14-2. Broker
-topology</figcaption>
-</figure>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718110824820.png" alt="FOSA Figure 14-2. Broker topology"></p>
 <p>一个典型的 broker 拓扑如上图所示，它包含以下几个部分：</p>
 <ul>
 <li><code>initiating event</code>：初始事件，它用于<strong>启动整个事件流</strong>，一般来源于系统外部。</li>
-<li><code>event channel</code>：事件通道，用于传递事件，比如 Go 的
-channel，或者分布式系统中的消息队列，如 RabbitMQ、Kafka
-等。一个事件通道一般对应一个订阅主题（topic）。</li>
-<li><code>event processor</code>：事件处理器，它们会根据需求，订阅自己感兴趣的
-topic，从 <code>event channel</code> 中获取事件进行处理。</li>
-<li><code>processing event</code>：处理事件，是由<strong>事件处理器生成并异步广播的事件</strong>，用于广告它刚刚完成了什么操作。这些事件是事件流的中间步骤，通知其他事件处理器某个操作已经完成，以便它们可以继续后续的处理。无论是否有其他的
-<code>event processor</code>
-关心这些事件，最佳实践中还是建议一直发布这些事件，这对于后续的扩展性非常良好。</li>
+<li><code>event channel</code>：事件通道，用于传递事件，比如 Go 的 channel，或者分布式系统中的消息队列，如 RabbitMQ、Kafka 等。一个事件通道一般对应一个订阅主题（topic）。</li>
+<li><code>event processor</code>：事件处理器，它们会根据需求，订阅自己感兴趣的 topic，从 <code>event channel</code> 中获取事件进行处理。</li>
+<li><code>processing event</code>：处理事件，是由<strong>事件处理器生成并异步广播的事件</strong>，用于广告它刚刚完成了什么操作。这些事件是事件流的中间步骤，通知其他事件处理器某个操作已经完成，以便它们可以继续后续的处理。无论是否有其他的 <code>event processor</code> 关心这些事件，最佳实践中还是建议一直发布这些事件，这对于后续的扩展性非常良好。</li>
 </ul>
 <p>它具有以下特点：</p>
 <ul>
@@ -185,29 +177,13 @@ topic，从 <code>event channel</code> 中获取事件进行处理。</li>
 <li><strong>缺点</strong>：端到端的工作流是<strong>隐式</strong>的，缺乏全局视图。如果流程出了问题，很难追踪到底是哪个环节的协同出了错，这对于异常处理和数据一致性要求较高的系统不是很友好。</li>
 </ul>
 <p>完整例子可参考下图：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718113630056.png"
-alt="FOSA Figure 14-4. Example of the broker topology" />
-<figcaption aria-hidden="true">FOSA Figure 14-4. Example of the broker
-topology</figcaption>
-</figure>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718113630056.png" alt="FOSA Figure 14-4. Example of the broker topology"></p>
 <h3 id="mediator">mediator</h3>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718111638117.png"
-alt="FOSA Figure 14-5. Mediator topology" />
-<figcaption aria-hidden="true">FOSA Figure 14-5. Mediator
-topology</figcaption>
-</figure>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718111638117.png" alt="FOSA Figure 14-5. Mediator topology"></p>
 <p>一个典型的 mediator 拓扑如上图所示，它跟 broker 有些许不同：</p>
 <ul>
-<li><code>event queue</code>：事件队列，它跟 <code>event channel</code>
-有所不同，专门用于 <code>event mediator</code> 接收
-<code>initiating event</code>。</li>
-<li><code>event mediator</code>：事件中介者，了解处理事件所需的步骤，并生成相应的处理事件，这些事件被发送到专用事件通道（event
-channel），采用<strong>点对点消息传递</strong>方式。在一些复杂的场景中，也可以设置多个
-<code>event mediator</code>，并分配到不同的层次中，以更好的管理复杂业务流程。</li>
+<li><code>event queue</code>：事件队列，它跟 <code>event channel</code> 有所不同，专门用于 <code>event mediator</code> 接收 <code>initiating event</code>。</li>
+<li><code>event mediator</code>：事件中介者，了解处理事件所需的步骤，并生成相应的处理事件，这些事件被发送到专用事件通道（event channel），采用<strong>点对点消息传递</strong>方式。在一些复杂的场景中，也可以设置多个 <code>event mediator</code>，并分配到不同的层次中，以更好的管理复杂业务流程。</li>
 </ul>
 <p>它具有以下特点：</p>
 <ul>
@@ -218,20 +194,9 @@ channel），采用<strong>点对点消息传递</strong>方式。在一些复�
 <li><strong>缺点</strong>：中介者本身可能成为一个<strong>复杂的单点</strong>（但通常是高可用的集群），所有流程的修改都必须在其中进行，降低了系统的灵活性。</li>
 </ul>
 <p>完整例子可参考下图：</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718113522146.png"
-alt="FOSA Figure 14-9. Step 2 of the mediator example" />
-<figcaption aria-hidden="true">FOSA Figure 14-9. Step 2 of the mediator
-example</figcaption>
-</figure>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718113522146.png" alt="FOSA Figure 14-9. Step 2 of the mediator example"></p>
 <h3 id="对比">对比</h3>
 <table>
-<colgroup>
-<col style="width: 12%" />
-<col style="width: 41%" />
-<col style="width: 45%" />
-</colgroup>
 <thead>
 <tr>
 <th>对比维度</th>
@@ -282,23 +247,21 @@ example</figcaption>
 </tr>
 </tbody>
 </table>
-<h2 id="request-reply">Request-Reply</h2>
+<h2 id="Request-Reply">Request-Reply</h2>
 <blockquote>
-<ol start="5" type="1">
-<li><p>Give an example of a typical request within the request-based
-model.</p>
-<p>举一个 request-based 模式的典型例子。</p></li>
-<li><p>Give an example of a typical request in an event-based model.</p>
-<p>举一个 event-based 模式的典型例子。</p></li>
+<ol start="5">
+<li>
+<p>Give an example of a typical request within the request-based model.</p>
+<p>举一个 request-based 模式的典型例子。</p>
+</li>
+<li>
+<p>Give an example of a typical request in an event-based model.</p>
+<p>举一个 event-based 模式的典型例子。</p>
+</li>
 </ol>
 </blockquote>
 <h3 id="request-based-vs-event-based">request-based vs event-based</h3>
 <table>
-<colgroup>
-<col style="width: 9%" />
-<col style="width: 45%" />
-<col style="width: 45%" />
-</colgroup>
 <thead>
 <tr>
 <th>对比维度</th>
@@ -314,8 +277,7 @@ model.</p>
 </tr>
 <tr>
 <td><strong>详细说明</strong></td>
-<td>请求方必须知道接收方的确切地址和接口（例如，一个 URL 端点和其 API
-契约）。它们之间是点对点的、强依赖的关系。</td>
+<td>请求方必须知道接收方的确切地址和接口（例如，一个 URL 端点和其 API 契约）。它们之间是点对点的、强依赖的关系。</td>
 <td>发布方和消费方互相完全不知道对方的存在。它们唯一的共同依赖是消息中间件和事件的格式。这种解耦是其最大优势。</td>
 </tr>
 <tr>
@@ -326,8 +288,7 @@ model.</p>
 <tr>
 <td><strong>详细说明</strong></td>
 <td>请求方发送请求后，会<strong>阻塞并等待</strong>一个响应。从请求方的视角看，整个调用是一个连续、不间断的操作。</td>
-<td>发布方发送事件后，<strong>立即继续</strong>自己的工作（“发后即忘”
-Fire-and-Forget）。它不等待任何结果。</td>
+<td>发布方发送事件后，<strong>立即继续</strong>自己的工作（“发后即忘” Fire-and-Forget）。它不等待任何结果。</td>
 </tr>
 <tr>
 <td><strong>例子</strong></td>
@@ -337,118 +298,80 @@ Fire-and-Forget）。它不等待任何结果。</td>
 </tbody>
 </table>
 <h3 id="event-based-实现-reply">event-based 实现 reply</h3>
-<p>虽然事件驱动架构的核心是异步和解耦，但在很多业务场景中，请求方确实需要得到一个明确的回复。例如，一个
-Web
-前端请求处理一个复杂的计算，它不能永远等待，而是需要在一个合理的时间内得到计算结果。</p>
+<p>虽然事件驱动架构的核心是异步和解耦，但在很多业务场景中，请求方确实需要得到一个明确的回复。例如，一个 Web 前端请求处理一个复杂的计算，它不能永远等待，而是需要在一个合理的时间内得到计算结果。</p>
 <p>在事件模型之上实现请求-响应模式，关键在于解决两个核心问题：</p>
-<ol type="1">
-<li><strong>响应应该发往何处？</strong>
-（因为接收方并不知道请求方是谁）</li>
-<li><strong>收到的响应如何与当初的请求对应起来？</strong>
-（因为请求方可能同时发出了多个请求）</li>
+<ol>
+<li><strong>响应应该发往何处？</strong> （因为接收方并不知道请求方是谁）</li>
+<li><strong>收到的响应如何与当初的请求对应起来？</strong> （因为请求方可能同时发出了多个请求）</li>
 </ol>
-<p>解决方案是巧妙地利用消息的两个元数据字段：<strong>回复地址
-(Reply-To)</strong> 和 <strong>关联标识 (Correlation ID)</strong>。</p>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718132839093.png"
-alt="FOSA Figure 14-20. Request-reply message processing using a correlation ID" />
-<figcaption aria-hidden="true">FOSA Figure 14-20. Request-reply message
-processing using a correlation ID</figcaption>
-</figure>
+<p>解决方案是巧妙地利用消息的两个元数据字段：<strong>回复地址 (Reply-To)</strong> 和 <strong>关联标识 (Correlation ID)</strong>。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250718132839093.png" alt="FOSA Figure 14-20. Request-reply message processing using a correlation ID"></p>
 <p><strong>Step 1: 请求方 (Requester) 发起请求</strong></p>
-<ol type="1">
+<ol>
 <li><strong>创建临时回复队列</strong>：请求方首先为自己创建一个唯一的、临时的、专用于接收本次响应的队列。这个队列的生命周期通常与本次请求-响应过程绑定。</li>
-<li><strong>生成关联 ID</strong>：请求方生成一个全局唯一的字符串，作为
-<code>Correlation ID</code>。</li>
-<li><strong>构造请求消息</strong>：请求方创建请求消息，其内容是业务数据。在消息的<strong>属性（Properties）或头信息（Headers）</strong>中，设置两个关键字段：
+<li><strong>生成关联 ID</strong>：请求方生成一个全局唯一的字符串，作为 <code>Correlation ID</code>。</li>
+<li><strong>构造请求消息</strong>：请求方创建请求消息，其内容是业务数据。在消息的**属性（Properties）或头信息（Headers）**中，设置两个关键字段：
 <ul>
 <li><code>Reply-To</code>: 填入刚才创建的临时回复队列的名称。</li>
 <li><code>Correlation ID</code>: 填入刚才生成的唯一 ID。</li>
-</ul></li>
-<li><strong>发送并等待</strong>：请求方将这个构造好的消息发送到一个众所周知的<strong>请求队列</strong>（例如
-<code>calculation-request-queue</code>）。然后，它开始<strong>监听</strong>自己的那个<strong>临时回复队列</strong>，等待一个包含相同
-<code>Correlation ID</code> 的消息出现。通常还会设置一个超时时间。</li>
+</ul>
+</li>
+<li><strong>发送并等待</strong>：请求方将这个构造好的消息发送到一个众所周知的<strong>请求队列</strong>（例如 <code>calculation-request-queue</code>）。然后，它开始<strong>监听</strong>自己的那个<strong>临时回复队列</strong>，等待一个包含相同 <code>Correlation ID</code> 的消息出现。通常还会设置一个超时时间。</li>
 </ol>
 <p><strong>Step 2: 响应方 (Replier) 处理请求并回复</strong></p>
-<ol type="1">
+<ol>
 <li><strong>接收请求</strong>：响应方服务从<strong>请求队列</strong>中消费一条消息。</li>
 <li><strong>处理业务逻辑</strong>：执行消息内容所要求的业务计算或操作。</li>
-<li><strong>提取元数据</strong>：从收到的请求消息的属性中，提取出
-<code>Reply-To</code> 和 <code>Correlation ID</code> 的值。</li>
+<li><strong>提取元数据</strong>：从收到的请求消息的属性中，提取出 <code>Reply-To</code> 和 <code>Correlation ID</code> 的值。</li>
 <li><strong>构造响应消息</strong>：响应方创建响应消息，其内容是业务处理的结果。</li>
-<li><strong>设置并发送响应</strong>：在响应消息的属性中，<strong>必须</strong>将从请求中收到的那个
-<code>Correlation ID</code>
-<strong>原封不动地设置回去</strong>。然后，将此响应消息发送到请求消息中
-<code>Reply-To</code> 字段所指定的那个队列地址。</li>
+<li><strong>设置并发送响应</strong>：在响应消息的属性中，<strong>必须</strong>将从请求中收到的那个 <code>Correlation ID</code> <strong>原封不动地设置回去</strong>。然后，将此响应消息发送到请求消息中 <code>Reply-To</code> 字段所指定的那个队列地址。</li>
 </ol>
 <p><strong>Step 3: 请求方 (Requester) 接收响应</strong></p>
-<ol type="1">
+<ol>
 <li><strong>接收消息</strong>：请求方在其临时回复队列上收到了一个消息。</li>
-<li><strong>匹配关联 ID</strong>：它检查收到的响应消息中的
-<code>Correlation ID</code> 是否与它当初发送的那个 ID 相匹配。</li>
-<li><strong>完成闭环</strong>：如果 ID
-匹配，则证明这就是它所等待的响应。请求-响应的流程至此完成。请求方可以处理响应结果，然后安全地删除那个临时的回复队列。</li>
+<li><strong>匹配关联 ID</strong>：它检查收到的响应消息中的 <code>Correlation ID</code> 是否与它当初发送的那个 ID 相匹配。</li>
+<li><strong>完成闭环</strong>：如果 ID 匹配，则证明这就是它所等待的响应。请求-响应的流程至此完成。请求方可以处理响应结果，然后安全地删除那个临时的回复队列。</li>
 </ol>
 <h2 id="可靠性">可靠性</h2>
 <blockquote>
-<p>What are some of the techniques for preventing data loss when sending
-and receiving messages from a queue?</p>
+<p>What are some of the techniques for preventing data loss when sending and receiving messages from a queue?</p>
 <p>有哪些技术可以防止在从队列发送和接收消息时丢失数据？</p>
 </blockquote>
 <p>这是一个生产者、消费者和代理三方共同的责任：</p>
 <p><strong>1. 代理端 (Broker Side)</strong>：</p>
 <ul>
-<li><strong>持久化
-(Persistence)</strong>：代理在将事件放入队列或主题时，会先将其写入磁盘，确保即使代理重启，事件也不会丢失。</li>
-<li><strong>集群与复制 (Clustering and
-Replication)</strong>：通过将代理部署为集群，并将事件在多个节点间进行复制，可以防止单点故障导致的数据丢失。</li>
+<li><strong>持久化 (Persistence)</strong>：代理在将事件放入队列或主题时，会先将其写入磁盘，确保即使代理重启，事件也不会丢失。</li>
+<li><strong>集群与复制 (Clustering and Replication)</strong>：通过将代理部署为集群，并将事件在多个节点间进行复制，可以防止单点故障导致的数据丢失。</li>
 </ul>
 <p><strong>2. 客户端 (Client Side)</strong>：</p>
 <ul>
-<li><strong>消费者确认
-(ACK)</strong>：消费者在<strong>成功处理完</strong>一个事件后，必须向代理发送一个
-ACK 信号。如果消费者在处理过程中崩溃而未发送
-ACK，代理会认为该事件未被成功处理，并会将其重新投递给其他消费者。</li>
-<li><strong>事务性发件箱
-(Transactional)</strong>：这是一个非常关键的高级模式。为了确保"写入业务数据库"和"发送事件"这两个操作的原子性，开发者会将待发送的事件与业务数据变更<strong>放在同一个本地数据库事务中</strong>，写入一个发件箱（Outbox）表。然后由一个独立的轮询进程负责读取发件箱表，并将事件可靠地发送给代理。这彻底解决了"业务成功但事件未发出"的问题。</li>
+<li><strong>消费者确认 (ACK)</strong>：消费者在<strong>成功处理完</strong>一个事件后，必须向代理发送一个 ACK 信号。如果消费者在处理过程中崩溃而未发送 ACK，代理会认为该事件未被成功处理，并会将其重新投递给其他消费者。</li>
+<li><strong>事务性发件箱 (Transactional)</strong>：这是一个非常关键的高级模式。为了确保&quot;写入业务数据库&quot;和&quot;发送事件&quot;这两个操作的原子性，开发者会将待发送的事件与业务数据变更<strong>放在同一个本地数据库事务中</strong>，写入一个发件箱（Outbox）表。然后由一个独立的轮询进程负责读取发件箱表，并将事件可靠地发送给代理。这彻底解决了&quot;业务成功但事件未发出&quot;的问题。</li>
 </ul>
 <h2 id="架构权衡">架构权衡</h2>
 <blockquote>
-<p>What are three main driving architecture characteristics for using
-event-driven architecture?</p>
+<p>What are three main driving architecture characteristics for using event-driven architecture?</p>
 <p>使用事件驱动架构的三个主要驱动架构特性是什么？</p>
 </blockquote>
 <ul>
-<li><strong>可伸缩性与弹性 (Scalability &amp;
-Elasticity)</strong>：如前所述，独立伸缩组件的能力是其核心优势。</li>
-<li><strong>可扩展性
-(Extensibility)</strong>：系统极易扩展。当需要增加新功能时，只需开发一个新的服务来订阅感兴趣的现有事件即可，完全无需改动已有服务。</li>
-<li><strong>响应性
-(Responsiveness)</strong>：对于需要快速响应用户的系统，可以将耗时任务异步化。例如，用户提交视频后，系统立即返回"上传成功，正在处理中"，然后通过事件驱动后台的转码、审核等一系列复杂流程。</li>
+<li><strong>可伸缩性与弹性 (Scalability &amp; Elasticity)</strong>：如前所述，独立伸缩组件的能力是其核心优势。</li>
+<li><strong>可扩展性 (Extensibility)</strong>：系统极易扩展。当需要增加新功能时，只需开发一个新的服务来订阅感兴趣的现有事件即可，完全无需改动已有服务。</li>
+<li><strong>响应性 (Responsiveness)</strong>：对于需要快速响应用户的系统，可以将耗时任务异步化。例如，用户提交视频后，系统立即返回&quot;上传成功，正在处理中&quot;，然后通过事件驱动后台的转码、审核等一系列复杂流程。</li>
 </ul>
 <blockquote>
-<p>What are some of the architecture characteristics that are not well
-supported in event-driven architecture?</p>
+<p>What are some of the architecture characteristics that are not well supported in event-driven architecture?</p>
 <p>事件驱动架构不能很好地支持哪些架构特性？</p>
 </blockquote>
 <ul>
-<li><strong>简单性 (Simplicity)</strong>：EDA
-显著增加了系统的复杂性。你需要管理消息代理，处理异步编程的挑战（如调试、错误处理），并应对最终一致性带来的心智负担。</li>
-<li><strong>事务性
-(Transactional)</strong>：实现跨多个服务的原子性操作（即分布式事务）变得异常困难。虽然可以通过
-Saga
-等模式来模拟长事务，但其实现复杂，且只能保证最终一致性而非强一致性。</li>
-<li><strong>工作流的可观测性 (Observability of
-Workflow)</strong>：尤其是在代理拓扑中，业务流程被分散到各个独立的处理器中，没有一个集中的地方可以让你直观地看到一个完整的业务流程是如何执行的，这给监控和排错带来了巨大挑战。</li>
+<li><strong>简单性 (Simplicity)</strong>：EDA 显著增加了系统的复杂性。你需要管理消息代理，处理异步编程的挑战（如调试、错误处理），并应对最终一致性带来的心智负担。</li>
+<li><strong>事务性 (Transactional)</strong>：实现跨多个服务的原子性操作（即分布式事务）变得异常困难。虽然可以通过 Saga 等模式来模拟长事务，但其实现复杂，且只能保证最终一致性而非强一致性。</li>
+<li><strong>工作流的可观测性 (Observability of Workflow)</strong>：尤其是在代理拓扑中，业务流程被分散到各个独立的处理器中，没有一个集中的地方可以让你直观地看到一个完整的业务流程是如何执行的，这给监控和排错带来了巨大挑战。</li>
 </ul>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -488,18 +411,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%82%E6%AD%A5%E9%80%9A%E4%BF%A1"><span class="toc-text">异步通信</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%93%E6%89%91"><span class="toc-text">拓扑</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#broker"><span class="toc-text">broker</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#mediator"><span class="toc-text">mediator</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%B9%E6%AF%94"><span class="toc-text">对比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#request-reply"><span class="toc-text">Request-Reply</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#request-based-vs-event-based"><span class="toc-text">request-based vs event-based</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#event-based-%E5%AE%9E%E7%8E%B0-reply"><span class="toc-text">event-based 实现 reply</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%AF%E9%9D%A0%E6%80%A7"><span class="toc-text">可靠性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E6%9D%83%E8%A1%A1"><span class="toc-text">架构权衡</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%82%E6%AD%A5%E9%80%9A%E4%BF%A1"><span class="toc-text">异步通信</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%93%E6%89%91"><span class="toc-text">拓扑</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#broker"><span class="toc-text">broker</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#mediator"><span class="toc-text">mediator</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%B9%E6%AF%94"><span class="toc-text">对比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Request-Reply"><span class="toc-text">Request-Reply</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#request-based-vs-event-based"><span class="toc-text">request-based vs event-based</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#event-based-%E5%AE%9E%E7%8E%B0-reply"><span class="toc-text">event-based 实现 reply</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%AF%E9%9D%A0%E6%80%A7"><span class="toc-text">可靠性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E6%9D%83%E8%A1%A1"><span class="toc-text">架构权衡</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
