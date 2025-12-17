@@ -156,8 +156,6 @@
     
     <category term="计算机网络" scheme="https://hedon.top/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
     
-    <category term="gRPC" scheme="https://hedon.top/tags/gRPC/"/>
-    
     <category term="HTTP" scheme="https://hedon.top/tags/HTTP/"/>
     
     <category term="Streamable HTTP" scheme="https://hedon.top/tags/Streamable-HTTP/"/>
@@ -165,6 +163,8 @@
     <category term="SSE" scheme="https://hedon.top/tags/SSE/"/>
     
     <category term="WebSocket" scheme="https://hedon.top/tags/WebSocket/"/>
+    
+    <category term="gRPC" scheme="https://hedon.top/tags/gRPC/"/>
     
   </entry>
   
