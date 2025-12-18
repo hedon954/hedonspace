@@ -70,7 +70,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/30/note/note-llm-from-scratch/"><span class="title">读书笔记丨《从零构建大语言模型》</span></a><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -94,43 +94,27 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>在单机数据库模式下，我们享受了太多的理所当然：ACID
-事务、强一致性读写、瞬间的数据可见性。然而，一旦引入了<strong>异步主从复制</strong>，这个美好的世界就崩塌了。系统从
-<strong>CP (一致性)</strong> 模型滑向了 <strong>AP (可用性)</strong>
-模型。<strong>主从延迟（Replication Lag）</strong>
-像一个幽灵，让许多在单机下奉为圭臬的最佳实践，变成了分布式环境下的致命陷阱。</p>
+  </div><article class="md-text content"><p>在单机数据库模式下，我们享受了太多的理所当然：ACID 事务、强一致性读写、瞬间的数据可见性。然而，一旦引入了<strong>异步主从复制</strong>，这个美好的世界就崩塌了。系统从 <strong>CP (一致性)</strong> 模型滑向了 <strong>AP (可用性)</strong> 模型。<strong>主从延迟（Replication Lag）</strong> 像一个幽灵，让许多在单机下奉为圭臬的最佳实践，变成了分布式环境下的致命陷阱。</p>
 <p>核心矛盾根源：真相的传播延迟</p>
 <ul>
-<li><strong>单机模式</strong>："真相"只有一个（唯一的 DB
-实例）。写入即事实，读取即真相。时间差近乎为零。</li>
-<li><strong>主从模式</strong>："真相"在传播。主库是当前的真相，从库是几百毫秒甚至几秒前的"历史影像"。<u>依赖历史影像做决策，必然出错</u>。</li>
+<li><strong>单机模式</strong>：&quot;真相&quot;只有一个（唯一的 DB 实例）。写入即事实，读取即真相。时间差近乎为零。</li>
+<li><strong>主从模式</strong>：“真相&quot;在传播。主库是当前的真相，从库是几百毫秒甚至几秒前的&quot;历史影像”。<u>依赖历史影像做决策，必然出错</u>。</li>
 </ul>
 <p>从单机到主从架构的升级，不是简单的加几台机器，而是一场思维方式的革命：</p>
-<ol type="1">
+<ol>
 <li><strong>放弃对实时强一致性的幻想</strong>：在分布式系统中，除了核心的金融级数据，大部分场景都要接受<strong>最终一致性</strong>。</li>
-<li><strong>识别真理之源</strong>：时刻清楚 Master DB
-是唯一的真理。Slave DB 只是用于分担非敏感读压力的快照副本。</li>
-<li><strong>防御性编程</strong>：写代码时，永远要假设你读到的数据可能是旧的，并思考"如果它是旧的，我的业务逻辑会不会炸？"如果会炸，就必须升级方案（走主库、加异步校验链等）。</li>
+<li><strong>识别真理之源</strong>：时刻清楚 Master DB 是唯一的真理。Slave DB 只是用于分担非敏感读压力的快照副本。</li>
+<li><strong>防御性编程</strong>：写代码时，永远要假设你读到的数据可能是旧的，并思考&quot;如果它是旧的，我的业务逻辑会不会炸？&quot;如果会炸，就必须升级方案（走主库、加异步校验链等）。</li>
 </ol>
 <p>本篇接下来就梳理单机模式最佳实践在主从架构下失效的经典场景。</p>
-<h2 id="缓存一致性">1. 缓存一致性</h2>
-<p>在单机模式下，为了应对 MySQL 和
-Redis（缓存）的一致性，业界通用的解决方案是 Cache
-Aside（旁路缓存）。即：先更新 DB，再删缓存。下次读请求发现 Cache
-Miss，查 DB 并回填。因 DB 里的数据永远是最新的，回填缓存没问题。</p>
+<h2 id="1-缓存一致性">1. 缓存一致性</h2>
+<p>在单机模式下，为了应对 MySQL 和 Redis（缓存）的一致性，业界通用的解决方案是 Cache Aside（旁路缓存）。即：先更新 DB，再删缓存。下次读请求发现 Cache Miss，查 DB 并回填。因 DB 里的数据永远是最新的，回填缓存没问题。</p>
 <p>但是在主从模式下就不一样了：</p>
 <blockquote>
-<p>写请求删了缓存。读请求去<strong>从库</strong>查到了旧数据（因为延迟）。读请求把<strong>旧数据</strong>当作新数据塞回了
-Redis。结果就导致了 Redis 里存储了脏数据。</p>
+<p>写请求删了缓存。读请求去<strong>从库</strong>查到了旧数据（因为延迟）。读请求把<strong>旧数据</strong>当作新数据塞回了 Redis。结果就导致了 Redis 里存储了脏数据。</p>
 </blockquote>
 <h2 id="总结">总结</h2>
 <table>
-<colgroup>
-<col style="width: 9%" />
-<col style="width: 21%" />
-<col style="width: 33%" />
-<col style="width: 36%" />
-</colgroup>
 <thead>
 <tr>
 <th><strong>核心场景</strong></th>
@@ -142,56 +126,33 @@ Redis。结果就导致了 Redis 里存储了脏数据。</p>
 <tbody>
 <tr>
 <td><strong>缓存一致性</strong> (Cache-Aside)</td>
-<td><strong>先写 DB，再删缓存</strong>
-依赖读操作回填缓存。简单高效，极少出现不一致。</td>
-<td><strong>脏数据回填死结</strong>
-写完主库删缓存后，读请求立刻打到延迟的从库，读到旧数据并永久回填入缓存。（即我们刚深入讨论的案例）。</td>
-<td><strong>方案 A (标准)：Binlog
-异步消息队列删除</strong>（引入异步重试机制兜底）。 <br><strong>方案 B
-(极强)：回填前强制校验主库版本号</strong>（牺牲主库性能换取强一致）。</td>
+<td><strong>先写 DB，再删缓存</strong> 依赖读操作回填缓存。简单高效，极少出现不一致。</td>
+<td><strong>脏数据回填死结</strong> 写完主库删缓存后，读请求立刻打到延迟的从库，读到旧数据并永久回填入缓存。（即我们刚深入讨论的案例）。</td>
+<td><strong>方案 A (标准)：Binlog 异步消息队列删除</strong>（引入异步重试机制兜底）。 <br><strong>方案 B (极强)：回填前强制校验主库版本号</strong>（牺牲主库性能换取强一致）。</td>
 </tr>
 <tr>
 <td><strong>读己之写</strong> (Read-Your-Own-Write)</td>
-<td><strong>写完直接读</strong>
-用户修改资料后，立刻刷新页面调用查询接口，能马上看到更新后的信息。</td>
-<td><strong>用户体验崩塌</strong>
-刚写完主库，转头读了从库。用户发现自己刚改的数据没生效，产生恐慌或重复提交。</td>
-<td><strong>方案 A (折中)：短期强制路由</strong>（写操作后的 N
-秒内，该用户的读请求强制走主库）。 <strong>方案 B
-(复杂)：客户端版本追踪</strong>（客户端记住自己刚修改的版本号，请求时带上，中间件判断从库是否追上）。</td>
+<td><strong>写完直接读</strong> 用户修改资料后，立刻刷新页面调用查询接口，能马上看到更新后的信息。</td>
+<td><strong>用户体验崩塌</strong> 刚写完主库，转头读了从库。用户发现自己刚改的数据没生效，产生恐慌或重复提交。</td>
+<td><strong>方案 A (折中)：短期强制路由</strong>（写操作后的 N 秒内，该用户的读请求强制走主库）。 <strong>方案 B (复杂)：客户端版本追踪</strong>（客户端记住自己刚修改的版本号，请求时带上，中间件判断从库是否追上）。</td>
 </tr>
 <tr>
 <td><strong>唯一性检查 / 业务前置校验</strong> (Business Check)</td>
-<td><strong>先查后写 (Check-Then-Act)</strong>
-例如注册时：<code>SELECT count(*) FROM user WHERE email=?</code>，若为 0
-则 INSERT。</td>
-<td><strong>并发重复与校验失效</strong>
-两个请求同时发到不同从库查询，都以为 email 不存在，然后同时向主库发起
-INSERT。虽然主库唯一索引能挡住，但业务层的校验逻辑彻底失效，引发大量报错。</td>
-<td><strong>方案
-A：强制查主库</strong>（所有涉及状态决策的前置查询，必须走主库）。
-<br><strong>方案 B：分布式锁</strong>（在查 DB 前，先在 Redis/ZK
-上抢占一个 key，但这引入了新组件依赖）。</td>
+<td><strong>先查后写 (Check-Then-Act)</strong> 例如注册时：<code>SELECT count(*) FROM user WHERE email=?</code>，若为 0 则 INSERT。</td>
+<td><strong>并发重复与校验失效</strong> 两个请求同时发到不同从库查询，都以为 email 不存在，然后同时向主库发起 INSERT。虽然主库唯一索引能挡住，但业务层的校验逻辑彻底失效，引发大量报错。</td>
+<td><strong>方案 A：强制查主库</strong>（所有涉及状态决策的前置查询，必须走主库）。 <br><strong>方案 B：分布式锁</strong>（在查 DB 前，先在 Redis/ZK 上抢占一个 key，但这引入了新组件依赖）。</td>
 </tr>
 <tr>
 <td><strong>高并发库存扣减</strong> (Inventory Deduction)</td>
-<td><strong>悲观锁 <code>SELECT FOR UPDATE</code> 或 乐观锁
-<code>UPDATE ... WHERE count &gt; 0</code></strong> 依赖数据库行锁或
-MVCC 保证原子性扣减。</td>
-<td><strong>从库读取导致超卖</strong>
-如果为了性能去从库查询“当前库存”，得到旧值（比如显示有货，实际主库已没货），然后发起扣减请求，导致判断失误。</td>
-<td><strong>铁律：涉及钱和库存的操作，读写必须全部在主库完成。</strong>
-或者彻底升级架构，使用 Redis + Lua
-脚本做库存扣减中心，数据库只做异步落库。</td>
+<td><strong>悲观锁 <code>SELECT FOR UPDATE</code> 或 乐观锁 <code>UPDATE ... WHERE count &gt; 0</code></strong> 依赖数据库行锁或 MVCC 保证原子性扣减。</td>
+<td><strong>从库读取导致超卖</strong> 如果为了性能去从库查询“当前库存”，得到旧值（比如显示有货，实际主库已没货），然后发起扣减请求，导致判断失误。</td>
+<td><strong>铁律：涉及钱和库存的操作，读写必须全部在主库完成。</strong> 或者彻底升级架构，使用 Redis + Lua 脚本做库存扣减中心，数据库只做异步落库。</td>
 </tr>
 <tr>
 <td><strong>事务状态查询</strong> (Transaction Status)</td>
-<td><strong>直接查询订单表状态</strong>
-支付回调后，查询订单表确认订单是否已变为“已支付”。</td>
-<td><strong>回调“未找到订单”</strong>
-支付成功的回调非常快，可能在主从同步完成前就到达。此时去从库查订单状态，可能查到还是“未支付”，导致业务逻辑错误。</td>
-<td><strong>方案：强制查主库</strong>。
-对于此类时效性极高的状态确认查询，绝不能走从库。</td>
+<td><strong>直接查询订单表状态</strong> 支付回调后，查询订单表确认订单是否已变为“已支付”。</td>
+<td><strong>回调“未找到订单”</strong> 支付成功的回调非常快，可能在主从同步完成前就到达。此时去从库查订单状态，可能查到还是“未支付”，导致业务逻辑错误。</td>
+<td><strong>方案：强制查主库</strong>。 对于此类时效性极高的状态确认查询，绝不能走从库。</td>
 </tr>
 </tbody>
 </table>
@@ -199,9 +160,7 @@ MVCC 保证原子性扣减。</td>
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -241,18 +200,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">1. 缓存一致性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">1. 缓存一致性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

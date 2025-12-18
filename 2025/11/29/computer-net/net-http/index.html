@@ -27,6 +27,13 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文梳理了从 HTTP&#x2F;1.0 到 HTTP&#x2F;3 的发展历程，介绍了各版本在连接管理、性能优化及协议升级方面的核心变化，帮助读者理解现代 Web 通信协议的演化脉络。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/HTTP1.1VSHTTP2.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251130232202995.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251130231349481.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251130231937223.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251130233954053.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251130235652829.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201000218593.png">
 <meta property="article:published_time" content="2025-11-29T06:17:00.000Z">
 <meta property="article:modified_time" content="2025-11-30T16:08:19.608Z">
 <meta property="article:author" content="Hedon Wang">
@@ -37,6 +44,7 @@
 <meta property="article:tag" content="HTTP3">
 <meta property="article:tag" content="QUIC">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/HTTP1.1VSHTTP2.png">
   
   
   
@@ -74,7 +82,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/30/note/note-llm-from-scratch/"><span class="title">读书笔记丨《从零构建大语言模型》</span></a><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -98,72 +106,60 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><h2 id="http1.0">HTTP1.0</h2>
+  </div><article class="md-text content"><h2 id="HTTP1-0">HTTP1.0</h2>
 <p>HTTP/1.0 的设计初衷只是为了在网络上传输 HTML 文档。</p>
 <ul>
-<li><p><strong>模型</strong>：Request-Response（一问一答）。</p></li>
-<li><p><strong>底层</strong>：基于 TCP。</p></li>
-<li><p><strong>瓶颈</strong>：<strong>TCP 连接成本过高</strong>。</p>
+<li>
+<p><strong>模型</strong>：Request-Response（一问一答）。</p>
+</li>
+<li>
+<p><strong>底层</strong>：基于 TCP。</p>
+</li>
+<li>
+<p><strong>瓶颈</strong>：<strong>TCP 连接成本过高</strong>。</p>
 <ul>
-<li><p>在 1.0 默认行为中，每一次 HTTP
-请求（比如下载一张图片）都要新建一个 TCP 连接。</p></li>
-<li><p><strong>TCP 三次握手</strong>：这意味着每个请求都要先消耗 1.5 个
-RTT（往返时延）才能开始发数据。</p></li>
-<li><p><strong>TCP 慢启动（Slow
-Start）</strong>：新连接的速度是从低到高爬坡的，短连接导致 TCP
-永远在低速爬坡阶段就断开了，带宽利用率极低。</p></li>
-</ul></li>
+<li>
+<p>在 1.0 默认行为中，每一次 HTTP 请求（比如下载一张图片）都要新建一个 TCP 连接。</p>
+</li>
+<li>
+<p><strong>TCP 三次握手</strong>：这意味着每个请求都要先消耗 1.5 个 RTT（往返时延）才能开始发数据。</p>
+</li>
+<li>
+<p><strong>TCP 慢启动（Slow Start）</strong>：新连接的速度是从低到高爬坡的，短连接导致 TCP 永远在低速爬坡阶段就断开了，带宽利用率极低。</p>
+</li>
 </ul>
-<h2 id="http1.1">HTTP1.1</h2>
-<p>为了解决连接成本问题，HTTP/1.1 在 1999 年成为了标准，并统治互联网长达
-15 年。</p>
-<h3 id="keep-alive长连接解决连接复用">1.
-Keep-Alive（长连接）：解决连接复用</h3>
-<ul>
-<li><strong>机制</strong>：引入持久连接（Persistent Connection）。默认
-<code>Connection: keep-alive</code>。</li>
-<li><strong>效果</strong>：只要连接不断开，后续请求可以直接发送，省去了三次握手和
-TCP 慢启动的开销。</li>
-<li><strong>细节</strong>：设置
-<code>Keep-Alive: timeout=5, max=100</code> 来控制连接的生命周期。</li>
+</li>
 </ul>
-<h3 id="pipeline管道化解决串行等待失败的尝试">2.
-Pipeline（管道化）：解决串行等待（失败的尝试）</h3>
+<h2 id="HTTP1-1">HTTP1.1</h2>
+<p>为了解决连接成本问题，HTTP/1.1 在 1999 年成为了标准，并统治互联网长达 15 年。</p>
+<h3 id="1-Keep-Alive（长连接）：解决连接复用">1. Keep-Alive（长连接）：解决连接复用</h3>
 <ul>
-<li><strong>尝试</strong>：允许客户端一口气发出去 10
-个请求，不用等第一个回来再发第二个。</li>
-<li><strong>致命缺陷</strong>：<strong>HTTP 层面的队头阻塞（HOL
-Blocking）</strong>。
+<li><strong>机制</strong>：引入持久连接（Persistent Connection）。默认 <code>Connection: keep-alive</code>。</li>
+<li><strong>效果</strong>：只要连接不断开，后续请求可以直接发送，省去了三次握手和 TCP 慢启动的开销。</li>
+<li><strong>细节</strong>：设置 <code>Keep-Alive: timeout=5, max=100</code> 来控制连接的生命周期。</li>
+</ul>
+<h3 id="2-Pipeline（管道化）：解决串行等待（失败的尝试）">2. Pipeline（管道化）：解决串行等待（失败的尝试）</h3>
 <ul>
-<li>服务器必须按照接收请求的顺序返回响应（FIFO）。如果第 1
-个请求处理很慢（比如数据库查询），第 2-10
-个请求即使处理完了，也必须排队等待第 1 个发送完毕。</li>
+<li><strong>尝试</strong>：允许客户端一口气发出去 10 个请求，不用等第一个回来再发第二个。</li>
+<li><strong>致命缺陷</strong>：<strong>HTTP 层面的队头阻塞（HOL Blocking）</strong>。
+<ul>
+<li>服务器必须按照接收请求的顺序返回响应（FIFO）。如果第 1 个请求处理很慢（比如数据库查询），第 2-10 个请求即使处理完了，也必须排队等待第 1 个发送完毕。</li>
 <li>由于这个风险，浏览器厂商默认都关闭了 Pipeline。</li>
-</ul></li>
 </ul>
-<h3 id="transfer-encoding-chunked分块传输">3. Transfer-Encoding:
-chunked（分块传输）</h3>
+</li>
+</ul>
+<h3 id="3-Transfer-Encoding-chunked（分块传输）">3. Transfer-Encoding: chunked（分块传输）</h3>
 <ul>
-<li><strong>痛点</strong>：HTTP/1.0 需要在 Header 里通过
-<code>Content-Length</code>
-告诉对方包体多大。如果是动态生成的流（比如视频、动态页面），服务器必须先把所有数据生成完算出长度才能发，延迟太高。</li>
-<li><strong>解决</strong>：<code>chunked</code>
-模式允许服务器产生一部分数据就发一部分，最后发一个长度为 0
-的块表示结束。这使得<strong>流式传输</strong>成为可能。</li>
+<li><strong>痛点</strong>：HTTP/1.0 需要在 Header 里通过 <code>Content-Length</code> 告诉对方包体多大。如果是动态生成的流（比如视频、动态页面），服务器必须先把所有数据生成完算出长度才能发，延迟太高。</li>
+<li><strong>解决</strong>：<code>chunked</code> 模式允许服务器产生一部分数据就发一部分，最后发一个长度为 0 的块表示结束。这使得<strong>流式传输</strong>成为可能。</li>
 </ul>
-<h3 id="缓存控制增强">4. 缓存控制增强</h3>
+<h3 id="4-缓存控制增强">4. 缓存控制增强</h3>
 <ul>
-<li>引入
-<code>Cache-Control</code>、<code>Etag</code>、<code>If-None-Match</code>，比
-1.0 的 <code>Expires</code> 和 <code>Last-Modified</code>
-提供了更精细的缓存策略，节省带宽。</li>
+<li>引入 <code>Cache-Control</code>、<code>Etag</code>、<code>If-None-Match</code>，比 1.0 的 <code>Expires</code> 和 <code>Last-Modified</code> 提供了更精细的缓存策略，节省带宽。</li>
 </ul>
-<h2 id="http2">HTTP2</h2>
-<p>HTTP/1.1
-虽然有了长连接，但本质上请求还是<strong>串行</strong>的。为了并发下载资源，浏览器被迫对同一个域名开启
-6 个 TCP 连接。HTTP/2 旨在解决这个问题。</p>
-<h3 id="核心改变二进制分帧层-binary-framing-layer">1.
-核心改变：二进制分帧层 (Binary Framing Layer)</h3>
+<h2 id="HTTP2">HTTP2</h2>
+<p>HTTP/1.1 虽然有了长连接，但本质上请求还是<strong>串行</strong>的。为了并发下载资源，浏览器被迫对同一个域名开启 6 个 TCP 连接。HTTP/2 旨在解决这个问题。</p>
+<h3 id="1-核心改变：二进制分帧层-Binary-Framing-Layer">1. 核心改变：二进制分帧层 (Binary Framing Layer)</h3>
 <p>这是 HTTP/2 的基石。</p>
 <ul>
 <li><strong>HTTP/1.1</strong>：纯文本，换行符分隔。解析慢，且无法交错。</li>
@@ -171,526 +167,398 @@ chunked（分块传输）</h3>
 <ul>
 <li><strong>Headers Frame</strong>：存放头部。</li>
 <li><strong>Data Frame</strong>：存放包体。</li>
-</ul></li>
+</ul>
+</li>
 <li><strong>意义</strong>：机器解析二进制比解析文本快得多，更重要的是，这为多路复用提供了基础。</li>
 </ul>
-<h3 id="多路复用-multiplexing解决-http-队头阻塞">2. 多路复用
-(Multiplexing)：解决 HTTP 队头阻塞</h3>
+<h3 id="2-多路复用-Multiplexing-：解决-HTTP-队头阻塞">2. 多路复用 (Multiplexing)：解决 HTTP 队头阻塞</h3>
 <ul>
-<li><strong>机制</strong>：在一个 TCP 连接中，通过
-<strong>Stream（流）</strong> 的概念，同时传输多个请求的数据帧。
+<li><strong>机制</strong>：在一个 TCP 连接中，通过 <strong>Stream（流）</strong> 的概念，同时传输多个请求的数据帧。
 <ul>
 <li>每个帧都有一个 <code>Stream ID</code>。</li>
-<li>比如：Stream 1 的帧和 Stream 2
-的帧可以<strong>乱序</strong>发送，接收端根据 ID 重新组装。</li>
-</ul></li>
-<li><strong>彻底解决</strong>：HTTP/1.1 的队头阻塞。请求 A
-的处理慢，完全不影响请求 B 的数据传输。</li>
+<li>比如：Stream 1 的帧和 Stream 2 的帧可以<strong>乱序</strong>发送，接收端根据 ID 重新组装。</li>
 </ul>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/HTTP1.1VSHTTP2.png" /></p>
-<h3 id="hpack头部压缩">3. HPACK：头部压缩</h3>
+</li>
+<li><strong>彻底解决</strong>：HTTP/1.1 的队头阻塞。请求 A 的处理慢，完全不影响请求 B 的数据传输。</li>
+</ul>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/HTTP1.1VSHTTP2.png" alt=""></p>
+<h3 id="3-HPACK：头部压缩">3. HPACK：头部压缩</h3>
 <ul>
-<li><strong>痛点</strong>：HTTP/1.1 的 Header 很多是冗余的（如 Cookie,
-User-Agent），每次都要重复发几百字节，浪费带宽。</li>
+<li><strong>痛点</strong>：HTTP/1.1 的 Header 很多是冗余的（如 Cookie, User-Agent），每次都要重复发几百字节，浪费带宽。</li>
 <li><strong>原理</strong>：
 <ul>
-<li><strong>静态表</strong>：预定义 61 个常用头部（如
-<code>method: GET</code> 对应索引 2）。传输时只传索引号（1
-个字节）。</li>
-<li><strong>动态表</strong>：连接建立后，双方动态维护一个表。第一次发过
-<code>User-Agent</code> 后，把它存入动态表，下次只发索引即可。</li>
+<li><strong>静态表</strong>：预定义 61 个常用头部（如 <code>method: GET</code> 对应索引 2）。传输时只传索引号（1 个字节）。</li>
+<li><strong>动态表</strong>：连接建立后，双方动态维护一个表。第一次发过 <code>User-Agent</code> 后，把它存入动态表，下次只发索引即可。</li>
 <li><strong>Huffman 编码</strong>：对字符串进行压缩。</li>
-</ul></li>
 </ul>
-<h2 id="tls1.2">TLS1.2</h2>
-<p>在进入 HTTP3 之前，先来阐述一下 TLS1.2 和 TLS1.3，它们都是 HTTPS
-的基石。</p>
+</li>
+</ul>
+<h2 id="TLS1-2">TLS1.2</h2>
+<p>在进入 HTTP3 之前，先来阐述一下 TLS1.2 和 TLS1.3，它们都是 HTTPS 的基石。</p>
 <p>HTTPS 常用的密钥交换算法有两种，分别是 RSA 和 ECDHE 算法。</p>
-<p>其中，RSA
-是比较传统的密钥交换算法，它不具备前向安全的性质，因此现在很少服务器使用的。而
-ECDHE 算法具有前向安全，所以被广泛使用。</p>
-<h3 id="rsa">1. RSA</h3>
-<p>我们先回顾一下 RSA
-方式的密钥交换，笔者发现大多数的书籍和文章介绍的都是这种方式。但事实上因为它不具备前向安全的性质，现在很少被服务器所使用。</p>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251130232202995.png" /></p>
-<ol type="1">
-<li><strong>客户端发送 ClientHello</strong>：客户端向服务器发送
-<code>ClientHello</code> 消息，包含支持的 TLS
-版本、加密算法列表、压缩方法以及一个随机数（Client
-Random），用于后续生成会话密钥。</li>
-<li><strong>服务器发送 ServerHello</strong>：服务器收到
-<code>ClientHello</code> 后，选择一个 TLS 版本和加密算法，发送
-<code>ServerHello</code>
-消息，包含选择的版本、加密算法、另一个随机数（Server
-Random）以及服务器的数字证书（包含公钥和 CA 信息）。</li>
+<p>其中，RSA 是比较传统的密钥交换算法，它不具备前向安全的性质，因此现在很少服务器使用的。而 ECDHE 算法具有前向安全，所以被广泛使用。</p>
+<h3 id="1-RSA">1. RSA</h3>
+<p>我们先回顾一下 RSA 方式的密钥交换，笔者发现大多数的书籍和文章介绍的都是这种方式。但事实上因为它不具备前向安全的性质，现在很少被服务器所使用。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251130232202995.png" alt=""></p>
+<ol>
+<li><strong>客户端发送 ClientHello</strong>：客户端向服务器发送 <code>ClientHello</code> 消息，包含支持的 TLS 版本、加密算法列表、压缩方法以及一个随机数（Client Random），用于后续生成会话密钥。</li>
+<li><strong>服务器发送 ServerHello</strong>：服务器收到 <code>ClientHello</code> 后，选择一个 TLS 版本和加密算法，发送 <code>ServerHello</code> 消息，包含选择的版本、加密算法、另一个随机数（Server Random）以及服务器的数字证书（包含公钥和 CA 信息）。</li>
 <li><strong>客户端验证证书并生成预主密钥</strong>：
 <ul>
-<li>客户端验证服务器的数字证书，检查是否由受信任的 CA 颁发（一直验证到根
-CA）、是否在有效期内、域名是否匹配。如果验证通过，客户端生成一个预主密钥（Pre-Master
-Secret），并用服务器的公钥加密后发送给服务器。</li>
-<li>结合预主密钥，结合 Client Random 和 Server
-Random，生成对称加密的会话密钥（Session Key）。</li>
-<li>并把迄今为止的通信数据内容生成一个摘要，形成 <code>Finished</code>
-报文，发送给服务端。</li>
-</ul></li>
+<li>客户端验证服务器的数字证书，检查是否由受信任的 CA 颁发（一直验证到根 CA）、是否在有效期内、域名是否匹配。如果验证通过，客户端生成一个预主密钥（Pre-Master Secret），并用服务器的公钥加密后发送给服务器。</li>
+<li>结合预主密钥，结合 Client Random 和 Server Random，生成对称加密的会话密钥（Session Key）。</li>
+<li>并把迄今为止的通信数据内容生成一个摘要，形成 <code>Finished</code> 报文，发送给服务端。</li>
+</ul>
+</li>
 <li><strong>服务端生成会话密钥</strong>：
 <ul>
-<li>服务器使用私钥解密客户端发送的预主密钥，结合 Client Random 和 Server
-Random，用跟客户端相同的算法生成对称加密的会话密钥（Session Key）。</li>
+<li>服务器使用私钥解密客户端发送的预主密钥，结合 Client Random 和 Server Random，用跟客户端相同的算法生成对称加密的会话密钥（Session Key）。</li>
 <li>然后发送 <code>Finished</code> 报文。</li>
-</ul></li>
-<li><strong>完成握手</strong>：如果双方都能正确解密对方的
-<code>Finished</code> 消息，握手成功。</li>
+</ul>
+</li>
+<li><strong>完成握手</strong>：如果双方都能正确解密对方的 <code>Finished</code> 消息，握手成功。</li>
 <li><strong>加密传输数据</strong>：握手完成后，客户端和服务器使用会话密钥对所有通信数据进行加密和解密，确保数据的机密性和完整性。</li>
 </ol>
-<h3 id="ecdhe">2. ECDHE</h3>
+<h3 id="2-ECDHE">2. ECDHE</h3>
 <div class="tag-plugin colorful note" color="orange"><div class="title"><strong><p>向前安全的定义</p>
 </strong></div><div class="body"><p>即便<strong>现在</strong>私钥泄漏了，也无法破解<strong>过去</strong>截获的流量。</p></div></div>
-<p>为什么说 TLS 1.2 使用 RSA 握手会有前向安全（Forward
-Secrecy）的问题呢？</p>
-<p>在 TLS 1.2 (RSA) 中，最终用来加密数据的 <strong>Session Key</strong>
-是这样算出来的：</p>
-<p><span class="math display">\[
-Session\ Key = Function(ClientRandom, ServerRandom, Pre\text{-}Master\
-Secret)
-\]</span></p>
-<p>因为 ClientRandom 和 ServerRandom
-都是明文的，所以<strong>整个会话的安全性，完全变成了"如何保护 Pre-Master
-Secret"这一个问题</strong>。</p>
-<p>只要私钥一旦泄露，那黑客就可以根据过完的 ClientRandom 和 ServerRandom
-以及解密后的 pre-master-secret 还原所有的历史消息。</p>
+<p>为什么说 TLS 1.2 使用 RSA 握手会有前向安全（Forward Secrecy）的问题呢？</p>
+<p>在 TLS 1.2 (RSA) 中，最终用来加密数据的 <strong>Session Key</strong> 是这样算出来的：</p>
+<p>$$<br>
+Session\ Key = Function(ClientRandom, ServerRandom, Pre\text{-}Master\ Secret)<br>
+$$</p>
+<p>因为 ClientRandom 和 ServerRandom 都是明文的，所以<strong>整个会话的安全性，完全变成了&quot;如何保护 Pre-Master Secret&quot;这一个问题</strong>。</p>
+<p>只要私钥一旦泄露，那黑客就可以根据过完的 ClientRandom 和 ServerRandom 以及解密后的 pre-master-secret 还原所有的历史消息。</p>
 <p><strong>ECDHE</strong> 旨在解决这个问题。这个名字由四部分组成：</p>
 <ul>
-<li><strong>EC (Elliptic Curve)</strong>：椭圆曲线。相比
-RSA，它用更短的密钥就能实现同等强度，计算更快，带宽更省。</li>
-<li><strong>DH
-(Diffie-Hellman)</strong>：密钥交换算法。它的魔力在于：<strong>双方只交换公钥，就能算出同一个密钥，而无需传递密钥本身。</strong></li>
-<li><strong>E
-(Ephemeral)</strong>：<strong>临时（关键点！）</strong>。指每次握手生成的"私钥"都是临时的，用完即焚。</li>
+<li><strong>EC (Elliptic Curve)</strong>：椭圆曲线。相比 RSA，它用更短的密钥就能实现同等强度，计算更快，带宽更省。</li>
+<li><strong>DH (Diffie-Hellman)</strong>：密钥交换算法。它的魔力在于：<strong>双方只交换公钥，就能算出同一个密钥，而无需传递密钥本身。</strong></li>
+<li><strong>E (Ephemeral)</strong>：<strong>临时（关键点！）</strong>。指每次握手生成的&quot;私钥&quot;都是临时的，用完即焚。</li>
 </ul>
 <p>它的核心原理是：<strong>核心原理（离散对数难题）</strong>。</p>
 <p>为了不陷入复杂的数学证明，我们用最简化的数学逻辑描述：</p>
-<p>假设椭圆曲线上有一个基点 <span class="math inline">\(G\)</span>。</p>
-<ol type="1">
-<li><strong>Client</strong> 生成一个随机临时私钥 <span
-class="math inline">\(a\)</span>，计算公钥 <span class="math inline">\(A
-= a \cdot G\)</span>，发给 Server。</li>
-<li><strong>Server</strong> 生成一个随机临时私钥 <span
-class="math inline">\(b\)</span>，计算公钥 <span class="math inline">\(B
-= b \cdot G\)</span>，发给 Client。</li>
+<p>假设椭圆曲线上有一个基点 $G$。</p>
+<ol>
+<li><strong>Client</strong> 生成一个随机临时私钥 $a$，计算公钥 $A = a \cdot G$，发给 Server。</li>
+<li><strong>Server</strong> 生成一个随机临时私钥 $b$，计算公钥 $B = b \cdot G$，发给 Client。</li>
 <li><strong>计算共享密钥</strong>：
 <ul>
-<li>Client 计算：<span class="math inline">\(S = a \cdot B = a \cdot b
-\cdot G\)</span></li>
-<li>Server 计算：<span class="math inline">\(S = b \cdot A = b \cdot a
-\cdot G\)</span></li>
-<li>结果一样！双方都得到了 <span class="math inline">\(S\)</span>。</li>
-</ul></li>
+<li>Client 计算：$S = a \cdot B = a \cdot b \cdot G$</li>
+<li>Server 计算：$S = b \cdot A = b \cdot a \cdot G$</li>
+<li>结果一样！双方都得到了 $S$。</li>
+</ul>
+</li>
 </ol>
 <blockquote>
-<p><strong>注意</strong>：黑客截获了 <span
-class="math inline">\(A\)</span> 和 <span
-class="math inline">\(B\)</span>，但根据椭圆曲线离散对数难题，他无法反推出
-<span class="math inline">\(a\)</span> 或 <span
-class="math inline">\(b\)</span>，因此算不出 <span
-class="math inline">\(S\)</span>。</p>
+<p><strong>注意</strong>：黑客截获了 $A$ 和 $B$，但根据椭圆曲线离散对数难题，他无法反推出 $a$ 或 $b$，因此算不出 $S$。</p>
 </blockquote>
-<p>为什么 ECDHE 有前向安全？在 ECDHE 中，<code>Session Key</code>
-依然需要三个参数，但第三个参数的来源变了：</p>
-<ol type="1">
+<p>为什么 ECDHE 有前向安全？在 ECDHE 中，<code>Session Key</code> 依然需要三个参数，但第三个参数的来源变了：</p>
+<ol>
 <li>ClientRandom（明文，可见）。</li>
 <li>ServerRandom（明文，可见）。</li>
-<li><strong>ECDH 算出的共享密钥</strong>（替代了原来的 Pre-Master
-Secret）。</li>
+<li><strong>ECDH 算出的共享密钥</strong>（替代了原来的 Pre-Master Secret）。</li>
 </ol>
 <p><strong>关键区别在于</strong>：</p>
 <ul>
-<li>这个共享密钥是 Client 和 Server
-通过交换<strong>临时的（Ephemeral）</strong>公钥 <span
-class="math inline">\(A\)</span> 和 <span
-class="math inline">\(B\)</span> 算出来的。</li>
-<li>在这个过程中，<strong>服务器的长期私钥仅仅用来"签名"</strong>（证明
-<span class="math inline">\(B\)</span>
-是我发的），而<strong>不参与密钥的加密或计算</strong>。</li>
-<li>握手结束后，Client 和 Server 会把计算用的临时私钥 <span
-class="math inline">\(a\)</span> 和 <span
-class="math inline">\(b\)</span> 删掉。</li>
+<li>这个共享密钥是 Client 和 Server 通过交换**临时的（Ephemeral）**公钥 $A$ 和 $B$ 算出来的。</li>
+<li>在这个过程中，<strong>服务器的长期私钥仅仅用来&quot;签名&quot;</strong>（证明 $B$ 是我发的），而<strong>不参与密钥的加密或计算</strong>。</li>
+<li>握手结束后，Client 和 Server 会把计算用的临时私钥 $a$ 和 $b$ 删掉。</li>
 </ul>
 <p>我们来看使用 ECDHE 的握手流程：</p>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251130231349481.png" /></p>
-<ol type="1">
-<li><p><strong>客户端发送 ClientHello：</strong> 客户端向服务器发送
-ClientHello 消息，包含支持的 TLS 版本、加密算法列表（必须包含
-<strong>ECDHE</strong> 算法）、压缩方法以及一个随机数（<strong>Client
-Random</strong>）。</p></li>
-<li><p><strong>服务器发送 ServerHello 和密钥协商参数：</strong>
-服务器收到 ClientHello 后，选择 ECDHE 算法，发送
-ServerHello（包含选择的版本、算法、<strong>Server
-Random</strong>）以及服务器数字证书。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251130231349481.png" alt=""></p>
+<ol>
+<li>
+<p><strong>客户端发送 ClientHello：</strong> 客户端向服务器发送 ClientHello 消息，包含支持的 TLS 版本、加密算法列表（必须包含 <strong>ECDHE</strong> 算法）、压缩方法以及一个随机数（<strong>Client Random</strong>）。</p>
+</li>
+<li>
+<p><strong>服务器发送 ServerHello 和密钥协商参数：</strong> 服务器收到 ClientHello 后，选择 ECDHE 算法，发送 ServerHello（包含选择的版本、算法、<strong>Server Random</strong>）以及服务器数字证书。</p>
 <blockquote>
 <p><strong>关键区别</strong>：服务器会在本地生成一对<strong>临时的</strong>椭圆曲线公私钥。它将<strong>服务器临时公钥</strong>发送给客户端，并用证书中的<strong>长期私钥</strong>对这个临时公钥进行<strong>数字签名</strong>，以防止篡改。</p>
-</blockquote></li>
-<li><p><strong>客户端验证并协商预主密钥：</strong></p>
+</blockquote>
+</li>
+<li>
+<p><strong>客户端验证并协商预主密钥：</strong></p>
 <ul>
-<li><p>客户端验证服务器证书的合法性。并用证书中的长期公钥验证收到的服务器临时公钥的<strong>签名</strong>是否有效。</p></li>
-<li><p>验证通过后，客户端也在本地生成一对<strong>临时的</strong>椭圆曲线公私钥。</p></li>
-<li><p><strong>计算预主密钥</strong>：客户端利用<strong>自己的临时私钥</strong>和收到的<strong>服务器临时公钥</strong>，通过
-ECDH 算法在本地计算出预主密钥（Pre-Master Secret）。</p></li>
-<li><p>客户端将<strong>自己的临时公钥</strong>明文发送给服务器。</p></li>
-<li><p>结合算出的预主密钥、Client Random 和 Server
-Random，生成会话密钥（Session Key），并发送 Finished 报文。</p></li>
-</ul></li>
-<li><p><strong>服务端计算预主密钥：</strong></p>
+<li>
+<p>客户端验证服务器证书的合法性。并用证书中的长期公钥验证收到的服务器临时公钥的<strong>签名</strong>是否有效。</p>
+</li>
+<li>
+<p>验证通过后，客户端也在本地生成一对<strong>临时的</strong>椭圆曲线公私钥。</p>
+</li>
+<li>
+<p><strong>计算预主密钥</strong>：客户端利用<strong>自己的临时私钥</strong>和收到的<strong>服务器临时公钥</strong>，通过 ECDH 算法在本地计算出预主密钥（Pre-Master Secret）。</p>
+</li>
+<li>
+<p>客户端将<strong>自己的临时公钥</strong>明文发送给服务器。</p>
+</li>
+<li>
+<p>结合算出的预主密钥、Client Random 和 Server Random，生成会话密钥（Session Key），并发送 Finished 报文。</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>服务端计算预主密钥：</strong></p>
 <ul>
-<li><strong>计算预主密钥</strong>：服务器收到客户端的临时公钥后，利用<strong>自己的临时私钥</strong>和收到的<strong>客户端临时公钥</strong>，通过同样的
-ECDH 算法在本地计算出<strong>一模一样</strong>的预主密钥。</li>
-<li>结合预主密钥、Client Random 和 Server
-Random，生成相同的会话密钥（Session Key），并发送 Finished 报文。</li>
-</ul></li>
-<li><p><strong>完成握手：</strong> 如果双方都能正确解密对方的 Finished
-消息，握手成功。双方立即<strong>删除</strong>各自生成的临时公私钥（实现前向安全）。</p></li>
-<li><p><strong>加密传输数据：</strong>
-握手完成后，客户端和服务器使用会话密钥对通信数据进行加密传输。</p></li>
+<li><strong>计算预主密钥</strong>：服务器收到客户端的临时公钥后，利用<strong>自己的临时私钥</strong>和收到的<strong>客户端临时公钥</strong>，通过同样的 ECDH 算法在本地计算出<strong>一模一样</strong>的预主密钥。</li>
+<li>结合预主密钥、Client Random 和 Server Random，生成相同的会话密钥（Session Key），并发送 Finished 报文。</li>
+</ul>
+</li>
+<li>
+<p><strong>完成握手：</strong> 如果双方都能正确解密对方的 Finished 消息，握手成功。双方立即<strong>删除</strong>各自生成的临时公私钥（实现前向安全）。</p>
+</li>
+<li>
+<p><strong>加密传输数据：</strong> 握手完成后，客户端和服务器使用会话密钥对通信数据进行加密传输。</p>
+</li>
 </ol>
-<h2 id="tls1.3">TLS1.3</h2>
-<p>TLS 1.2 虽然支持 ECDHE，但握手还是很慢（需要
-2-RTT），而且保留了很多不安全的加密算法。TLS 1.3
-做了大刀阔斧的改革。</p>
-<p>TLS 1.2
-的逻辑是：<strong><u>"先打招呼，商量用什么算法，再交换密钥"</u></strong>。
-TLS 1.3
-的逻辑是：<strong><u>"我猜你会用这个算法，先把公钥给你！"</u></strong></p>
-<h3 id="rtt">1-RTT</h3>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251130231937223.png" /></p>
+<h2 id="TLS1-3">TLS1.3</h2>
+<p>TLS 1.2 虽然支持 ECDHE，但握手还是很慢（需要 2-RTT），而且保留了很多不安全的加密算法。TLS 1.3 做了大刀阔斧的改革。</p>
+<p>TLS 1.2 的逻辑是：<strong><u>“先打招呼，商量用什么算法，再交换密钥”</u></strong>。 TLS 1.3 的逻辑是：<strong><u>“我猜你会用这个算法，先把公钥给你！”</u></strong></p>
+<h3 id="1-RTT">1-RTT</h3>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251130231937223.png" alt=""></p>
 <p>通过上述流程图可以看到，TLS1.3 直接从 2-RTT 缩短到了 1-RTT：</p>
 <ul>
-<li>Client 在发 <code>ClientHello</code>
-时，不再干等服务器选算法，而是<strong>直接猜测</strong>服务器支持
-ECDHE，并直接把自己的<strong>Key Share（临时公钥）</strong>
-一起发过去。</li>
-<li>Server 收到后直接生成密钥，回复 <code>ServerHello</code> +
-<code>Finished</code>。握手直接结束。</li>
+<li>Client 在发 <code>ClientHello</code> 时，不再干等服务器选算法，而是<strong>直接猜测</strong>服务器支持 ECDHE，并直接把自己的<strong>Key Share（临时公钥）</strong> 一起发过去。</li>
+<li>Server 收到后直接生成密钥，回复 <code>ServerHello</code> + <code>Finished</code>。握手直接结束。</li>
 </ul>
-<h3 id="rtt-1">0-RTT</h3>
+<h3 id="0-RTT">0-RTT</h3>
 <p>更进一步，如果是连接恢复的情况，TLS1.3 还可以做到 0-RTT。</p>
-<p>在初始连接 1-RTT
-之后，在连接结束前，服务器会生成一个极其重要的数据结构，叫做
-<strong>Session Ticket（会话票据）</strong>，并通过
-<code>NewSessionTicket</code> 指令发给客户端。<strong>Session
-Ticket</strong> 包含了 Pre-Shared Key（预共享密钥）</p>
+<p>在初始连接 1-RTT 之后，在连接结束前，服务器会生成一个极其重要的数据结构，叫做 <strong>Session Ticket（会话票据）</strong>，并通过 <code>NewSessionTicket</code> 指令发给客户端。<strong>Session Ticket</strong> 包含了 Pre-Shared Key（预共享密钥）</p>
 <ul>
-<li>一个 <strong>PSK (Pre-Shared
-Key，预共享密钥)</strong>：这是从当前的会话主密钥衍生出来的一个秘密数据。</li>
+<li>一个 <strong>PSK (Pre-Shared Key，预共享密钥)</strong>：这是从当前的会话主密钥衍生出来的一个秘密数据。</li>
 <li>有效期、加密算法等信息。</li>
-<li>这个 Ticket
-通常只有服务器能解密（用服务器只有自己知道的密钥加密）。</li>
+<li>这个 Ticket 通常只有服务器能解密（用服务器只有自己知道的密钥加密）。</li>
 </ul>
-<p>客户端收到 Ticket
-后，把它安全地存在本地（比如浏览器的缓存里），然后断开连接。</p>
-<p>假设过了几个小时，用户又打开了同一个网站。客户端发现本地有上次存的
-Ticket。</p>
+<p>客户端收到 Ticket 后，把它安全地存在本地（比如浏览器的缓存里），然后断开连接。</p>
+<p>假设过了几个小时，用户又打开了同一个网站。客户端发现本地有上次存的 Ticket。</p>
 <p><strong>客户端动作：</strong></p>
-<ol type="1">
+<ol>
 <li><strong>取出 PSK</strong>：客户端从 Ticket 里提取出 PSK。</li>
-<li><strong>生成早期密钥</strong>：客户端利用这个 PSK，结合当前的 Client
-Random，提前算出用于加密早期数据（Early Data）的密钥。</li>
+<li><strong>生成早期密钥</strong>：客户端利用这个 PSK，结合当前的 Client Random，提前算出用于加密早期数据（Early Data）的密钥。</li>
 <li><strong>客户端构造一个超级数据包，一次性发给服务器：</strong>
 <ul>
 <li><strong>ClientHello</strong>：标准的问候，包含支持的算法、随机数。</li>
 <li><strong>Session Ticket</strong></li>
-<li><strong>Key Share</strong>：为了保险起见，依然带上新的 ECDHE
-临时公钥（万一 0-RTT 失败了，可以无缝降级回 1-RTT）。</li>
-<li><strong>Early Data
-(加密的)</strong>：这是重点！用刚才算的早期密钥加密的 HTTP 请求（如
-<code>GET /index.html</code>）。</li>
-</ul></li>
+<li><strong>Key Share</strong>：为了保险起见，依然带上新的 ECDHE 临时公钥（万一 0-RTT 失败了，可以无缝降级回 1-RTT）。</li>
+<li><strong>Early Data (加密的)</strong>：这是重点！用刚才算的早期密钥加密的 HTTP 请求（如 <code>GET /index.html</code>）。</li>
+</ul>
+</li>
 </ol>
 <p><strong>服务器动作：</strong></p>
-<ol type="1">
+<ol>
 <li><strong>收到大礼包</strong>：服务器收到这一大堆数据。</li>
-<li><strong>验证凭证</strong>：服务器解密 Session
-Ticket，确认它有效，并从中提取出 <strong>PSK</strong>。</li>
-<li><strong>尝试解密</strong>：服务器用提取出的
-PSK，算出同样的早期密钥，尝试解密后面的 <strong>Early
-Data</strong>。</li>
+<li><strong>验证凭证</strong>：服务器解密 Session Ticket，确认它有效，并从中提取出 <strong>PSK</strong>。</li>
+<li><strong>尝试解密</strong>：服务器用提取出的 PSK，算出同样的早期密钥，尝试解密后面的 <strong>Early Data</strong>。</li>
 <li><strong>并行处理（极速的核心）</strong>：
 <ul>
-<li><strong>路径
-A（应用层）</strong>：如果解密成功，服务器<strong>立即</strong>把解出来的
-HTTP 请求（GET /）交给后端应用（比如
-Nginx/Tomcat）去处理。<strong>此时此刻，握手甚至还没完成，但服务器已经开始干活了！</strong></li>
-<li><strong>路径 B（握手层）</strong>：与此同时，服务器利用客户端发来的
-Key Share，完成标准的 ECDHE
-密钥协商，生成<strong>新的</strong>、具有前向安全的正式会话密钥。</li>
-</ul></li>
-<li><strong>回复</strong>：服务器发送 <code>ServerHello</code> +
-<code>Finished</code>（完成握手），紧接着发送用新密钥加密的 HTTP
-响应（网页内容）。</li>
+<li><strong>路径 A（应用层）</strong>：如果解密成功，服务器<strong>立即</strong>把解出来的 HTTP 请求（GET /）交给后端应用（比如 Nginx/Tomcat）去处理。<strong>此时此刻，握手甚至还没完成，但服务器已经开始干活了！</strong></li>
+<li><strong>路径 B（握手层）</strong>：与此同时，服务器利用客户端发来的 Key Share，完成标准的 ECDHE 密钥协商，生成<strong>新的</strong>、具有前向安全的正式会话密钥。</li>
+</ul>
+</li>
+<li><strong>回复</strong>：服务器发送 <code>ServerHello</code> + <code>Finished</code>（完成握手），紧接着发送用新密钥加密的 HTTP 响应（网页内容）。</li>
 </ol>
 <p><strong>效果对比：</strong></p>
 <ul>
-<li><strong>1-RTT</strong>：客户端发送 -&gt; 服务器处理握手 -&gt;
-服务器回复握手完成 -&gt; 客户端发送 HTTP 请求 -&gt;
-服务器处理并回复网页。</li>
-<li><strong>0-RTT</strong>：客户端发送(含 HTTP 请求) -&gt;
-服务器处理握手并<strong>同时</strong>处理 HTTP 请求 -&gt;
-服务器回复握手完成和网页内容。</li>
-<li>用户感受到网页加载的时间，整整少了一个
-RTT。在跨国网络或移动网络下，这可能是几百毫秒的提升。</li>
+<li><strong>1-RTT</strong>：客户端发送 -&gt; 服务器处理握手 -&gt; 服务器回复握手完成 -&gt; 客户端发送 HTTP 请求 -&gt; 服务器处理并回复网页。</li>
+<li><strong>0-RTT</strong>：客户端发送(含 HTTP 请求) -&gt; 服务器处理握手并<strong>同时</strong>处理 HTTP 请求 -&gt; 服务器回复握手完成和网页内容。</li>
+<li>用户感受到网页加载的时间，整整少了一个 RTT。在跨国网络或移动网络下，这可能是几百毫秒的提升。</li>
 </ul>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251130233954053.png" /></p>
-<p>然而！天下没有免费的午餐。0-RTT
-带来了极致的速度，也引入了一个巨大的安全风险。</p>
-<p>在标准的 ECDHE 握手中，每次的密钥都是基于<strong>全新的</strong>
-Client Random 和 Server Random
-实时计算出来的。黑客录制了昨天的握手数据包，今天重新发给服务器，服务器一看随机数是旧的，或者因为没有对应的临时私钥无法算出正确的密钥，直接就拒绝了。</p>
-<p>然而 0-RTT 用于加密 Early Data 的密钥，是基于<strong>以前</strong>的
-PSK 衍生出来的，所以是存在重放危险的！</p>
-<p>由于这个致命缺陷，TLS 1.3 标准明确建议：<strong>千万不要用 0-RTT
-发送非幂等（Non-Idempotent）请求！</strong></p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251130233954053.png" alt=""></p>
+<p>然而！天下没有免费的午餐。0-RTT 带来了极致的速度，也引入了一个巨大的安全风险。</p>
+<p>在标准的 ECDHE 握手中，每次的密钥都是基于<strong>全新的</strong> Client Random 和 Server Random 实时计算出来的。黑客录制了昨天的握手数据包，今天重新发给服务器，服务器一看随机数是旧的，或者因为没有对应的临时私钥无法算出正确的密钥，直接就拒绝了。</p>
+<p>然而 0-RTT 用于加密 Early Data 的密钥，是基于<strong>以前</strong>的 PSK 衍生出来的，所以是存在重放危险的！</p>
+<p>由于这个致命缺陷，TLS 1.3 标准明确建议：<strong>千万不要用 0-RTT 发送非幂等（Non-Idempotent）请求！</strong></p>
 <ul>
-<li><strong>安全场景</strong>：<code>GET</code>
-请求（如获取图片、网页）。重放多少次结果都一样，没副作用。</li>
-<li><strong>危险场景</strong>：<code>POST</code>、<code>PUT</code>、<code>DELETE</code>
-等改变服务器状态的请求。</li>
+<li><strong>安全场景</strong>：<code>GET</code> 请求（如获取图片、网页）。重放多少次结果都一样，没副作用。</li>
+<li><strong>危险场景</strong>：<code>POST</code>、<code>PUT</code>、<code>DELETE</code> 等改变服务器状态的请求。</li>
 </ul>
-<h2 id="http3">HTTP3</h2>
-<p>HTTP/3 不再使用 TCP，而是基于 Google 开发的
-<strong>QUIC</strong>（Quick UDP Internet Connections），底层使用
-<strong>UDP</strong>。</p>
-<h3 id="核心机制">1. 核心机制</h3>
+<h2 id="HTTP3">HTTP3</h2>
+<p>HTTP/3 不再使用 TCP，而是基于 Google 开发的 <strong>QUIC</strong>（Quick UDP Internet Connections），底层使用 <strong>UDP</strong>。</p>
+<h3 id="1-核心机制">1. 核心机制</h3>
 <ul>
 <li><strong>机制 1：独立的流控制（解决 TCP 队头阻塞）</strong>
 <ul>
 <li>QUIC 在用户态（User Space）实现了类似 TCP 的可靠传输。</li>
-<li>但它知道"流"的概念。如果 Stream 1 丢包，QUIC 只会阻塞 Stream
-1，Stream 2 的数据包可以直接交给浏览器渲染。</li>
-</ul></li>
+<li>但它知道&quot;流&quot;的概念。如果 Stream 1 丢包，QUIC 只会阻塞 Stream 1，Stream 2 的数据包可以直接交给浏览器渲染。</li>
+</ul>
+</li>
 <li><strong>机制 2：连接迁移 (Connection Migration)</strong>
 <ul>
-<li><strong>TCP</strong>：使用四元组（源 IP, 源端口, 目的 IP,
-目的端口）标识连接。手机从 Wi-Fi 切到 4G，源 IP
-变了，连接断开，必须重连。</li>
-<li><strong>QUIC</strong>：使用 <strong>Connection ID</strong> (CID)
-标识连接。只要 CID 不变，IP 变了也能继续传输，实现无缝网络切换。</li>
-</ul></li>
+<li><strong>TCP</strong>：使用四元组（源 IP, 源端口, 目的 IP, 目的端口）标识连接。手机从 Wi-Fi 切到 4G，源 IP 变了，连接断开，必须重连。</li>
+<li><strong>QUIC</strong>：使用 <strong>Connection ID</strong> (CID) 标识连接。只要 CID 不变，IP 变了也能继续传输，实现无缝网络切换。</li>
+</ul>
+</li>
 <li><strong>机制 3：内置 TLS 1.3</strong>
 <ul>
-<li>HTTP/3 没有把 TLS 当作上层协议，而是直接将 TLS 1.3 的握手过程嵌入到
-QUIC 的建立过程中。</li>
-<li>传输层握手 + 加密层握手合并，实现真正的 1-RTT 建连（TCP+TLS
-需要分别握手）。</li>
-</ul></li>
+<li>HTTP/3 没有把 TLS 当作上层协议，而是直接将 TLS 1.3 的握手过程嵌入到 QUIC 的建立过程中。</li>
+<li>传输层握手 + 加密层握手合并，实现真正的 1-RTT 建连（TCP+TLS 需要分别握手）。</li>
+</ul>
+</li>
 <li><strong>机制 4：用户态拥塞控制</strong>
 <ul>
-<li>TCP 的拥塞控制（CUBIC, BBR）在操作系统内核里，升级困难（需要更新
-OS）。</li>
-<li>QUIC
-在应用层实现，浏览器更新一下就能换用最新的拥塞控制算法，迭代极快。</li>
-</ul></li>
+<li>TCP 的拥塞控制（CUBIC, BBR）在操作系统内核里，升级困难（需要更新 OS）。</li>
+<li>QUIC 在应用层实现，浏览器更新一下就能换用最新的拥塞控制算法，迭代极快。</li>
+</ul>
+</li>
 <li><strong>QPACK</strong>：
 <ul>
 <li>HTTP/2 的 HPACK 依赖于数据的顺序到达（更新动态表）。</li>
-<li>由于 QUIC 允许乱序，HPACK 失效。HTTP/3 引入了
-QPACK，专门适配乱序环境下的头部压缩。</li>
-</ul></li>
+<li>由于 QUIC 允许乱序，HPACK 失效。HTTP/3 引入了 QPACK，专门适配乱序环境下的头部压缩。</li>
 </ul>
-<h3 id="握手机制">2. 握手机制</h3>
-<p>接下来我们重点讨论 QUIC（HTTP3）的握手机制。QUIC
-的握手是其最核心的创新之一，它解决了 TCP + TLS
-分层架构带来的根本性低效问题。</p>
+</li>
+</ul>
+<h3 id="2-握手机制">2. 握手机制</h3>
+<p>接下来我们重点讨论 QUIC（HTTP3）的握手机制。QUIC 的握手是其最核心的创新之一，它解决了 TCP + TLS 分层架构带来的根本性低效问题。</p>
 <p>在传统的 HTTPS (HTTP/2) 中，网络栈是分层的：</p>
-<ol type="1">
-<li><strong>TCP 层</strong>：先花
-1-RTT（三次握手）建立可靠连接。此时数据是明文的。</li>
-<li><strong>TLS 层</strong>：再花 1-RTT（TLS 1.3）在 TCP
-之上协商密钥。</li>
+<ol>
+<li><strong>TCP 层</strong>：先花 1-RTT（三次握手）建立可靠连接。此时数据是明文的。</li>
+<li><strong>TLS 层</strong>：再花 1-RTT（TLS 1.3）在 TCP 之上协商密钥。</li>
 </ol>
 <p>总共需要 <strong>2-RTT</strong> 才能开始发 HTTP 数据。</p>
 <div class="tag-plugin colorful note" color="green"><div class="title"><strong><p>QUIC 的革命性设计：融合层级</p>
-</strong></div><div class="body"><p>QUIC 基于 UDP，UDP 没有连接的概念。QUIC协议栈<strong>直接包含</strong>了 TLS 1.3 模块。 QUIC的握手目标是：<strong>在建立逻辑连接的同时，完成加密密钥的协商。</strong>它把这两个步骤合并成了真正的<strong>1-RTT</strong>。</p></div></div>
+</strong></div><div class="body"><p>QUIC 基于 UDP，UDP 没有连接的概念。QUIC 协议栈<strong>直接包含</strong>了 TLS 1.3 模块。 QUIC 的握手目标是：**在建立逻辑连接的同时，完成加密密钥的协商。**它把这两个步骤合并成了真正的 <strong>1-RTT</strong>。</p></div></div>
 <p>在深入 QUIC 的握手机制之前，我们需要先了解几个 QUIC 特有的概念：</p>
-<ol type="1">
-<li><p><strong>Connection ID (CID, 连接 ID)</strong>：</p>
+<ol>
+<li>
+<p><strong>Connection ID (CID, 连接 ID)</strong>：</p>
 <ul>
-<li><p>因为 UDP 没有连接，IP
-地址和端口又可能会变（比如手机切网络），QUIC 使用 CID
-来标识一个连接。</p></li>
-<li><p>每个数据包头都会带上目标 CID (DCID) 和源 CID
-(SCID)。这使得连接可以迁移。</p></li>
-</ul></li>
-<li><p><strong>报文类型 (Packet Types)</strong>：</p>
+<li>
+<p>因为 UDP 没有连接，IP 地址和端口又可能会变（比如手机切网络），QUIC 使用 CID 来标识一个连接。</p>
+</li>
+<li>
+<p>每个数据包头都会带上目标 CID (DCID) 和源 CID (SCID)。这使得连接可以迁移。</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>报文类型 (Packet Types)</strong>：</p>
 <ul>
-<li><p>QUIC 在握手阶段使用特殊的长首部（Long Header）报文。</p></li>
-<li><p><strong>Initial 包</strong>：用于承载 TLS 的
-<code>ClientHello</code> 和 <code>ServerHello</code>。</p></li>
-<li><p><strong>Handshake 包</strong>：用于承载加密后的 TLS
-握手消息（如证书、Finished）。</p></li>
-<li><p><strong>0-RTT 包</strong>：用于承载 0-RTT
-的早期应用数据。</p></li>
-<li><p><strong>Short Header
-包</strong>：握手完成后，传输普通应用数据使用。</p></li>
-</ul></li>
-<li><p><strong>反放大攻击 (Anti-Amplification)</strong>：</p>
+<li>
+<p>QUIC 在握手阶段使用特殊的长首部（Long Header）报文。</p>
+</li>
+<li>
+<p><strong>Initial 包</strong>：用于承载 TLS 的 <code>ClientHello</code> 和 <code>ServerHello</code>。</p>
+</li>
+<li>
+<p><strong>Handshake 包</strong>：用于承载加密后的 TLS 握手消息（如证书、Finished）。</p>
+</li>
+<li>
+<p><strong>0-RTT 包</strong>：用于承载 0-RTT 的早期应用数据。</p>
+</li>
+<li>
+<p><strong>Short Header 包</strong>：握手完成后，传输普通应用数据使用。</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>反放大攻击 (Anti-Amplification)</strong>：</p>
 <ul>
-<li>由于 UDP 容易被伪造 IP 进行 DDoS 攻击（发送小包骗取大包回复），QUIC
-规定在验证客户端 IP
-地址之前，服务器回复的数据量不能超过客户端发送数据量的 3 倍。</li>
-</ul></li>
+<li>由于 UDP 容易被伪造 IP 进行 DDoS 攻击（发送小包骗取大包回复），QUIC 规定在验证客户端 IP 地址之前，服务器回复的数据量不能超过客户端发送数据量的 3 倍。</li>
+</ul>
+</li>
 </ol>
-<h4 id="rtt-2">2.1 1-RTT</h4>
-<p>这是最基础的场景，目标是达到 TLS 1.3 的 1-RTT 效果，但不需要 TCP
-握手。</p>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251130235652829.png" /></p>
+<h4 id="2-1-1-RTT">2.1 1-RTT</h4>
+<p>这是最基础的场景，目标是达到 TLS 1.3 的 1-RTT 效果，但不需要 TCP 握手。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251130235652829.png" alt=""></p>
 <p><strong>步骤 1：客户端发送 Initial 包</strong></p>
 <ul>
-<li><strong>外层 (QUIC)</strong>：客户端生成一个随机的各种 CID。封装一个
-<code>Initial</code> 类型的 QUIC 包。</li>
-<li><strong>内层 (TLS 1.3)</strong>：包含标准的 TLS
-<code>ClientHello</code> 消息。
+<li><strong>外层 (QUIC)</strong>：客户端生成一个随机的各种 CID。封装一个 <code>Initial</code> 类型的 QUIC 包。</li>
+<li><strong>内层 (TLS 1.3)</strong>：包含标准的 TLS <code>ClientHello</code> 消息。
 <ul>
 <li>带着 Key Share（猜测的临时公钥，如 X25519 公钥 A）。</li>
 <li>带着 TLS 版本、加密套件列表等。</li>
-</ul></li>
-<li><strong>注意</strong>：这个包本身也需要加密，但因为还没协商密钥，所以使用一个协议标准里写死的"初始密钥"进行模糊化（Obfuscation），主要为了防干扰，不防黑客。</li>
+</ul>
+</li>
+<li><strong>注意</strong>：这个包本身也需要加密，但因为还没协商密钥，所以使用一个协议标准里写死的&quot;初始密钥&quot;进行模糊化（Obfuscation），主要为了防干扰，不防黑客。</li>
 </ul>
 <p><strong>步骤 2：服务器回复 Initial + Handshake 包</strong></p>
 <ul>
-<li><p>服务器收到包，提取出 <code>ClientHello</code>，交给内置的 TLS
-模块处理。</p></li>
-<li><p>TLS 模块生成自己的临时公钥 B，算出握手密钥（Handshake
-Keys）。</p></li>
-<li><p><strong>服务器需要连续发送两个逻辑上的包（可能会合并在一个 UDP
-数据报里）</strong>：</p>
-<ol type="1">
-<li><strong>QUIC Initial 包</strong>：包裹着 TLS
-<code>ServerHello</code>（包含服务器的临时公钥
-B）。这个包用初始密钥模糊化。</li>
-<li><strong>QUIC Handshake 包</strong>：包裹着 TLS
-的后续消息——<strong>证书 (Certificate)、签名
-(CertificateVerify)、结束消息 (Finished)</strong>。</li>
+<li>
+<p>服务器收到包，提取出 <code>ClientHello</code>，交给内置的 TLS 模块处理。</p>
+</li>
+<li>
+<p>TLS 模块生成自己的临时公钥 B，算出握手密钥（Handshake Keys）。</p>
+</li>
+<li>
+<p><strong>服务器需要连续发送两个逻辑上的包（可能会合并在一个 UDP 数据报里）</strong>：</p>
+<ol>
+<li><strong>QUIC Initial 包</strong>：包裹着 TLS <code>ServerHello</code>（包含服务器的临时公钥 B）。这个包用初始密钥模糊化。</li>
+<li><strong>QUIC Handshake 包</strong>：包裹着 TLS 的后续消息——<strong>证书 (Certificate)、签名 (CertificateVerify)、结束消息 (Finished)</strong>。</li>
 </ol>
 <ul>
-<li><strong>关键点</strong>：这个 Handshake
-包是使用刚才算出来的<strong>握手密钥加密</strong>的。这是第一批真正加密的数据。</li>
-</ul></li>
+<li><strong>关键点</strong>：这个 Handshake 包是使用刚才算出来的<strong>握手密钥加密</strong>的。这是第一批真正加密的数据。</li>
+</ul>
+</li>
 </ul>
 <p><strong>步骤 3：客户端完成握手并发送数据</strong></p>
 <ul>
 <li>客户端收到 <code>ServerHello</code>，算出握手密钥。</li>
-<li>用握手密钥解密后续的 <code>Handshake</code>
-包，验证证书和签名。</li>
+<li>用握手密钥解密后续的 <code>Handshake</code> 包，验证证书和签名。</li>
 <li>验证成功后，客户端算出最终的传输层会话密钥（1-RTT Keys）。</li>
 <li><strong>发送两个逻辑包</strong>：
-<ol type="1">
-<li><strong>QUIC Handshake 包</strong>：包裹着客户端的 TLS
-<code>Finished</code> 消息（用握手密钥加密）。</li>
-<li><strong>QUIC Short Header 包</strong>：包裹着真正的 HTTP/3
-请求数据（如
-<code>GET /</code>），<strong>用最终会话密钥加密</strong>。</li>
-</ol></li>
+<ol>
+<li><strong>QUIC Handshake 包</strong>：包裹着客户端的 TLS <code>Finished</code> 消息（用握手密钥加密）。</li>
+<li><strong>QUIC Short Header 包</strong>：包裹着真正的 HTTP/3 请求数据（如 <code>GET /</code>），<strong>用最终会话密钥加密</strong>。</li>
+</ol>
+</li>
 <li><strong>握手结束</strong>。</li>
 </ul>
-<h4 id="rtt-3">2.2 0-RTT</h4>
-<p>如果你理解了 TLS 1.3 的 0-RTT 原理（利用之前的 PSK/Ticket），QUIC
-只是把它封装到了特定的包类型中。</p>
+<h4 id="2-2-0-RTT">2.2 0-RTT</h4>
+<p>如果你理解了 TLS 1.3 的 0-RTT 原理（利用之前的 PSK/Ticket），QUIC 只是把它封装到了特定的包类型中。</p>
 <blockquote>
 <p>所以它跟 TCP+TLS1.3 的 0-RTT 一样会存在重放危险。</p>
 </blockquote>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201000218593.png" /></p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251201000218593.png" alt=""></p>
 <p><strong>步骤 1：客户端发送 Initial + 0-RTT 包（大礼包）</strong></p>
 <ul>
 <li>客户端找到了上次连接存下来的 Session Ticket (PSK)。</li>
-<li>客户端使用 PSK 生成"早期数据密钥"。</li>
+<li>客户端使用 PSK 生成&quot;早期数据密钥&quot;。</li>
 <li><strong>客户端一股脑发送出去：</strong>
-<ol type="1">
-<li><strong>QUIC Initial 包</strong>：包含 TLS
-<code>ClientHello</code>，里面带着 PSK Ticket，同时也带着新的 Key Share
-(以防 0-RTT 失败回退到 1-RTT)。</li>
-<li><strong>QUIC 0-RTT 包</strong>：使用早期密钥加密的 HTTP
-请求数据。</li>
-</ol></li>
+<ol>
+<li><strong>QUIC Initial 包</strong>：包含 TLS <code>ClientHello</code>，里面带着 PSK Ticket，同时也带着新的 Key Share (以防 0-RTT 失败回退到 1-RTT)。</li>
+<li><strong>QUIC 0-RTT 包</strong>：使用早期密钥加密的 HTTP 请求数据。</li>
+</ol>
+</li>
 </ul>
 <p><strong>步骤 2：服务器并行处理</strong></p>
 <ul>
 <li>服务器收到这些包。TLS 模块验证 PSK 成功。</li>
 <li><strong>关键动作（并行）</strong>：
 <ul>
-<li>服务器使用 PSK 算出早期密钥，<strong>立即解密 0-RTT 包里的 HTTP
-请求，交给后端应用处理</strong>。</li>
-<li>同时，服务器利用 <code>ClientHello</code> 里的新 Key
-Share，完成标准的 1-RTT 握手流程，生成新的、前向安全的会话密钥。</li>
-</ul></li>
+<li>服务器使用 PSK 算出早期密钥，<strong>立即解密 0-RTT 包里的 HTTP 请求，交给后端应用处理</strong>。</li>
+<li>同时，服务器利用 <code>ClientHello</code> 里的新 Key Share，完成标准的 1-RTT 握手流程，生成新的、前向安全的会话密钥。</li>
+</ul>
+</li>
 </ul>
 <p><strong>步骤 3：服务器回复</strong></p>
 <ul>
-<li>服务器发送 <code>ServerHello</code>
-和加密的握手消息（Finished），完成正式握手。</li>
+<li>服务器发送 <code>ServerHello</code> 和加密的握手消息（Finished），完成正式握手。</li>
 <li>紧接着发送用新密钥加密的 HTTP 响应数据。</li>
 </ul>
-<hr />
+<hr>
 <p>特殊情况：<strong>地址验证（Retry 机制）</strong></p>
-<p>为了防止 UDP
-反放大攻击，当服务器是一个热门服务，它可能会要求客户端先证明"<u><strong>你确实拥有这个
-IP 地址，不是伪造的</strong></u>"。</p>
+<p>为了防止 UDP 反放大攻击，当服务器是一个热门服务，它可能会要求客户端先证明&quot;<u><strong>你确实拥有这个 IP 地址，不是伪造的</strong></u>&quot;。</p>
 <p>这会引入一个额外的 RTT：</p>
-<ol type="1">
-<li><strong>Client -&gt; Server</strong>: 发送 <code>Initial</code> 包
-(ClientHello)。</li>
-<li><strong>Server -&gt; Client</strong>: 服务器感觉有风险，不进行复杂的
-TLS 运算，而是回复一个很小的 <strong>QUIC Retry
-包</strong>，里面包含一个加密的 <strong>Token</strong>。</li>
-<li><strong>Client -&gt; Server</strong>: 客户端收到 Retry，必须重新发送
-<code>Initial</code> 包，但这次要带上刚才收到的
-<strong>Token</strong>。</li>
-<li><strong>Server -&gt; Client</strong>: 服务器验证 Token
-有效，确认客户端 IP 没问题，才开始正常的 1-RTT 握手流程（回复
-Certificate 等）。</li>
+<ol>
+<li><strong>Client -&gt; Server</strong>: 发送 <code>Initial</code> 包 (ClientHello)。</li>
+<li><strong>Server -&gt; Client</strong>: 服务器感觉有风险，不进行复杂的 TLS 运算，而是回复一个很小的 <strong>QUIC Retry 包</strong>，里面包含一个加密的 <strong>Token</strong>。</li>
+<li><strong>Client -&gt; Server</strong>: 客户端收到 Retry，必须重新发送 <code>Initial</code> 包，但这次要带上刚才收到的 <strong>Token</strong>。</li>
+<li><strong>Server -&gt; Client</strong>: 服务器验证 Token 有效，确认客户端 IP 没问题，才开始正常的 1-RTT 握手流程（回复 Certificate 等）。</li>
 </ol>
-<p>虽然多了一步，但这是一个轻量级的 UDP 交互，比完整的 TCP
-握手还是要快。</p>
+<p>虽然多了一步，但这是一个轻量级的 UDP 交互，比完整的 TCP 握手还是要快。</p>
 <h2 id="总结">总结</h2>
-<p>回顾从 HTTP/1.0 到 HTTP/3
-的二十多年演进历程，我们可以清晰地看到，推动 Web
-协议不断升级的核心动力，始终是为了提供<strong>更快、更稳、更安全</strong>的网络体验。这是一部与网络延迟、带宽限制和计算成本进行持续抗争的历史。</p>
+<p>回顾从 HTTP/1.0 到 HTTP/3 的二十多年演进历程，我们可以清晰地看到，推动 Web 协议不断升级的核心动力，始终是为了提供<strong>更快、更稳、更安全</strong>的网络体验。这是一部与网络延迟、带宽限制和计算成本进行持续抗争的历史。</p>
 <ul>
-<li><strong>HTTP/1.0 -&gt; HTTP/1.1</strong>：为了解决 TCP
-短连接带来的巨大开销，HTTP/1.1
-引入了<strong>持久连接（Keep-Alive）</strong>，让多个请求可以复用同一个
-TCP 连接，显著减少了握手次数，是 Web 性能优化的第一步。</li>
-<li><strong>HTTP/1.1 -&gt; HTTP/2</strong>：为了解决 HTTP/1.1
-在持久连接上仍然存在的<strong>应用层队头阻塞</strong>问题，HTTP/2
-引入了<strong>二进制分帧</strong>和<strong>多路复用（Multiplexing）</strong>。它允许在同一个
-TCP
-连接上并发处理多个请求和响应，极大地提高了带宽利用率和并发能力。</li>
-<li><strong>TLS 的演进 (1.2 -&gt; 1.3)</strong>：在安全层面，TLS
-协议也在不断进化。TLS 1.3
-通过废除不安全的加密算法、强制使用具备<strong>前向安全</strong>的 ECDHE
-密钥交换，并将握手流程极致优化至 <strong>1-RTT</strong> 甚至
-<strong>0-RTT</strong>，实现了速度与安全的双重飞跃。</li>
-<li><strong>HTTP/2 -&gt; HTTP/3</strong>：为了彻底解决受制于 TCP
-协议特性的<strong>传输层队头阻塞</strong>以及网络切换时的连接中断问题，HTTP/3
-做出了颠覆性的改变。它基于 UDP 构建了全新的 <strong>QUIC</strong>
-协议，将 TLS 1.3 的安全握手深度融合，实现了真正的 <strong>1-RTT</strong>
-建连、基于 <strong>Connection ID</strong>
-的无缝连接迁移，以及更高效的独立流控制。</li>
+<li><strong>HTTP/1.0 -&gt; HTTP/1.1</strong>：为了解决 TCP 短连接带来的巨大开销，HTTP/1.1 引入了<strong>持久连接（Keep-Alive）</strong>，让多个请求可以复用同一个 TCP 连接，显著减少了握手次数，是 Web 性能优化的第一步。</li>
+<li><strong>HTTP/1.1 -&gt; HTTP/2</strong>：为了解决 HTTP/1.1 在持久连接上仍然存在的<strong>应用层队头阻塞</strong>问题，HTTP/2 引入了<strong>二进制分帧</strong>和<strong>多路复用（Multiplexing）</strong>。它允许在同一个 TCP 连接上并发处理多个请求和响应，极大地提高了带宽利用率和并发能力。</li>
+<li><strong>TLS 的演进 (1.2 -&gt; 1.3)</strong>：在安全层面，TLS 协议也在不断进化。TLS 1.3 通过废除不安全的加密算法、强制使用具备<strong>前向安全</strong>的 ECDHE 密钥交换，并将握手流程极致优化至 <strong>1-RTT</strong> 甚至 <strong>0-RTT</strong>，实现了速度与安全的双重飞跃。</li>
+<li><strong>HTTP/2 -&gt; HTTP/3</strong>：为了彻底解决受制于 TCP 协议特性的<strong>传输层队头阻塞</strong>以及网络切换时的连接中断问题，HTTP/3 做出了颠覆性的改变。它基于 UDP 构建了全新的 <strong>QUIC</strong> 协议，将 TLS 1.3 的安全握手深度融合，实现了真正的 <strong>1-RTT</strong> 建连、基于 <strong>Connection ID</strong> 的无缝连接迁移，以及更高效的独立流控制。</li>
 </ul>
-<p>从最初的简单文本传输，到如今基于 UDP 的高性能、高安全复合协议，HTTP
-的演进之路从未停歇。未来的网络协议将如何发展？也许会更加智能化、更加适应边缘计算和物联网的需求，但其核心目标——<strong>连接你我，更快更安全</strong>——将永远不变。</p>
+<p>从最初的简单文本传输，到如今基于 UDP 的高性能、高安全复合协议，HTTP 的演进之路从未停歇。未来的网络协议将如何发展？也许会更加智能化、更加适应边缘计算和物联网的需求，但其核心目标——<strong>连接你我，更快更安全</strong>——将永远不变。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -730,23 +598,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#http1.0"><span class="toc-text">HTTP1.0</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#http1.1"><span class="toc-text">HTTP1.1</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#keep-alive%E9%95%BF%E8%BF%9E%E6%8E%A5%E8%A7%A3%E5%86%B3%E8%BF%9E%E6%8E%A5%E5%A4%8D%E7%94%A8"><span class="toc-text">1.
-Keep-Alive（长连接）：解决连接复用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#pipeline%E7%AE%A1%E9%81%93%E5%8C%96%E8%A7%A3%E5%86%B3%E4%B8%B2%E8%A1%8C%E7%AD%89%E5%BE%85%E5%A4%B1%E8%B4%A5%E7%9A%84%E5%B0%9D%E8%AF%95"><span class="toc-text">2.
-Pipeline（管道化）：解决串行等待（失败的尝试）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#transfer-encoding-chunked%E5%88%86%E5%9D%97%E4%BC%A0%E8%BE%93"><span class="toc-text">3. Transfer-Encoding:
-chunked（分块传输）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%93%E5%AD%98%E6%8E%A7%E5%88%B6%E5%A2%9E%E5%BC%BA"><span class="toc-text">4. 缓存控制增强</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#http2"><span class="toc-text">HTTP2</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%94%B9%E5%8F%98%E4%BA%8C%E8%BF%9B%E5%88%B6%E5%88%86%E5%B8%A7%E5%B1%82-binary-framing-layer"><span class="toc-text">1.
-核心改变：二进制分帧层 (Binary Framing Layer)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8-multiplexing%E8%A7%A3%E5%86%B3-http-%E9%98%9F%E5%A4%B4%E9%98%BB%E5%A1%9E"><span class="toc-text">2. 多路复用
-(Multiplexing)：解决 HTTP 队头阻塞</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#hpack%E5%A4%B4%E9%83%A8%E5%8E%8B%E7%BC%A9"><span class="toc-text">3. HPACK：头部压缩</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#tls1.2"><span class="toc-text">TLS1.2</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#rsa"><span class="toc-text">1. RSA</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ecdhe"><span class="toc-text">2. ECDHE</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#tls1.3"><span class="toc-text">TLS1.3</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#rtt"><span class="toc-text">1-RTT</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#rtt-1"><span class="toc-text">0-RTT</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#http3"><span class="toc-text">HTTP3</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%9C%BA%E5%88%B6"><span class="toc-text">1. 核心机制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8F%A1%E6%89%8B%E6%9C%BA%E5%88%B6"><span class="toc-text">2. 握手机制</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#rtt-2"><span class="toc-text">2.1 1-RTT</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#rtt-3"><span class="toc-text">2.2 0-RTT</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#HTTP1-0"><span class="toc-text">HTTP1.0</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#HTTP1-1"><span class="toc-text">HTTP1.1</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Keep-Alive%EF%BC%88%E9%95%BF%E8%BF%9E%E6%8E%A5%EF%BC%89%EF%BC%9A%E8%A7%A3%E5%86%B3%E8%BF%9E%E6%8E%A5%E5%A4%8D%E7%94%A8"><span class="toc-text">1. Keep-Alive（长连接）：解决连接复用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Pipeline%EF%BC%88%E7%AE%A1%E9%81%93%E5%8C%96%EF%BC%89%EF%BC%9A%E8%A7%A3%E5%86%B3%E4%B8%B2%E8%A1%8C%E7%AD%89%E5%BE%85%EF%BC%88%E5%A4%B1%E8%B4%A5%E7%9A%84%E5%B0%9D%E8%AF%95%EF%BC%89"><span class="toc-text">2. Pipeline（管道化）：解决串行等待（失败的尝试）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Transfer-Encoding-chunked%EF%BC%88%E5%88%86%E5%9D%97%E4%BC%A0%E8%BE%93%EF%BC%89"><span class="toc-text">3. Transfer-Encoding: chunked（分块传输）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E7%BC%93%E5%AD%98%E6%8E%A7%E5%88%B6%E5%A2%9E%E5%BC%BA"><span class="toc-text">4. 缓存控制增强</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#HTTP2"><span class="toc-text">HTTP2</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%A0%B8%E5%BF%83%E6%94%B9%E5%8F%98%EF%BC%9A%E4%BA%8C%E8%BF%9B%E5%88%B6%E5%88%86%E5%B8%A7%E5%B1%82-Binary-Framing-Layer"><span class="toc-text">1. 核心改变：二进制分帧层 (Binary Framing Layer)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8-Multiplexing-%EF%BC%9A%E8%A7%A3%E5%86%B3-HTTP-%E9%98%9F%E5%A4%B4%E9%98%BB%E5%A1%9E"><span class="toc-text">2. 多路复用 (Multiplexing)：解决 HTTP 队头阻塞</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-HPACK%EF%BC%9A%E5%A4%B4%E9%83%A8%E5%8E%8B%E7%BC%A9"><span class="toc-text">3. HPACK：头部压缩</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#TLS1-2"><span class="toc-text">TLS1.2</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-RSA"><span class="toc-text">1. RSA</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-ECDHE"><span class="toc-text">2. ECDHE</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#TLS1-3"><span class="toc-text">TLS1.3</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-RTT"><span class="toc-text">1-RTT</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#0-RTT"><span class="toc-text">0-RTT</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#HTTP3"><span class="toc-text">HTTP3</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%A0%B8%E5%BF%83%E6%9C%BA%E5%88%B6"><span class="toc-text">1. 核心机制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E6%8F%A1%E6%89%8B%E6%9C%BA%E5%88%B6"><span class="toc-text">2. 握手机制</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-1-RTT"><span class="toc-text">2.1 1-RTT</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-0-RTT"><span class="toc-text">2.2 0-RTT</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

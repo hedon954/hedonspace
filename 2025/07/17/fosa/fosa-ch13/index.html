@@ -27,6 +27,7 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本篇通过回答《Fundamentals of Software Architecture》第十三章的课后思考题，深入探讨基于服务的架构中服务数量的设计考量、数据库分解策略与变更管理机制、领域服务的容器化部署模式，以及基于服务架构的特性支持分析、弹性限制因素和架构量子扩展方案，帮助理解基于服务架构的核心设计原则和实施要点，提升架构师在构建分布式系统时的架构选择能力和服务化设计水平。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250717114456233.png">
 <meta property="article:published_time" content="2025-07-17T02:30:00.000Z">
 <meta property="article:modified_time" content="2025-07-27T04:29:14.327Z">
 <meta property="article:author" content="Hedon Wang">
@@ -34,6 +35,7 @@
 <meta property="article:tag" content="软件架构">
 <meta property="article:tag" content="fosa">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250717114456233.png">
   
   
   
@@ -71,7 +73,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/30/note/note-llm-from-scratch/"><span class="title">读书笔记丨《从零构建大语言模型》</span></a><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -95,115 +97,92 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>本系列文章通过逐章回答<a
-target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of
-Software Architecture》</a>（下文简称
-FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第十三章</u>内容。</p>
+  </div><article class="md-text content"><p>本系列文章通过逐章回答<a target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of Software Architecture》</a>（下文简称 FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第十三章</u>内容。</p>
 <p>本章的课后题是：</p>
-<ol type="1">
-<li><p>How many services are there in a typical service-based
-architecture?</p>
-<p>在一个经典的基于服务的架构中通常有多少个服务？</p></li>
-<li><p>Do you have to break apart a database in service-based
-architecture?</p>
-<p>在基于服务的架构中，你是否必须将数据库进行拆分？</p></li>
-<li><p>Under what circumstances might you want to break apart a
-database?</p>
-<p>在什么场景下你会对数据库进行拆分？</p></li>
-<li><p>What technique can you use to manage database changes within a
-service-based architecture?</p>
-<p>在基于服务的架构中，你会使用什么样的技术来管理数据库变更？</p></li>
-<li><p>Do domain services require a container (such as Docker) to
-run?</p>
-<p>领域服务需要在容器（如 Docker）中运行吗？</p></li>
-<li><p>Which architecture characteristics are well supported by the
-service-based architecture style?</p>
-<p>基于服务的架构在哪些架构特性表现很优异？</p></li>
-<li><p>Why isn’t elasticity well supported in a service-based
-architecture?</p>
-<p>为什么基于服务的架构的架构弹性不是很好？</p></li>
-<li><p>How can you increase the number of architecture quanta in a
-service-based architecture?</p>
-<p>在基于服务的架构中，你如何增加架构量子的数量？</p></li>
+<ol>
+<li>
+<p>How many services are there in a typical service-based architecture?</p>
+<p>在一个经典的基于服务的架构中通常有多少个服务？</p>
+</li>
+<li>
+<p>Do you have to break apart a database in service-based architecture?</p>
+<p>在基于服务的架构中，你是否必须将数据库进行拆分？</p>
+</li>
+<li>
+<p>Under what circumstances might you want to break apart a database?</p>
+<p>在什么场景下你会对数据库进行拆分？</p>
+</li>
+<li>
+<p>What technique can you use to manage database changes within a service-based architecture?</p>
+<p>在基于服务的架构中，你会使用什么样的技术来管理数据库变更？</p>
+</li>
+<li>
+<p>Do domain services require a container (such as Docker) to run?</p>
+<p>领域服务需要在容器（如 Docker）中运行吗？</p>
+</li>
+<li>
+<p>Which architecture characteristics are well supported by the service-based architecture style?</p>
+<p>基于服务的架构在哪些架构特性表现很优异？</p>
+</li>
+<li>
+<p>Why isn’t elasticity well supported in a service-based architecture?</p>
+<p>为什么基于服务的架构的架构弹性不是很好？</p>
+</li>
+<li>
+<p>How can you increase the number of architecture quanta in a service-based architecture?</p>
+<p>在基于服务的架构中，你如何增加架构量子的数量？</p>
+</li>
 </ol>
-<hr />
+<hr>
 <h2 id="简介">简介</h2>
-<p>在软件架构的演进光谱中，如果说单体（Monolith）和微服务（Microservices）是两个广为人知的端点，那么基于服务的架构（Service-Based
-Architecture,
-SBA）就是它们之间那个常常被忽略，却又极具现实意义的"务实中间派"。它既非庞大到笨拙，也非精细到繁杂，为许多成长中的系统提供了一条平滑的演进路径。</p>
-<p>SBA
-的本质是一种将一个大型的单体应用，<strong>分解为少数几个、逻辑独立的、可独立部署的"服务"</strong>
-的架构风格。SBA 的服务数量通常不多，一般在 <strong>4 到 12
-个</strong>之间。它不像微服务那样追求极致的拆分（可能会有几十上百个服务），而是将应用按照<strong>核心的业务领域（Domain）</strong>进行划分。</p>
+<p>在软件架构的演进光谱中，如果说单体（Monolith）和微服务（Microservices）是两个广为人知的端点，那么基于服务的架构（Service-Based Architecture, SBA）就是它们之间那个常常被忽略，却又极具现实意义的&quot;务实中间派&quot;。它既非庞大到笨拙，也非精细到繁杂，为许多成长中的系统提供了一条平滑的演进路径。</p>
+<p>SBA 的本质是一种将一个大型的单体应用，<strong>分解为少数几个、逻辑独立的、可独立部署的&quot;服务&quot;</strong> 的架构风格。SBA 的服务数量通常不多，一般在 <strong>4 到 12 个</strong>之间。它不像微服务那样追求极致的拆分（可能会有几十上百个服务），而是将应用按照**核心的业务领域（Domain）**进行划分。</p>
 <h2 id="拓扑">拓扑</h2>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250717114456233.png"
-alt="FOSA Figure 13-8. Electronics recycling example using service-based architecture" />
-<figcaption aria-hidden="true">FOSA Figure 13-8. Electronics recycling
-example using service-based architecture</figcaption>
-</figure>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250717114456233.png" alt="FOSA Figure 13-8. Electronics recycling example using service-based architecture"></p>
 <h2 id="数据库">数据库</h2>
-<p>SBA
-最具标志性，也是与微服务最根本的区别之一，就在于它对数据库的处理方式。这直接引出了接下来的两个问题。</p>
+<p>SBA 最具标志性，也是与微服务最根本的区别之一，就在于它对数据库的处理方式。这直接引出了接下来的两个问题。</p>
 <blockquote>
-<p>Do you have to break apart a database in service-based
-architecture?</p>
+<p>Do you have to break apart a database in service-based architecture?</p>
 <p>在基于服务的架构中，你是否必须将数据库进行拆分？</p>
 </blockquote>
 <p>答案是：<strong>通常不，而且默认不拆分是其主要特征。</strong></p>
-<p>SBA
-的典型实现是，所有服务共享<strong>同一个数据库</strong>。这种设计的初衷是为了在享受独立部署带来的好处的同时，最大限度地<strong>降低数据层面的复杂性</strong>。共享数据库可以：</p>
+<p>SBA 的典型实现是，所有服务共享<strong>同一个数据库</strong>。这种设计的初衷是为了在享受独立部署带来的好处的同时，最大限度地<strong>降低数据层面的复杂性</strong>。共享数据库可以：</p>
 <ul>
 <li><strong>简化开发</strong>：开发者无需处理复杂的分布式事务和跨服务数据同步问题。</li>
-<li><strong>保证数据一致性</strong>：传统的 ACID
-事务可以在数据库层面轻松实现。</li>
+<li><strong>保证数据一致性</strong>：传统的 ACID 事务可以在数据库层面轻松实现。</li>
 <li><strong>降低技术门槛</strong>：团队无需掌握复杂的分布式数据管理技术。</li>
 </ul>
 <p>在共享数据库的模式下，如何管理这个公共资产成了一个关键的治理问题。</p>
 <blockquote>
-<p>What technique can you use to manage database changes within a
-service-based architecture?</p>
+<p>What technique can you use to manage database changes within a service-based architecture?</p>
 <p>在基于服务的架构中，你会使用什么样的技术来管理数据库变更？</p>
 </blockquote>
-<p>当多个团队开发的服务都依赖同一个数据库时，随意的 Schema
-变更会引发灾难。因此，必须采用严格的数据库治理技术。</p>
+<p>当多个团队开发的服务都依赖同一个数据库时，随意的 Schema 变更会引发灾难。因此，必须采用严格的数据库治理技术。</p>
 <p>核心方法是成立一个跨团队的数据库治理小组，或者由一个专职的数据库管理员（DBA）团队来担当此任。这个团队的职责是：</p>
 <ul>
-<li><strong>守护数据库 Schema
-的所有权</strong>：任何对数据库结构的修改（增删改表、字段等）都必须通过该团队的评审。</li>
-<li><strong>执行数据库迁移脚本</strong>：使用专业的数据库迁移工具（如
-<strong>Flyway</strong> 或
-<strong>Liquibase</strong>）来统一管理和执行所有的变更脚本，确保变更的可追溯性、版本化和一致性。</li>
+<li><strong>守护数据库 Schema 的所有权</strong>：任何对数据库结构的修改（增删改表、字段等）都必须通过该团队的评审。</li>
+<li><strong>执行数据库迁移脚本</strong>：使用专业的数据库迁移工具（如 <strong>Flyway</strong> 或 <strong>Liquibase</strong>）来统一管理和执行所有的变更脚本，确保变更的可追溯性、版本化和一致性。</li>
 <li><strong>保证向后兼容性</strong>：确保数据库的变更不会破坏现有服务的正常运行。</li>
 </ul>
 <p>然而，这种共享模式并非一成不变，这就引出了下一个问题：</p>
 <blockquote>
-<p>Under what circumstances might you want to break apart a
-database?</p>
+<p>Under what circumstances might you want to break apart a database?</p>
 <p>在什么场景下你会对数据库进行拆分？</p>
 </blockquote>
 <p>随着业务发展，共享数据库的弊端会逐渐显现。在以下情况下，拆分数据库就成了合理的选择：</p>
-<ol type="1">
-<li><strong>服务资源争用 (Service
-Contention)</strong>：某个服务（如高流量的商品浏览服务）对数据库产生巨大压力，影响了其他关键服务（如订单服务）的性能。</li>
-<li><strong>数据隔离与安全 (Data Isolation and
-Security)</strong>：某个服务处理的数据高度敏感（如支付服务中的金融信息），需要从主数据库中物理隔离出来，以满足合规性或安全要求。</li>
-<li><strong>技术栈不匹配 (Technology
-Mismatch)</strong>：某个服务有特殊的数据存储需求。例如，搜索服务最适合使用
-Elasticsearch，而核心业务数据则存储在关系型数据库中。</li>
+<ol>
+<li><strong>服务资源争用 (Service Contention)</strong>：某个服务（如高流量的商品浏览服务）对数据库产生巨大压力，影响了其他关键服务（如订单服务）的性能。</li>
+<li><strong>数据隔离与安全 (Data Isolation and Security)</strong>：某个服务处理的数据高度敏感（如支付服务中的金融信息），需要从主数据库中物理隔离出来，以满足合规性或安全要求。</li>
+<li><strong>技术栈不匹配 (Technology Mismatch)</strong>：某个服务有特殊的数据存储需求。例如，搜索服务最适合使用 Elasticsearch，而核心业务数据则存储在关系型数据库中。</li>
 </ol>
-<p>当这些情况发生时，SBA
-允许你"渐进式"地将某个服务连同其数据一起剥离出去，赋予它独立的数据库。</p>
+<p>当这些情况发生时，SBA 允许你&quot;渐进式&quot;地将某个服务连同其数据一起剥离出去，赋予它独立的数据库。</p>
 <h2 id="部署">部署</h2>
 <blockquote>
 <p>Do domain services require a container (such as Docker) to run?</p>
 <p>领域服务需要容器（例如 Docker）来运行吗？</p>
 </blockquote>
 <p>答案是：<strong>不需要，但强烈推荐。</strong></p>
-<p>从技术上讲，你可以将每个服务单独部署服务器上。但是，容器技术（如
-Docker）和容器编排工具（如 Kubernetes）与 SBA
-的理念天然契合。使用容器可以带来巨大好处：</p>
+<p>从技术上讲，你可以将每个服务单独部署服务器上。但是，容器技术（如 Docker）和容器编排工具（如 Kubernetes）与 SBA 的理念天然契合。使用容器可以带来巨大好处：</p>
 <ul>
 <li>环境一致性</li>
 <li>部署简化</li>
@@ -211,48 +190,36 @@ Docker）和容器编排工具（如 Kubernetes）与 SBA
 </ul>
 <h2 id="架构权衡">架构权衡</h2>
 <blockquote>
-<p>Which architecture characteristics are well supported by the
-service-based architecture style?</p>
+<p>Which architecture characteristics are well supported by the service-based architecture style?</p>
 <p>基于服务的架构在哪些架构特性表现很优异？</p>
 </blockquote>
 <p>相比于单体架构，SBA 在以下方面有显著提升：</p>
-<ol type="1">
-<li><strong>可部署性
-(Deployability)</strong>：这是最大的优势之一。每个服务都可以独立部署，使得发布更加频繁、风险更低。</li>
-<li><strong>模块化
-(Modularity)</strong>：通过按领域划分服务，实现了清晰的业务模块边界。</li>
-<li><strong>可维护性
-(Maintainability)</strong>：每个服务的代码库规模远小于整个单体，更易于理解、修改和维护。</li>
-<li><strong>容错性 (Fault
-Tolerance)</strong>：一个服务的崩溃不会导致整个应用程序宕机（尽管共享数据库可能成为共同的故障点）。</li>
+<ol>
+<li><strong>可部署性 (Deployability)</strong>：这是最大的优势之一。每个服务都可以独立部署，使得发布更加频繁、风险更低。</li>
+<li><strong>模块化 (Modularity)</strong>：通过按领域划分服务，实现了清晰的业务模块边界。</li>
+<li><strong>可维护性 (Maintainability)</strong>：每个服务的代码库规模远小于整个单体，更易于理解、修改和维护。</li>
+<li><strong>容错性 (Fault Tolerance)</strong>：一个服务的崩溃不会导致整个应用程序宕机（尽管共享数据库可能成为共同的故障点）。</li>
 </ol>
 <p>然而，SBA 并非银弹，它也有其固有的局限性。</p>
 <blockquote>
-<p>Why isn’t elasticity well supported in a service-based
-architecture?</p>
+<p>Why isn’t elasticity well supported in a service-based architecture?</p>
 <p>为什么基于服务的架构的架构弹性不是很好？</p>
 </blockquote>
 <p><strong>弹性</strong>指的是根据实时负载，自动、精细地伸缩应用<strong>特定部分</strong>的能力。</p>
-<p>SBA
-对弹性的支持不佳，根源在于其服务的<strong>粗粒度</strong>。假设"订单服务"包含了"浏览历史订单"、"创建新订单"和"订单退款"三个功能。如果"创建新订单"功能因为促销活动而流量激增，你无法只针对这一个功能进行扩容。你必须将整个庞大的"订单服务"进行水平扩展，复制出多个实例。这不仅造成了资源浪费（其他两个功能并未承压），也远不如微服务那样能够对具体功能点进行精准、高效的弹性伸缩。</p>
+<p>SBA 对弹性的支持不佳，根源在于其服务的<strong>粗粒度</strong>。假设&quot;订单服务&quot;包含了&quot;浏览历史订单&quot;、&quot;创建新订单&quot;和&quot;订单退款&quot;三个功能。如果&quot;创建新订单&quot;功能因为促销活动而流量激增，你无法只针对这一个功能进行扩容。你必须将整个庞大的&quot;订单服务&quot;进行水平扩展，复制出多个实例。这不仅造成了资源浪费（其他两个功能并未承压），也远不如微服务那样能够对具体功能点进行精准、高效的弹性伸缩。</p>
 <h2 id="架构量子">架构量子</h2>
 <blockquote>
-<p>How can you increase the number of architecture quanta in a
-service-based architecture?</p>
+<p>How can you increase the number of architecture quanta in a service-based architecture?</p>
 <p>在基于服务的架构中，你如何增加架构量子的数量？</p>
 </blockquote>
-<p>首先要明确，在<strong>典型的、共享数据库的 SBA</strong>
-中，整个系统只有<strong>一个架构量子</strong>。因为所有服务都与同一个数据库紧密耦合，它们无法被真正独立地部署和演化，形成了一个不可分割的整体。</p>
-<p>增加架构量子的数量，唯一的途径就是<strong>打破这种共享依赖</strong>。具体方法是：
-<strong>将某个服务连同其数据一起拆分出来，为其分配一个独立的、专用的数据库。</strong></p>
-<p>每完成一次这样的拆分，这个被分离出去的服务就演变成了一个独立的架构量子。因此，增加架构量子的过程，就是<strong>逐步从共享数据库模型向"每个服务一个数据库"模型演进的过程</strong>，也就逐渐趋向于微服务架构了。</p>
+<p>首先要明确，在<strong>典型的、共享数据库的 SBA</strong> 中，整个系统只有<strong>一个架构量子</strong>。因为所有服务都与同一个数据库紧密耦合，它们无法被真正独立地部署和演化，形成了一个不可分割的整体。</p>
+<p>增加架构量子的数量，唯一的途径就是<strong>打破这种共享依赖</strong>。具体方法是： <strong>将某个服务连同其数据一起拆分出来，为其分配一个独立的、专用的数据库。</strong></p>
+<p>每完成一次这样的拆分，这个被分离出去的服务就演变成了一个独立的架构量子。因此，增加架构量子的过程，就是<strong>逐步从共享数据库模型向&quot;每个服务一个数据库&quot;模型演进的过程</strong>，也就逐渐趋向于微服务架构了。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -292,11 +259,8 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
