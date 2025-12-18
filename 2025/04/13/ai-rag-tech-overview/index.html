@@ -27,19 +27,14 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文是在笔者学习了极客时间《RAG 快速开发实战》课程后，对 RAG 相关技术进行一个梳理归纳，帮助开发者在 RAG 开发中进行快速定位、系统学习。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250413223908403.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/c60419a3c73f3090651a4c2761e05583.png">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/63b052c1b1639bfa66c23342cf28d9ef.jpg">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/c27b4yy6748a414dae0c679835a1eccc.jpg">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/7eddf214ee696b2e1f5977d72a4db134.jpg">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/7c3ebbe6ec9d9f2886881d7e534396a0.jpg">
 <meta property="article:published_time" content="2025-04-13T14:23:22.000Z">
 <meta property="article:modified_time" content="2025-12-15T14:41:02.183Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="AI">
 <meta property="article:tag" content="RAG">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250413223908403.png">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/63b052c1b1639bfa66c23342cf28d9ef.jpg">
   
   
   
@@ -77,7 +72,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/30/note/note-llm-from-scratch/"><span class="title">读书笔记丨《从零构建大语言模型》</span></a><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/08/30/note/note-llm-from-scratch/"><span class="title">读书笔记丨《从零构建大语言模型》</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -101,15 +96,22 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>RAG 的整个流程可概括为如下图所示，主要分成<strong>索引</strong>、<strong>检索</strong>和<strong>生成</strong>三个部分。</p>
-<p>本文提供配套的完整案例，源码可参考：<a target="_blank" rel="noopener" href="https://github.com/hedon-ai-road/rag-demo">hedon-ai-road/rag-demo</a>，每个 commit 都引入了一个新的技术点，感兴趣的读者可根据 commit 记录一一查探。</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250413223908403.png" alt=""></p>
+  </div><article class="md-text content"><p>RAG
+的整个流程可概括为如下图所示，主要分成<strong>索引</strong>、<strong>检索</strong>和<strong>生成</strong>三个部分。</p>
+<p>本文提供配套的完整案例，源码可参考：<a
+target="_blank" rel="noopener" href="https://github.com/hedon-ai-road/rag-demo">hedon-ai-road/rag-demo</a>，每个
+commit 都引入了一个新的技术点，感兴趣的读者可根据 commit
+记录一一查探。</p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250413223908403.png" /></p>
 <h2 id="文档解析技术">文档解析技术</h2>
 <blockquote>
-<p><a target="_blank" rel="noopener" href="https://github.com/hedon-ai-road/rag-demo/commit/26d52ac964ca099e1726fccb5f4c18adc0fd940f#diff-b10564ab7d2c520cdd0243874879fb0a782862c3c902ab535faabe57d5a505e1">代码示例</a></p>
+<p><a
+target="_blank" rel="noopener" href="https://github.com/hedon-ai-road/rag-demo/commit/26d52ac964ca099e1726fccb5f4c18adc0fd940f#diff-b10564ab7d2c520cdd0243874879fb0a782862c3c902ab535faabe57d5a505e1">代码示例</a></p>
 </blockquote>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/c60419a3c73f3090651a4c2761e05583.png" alt=""></p>
-<h3 id="PDF">PDF</h3>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/c60419a3c73f3090651a4c2761e05583.png" /></p>
+<h3 id="pdf">PDF</h3>
 <ul>
 <li>基于规则的开源库
 <ul>
@@ -118,8 +120,7 @@
 <li>pdfminer</li>
 <li>pdfplumber</li>
 <li>papermage</li>
-</ul>
-</li>
+</ul></li>
 <li>基于深度学习的开源库
 <ul>
 <li>Layout-parser</li>
@@ -129,21 +130,20 @@
 <li>MinerU</li>
 <li>marker</li>
 <li>Gptpdf（基于 LLM API）</li>
-</ul>
-</li>
+</ul></li>
 <li>商业闭源库
 <ul>
-<li><a target="_blank" rel="noopener" href="http://Textln.com">Textln.com</a></li>
+<li>Textln.com</li>
 <li>Doc2x</li>
 <li>mathpix</li>
 <li>庖丁 PDFlux</li>
 <li>腾讯云文档识别</li>
-</ul>
-</li>
+</ul></li>
 </ul>
 <h2 id="分块策略">分块策略</h2>
 <blockquote>
-<p><a target="_blank" rel="noopener" href="https://github.com/hedon-ai-road/rag-demo/commit/a26ae8895da7a9673660b31904857307a149c983">代码示例</a></p>
+<p><a
+target="_blank" rel="noopener" href="https://github.com/hedon-ai-road/rag-demo/commit/a26ae8895da7a9673660b31904857307a149c983">代码示例</a></p>
 <p><a target="_blank" rel="noopener" href="https://chunkviz.up.railway.app/">分块演示工具</a></p>
 </blockquote>
 <p>3 个关键部分组成：</p>
@@ -152,95 +152,105 @@
 <li>重叠</li>
 <li>拆分</li>
 </ul>
-<img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/63b052c1b1639bfa66c23342cf28d9ef.jpg" style="zoom: 33%;" />
-<h3 id="固定大小分块（Fixed-Size-Chunking）">固定大小分块（Fixed Size Chunking）</h3>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/63b052c1b1639bfa66c23342cf28d9ef.jpg" style="zoom: 33%;" /></p>
+<h3 id="固定大小分块fixed-size-chunking">固定大小分块（Fixed Size
+Chunking）</h3>
 <p>适用场景：</p>
-<ol>
+<ol type="1">
 <li>作为分块策略的基准线；</li>
 <li>对大型数据集进行初步分析；</li>
 <li>实现简单且可观测性高，分块便于管理；</li>
 <li>适用于格式和大小相似的同质数据集，如新闻文章或博客文章。</li>
 </ol>
 <p>问题：</p>
-<ol>
+<ol type="1">
 <li>不考虑内容上下文，容易导致无意义的文本块；</li>
 <li>缺乏灵活性，无法适应文本的自然结构</li>
 </ol>
-<h3 id="重叠分块（Overlap-Chunking）">重叠分块（Overlap Chunking）</h3>
+<h3 id="重叠分块overlap-chunking">重叠分块（Overlap Chunking）</h3>
 <p>使用场景：</p>
-<ol>
+<ol type="1">
 <li>需要深入理解语义并保持上下文完整性的文档，如法律文档、技术手册或科研论文；</li>
 <li>提升分块内容的连贯性，以提高分析质量。</li>
 </ol>
 <p>问题：</p>
-<ol>
+<ol type="1">
 <li>计算复杂度增加，处理效率降低；</li>
 <li>冗余信息的存储和管理成为负担。</li>
 </ol>
-<h3 id="递归分块（Recursive-Chunking）">递归分块（Recursive Chunking）</h3>
+<h3 id="递归分块recursive-chunking">递归分块（Recursive Chunking）</h3>
 <ul>
-<li>通过预定义的文本分隔符（如换行符 \n\n、\n、句号、逗号、感叹号、空格等）迭代地将文本分解为更小的块，以实现段大小的均匀性和语义完整性。</li>
+<li>通过预定义的文本分隔符（如换行符
+、、句号、逗号、感叹号、空格等）迭代地将文本分解为更小的块，以实现段大小的均匀性和语义完整性。</li>
 <li>先按较大的逻辑单元分割，再逐步递归到较小单元，确保在分块大小限制内保留最强的语义片段。</li>
 </ul>
 <p>使用场景：</p>
-<ol>
+<ol type="1">
 <li>需要逐层分析的文本文档或需要分解成长片段、长段落的长文档，如研究报告、法律文档等。</li>
 </ol>
 <p>问题：</p>
-<ol>
+<ol type="1">
 <li>在块边界处模糊语义，容易将完整的语义单元切分开。</li>
 </ol>
-<h3 id="文档特定分块（Document-Specific-Chunking）">文档特定分块（Document Specific Chunking）</h3>
+<h3 id="文档特定分块document-specific-chunking">文档特定分块（Document
+Specific Chunking）</h3>
 <ul>
-<li>根据文档的格式（如 Markdown、Latex、或编程语言如 Python 等）进行定制化分割的技术。此方法依据文档的特定格式和结构规则，例如 Markdown 的标题、列表项，或 Python 代码中的函数和类定义等，来确定分块边界。</li>
+<li>根据文档的格式（如 Markdown、Latex、或编程语言如 Python
+等）进行定制化分割的技术。此方法依据文档的特定格式和结构规则，例如
+Markdown 的标题、列表项，或 Python
+代码中的函数和类定义等，来确定分块边界。</li>
 </ul>
 <p>适用场景：</p>
-<ol>
+<ol type="1">
 <li>有特定的文档结构，如编程语言、Markdown、Latex 等结构文档。</li>
 </ol>
 <p>问题：</p>
-<ol>
+<ol type="1">
 <li>格式依赖性强，不同格式之间的分块策略不通用；</li>
 <li>无法处理格式不规范及混合多种格式的情况。</li>
 </ol>
-<h3 id="语义分块（Semantic-Chunking）">语义分块（Semantic Chunking）</h3>
+<h3 id="语义分块semantic-chunking">语义分块（Semantic Chunking）</h3>
 <ul>
-<li>基于文本的自然语言边界（如句子、段落或主题中断）进行分段的技术，需要使用 NLP 技术根据语义分词分句，旨在确保每个分块都包含语义连贯的信息单元。</li>
+<li>基于文本的自然语言边界（如句子、段落或主题中断）进行分段的技术，需要使用
+NLP
+技术根据语义分词分句，旨在确保每个分块都包含语义连贯的信息单元。</li>
 </ul>
 <p>适用场景：</p>
-<ol>
+<ol type="1">
 <li>确保每个文档块的信息完整性且语义连贯；</li>
 <li>提高检索结果的相关性和准确性；</li>
 <li>适用于复杂文档和上下文敏感的精细化分析。</li>
 </ol>
 <p>问题：</p>
-<ol>
+<ol type="1">
 <li>需要额外的高计算资源，特别是在处理大型或动态变化的文档数据时；</li>
 <li>处理效率降低。</li>
 </ol>
-<h3 id="混合分块（Mix-Chunking）">混合分块（Mix Chunking）</h3>
+<h3 id="混合分块mix-chunking">混合分块（Mix Chunking）</h3>
 <ul>
 <li>在初始阶段使用固定长度分块快速整理大量文档，而在后续阶段使用语义分块进行更精细的分类和主题提取。根据实际业务场景，设计多种分块策略的混合，能够灵活适应各种需求，提供更强大的分块方案。</li>
 </ul>
 <p>适用场景：</p>
-<ol>
+<ol type="1">
 <li>适用于多层次的精细化分块场景；</li>
 <li>数据集动态变化，包含多种文档格式与结构；</li>
 <li>平衡处理速度与准确性的场景。</li>
 </ol>
 <p>问题：</p>
-<ol>
+<ol type="1">
 <li>实现复杂度高；</li>
 <li>策略调优难度高；</li>
 <li>资源消耗增加。</li>
 </ol>
-<h2 id="Embedding-技术">Embedding 技术</h2>
+<h2 id="embedding-技术">Embedding 技术</h2>
 <ul>
-<li>Embedding 嵌入是指将文本、图像、音频、视频等形式的信息映射为高维空间中的密集向量表示。这些向量在语义空间中起到坐标的作用，捕捉对象之间的语义关系和隐含的意义。通过在向量空间中进行计算（例如余弦相似度），可以量化和衡量这些对象之间的语义相似性。</li>
-<li>向量检索（Vector Retrieval）是一种基于向量表示的搜索技术，通过计算查询向量与已知文本向量的相似度来识别最相关的文本数据。向量检索的高效性在于，它能在大规模数据集中快速、准确地找到与查询最相关的内容，这得益于向量表示中蕴含的丰富语义信息。</li>
+<li>Embedding
+嵌入是指将文本、图像、音频、视频等形式的信息映射为高维空间中的密集向量表示。这些向量在语义空间中起到坐标的作用，捕捉对象之间的语义关系和隐含的意义。通过在向量空间中进行计算（例如余弦相似度），可以量化和衡量这些对象之间的语义相似性。</li>
+<li>向量检索（Vector
+Retrieval）是一种基于向量表示的搜索技术，通过计算查询向量与已知文本向量的相似度来识别最相关的文本数据。向量检索的高效性在于，它能在大规模数据集中快速、准确地找到与查询最相关的内容，这得益于向量表示中蕴含的丰富语义信息。</li>
 </ul>
 <p>评估指标：（MTEB、C-MTEB）</p>
-<ol>
+<ol type="1">
 <li>特定领域的适用性</li>
 <li>检索精度</li>
 <li>支持的语言</li>
@@ -250,7 +260,8 @@
 </ol>
 <h2 id="向量数据库">向量数据库</h2>
 <blockquote>
-<p><a target="_blank" rel="noopener" href="https://github.com/hedon-ai-road/rag-demo/commit/1f9c07ec6b10d6bfdb55c17c2c6a7ad461b00ab2">代码示例</a></p>
+<p><a
+target="_blank" rel="noopener" href="https://github.com/hedon-ai-road/rag-demo/commit/1f9c07ec6b10d6bfdb55c17c2c6a7ad461b00ab2">代码示例</a></p>
 </blockquote>
 <ul>
 <li>向量数据库是一种专门用于存储和检索多维向量的数据库类型，与传统的基于行列结构的数据库不同，它主要处理高维空间中的数据点。</li>
@@ -263,7 +274,7 @@
 <li>位置敏感哈希（<strong>LSH</strong>）：通过哈希函数将相似向量聚集在一起，便于快速定位。</li>
 </ul>
 <p>向量数据库的工作流程：</p>
-<ol>
+<ol type="1">
 <li>数据处理与向量化</li>
 <li>向量存储</li>
 <li>向量索引</li>
@@ -272,34 +283,43 @@
 <li>余弦相似度：主要用于文本处理和信息检索，关注向量之间的角度，以捕捉语义相似性。</li>
 <li>欧几里得距离：测量向量之间的实际距离，适用于密集特征集的聚类或分类。</li>
 <li>曼哈顿距离：通过计算笛卡尔坐标中的绝对差值之和，适用于稀疏数据的处理。</li>
-</ul>
-</li>
+</ul></li>
 <li>数据检索</li>
 </ol>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/c27b4yy6748a414dae0c679835a1eccc.jpg" alt=""></p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/c27b4yy6748a414dae0c679835a1eccc.jpg" /></p>
 <h2 id="混合检索">混合检索</h2>
 <blockquote>
-<p><a target="_blank" rel="noopener" href="https://github.com/hedon-ai-road/rag-demo/commit/38f1739c7ac1d3fc58023cb12bf863d3f502c419">代码示例</a></p>
+<p><a
+target="_blank" rel="noopener" href="https://github.com/hedon-ai-road/rag-demo/commit/38f1739c7ac1d3fc58023cb12bf863d3f502c419">代码示例</a></p>
 </blockquote>
 <ul>
-<li>混合检索（Hybrid Search）通过结合关键词检索和语义匹配的优势，可以首先利用关键词检索精确定位到“订单 12345”的信息，然后通过语义匹配扩展与该订单相关的其他上下文或客户操作的信息，例如“12 开头的订单、包装破损严重”等。这样不仅能够获取精确的订单详情，还能获得与之相关的额外有用信息。</li>
+<li>混合检索（Hybrid
+Search）通过结合关键词检索和语义匹配的优势，可以首先利用关键词检索精确定位到“订单
+12345”的信息，然后通过语义匹配扩展与该订单相关的其他上下文或客户操作的信息，例如“12
+开头的订单、包装破损严重”等。这样不仅能够获取精确的订单详情，还能获得与之相关的额外有用信息。</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/7eddf214ee696b2e1f5977d72a4db134.jpg" alt=""></p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/7eddf214ee696b2e1f5977d72a4db134.jpg" /></p>
 <h2 id="重排序技术">重排序技术</h2>
 <blockquote>
-<p><a target="_blank" rel="noopener" href="https://github.com/hedon-ai-road/rag-demo/commit/4837ef3220d177297169f28fbff5f52eaaee720e">代码示例</a></p>
+<p><a
+target="_blank" rel="noopener" href="https://github.com/hedon-ai-road/rag-demo/commit/4837ef3220d177297169f28fbff5f52eaaee720e">代码示例</a></p>
 </blockquote>
 <ul>
-<li>重排序技术（Reranking）通过对初始检索结果进行重新排序，改善检索结果的相关性，为生成模型提供更优质的上下文，从而提升整体 RAG 系统的效果。</li>
+<li>重排序技术（Reranking）通过对初始检索结果进行重新排序，改善检索结果的相关性，为生成模型提供更优质的上下文，从而提升整体
+RAG 系统的效果。</li>
 <li>重排序模型大多是基于<strong>双塔</strong>或<strong>交叉编码架构</strong>的模型，在此基础上进一步计算更精确的相关性分数，能够捕捉查询词与文档块之间更细致的相关性，从而在细节层面上提高检索精度。</li>
 </ul>
 <h2 id="提示工程">提示工程</h2>
 <p>一个提示（prompt）通常包含以下几个元素：</p>
-<ol>
+<ol type="1">
 <li><strong>指令（Instruction）</strong>：指明模型要执行的特定任务或操作。</li>
 <li><strong>上下文（Context）</strong>：为模型提供额外信息或背景，可以帮助引导模型生成更准确的响应。</li>
-<li><strong>输入数据（Input Data）</strong>：我们希望模型回答的问题或感兴趣的输入内容。</li>
-<li><strong>输出指示符（Output Indicator）</strong>：指定模型的输出类型或格式，例如格式、是否要生成代码、总结文本或回答具体问题。</li>
+<li><strong>输入数据（Input
+Data）</strong>：我们希望模型回答的问题或感兴趣的输入内容。</li>
+<li><strong>输出指示符（Output
+Indicator）</strong>：指定模型的输出类型或格式，例如格式、是否要生成代码、总结文本或回答具体问题。</li>
 </ol>
 <p>核心技巧：</p>
 <ul>
@@ -313,8 +333,10 @@
 <h2 id="优化技术">优化技术</h2>
 <h3 id="数据清洗和预处理">数据清洗和预处理</h3>
 <blockquote>
-<p>在 RAG 索引流程中，文档解析之后、文本块切分之前，进行数据清洗和预处理能够有效减少脏数据和噪声，提升文本的整体质量和信息密度。</p>
-<p>通过清除冗余信息、统一格式、处理异常字符等手段，数据清洗和预处理过程确保文档更加规范和高质量，从而提高 RAG 系统的检索效果和信息准确性。</p>
+<p>在 RAG
+索引流程中，文档解析之后、文本块切分之前，进行数据清洗和预处理能够有效减少脏数据和噪声，提升文本的整体质量和信息密度。</p>
+<p>通过清除冗余信息、统一格式、处理异常字符等手段，数据清洗和预处理过程确保文档更加规范和高质量，从而提高
+RAG 系统的检索效果和信息准确性。</p>
 </blockquote>
 <ul>
 <li>处理冗余的模型内容。</li>
@@ -334,7 +356,8 @@
 <p>通过这种查询扩展策略，原始问题被分解为多个子查询，每个子查询独立检索相关文档并生成相应的结果。随后，系统将所有子查询的检索结果进行合并和重新排序，效果会更全面更准确。</p>
 <h3 id="自查询">自查询</h3>
 <blockquote>
-<p>自查询策略通过大语言模型自动提取查询中对业务场景至关重要的元数据字段（如标签、作者 ID、评论数量等关键信息），并将这些信息结合到嵌入检索过程中。</p>
+<p>自查询策略通过大语言模型自动提取查询中对业务场景至关重要的元数据字段（如标签、作者
+ID、评论数量等关键信息），并将这些信息结合到嵌入检索过程中。</p>
 </blockquote>
 <p>自查询的指令模版：</p>
 <figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">你是一个AI语言模型助手。</span><br><span class="line">你的任务是从用户问题中提取关键信息，你的回复应仅包含提取的关键信息。</span><br><span class="line">用户问题：&#123;查询原文&#125;</span><br></pre></td></tr></table></figure>
@@ -348,43 +371,51 @@
 </blockquote>
 <p>提示压缩的指令模版：</p>
 <figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">你是一个AI语言模型助手，负责对检索到的文档进行上下文压缩。</span><br><span class="line">你的目标是从文档中提取与用户查询高度相关的段落，并删除与查询无关或噪声较大的部分。</span><br><span class="line">你应确保保留所有能够直接回答用户查询的问题核心信息。</span><br><span class="line"></span><br><span class="line">输入：</span><br><span class="line">用户查询：&#123;用户的原始查询&#125;</span><br><span class="line">检索到的文档：&#123;检索到的文档内容&#125;</span><br><span class="line"></span><br><span class="line">输出要求：</span><br><span class="line">提取与用户查询最相关的段落和信息。</span><br><span class="line">删除所有与查询无关的内容，包括噪声、背景信息或扩展讨论。</span><br><span class="line">压缩后的内容应简洁清晰，直指用户的核心问题。</span><br><span class="line"></span><br><span class="line">输出格式：</span><br><span class="line">&#123;压缩段落1&#125;</span><br><span class="line">&#123;压缩段落2&#125;</span><br><span class="line">&#123;压缩段落3&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="RAG-效果评估">RAG 效果评估</h2>
-<ol>
-<li>大模型打分：通过 LLM 对 RAG 的输出进行自动评分。效率高，但是准确性一般。</li>
-<li>人工打分：手工针对 RAG 的输出进行逐一打分。更精确、细致的反馈，成本高。</li>
+<h2 id="rag-效果评估">RAG 效果评估</h2>
+<ol type="1">
+<li>大模型打分：通过 LLM 对 RAG
+的输出进行自动评分。效率高，但是准确性一般。</li>
+<li>人工打分：手工针对 RAG
+的输出进行逐一打分。更精确、细致的反馈，成本高。</li>
 </ol>
 <p>评估指标：</p>
-<ol>
-<li>**CR（Context Relevancy）**检索相关性：检索到的信息是否偏离了原始查询。</li>
-<li>**AR（Answer Relevancy）**答案相关性：是否能解决用户的问题，且内容是否逻辑连贯。</li>
-<li>**F（Faithfulness）**可信度：是否存在幻觉或不准确之处。</li>
+<ol type="1">
+<li><strong>CR（Context
+Relevancy）</strong>检索相关性：检索到的信息是否偏离了原始查询。</li>
+<li><strong>AR（Answer
+Relevancy）</strong>答案相关性：是否能解决用户的问题，且内容是否逻辑连贯。</li>
+<li><strong>F（Faithfulness）</strong>可信度：是否存在幻觉或不准确之处。</li>
 </ol>
 <p>打分标准：</p>
-<ol>
+<ol type="1">
 <li>完美（Perfect）1.0 分</li>
 <li>可接受（Acceptable）0.75 分</li>
 <li>缺失（Missing）0.5 分</li>
 <li>错误（Incorrect）0.25 分</li>
 </ol>
-<h2 id="更高级的-RAG">更高级的 RAG</h2>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/7c3ebbe6ec9d9f2886881d7e534396a0.jpg" alt=""></p>
-<h2 id="GraphRAG">GraphRAG</h2>
-<p>GraphRAG 通过构建知识图谱，将实体和实体之间的关系结构化地表示出来，克服了传统 RAG 的复杂推理局限性。</p>
+<h2 id="更高级的-rag">更高级的 RAG</h2>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/7c3ebbe6ec9d9f2886881d7e534396a0.jpg" /></p>
+<h2 id="graphrag">GraphRAG</h2>
+<p>GraphRAG
+通过构建知识图谱，将实体和实体之间的关系结构化地表示出来，克服了传统 RAG
+的复杂推理局限性。</p>
 <p>有以下优势：</p>
-<ol>
+<ol type="1">
 <li>提高答案的准确性和完整性</li>
 <li>提高数据理解和迭代效率</li>
 <li>提升可解释性和可追溯性</li>
 </ol>
 <p>知识图谱的构建步骤：</p>
-<ol>
+<ol type="1">
 <li><strong>实体识别</strong>：从文本或数据源中识别出关键实体。</li>
 <li><strong>关系抽取</strong>：确定实体之间的关系，可能通过自然语言处理技术实现。</li>
-<li><strong>三元组生成</strong>：将实体和关系表示为 (主体，关系，客体) 的形式。</li>
+<li><strong>三元组生成</strong>：将实体和关系表示为 (主体，关系，客体)
+的形式。</li>
 <li><strong>图谱存储</strong>：使用图数据库或专门的存储系统保存知识图谱。</li>
 </ol>
 <p>知识图谱的主要<strong>成本</strong>挑战：</p>
-<ol>
+<ol type="1">
 <li>数据收集与清洗成本</li>
 <li>知识图谱构建成本</li>
 <li>图谱的维护与更新</li>
@@ -393,7 +424,9 @@
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -433,15 +466,20 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%87%E6%A1%A3%E8%A7%A3%E6%9E%90%E6%8A%80%E6%9C%AF"><span class="toc-text">文档解析技术</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#PDF"><span class="toc-text">PDF</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E5%9D%97%E7%AD%96%E7%95%A5"><span class="toc-text">分块策略</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%BA%E5%AE%9A%E5%A4%A7%E5%B0%8F%E5%88%86%E5%9D%97%EF%BC%88Fixed-Size-Chunking%EF%BC%89"><span class="toc-text">固定大小分块（Fixed Size Chunking）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%8D%E5%8F%A0%E5%88%86%E5%9D%97%EF%BC%88Overlap-Chunking%EF%BC%89"><span class="toc-text">重叠分块（Overlap Chunking）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%92%E5%BD%92%E5%88%86%E5%9D%97%EF%BC%88Recursive-Chunking%EF%BC%89"><span class="toc-text">递归分块（Recursive Chunking）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E6%A1%A3%E7%89%B9%E5%AE%9A%E5%88%86%E5%9D%97%EF%BC%88Document-Specific-Chunking%EF%BC%89"><span class="toc-text">文档特定分块（Document Specific Chunking）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%AD%E4%B9%89%E5%88%86%E5%9D%97%EF%BC%88Semantic-Chunking%EF%BC%89"><span class="toc-text">语义分块（Semantic Chunking）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B7%B7%E5%90%88%E5%88%86%E5%9D%97%EF%BC%88Mix-Chunking%EF%BC%89"><span class="toc-text">混合分块（Mix Chunking）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Embedding-%E6%8A%80%E6%9C%AF"><span class="toc-text">Embedding 技术</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="toc-text">向量数据库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B7%B7%E5%90%88%E6%A3%80%E7%B4%A2"><span class="toc-text">混合检索</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%8D%E6%8E%92%E5%BA%8F%E6%8A%80%E6%9C%AF"><span class="toc-text">重排序技术</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8F%90%E7%A4%BA%E5%B7%A5%E7%A8%8B"><span class="toc-text">提示工程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BC%98%E5%8C%96%E6%8A%80%E6%9C%AF"><span class="toc-text">优化技术</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E6%B8%85%E6%B4%97%E5%92%8C%E9%A2%84%E5%A4%84%E7%90%86"><span class="toc-text">数据清洗和预处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9F%A5%E8%AF%A2%E6%89%A9%E5%B1%95"><span class="toc-text">查询扩展</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%87%AA%E6%9F%A5%E8%AF%A2"><span class="toc-text">自查询</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8F%90%E7%A4%BA%E5%8E%8B%E7%BC%A9"><span class="toc-text">提示压缩</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RAG-%E6%95%88%E6%9E%9C%E8%AF%84%E4%BC%B0"><span class="toc-text">RAG 效果评估</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9B%B4%E9%AB%98%E7%BA%A7%E7%9A%84-RAG"><span class="toc-text">更高级的 RAG</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#GraphRAG"><span class="toc-text">GraphRAG</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%87%E6%A1%A3%E8%A7%A3%E6%9E%90%E6%8A%80%E6%9C%AF"><span class="toc-text">文档解析技术</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#pdf"><span class="toc-text">PDF</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E5%9D%97%E7%AD%96%E7%95%A5"><span class="toc-text">分块策略</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%BA%E5%AE%9A%E5%A4%A7%E5%B0%8F%E5%88%86%E5%9D%97fixed-size-chunking"><span class="toc-text">固定大小分块（Fixed Size
+Chunking）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%8D%E5%8F%A0%E5%88%86%E5%9D%97overlap-chunking"><span class="toc-text">重叠分块（Overlap Chunking）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%92%E5%BD%92%E5%88%86%E5%9D%97recursive-chunking"><span class="toc-text">递归分块（Recursive Chunking）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E6%A1%A3%E7%89%B9%E5%AE%9A%E5%88%86%E5%9D%97document-specific-chunking"><span class="toc-text">文档特定分块（Document
+Specific Chunking）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%AD%E4%B9%89%E5%88%86%E5%9D%97semantic-chunking"><span class="toc-text">语义分块（Semantic Chunking）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B7%B7%E5%90%88%E5%88%86%E5%9D%97mix-chunking"><span class="toc-text">混合分块（Mix Chunking）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#embedding-%E6%8A%80%E6%9C%AF"><span class="toc-text">Embedding 技术</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="toc-text">向量数据库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B7%B7%E5%90%88%E6%A3%80%E7%B4%A2"><span class="toc-text">混合检索</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%8D%E6%8E%92%E5%BA%8F%E6%8A%80%E6%9C%AF"><span class="toc-text">重排序技术</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8F%90%E7%A4%BA%E5%B7%A5%E7%A8%8B"><span class="toc-text">提示工程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BC%98%E5%8C%96%E6%8A%80%E6%9C%AF"><span class="toc-text">优化技术</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E6%B8%85%E6%B4%97%E5%92%8C%E9%A2%84%E5%A4%84%E7%90%86"><span class="toc-text">数据清洗和预处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9F%A5%E8%AF%A2%E6%89%A9%E5%B1%95"><span class="toc-text">查询扩展</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%87%AA%E6%9F%A5%E8%AF%A2"><span class="toc-text">自查询</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8F%90%E7%A4%BA%E5%8E%8B%E7%BC%A9"><span class="toc-text">提示压缩</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#rag-%E6%95%88%E6%9E%9C%E8%AF%84%E4%BC%B0"><span class="toc-text">RAG 效果评估</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9B%B4%E9%AB%98%E7%BA%A7%E7%9A%84-rag"><span class="toc-text">更高级的 RAG</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#graphrag"><span class="toc-text">GraphRAG</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

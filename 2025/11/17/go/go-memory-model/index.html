@@ -27,16 +27,6 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文基于 Go 1.25.3 源码，从第一性原理出发，深入探讨 Go 的内存模型，包括内存分配机制、实现原理、使用场景以及最新特性。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/68747470733a2f2f747661312e73696e61696d672e636e2f6c617267652f6536633964323465677931683575666b306f3079756a3231657a3075303736662e6a7067.jpeg">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/68747470733a2f2f747661312e73696e61696d672e636e2f6c617267652f65366339643234656779316835746934766b3936356a32316937307530676f772e6a7067.jpeg">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/68747470733a2f2f747661312e73696e61696d672e636e2f6c617267652f6536633964323465677931683575647a7a6c3436316a3231696130656b6468772e6a7067.jpeg">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/e6c9d24egy1h5uebsvbasj21ei0ne76j.jpg">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/e6c9d24egy1h5ueba2f53j21fi0n641m.jpg">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/e6c9d24egy1h5uedvcmcdj21dw0mm79w.jpg">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/e6c9d24egy1h5uemrzou7j217a0kwadr.jpg">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/e6c9d24egy1h5uf0kf27jj21iw0rg0xy.jpg">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/e6c9d24egy1h5ufd5lnvxj21ez0u0n3h.jpg">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/e6c9d24egy1h5ulg364i2j21nk09uq4s.jpg">
 <meta property="article:published_time" content="2025-11-17T06:30:00.000Z">
 <meta property="article:modified_time" content="2025-12-08T06:23:52.446Z">
 <meta property="article:author" content="Hedon Wang">
@@ -44,7 +34,6 @@
 <meta property="article:tag" content="内存管理">
 <meta property="article:tag" content="malloc">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/68747470733a2f2f747661312e73696e61696d672e636e2f6c617267652f6536633964323465677931683575666b306f3079756a3231657a3075303736662e6a7067.jpeg">
   
   
   
@@ -82,7 +71,7 @@
 <div class="widgets">
 <widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">专栏：Go 底层原理</span></div><div class="widget-body"><a class="item" href="/2025/11/23/go/go-net/"><span class="title">Go 底层原理丨网络编程</span></a><a class="item" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a><a class="item" href="/2025/11/17/go/go-gc-tri-color-marking/"><span class="title">Go 底层原理丨垃圾回收（三色标记法）</span></a><a class="item active" href="/2025/11/17/go/go-memory-model/"><span class="title">Go 底层原理丨内存模型</span><svg class="active-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11.098v4.993c0 3.096 0 4.645-.734 5.321c-.35.323-.792.526-1.263.58c-.987.113-2.14-.907-4.445-2.946c-1.02-.901-1.529-1.352-2.118-1.47a2.225 2.225 0 0 0-.88 0c-.59.118-1.099.569-2.118 1.47c-2.305 2.039-3.458 3.059-4.445 2.945a2.238 2.238 0 0 1-1.263-.579C3 20.736 3 19.188 3 16.091v-4.994C3 6.81 3 4.666 4.318 3.333C5.636 2 7.758 2 12 2c4.243 0 6.364 0 7.682 1.332C21 4.665 21 6.81 21 11.098" opacity=".5"/><path fill="currentColor" d="M9 5.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5z"/></svg></a><a class="item" href="/2025/11/17/go/go-interface/"><span class="title">Go 底层原理丨interface</span></a><a class="item" href="/2025/11/16/go/go-map-swiss/"><span class="title">Go 底层原理丨map（Swiss Table 版本）</span></a><a class="item" href="/2025/11/16/go/go-map-no-swiss/"><span class="title">Go 底层原理丨map（非 swiss 版本）</span></a><a class="item" href="/2025/11/16/go/go-slice/"><span class="title">Go 底层原理丨slice 从第一性原理到实现细节</span></a><a class="item" href="/2025/06/30/go/go-gin/"><span class="title">Go 底层原理丨深度剖析 Gin 框架核心机制：从 HTTP 请求生命周期到高性能设计哲学</span></a><a class="item" href="/2024/03/28/go/go-defer/"><span class="title">深入浅出 Go 语言的 defer 机制</span></a><a class="item" href="/2024/03/09/go/go-struct/"><span class="title">深入 Go 语言核心：结构体的全方位解析</span></a><a class="item" href="/2024/01/20/go/go-gpm/"><span class="title">深入浅出 Go 语言的 GPM 模型（Go1.21）</span></a><a class="item" href="/2023/12/07/go/go-start/"><span class="title">Go1.21.0 程序启动过程</span></a><a class="item" href="/2023/11/29/go/go-compilation/"><span class="title">Go1.21.0 程序编译过程</span></a></div></widget>
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/30/note/note-llm-from-scratch/"><span class="title">读书笔记丨《从零构建大语言模型》</span></a><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/08/30/note/note-llm-from-scratch/"><span class="title">读书笔记丨《从零构建大语言模型》</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -108,34 +97,54 @@
   </div>
   </div><article class="md-text content"><blockquote>
 <p>[!NOTE]</p>
-<p>💡 本文基于 Go 1.25.3 源码编写，相比 Go 1.16 版本，增加了 User Arena、Weak Pointer、Cleanup 机制等重要特性。后续版本可能会有变化。建议结合实际使用的 Go 版本阅读相关源码。</p>
-<p>特此声明，本篇是笔者与 Google Gemini 3Pro 共创所作，非常庆幸在当今 AI 时代下获取知识已是如此便利，且也为学习者从第一性原理理解所学知识大大降低了门槛。不过本篇的篇章安排和叙述逻辑，均由笔者把控和审阅，欢迎放心阅读。</p>
+<p>💡 本文基于 Go 1.25.3 源码编写，相比 Go 1.16 版本，增加了 User
+Arena、Weak Pointer、Cleanup
+机制等重要特性。后续版本可能会有变化。建议结合实际使用的 Go
+版本阅读相关源码。</p>
+<p>特此声明，本篇是笔者与 Google Gemini 3Pro 共创所作，非常庆幸在当今 AI
+时代下获取知识已是如此便利，且也为学习者从第一性原理理解所学知识大大降低了门槛。不过本篇的篇章安排和叙述逻辑，均由笔者把控和审阅，欢迎放心阅读。</p>
 </blockquote>
 <h2 id="结论先行">结论先行</h2>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/68747470733a2f2f747661312e73696e61696d672e636e2f6c617267652f6536633964323465677931683575666b306f3079756a3231657a3075303736662e6a7067.jpeg" alt="Go内存模型架构"></p>
-<p>Go 的内存分配器设计源于 <strong>TCMalloc</strong>，采用了多层级缓存架构来减少锁竞争并提高性能。核心设计如下：</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/68747470733a2f2f747661312e73696e61696d672e636e2f6c617267652f6536633964323465677931683575666b306f3079756a3231657a3075303736662e6a7067.jpeg"
+alt="Go内存模型架构" />
+<figcaption aria-hidden="true">Go内存模型架构</figcaption>
+</figure>
+<p>Go 的内存分配器设计源于
+<strong>TCMalloc</strong>，采用了多层级缓存架构来减少锁竞争并提高性能。核心设计如下：</p>
 <h3 id="核心架构">核心架构</h3>
 <ul>
 <li>Go 将堆内存抽象为 <strong>mheap</strong> 结构体；</li>
-<li>Go 进程会从虚拟内存中申请 n 个 <strong>heapArena</strong>（64 位系统每个 64MB）；</li>
-<li>每个 heapArena 被按需划分成不同 class 的 <strong>mspan</strong>，共有 <strong>68</strong> 个 size class；</li>
+<li>Go 进程会从虚拟内存中申请 n 个 <strong>heapArena</strong>（64
+位系统每个 64MB）；</li>
+<li>每个 heapArena 被按需划分成不同 class 的
+<strong>mspan</strong>，共有 <strong>68</strong> 个 size class；</li>
 <li>每个 mspan 由 n 个相同大小的 span 组成；</li>
-<li>为了快速定位合适的 span，为 mheap 建立了 <strong>136</strong> 个中央索引 <strong>mcentral</strong>；</li>
-<li>每个 mcentral 存储对应 class 的 mspan，每种 mspan 又划分为 gc scan 和 no scan 两种，故共有 68 × 2 = 136 个 mcentral；</li>
-<li>为了解决中央索引的并发锁竞争问题，为每一个 P（线程）建立一个本地缓存 <strong>mcache</strong>；</li>
-<li>每个 mcache 存储 <strong>136</strong> 个 span，分别是每种 class 的 mspan 的一个 scan 和 noscan 的 span。</li>
+<li>为了快速定位合适的 span，为 mheap 建立了 <strong>136</strong>
+个中央索引 <strong>mcentral</strong>；</li>
+<li>每个 mcentral 存储对应 class 的 mspan，每种 mspan 又划分为 gc scan
+和 no scan 两种，故共有 68 × 2 = 136 个 mcentral；</li>
+<li>为了解决中央索引的并发锁竞争问题，为每一个 P（线程）建立一个本地缓存
+<strong>mcache</strong>；</li>
+<li>每个 mcache 存储 <strong>136</strong> 个 span，分别是每种 class 的
+mspan 的一个 scan 和 noscan 的 span。</li>
 </ul>
 <h3 id="内存分配策略">内存分配策略</h3>
 <ul>
-<li>Go 中根据对象大小分为 <strong>tiny</strong>、<strong>small</strong> 和 <strong>large</strong> 三种对象；</li>
-<li>tiny (0~16B 无指针) 对象主要分配到 class 2 的 span 中（通过 tiny allocator）；</li>
+<li>Go 中根据对象大小分为 <strong>tiny</strong>、<strong>small</strong>
+和 <strong>large</strong> 三种对象；</li>
+<li>tiny (0~16B 无指针) 对象主要分配到 class 2 的 span 中（通过 tiny
+allocator）；</li>
 <li>small (16B~32KB) 对象会被分配到 class 2 ~ class 67 的 span 中；</li>
 <li>class 1 (8B) 仅用于 64 位平台上的单指针对象，使用极少；</li>
-<li>large (&gt;32KB) 对象会量身定做分配到 class0 的 span 中，直接从 mheap 上申请；</li>
-<li>为对象分配内存时，会先从 mcache 上找 span，找不到就去 mcentral 上交换，还找不到就去 mheap 上申请，最后找不到就 OOM。</li>
+<li>large (&gt;32KB) 对象会量身定做分配到 class0 的 span 中，直接从
+mheap 上申请；</li>
+<li>为对象分配内存时，会先从 mcache 上找 span，找不到就去 mcentral
+上交换，还找不到就去 mheap 上申请，最后找不到就 OOM。</li>
 </ul>
-<h2 id="1-协程栈">1. 协程栈</h2>
-<h3 id="1-1-作用">1.1 作用</h3>
+<h2 id="协程栈">1. 协程栈</h2>
+<h3 id="作用">1.1 作用</h3>
 <p>协程栈是 Go 协程执行的核心数据结构，主要用于：</p>
 <ul>
 <li><strong>记录执行路径</strong>：追踪函数调用链</li>
@@ -143,73 +152,93 @@
 <li><strong>函数传参</strong>：通过栈传递函数参数</li>
 <li><strong>保存返回值</strong>：存储函数的返回值</li>
 </ul>
-<h3 id="1-2-位置">1.2 位置</h3>
+<h3 id="位置">1.2 位置</h3>
 <ul>
 <li>Go 协程栈位于 <strong>Go 堆内存</strong>上（而非操作系统栈）</li>
 <li>Go 堆内存位于<strong>操作系统虚拟内存</strong>上</li>
 <li>这种设计使得 Go 可以灵活管理协程栈的大小</li>
 </ul>
-<h3 id="1-3-图解">1.3 图解</h3>
+<h3 id="图解">1.3 图解</h3>
 <p>以下面的代码为例：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sum</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">  sum := <span class="number">0</span></span><br><span class="line">  sum = a + b</span><br><span class="line">  <span class="keyword">return</span> sum</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">  a := <span class="number">3</span></span><br><span class="line">  b := <span class="number">5</span></span><br><span class="line">  <span class="built_in">print</span>(sum(a, b))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>栈帧结构如下：</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/68747470733a2f2f747661312e73696e61696d672e636e2f6c617267652f65366339643234656779316835746934766b3936356a32316937307530676f772e6a7067.jpeg" alt="协程栈结构"></p>
-<h3 id="1-4-参数传递">1.4 参数传递</h3>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/68747470733a2f2f747661312e73696e61696d672e636e2f6c617267652f65366339643234656779316835746934766b3936356a32316937307530676f772e6a7067.jpeg"
+alt="协程栈结构" />
+<figcaption aria-hidden="true">协程栈结构</figcaption>
+</figure>
+<h3 id="参数传递">1.4 参数传递</h3>
 <p><strong>Go 采用值传递</strong></p>
 <ul>
 <li>传递结构体时：<strong>拷贝结构体中的全部内容</strong></li>
 <li>传递结构体指针时：<strong>拷贝结构体指针</strong>（8 字节）</li>
 </ul>
-<h3 id="1-5-栈大小">1.5 栈大小</h3>
-<p>Go 1.25.3 中，协程栈的初始大小为 <strong>2KB</strong>，相比早期版本（如 Go 1.2 的 8KB）更加轻量。</p>
-<h3 id="1-6-逃逸分析">1.6 逃逸分析</h3>
+<h3 id="栈大小">1.5 栈大小</h3>
+<p>Go 1.25.3 中，协程栈的初始大小为
+<strong>2KB</strong>，相比早期版本（如 Go 1.2 的 8KB）更加轻量。</p>
+<h3 id="逃逸分析">1.6 逃逸分析</h3>
 <p>不是所有的变量都能放在协程栈上。以下三种情况会导致变量<strong>逃逸到堆</strong>上：</p>
-<h4 id="1-指针逃逸">1. 指针逃逸</h4>
+<h4 id="指针逃逸">1. 指针逃逸</h4>
 <p>函数返回局部变量的指针：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newInt</span><span class="params">()</span></span> *<span class="type">int</span> &#123;</span><br><span class="line">    x := <span class="number">42</span></span><br><span class="line">    <span class="keyword">return</span> &amp;x  <span class="comment">// x 逃逸到堆</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="2-空接口逃逸">2. 空接口逃逸</h4>
+<h4 id="空接口逃逸">2. 空接口逃逸</h4>
 <p>函数参数为 <code>interface&#123;&#125;</code>，编译器无法确定具体类型：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">println</span><span class="params">(v <span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;  <span class="comment">// v 可能逃逸</span></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="3-大变量逃逸">3. 大变量逃逸</h4>
-<p>变量太大，栈帧放不下。在 64 位机器中，一般超过 <strong>64KB</strong> 的变量就会逃逸。</p>
-<h3 id="1-7-栈扩容">1.7 栈扩容</h3>
-<p>Go 栈的初始空间为 2KB。在函数调用前会执行 <code>morestack</code> 判断栈空间是否足够。</p>
+<h4 id="大变量逃逸">3. 大变量逃逸</h4>
+<p>变量太大，栈帧放不下。在 64 位机器中，一般超过 <strong>64KB</strong>
+的变量就会逃逸。</p>
+<h3 id="栈扩容">1.7 栈扩容</h3>
+<p>Go 栈的初始空间为 2KB。在函数调用前会执行 <code>morestack</code>
+判断栈空间是否足够。</p>
 <h4 id="栈扩容策略演进">栈扩容策略演进</h4>
 <ul>
-<li>
-<p><strong>分段栈</strong>（Go 1.3 之前）</p>
+<li><p><strong>分段栈</strong>（Go 1.3 之前）</p>
 <ul>
 <li>优点：没有空间浪费</li>
-<li>缺点：栈帧在不连续的空间之间横跳，性能较差（&quot;热分裂&quot;问题）</li>
-</ul>
-</li>
-<li>
-<p><strong>连续栈</strong>（Go 1.3 及之后）</p>
+<li>缺点：栈帧在不连续的空间之间横跳，性能较差（"热分裂"问题）</li>
+</ul></li>
+<li><p><strong>连续栈</strong>（Go 1.3 及之后）</p>
 <ul>
 <li>优点：空间连续，性能更好</li>
 <li>缺点：扩容时需要拷贝，开销较大</li>
 <li>策略：小于 1KB 时翻倍，否则增长 25%</li>
+</ul></li>
 </ul>
-</li>
-</ul>
-<hr>
-<h2 id="2-虚拟内存单元-heapArena">2. 虚拟内存单元 heapArena</h2>
-<h3 id="2-1-概述">2.1 概述</h3>
+<hr />
+<h2 id="虚拟内存单元-heaparena">2. 虚拟内存单元 heapArena</h2>
+<h3 id="概述">2.1 概述</h3>
 <ul>
-<li>在物理内存为 64GB 的机器中，每个 Go 进程最多可被分配到 <strong>256TB</strong> 的虚拟内存</li>
-<li>Go 的虚拟内存单元为 <code>heapArena</code>，每次申请 <strong>64MB</strong>（64 位非 Windows 系统）</li>
+<li>在物理内存为 64GB 的机器中，每个 Go 进程最多可被分配到
+<strong>256TB</strong> 的虚拟内存</li>
+<li>Go 的虚拟内存单元为 <code>heapArena</code>，每次申请
+<strong>64MB</strong>（64 位非 Windows 系统）</li>
 <li>最多可以申请 <strong>2²⁰</strong> (约 100 万) 个 heapArena</li>
-<li>所有的 <code>heapArena</code> 组成了 <code>mheap</code>（Go 堆内存）</li>
+<li>所有的 <code>heapArena</code> 组成了 <code>mheap</code>（Go
+堆内存）</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/68747470733a2f2f747661312e73696e61696d672e636e2f6c617267652f6536633964323465677931683575647a7a6c3436316a3231696130656b6468772e6a7067.jpeg" alt="heapArena 结构"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/68747470733a2f2f747661312e73696e61696d672e636e2f6c617267652f6536633964323465677931683575647a7a6c3436316a3231696130656b6468772e6a7067.jpeg"
+alt="heapArena 结构" />
+<figcaption aria-hidden="true">heapArena 结构</figcaption>
+</figure>
 <blockquote>
-<p>💡 <strong>相关阅读</strong>：<a target="_blank" rel="noopener" href="https://hedon954.github.io/noteSite/cs/os/04-os-store.html#_6-%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98">操作系统 - 虚拟内存</a></p>
+<p>💡 <strong>相关阅读</strong>：<a
+target="_blank" rel="noopener" href="https://hedon954.github.io/noteSite/cs/os/04-os-store.html#_6-%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98">操作系统
+- 虚拟内存</a></p>
 </blockquote>
-<h3 id="2-2-底层结构">2.2 底层结构</h3>
-<p><code>heapArena</code> 定义在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/go1.25.3/src/runtime/mheap.go#L266">runtime/mheap.go#L266</a>：</p>
+<h3 id="底层结构">2.2 底层结构</h3>
+<p><code>heapArena</code> 定义在 <a
+target="_blank" rel="noopener" href="https://github.com/golang/go/blob/go1.25.3/src/runtime/mheap.go#L266">runtime/mheap.go#L266</a>：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> heapArena <span class="keyword">struct</span> &#123;</span><br><span class="line">    _ sys.NotInHeap</span><br><span class="line"></span><br><span class="line">    <span class="comment">// spans 将 arena 中的虚拟页 ID 映射到 mspan</span></span><br><span class="line">    spans [pagesPerArena]*mspan</span><br><span class="line"></span><br><span class="line">    <span class="comment">// pageInUse 是位图，标记哪些页正在被使用</span></span><br><span class="line">    pageInUse [pagesPerArena / <span class="number">8</span>]<span class="type">uint8</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// pageMarks 用于 GC，标记哪些 span 有被标记的对象</span></span><br><span class="line">    pageMarks [pagesPerArena / <span class="number">8</span>]<span class="type">uint8</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// pageSpecials 标记哪些 span 有 special 记录（finalizer 等）</span></span><br><span class="line">    pageSpecials [pagesPerArena / <span class="number">8</span>]<span class="type">uint8</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// pageUseSpanInlineMarkBits 标记使用内联 mark bits 的 span</span></span><br><span class="line">    pageUseSpanInlineMarkBits [pagesPerArena / <span class="number">8</span>]<span class="type">uint8</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// checkmarks 用于 GC 调试</span></span><br><span class="line">    checkmarks *checkmarksMap</span><br><span class="line"></span><br><span class="line">    <span class="comment">// zeroedBase 标记第一个未使用且已归零的页</span></span><br><span class="line">    zeroedBase <span class="type">uintptr</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="2-3-分配策略对比">2.3 分配策略对比</h3>
+<h3 id="分配策略对比">2.3 分配策略对比</h3>
 <table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
 <thead>
 <tr>
 <th>线性分配</th>
@@ -219,9 +248,15 @@
 </thead>
 <tbody>
 <tr>
-<td><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/e6c9d24egy1h5uebsvbasj21ei0ne76j.jpg" alt="线性分配"></td>
-<td><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/e6c9d24egy1h5ueba2f53j21fi0n641m.jpg" alt="链表分配"></td>
-<td><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/e6c9d24egy1h5uedvcmcdj21dw0mm79w.jpg" alt="分级分配"></td>
+<td><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/e6c9d24egy1h5uebsvbasj21ei0ne76j.jpg"
+alt="线性分配" /></td>
+<td><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/e6c9d24egy1h5ueba2f53j21fi0n641m.jpg"
+alt="链表分配" /></td>
+<td><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/e6c9d24egy1h5uedvcmcdj21dw0mm79w.jpg"
+alt="分级分配" /></td>
 </tr>
 <tr>
 <td>实现简单，但内存碎片较多</td>
@@ -231,97 +266,129 @@
 </tbody>
 </table>
 <blockquote>
-<p><strong>Go 采用分级分配策略</strong>，参考了 <a target="_blank" rel="noopener" href="http://goog-perftools.sourceforge.net/doc/tcmalloc.html">TCMalloc</a>，将每一个级定义为 <code>mspan</code>。</p>
+<p><strong>Go 采用分级分配策略</strong>，参考了 <a
+target="_blank" rel="noopener" href="http://goog-perftools.sourceforge.net/doc/tcmalloc.html">TCMalloc</a>，将每一个级定义为
+<code>mspan</code>。</p>
 </blockquote>
-<h2 id="3-内存管理单元-mspan">3. 内存管理单元 mspan</h2>
-<h3 id="3-1-概述">3.1 概述</h3>
+<h2 id="内存管理单元-mspan">3. 内存管理单元 mspan</h2>
+<h3 id="概述-1">3.1 概述</h3>
 <ul>
 <li>Go 使用内存时的基本单位是 <code>mspan</code></li>
-<li>每个 <code>mspan</code> 由 N 个相同大小的 <code>span</code> 组成</li>
-<li>Go 1.25.3 中有 <strong>68</strong> 种 size class（class 0 ~ class 67）</li>
+<li>每个 <code>mspan</code> 由 N 个相同大小的 <code>span</code>
+组成</li>
+<li>Go 1.25.3 中有 <strong>68</strong> 种 size class（class 0 ~ class
+67）</li>
 </ul>
-<h4 id="Size-Class-表（部分）">Size Class 表（部分）</h4>
+<h4 id="size-class-表部分">Size Class 表（部分）</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// runtime/sizeclasses.go</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// class  bytes/obj  bytes/span  objects  tail waste  max waste</span></span><br><span class="line"><span class="comment">//     0          0           0        0           0      0.00%</span></span><br><span class="line"><span class="comment">//     1          8        8192     1024           0     87.50%</span></span><br><span class="line"><span class="comment">//     2         16        8192      512           0     43.75%</span></span><br><span class="line"><span class="comment">//     3         24        8192      341           8     29.24%</span></span><br><span class="line"><span class="comment">//     4         32        8192      256           0     11.72%</span></span><br><span class="line"><span class="comment">//   ...</span></span><br><span class="line"><span class="comment">//    64      24576       24576        1           0     11.45%</span></span><br><span class="line"><span class="comment">//    65      27264       81920        3         128     10.00%</span></span><br><span class="line"><span class="comment">//    66      28672       57344        2           0      4.91%</span></span><br><span class="line"><span class="comment">//    67      32768       32768        1           0     12.50%</span></span><br></pre></td></tr></table></figure>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/e6c9d24egy1h5uemrzou7j217a0kwadr.jpg" alt="mspan 结构"></p>
-<h3 id="3-2-底层结构">3.2 底层结构</h3>
-<p><code>mspan</code> 定义在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/go1.25.3/src/runtime/mheap.go#L420">runtime/mheap.go#L420</a>：</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/e6c9d24egy1h5uemrzou7j217a0kwadr.jpg"
+alt="mspan 结构" />
+<figcaption aria-hidden="true">mspan 结构</figcaption>
+</figure>
+<h3 id="底层结构-1">3.2 底层结构</h3>
+<p><code>mspan</code> 定义在 <a
+target="_blank" rel="noopener" href="https://github.com/golang/go/blob/go1.25.3/src/runtime/mheap.go#L420">runtime/mheap.go#L420</a>：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> mspan <span class="keyword">struct</span> &#123;</span><br><span class="line">    _ sys.NotInHeap</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 双向链表</span></span><br><span class="line">    next *mspan</span><br><span class="line">    prev *mspan</span><br><span class="line">    list *mSpanList</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 内存地址和大小</span></span><br><span class="line">    startAddr <span class="type">uintptr</span>    <span class="comment">// 起始地址</span></span><br><span class="line">    npages    <span class="type">uintptr</span>    <span class="comment">// 页数（每页 8KB）</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 分配信息</span></span><br><span class="line">    freeindex        <span class="type">uint16</span>      <span class="comment">// 下一个空闲对象的索引</span></span><br><span class="line">    freeIndexForScan <span class="type">uint16</span>      <span class="comment">// GC 扫描器使用的索引（Go 1.19+）</span></span><br><span class="line">    nelems           <span class="type">uint16</span>      <span class="comment">// 对象总数</span></span><br><span class="line">    allocCount       <span class="type">uint16</span>      <span class="comment">// 已分配对象数</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 位图</span></span><br><span class="line">    allocBits  *gcBits   <span class="comment">// 分配位图</span></span><br><span class="line">    gcmarkBits *gcBits   <span class="comment">// GC 标记位图</span></span><br><span class="line">    pinnerBits *gcBits   <span class="comment">// 固定对象位图（Go 1.21+）</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 元数据</span></span><br><span class="line">    spanclass  spanClass      <span class="comment">// size class 和 noscan 标志</span></span><br><span class="line">    elemsize   <span class="type">uintptr</span>        <span class="comment">// 对象大小</span></span><br><span class="line">    state      mSpanStateBox  <span class="comment">// mspan 状态</span></span><br><span class="line">    sweepgen   <span class="type">uint32</span>         <span class="comment">// 清扫代数</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 新增字段（Go 1.20+）</span></span><br><span class="line">    isUserArenaChunk <span class="type">bool</span>       <span class="comment">// 是否为 user arena chunk</span></span><br><span class="line">    userArenaChunkFree addrRange <span class="comment">// user arena 管理</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// GreenTeaGC 实验字段（Go 1.24+）</span></span><br><span class="line">    scanIdx <span class="type">uint16</span>  <span class="comment">// 扫描索引</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 大对象类型信息（Go 1.22+）</span></span><br><span class="line">    largeType *_type</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Special 记录</span></span><br><span class="line">    speciallock mutex</span><br><span class="line">    specials    *special</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="3-3-关键字段说明">3.3 关键字段说明</h3>
-<h4 id="3-3-1-分配位图（allocBits）">3.3.1 分配位图（allocBits）</h4>
+<h3 id="关键字段说明">3.3 关键字段说明</h3>
+<h4 id="分配位图allocbits">3.3.1 分配位图（allocBits）</h4>
 <p>使用位图标记对象是否已分配：</p>
 <ul>
 <li><code>0</code> 表示空闲</li>
 <li><code>1</code> 表示已分配</li>
 </ul>
-<h4 id="3-3-2-双索引设计（Go-1-19-）">3.3.2 双索引设计（Go 1.19+）</h4>
+<h4 id="双索引设计go-1.19">3.3.2 双索引设计（Go 1.19+）</h4>
 <ul>
 <li><code>freeindex</code>：分配器使用</li>
 <li><code>freeIndexForScan</code>：GC 扫描器使用</li>
 </ul>
 <p>这样设计避免了竞争条件，确保 GC 只在对象完全初始化后才能看到它。</p>
-<h4 id="3-3-2-状态机">3.3.2 状态机</h4>
+<h4 id="状态机">3.3.2 状态机</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">    mSpanDead   mSpanState = <span class="literal">iota</span>  <span class="comment">// 未使用</span></span><br><span class="line">    mSpanInUse                     <span class="comment">// 正在使用</span></span><br><span class="line">    mSpanManual                    <span class="comment">// 手动管理（如栈）</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
-<hr>
-<h2 id="4-中心索引-mcentral">4. 中心索引 mcentral</h2>
-<h3 id="4-1-概述">4.1 概述</h3>
-<p>heapArena 中的 <code>mspan</code> 不是一开始就全部划分好的，而是<strong>按需划分</strong>。</p>
-<p>由于每个 heapArena 中的 mspan 分布是动态的，为了给要分配空间的对象快速定位到合适的 mspan，Go 定义了中心索引 <code>mcentral</code>。</p>
+<hr />
+<h2 id="中心索引-mcentral">4. 中心索引 mcentral</h2>
+<h3 id="概述-2">4.1 概述</h3>
+<p>heapArena 中的 <code>mspan</code>
+不是一开始就全部划分好的，而是<strong>按需划分</strong>。</p>
+<p>由于每个 heapArena 中的 mspan
+分布是动态的，为了给要分配空间的对象快速定位到合适的 mspan，Go
+定义了中心索引 <code>mcentral</code>。</p>
 <ul>
 <li>总共有 <strong>136</strong> 个 <code>mcentral</code> 结构体</li>
 <li>其中 <strong>68</strong> 个用于需要 GC 扫描的对象（scan）</li>
 <li>另外 <strong>68</strong> 个用于无需 GC 扫描的对象（noscan）</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/e6c9d24egy1h5uf0kf27jj21iw0rg0xy.jpg" alt="mcentral 结构"></p>
-<h3 id="4-2-底层结构">4.2 底层结构</h3>
-<p><code>mcentral</code> 定义在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/go1.25.3/src/runtime/mcentral.go#L22">runtime/mcentral.go#L22</a>：</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/e6c9d24egy1h5uf0kf27jj21iw0rg0xy.jpg"
+alt="mcentral 结构" />
+<figcaption aria-hidden="true">mcentral 结构</figcaption>
+</figure>
+<h3 id="底层结构-2">4.2 底层结构</h3>
+<p><code>mcentral</code> 定义在 <a
+target="_blank" rel="noopener" href="https://github.com/golang/go/blob/go1.25.3/src/runtime/mcentral.go#L22">runtime/mcentral.go#L22</a>：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> mcentral <span class="keyword">struct</span> &#123;</span><br><span class="line">    _ sys.NotInHeap</span><br><span class="line"></span><br><span class="line">    spanclass spanClass  <span class="comment">// size class 级别</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 双缓冲设计：配合 GC 的 sweepgen</span></span><br><span class="line">    partial [<span class="number">2</span>]spanSet  <span class="comment">// 有空闲对象的 span 列表</span></span><br><span class="line">    full    [<span class="number">2</span>]spanSet  <span class="comment">// 无空闲对象的 span 列表</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="4-3-双缓冲机制">4.3 双缓冲机制</h3>
+<h3 id="双缓冲机制">4.3 双缓冲机制</h3>
 <p><code>mcentral</code> 使用双缓冲配合 GC 的清扫机制：</p>
 <ul>
 <li><code>sweepgen</code> 每次 GC 增加 2</li>
 <li><code>partial[sweepgen/2%2]</code> 是已清扫的 span</li>
 <li><code>partial[1-sweepgen/2%2]</code> 是未清扫的 span</li>
 </ul>
-<p>这种设计使得 GC 和分配可以并发进行，无需等待所有 span 都清扫完毕。</p>
-<h2 id="5-线程缓存-mcache">5. 线程缓存 mcache</h2>
-<h3 id="5-1-概述">5.1 概述</h3>
-<p><code>mcentral</code> 是一个中心索引，修改它需要使用互斥锁进行保护，锁竞争会造成性能问题。</p>
-<p>Go 参考 <strong>GMP 模型</strong>，为每个 P（逻辑处理器）建立了<strong>线程本地缓存</strong> <code>mcache</code>，极大缓解了并发锁争夺的性能消耗。</p>
+<p>这种设计使得 GC 和分配可以并发进行，无需等待所有 span
+都清扫完毕。</p>
+<h2 id="线程缓存-mcache">5. 线程缓存 mcache</h2>
+<h3 id="概述-3">5.1 概述</h3>
+<p><code>mcentral</code>
+是一个中心索引，修改它需要使用互斥锁进行保护，锁竞争会造成性能问题。</p>
+<p>Go 参考 <strong>GMP 模型</strong>，为每个
+P（逻辑处理器）建立了<strong>线程本地缓存</strong>
+<code>mcache</code>，极大缓解了并发锁争夺的性能消耗。</p>
 <p>设计要点：</p>
 <ul>
 <li>每个 <strong>P</strong> 有一个 <code>mcache</code></li>
 <li>对于每一种 size class，取一个 scan 和一个 noscan span</li>
-<li>一个 <code>mcache</code> 拥有 <strong>136</strong> 个 <code>mspan</code>（68 个 scan + 68 个 noscan）</li>
+<li>一个 <code>mcache</code> 拥有 <strong>136</strong> 个
+<code>mspan</code>（68 个 scan + 68 个 noscan）</li>
 <li>当本地缓存用完后，才需要上锁去 mcentral 交换</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/e6c9d24egy1h5ufd5lnvxj21ez0u0n3h.jpg" alt="mcache 结构"></p>
-<h3 id="5-2-底层结构">5.2 底层结构</h3>
-<p><code>mcache</code> 定义在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/go1.25.3/src/runtime/mcache.go#L20">runtime/mcache.go#L20</a>：</p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/e6c9d24egy1h5ufd5lnvxj21ez0u0n3h.jpg"
+alt="mcache 结构" />
+<figcaption aria-hidden="true">mcache 结构</figcaption>
+</figure>
+<h3 id="底层结构-3">5.2 底层结构</h3>
+<p><code>mcache</code> 定义在 <a
+target="_blank" rel="noopener" href="https://github.com/golang/go/blob/go1.25.3/src/runtime/mcache.go#L20">runtime/mcache.go#L20</a>：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> mcache <span class="keyword">struct</span> &#123;</span><br><span class="line">    _ sys.NotInHeap</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 内存分析相关</span></span><br><span class="line">    nextSample  <span class="type">int64</span>   <span class="comment">// 触发堆采样的字节数</span></span><br><span class="line">    memProfRate <span class="type">int</span>     <span class="comment">// 缓存的内存分析速率</span></span><br><span class="line">    scanAlloc   <span class="type">uintptr</span> <span class="comment">// 可扫描对象的已分配字节数</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 微对象分配器（&lt;16B 的对象）</span></span><br><span class="line">    tiny       <span class="type">uintptr</span>  <span class="comment">// 当前 tiny block 的起始地址</span></span><br><span class="line">    tinyoffset <span class="type">uintptr</span>  <span class="comment">// tiny block 中的偏移</span></span><br><span class="line">    tinyAllocs <span class="type">uintptr</span>  <span class="comment">// tiny 分配次数</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 核心：136 个 mspan</span></span><br><span class="line">    alloc [numSpanClasses]*mspan  <span class="comment">// numSpanClasses = 136</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 栈缓存</span></span><br><span class="line">    stackcache [_NumStackOrders]stackfreelist</span><br><span class="line"></span><br><span class="line">    <span class="comment">// GC 相关</span></span><br><span class="line">    flushGen atomic.Uint32  <span class="comment">// 上次 flush 时的 sweepgen</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="5-3-与-P-的关系">5.3 与 P 的关系</h3>
+<h3 id="与-p-的关系">5.3 与 P 的关系</h3>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> p <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    mcache *mcache</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>每个 P 持有一个 mcache 指针，实现<strong>无锁快速路径</strong>。</p>
-<h2 id="6-堆-mheap">6. 堆 mheap</h2>
+<h2 id="堆-mheap">6. 堆 mheap</h2>
 <p><code>mheap</code> 是 Go 堆内存的全局管理者，统筹所有内存分配。</p>
-<h3 id="6-1-底层结构">6.1 底层结构</h3>
-<p><code>mheap</code> 定义在 <a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/go1.25.3/src/runtime/mheap.go#L64">runtime/mheap.go#L64</a>：</p>
+<h3 id="底层结构-4">6.1 底层结构</h3>
+<p><code>mheap</code> 定义在 <a
+target="_blank" rel="noopener" href="https://github.com/golang/go/blob/go1.25.3/src/runtime/mheap.go#L64">runtime/mheap.go#L64</a>：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> mheap <span class="keyword">struct</span> &#123;</span><br><span class="line">    _ sys.NotInHeap</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 全局锁（必须在系统栈上获取）</span></span><br><span class="line">    lock mutex</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 页分配器</span></span><br><span class="line">    pages pageAlloc</span><br><span class="line"></span><br><span class="line">    <span class="comment">// GC 相关</span></span><br><span class="line">    sweepgen       <span class="type">uint32</span>           <span class="comment">// 清扫代数</span></span><br><span class="line">    pagesInUse     atomic.Uintptr   <span class="comment">// 使用中的页数</span></span><br><span class="line">    pagesSwept     atomic.Uint64    <span class="comment">// 已清扫的页数</span></span><br><span class="line">    sweepPagesPerByte <span class="type">float64</span>       <span class="comment">// 比例清扫速率</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// Arena 管理（二级映射）</span></span><br><span class="line">    arenas [<span class="number">1</span> &lt;&lt; arenaL1Bits]*[<span class="number">1</span> &lt;&lt; arenaL2Bits]*heapArena</span><br><span class="line">    heapArenas []arenaIdx  <span class="comment">// 所有已分配的 arena</span></span><br><span class="line">    curArena <span class="keyword">struct</span> &#123;      <span class="comment">// 当前正在增长的 arena</span></span><br><span class="line">        base, end <span class="type">uintptr</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 中心索引（136 个）</span></span><br><span class="line">    central [numSpanClasses]<span class="keyword">struct</span> &#123;</span><br><span class="line">        mcentral mcentral</span><br><span class="line">        pad [cpu.CacheLinePadSize - unsafe.Sizeof(mcentral&#123;&#125;)%cpu.CacheLinePadSize]<span class="type">byte</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// mspan 是按需分级的，这里保存所有已划分的 mspan</span></span><br><span class="line">    allspans []*mspan</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 各种 fixalloc 分配器</span></span><br><span class="line">    spanalloc             fixalloc  <span class="comment">// 分配 mspan</span></span><br><span class="line">    cachealloc            fixalloc  <span class="comment">// 分配 mcache</span></span><br><span class="line">    specialfinalizeralloc fixalloc  <span class="comment">// 分配 finalizer</span></span><br><span class="line">    specialWeakHandleAlloc fixalloc <span class="comment">// 分配弱指针（Go 1.23+）</span></span><br><span class="line">    specialCleanupAlloc   fixalloc  <span class="comment">// 分配 cleanup（Go 1.24+）</span></span><br><span class="line">    specialPinCounterAlloc fixalloc <span class="comment">// 分配 pin counter（Go 1.21+）</span></span><br><span class="line">    <span class="comment">// ... 更多 special 分配器</span></span><br><span class="line"></span><br><span class="line">    speciallock mutex  <span class="comment">// 保护 special 分配器</span></span><br><span class="line">    arenaHintAlloc fixalloc</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 【新特性】User Arena 状态（Go 1.20+）</span></span><br><span class="line">    userArena <span class="keyword">struct</span> &#123;</span><br><span class="line">        arenaHints     *arenaHint</span><br><span class="line">        quarantineList mSpanList  <span class="comment">// 等待释放的 span</span></span><br><span class="line">        readyList      mSpanList  <span class="comment">// 可复用的 span</span></span><br><span class="line">    &#125;</span><br><span class="line">    userArenaArenas []arenaIdx</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 【新特性】Cleanup ID 计数器（Go 1.24+）</span></span><br><span class="line">    cleanupID <span class="type">uint64</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 【新特性】弱指针映射（Go 1.23+）</span></span><br><span class="line">    immortalWeakHandles immortalWeakHandleMap</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="6-2-关键设计">6.2 关键设计</h3>
-<h4 id="1-二级映射（arenas）">1. 二级映射（arenas）</h4>
+<h3 id="关键设计">6.2 关键设计</h3>
+<h4 id="二级映射arenas">1. 二级映射（arenas）</h4>
 <p>为了支持稀疏的虚拟地址空间，使用二级数组：</p>
 <ul>
 <li>L1 map：索引 arena 组</li>
 <li>L2 map：索引具体的 heapArena</li>
 </ul>
-<p>在大多数 64 位平台上，<code>arenaL1Bits = 0</code>，退化为单级映射。</p>
-<h4 id="2-Cache-Line-对齐">2. Cache Line 对齐</h4>
+<p>在大多数 64
+位平台上，<code>arenaL1Bits = 0</code>，退化为单级映射。</p>
+<h4 id="cache-line-对齐">2. Cache Line 对齐</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pad [(cpu.CacheLinePadSize - unsafe.Sizeof(mcentral&#123;&#125;)%cpu.CacheLinePadSize) % cpu.CacheLinePadSize]<span class="type">byte</span></span><br></pre></td></tr></table></figure>
 <p>填充字节避免伪共享（false sharing），提升多核性能。</p>
-<h4 id="3-页回收器">3. 页回收器</h4>
+<h4 id="页回收器">3. 页回收器</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">reclaimIndex  atomic.Uint64  <span class="comment">// 下一个要回收的页索引</span></span><br><span class="line">reclaimCredit atomic.Uintptr <span class="comment">// 额外回收的页的信用</span></span><br></pre></td></tr></table></figure>
 <p>后台异步回收未使用的页，减少内存占用。</p>
-<h2 id="7-内存分配">7. 内存分配</h2>
-<h3 id="7-1-对象分级">7.1 对象分级</h3>
+<h2 id="内存分配">7. 内存分配</h2>
+<h3 id="对象分级">7.1 对象分级</h3>
 <p>Go 根据对象大小将分配分为三类：</p>
 <table>
 <thead>
@@ -360,104 +427,103 @@
 </tbody>
 </table>
 <blockquote>
-<p><strong>注意</strong>：Class 1 (8B) 在实践中使用极少，仅在 64 位平台上分配恰好 8 字节且包含指针的对象时使用。绝大多数 8 字节对象要么无指针（走 tiny allocator），要么是结构体的一部分。</p>
+<p><strong>注意</strong>：Class 1 (8B) 在实践中使用极少，仅在 64
+位平台上分配恰好 8 字节且包含指针的对象时使用。绝大多数 8
+字节对象要么无指针（走 tiny allocator），要么是结构体的一部分。</p>
 </blockquote>
-<h4 id="7-1-1-Tiny-对象分配">7.1.1 Tiny 对象分配</h4>
-<p>对于 <strong>&lt; 16B</strong> 且<strong>无指针</strong>的对象，Go 使用特殊的 <strong>tiny allocator</strong>：</p>
+<h4 id="tiny-对象分配">7.1.1 Tiny 对象分配</h4>
+<p>对于 <strong>&lt; 16B</strong> 且<strong>无指针</strong>的对象，Go
+使用特殊的 <strong>tiny allocator</strong>：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// mcache 中的 tiny allocator</span></span><br><span class="line">tiny       <span class="type">uintptr</span>  <span class="comment">// 当前 tiny block 起始地址</span></span><br><span class="line">tinyoffset <span class="type">uintptr</span>  <span class="comment">// 已使用的偏移量</span></span><br><span class="line">tinyAllocs <span class="type">uintptr</span>  <span class="comment">// tiny 分配计数</span></span><br></pre></td></tr></table></figure>
-<ol>
+<ol type="1">
 <li>尝试在当前 tiny block 中分配（根据对齐要求）</li>
 <li>如果空间不足，从 class 2 (16B) 的 span 中获取新的 tiny block</li>
 <li>多个 tiny 对象共享同一个 16B 块，减少内存浪费</li>
 </ol>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/e6c9d24egy1h5ulg364i2j21nk09uq4s.jpg" alt="Tiny 对象分配"></p>
+<figure>
+<img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img2/e6c9d24egy1h5ulg364i2j21nk09uq4s.jpg"
+alt="Tiny 对象分配" />
+<figcaption aria-hidden="true">Tiny 对象分配</figcaption>
+</figure>
 <blockquote>
-<p><strong>Class 1 的特殊性</strong>：Class 1 (8B) 在实践中使用极少，仅在 64 位平台上分配恰好 8 字节且包含指针的对象时使用。典型例子如单个逃逸的指针变量。由于这种场景非常罕见，class 1 基本处于&quot;保留但不常用&quot;的状态。大多数 8 字节对象要么：</p>
+<p><strong>Class 1 的特殊性</strong>：Class 1 (8B)
+在实践中使用极少，仅在 64 位平台上分配恰好 8
+字节且包含指针的对象时使用。典型例子如单个逃逸的指针变量。由于这种场景非常罕见，class
+1 基本处于"保留但不常用"的状态。大多数 8 字节对象要么：</p>
 <ul>
 <li>无指针 → 走 tiny allocator（class 2）</li>
 <li>是结构体字段的一部分 → 随结构体一起分配</li>
 <li>是栈上变量 → 不进行堆分配</li>
 </ul>
 </blockquote>
-<h4 id="7-1-2-Small-对象分配">7.1.2 Small 对象分配</h4>
+<h4 id="small-对象分配">7.1.2 Small 对象分配</h4>
 <p>对于 <strong>16B ~ 32KB</strong> 的对象：</p>
-<ol>
+<ol type="1">
 <li>根据对象大小查表确定 size class</li>
 <li>在 mcache 中寻找对应 class 的 span</li>
 <li>从 span 的 allocBits 中找到空闲 slot</li>
 <li>如果 mcache 中 span 已满，去 mcentral 交换</li>
 <li>如果 mcentral 也没有，去 mheap 申请</li>
 </ol>
-<h4 id="7-1-3-Large-对象分配">7.1.3 Large 对象分配</h4>
-<p>对于 <strong>&gt; 32KB</strong> 的大对象：量身定做 class0，直接从 mheap 上申请内存。</p>
-<h3 id="7-2-mcache-替换">7.2 mcache 替换</h3>
-<p>在 mcache 中，每个 class 的 mspan 只有一个，当 mspan 满了之后，会从 mcentral 中兑换一个新的。</p>
+<h4 id="large-对象分配">7.1.3 Large 对象分配</h4>
+<p>对于 <strong>&gt; 32KB</strong> 的大对象：量身定做 class0，直接从
+mheap 上申请内存。</p>
+<h3 id="mcache-替换">7.2 mcache 替换</h3>
+<p>在 mcache 中，每个 class 的 mspan 只有一个，当 mspan 满了之后，会从
+mcentral 中兑换一个新的。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *mcache)</span></span> refill(spc spanClass) &#123;</span><br><span class="line">    <span class="comment">// 1. 释放当前 span 回 mcentral</span></span><br><span class="line">    s := c.alloc[spc]</span><br><span class="line">    <span class="keyword">if</span> s != &amp;emptymspan &#123;</span><br><span class="line">        <span class="keyword">if</span> s.sweepgen != mheap_.sweepgen+<span class="number">3</span> &#123;</span><br><span class="line">            throw(<span class="string">&quot;bad sweepgen in refill&quot;</span>)</span><br><span class="line">        &#125;</span><br><span class="line">        mheap_.central[spc].mcentral.uncacheSpan(s)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 2. 从 mcentral 获取新的 span</span></span><br><span class="line">    s = mheap_.central[spc].mcentral.cacheSpan()</span><br><span class="line">    <span class="keyword">if</span> s == <span class="literal">nil</span> &#123;</span><br><span class="line">        throw(<span class="string">&quot;out of memory&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 3. 更新 mcache</span></span><br><span class="line">    c.alloc[spc] = s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="7-3-mcentral-扩容">7.3 mcentral 扩容</h3>
-<p>mcentral 中，只有有限数量的 mspan，当 mspan 缺少时，会像 mheap 中开辟新的 heapArena，并申请对应 class 的 span。</p>
+<h3 id="mcentral-扩容">7.3 mcentral 扩容</h3>
+<p>mcentral 中，只有有限数量的 mspan，当 mspan 缺少时，会像 mheap
+中开辟新的 heapArena，并申请对应 class 的 span。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *mcentral)</span></span> grow() *mspan &#123;</span><br><span class="line">    <span class="comment">// 1. 计算需要的页数</span></span><br><span class="line">    npages := <span class="type">uintptr</span>(class_to_allocnpages[c.spanclass.sizeclass()])</span><br><span class="line">    size := <span class="type">uintptr</span>(class_to_size[c.spanclass.sizeclass()])</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 2. 从 mheap 分配新的 span</span></span><br><span class="line">    s := mheap_.alloc(npages, c.spanclass)</span><br><span class="line">    <span class="keyword">if</span> s == <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 3. 初始化 span</span></span><br><span class="line">    n := (npages &lt;&lt; pageShift) / size</span><br><span class="line">    s.limit = s.base() + size*n</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="7-4-mallocgc-源码分析">7.4 mallocgc 源码分析</h3>
-<p><a target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.25/src/runtime/malloc.go#L1014">mallocgc</a> 是 Go 内存分配的核心函数，核心结构如下：</p>
+<h3 id="mallocgc-源码分析">7.4 mallocgc 源码分析</h3>
+<p><a
+target="_blank" rel="noopener" href="https://github.com/golang/go/blob/release-branch.go1.25/src/runtime/malloc.go#L1014">mallocgc</a>
+是 Go 内存分配的核心函数，核心结构如下：</p>
 <figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mallocgc</span><br><span class="line">├── mallocgcTiny // Tiny 对象 (0~16B, 无指针)</span><br><span class="line">├── mallocgcSmallNoscan // Small 对象 (16B~32KB, 无指针)</span><br><span class="line">├── mallocgcSmallScanNoHeader // Small 对象 (带指针, 无 header)</span><br><span class="line">├── mallocgcSmallScanHeader // Small 对象 (带指针, 有 header)</span><br><span class="line">└── mallocgcLarge // Large 对象 (&gt;32KB)</span><br></pre></td></tr></table></figure>
 <p>源码注释如下（省略了与内存分配无关的次要代码）：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mallocgc</span><span class="params">(size <span class="type">uintptr</span>, typ *_type, needzero <span class="type">bool</span>)</span></span> unsafe.Pointer &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 零大小分配的快速路径</span></span><br><span class="line">    <span class="keyword">if</span> size == <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> unsafe.Pointer(&amp;zerobase)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 核心分配逻辑 ==========</span></span><br><span class="line">    <span class="keyword">var</span> x unsafe.Pointer</span><br><span class="line">    <span class="keyword">var</span> elemsize <span class="type">uintptr</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> size &lt;= maxSmallSize-gc.MallocHeaderSize &#123;</span><br><span class="line">        <span class="comment">// 小对象分配</span></span><br><span class="line">        <span class="keyword">if</span> typ == <span class="literal">nil</span> || !typ.Pointers() &#123;</span><br><span class="line">            <span class="comment">// 无指针对象</span></span><br><span class="line">            <span class="keyword">if</span> size &lt; maxTinySize &#123;</span><br><span class="line">                x, elemsize = mallocgcTiny(size, typ)        <span class="comment">// Tiny 路径</span></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                x, elemsize = mallocgcSmallNoscan(size, typ, needzero)  <span class="comment">// Small Noscan</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 有指针对象（必须归零）</span></span><br><span class="line">            <span class="keyword">if</span> !needzero &#123;</span><br><span class="line">                throw(<span class="string">&quot;objects with pointers must be zeroed&quot;</span>)</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> heapBitsInSpan(size) &#123;</span><br><span class="line">                x, elemsize = mallocgcSmallScanNoHeader(size, typ)  <span class="comment">// 位图在 span 中</span></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                x, elemsize = mallocgcSmallScanHeader(size, typ)    <span class="comment">// 需要 malloc header</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 大对象分配</span></span><br><span class="line">        x, elemsize = mallocgcLarge(size, typ, needzero)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  	<span class="comment">// ...</span></span><br><span class="line">    <span class="keyword">return</span> x</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="7-4-1-Tiny-对象分配：mallocgcTiny">7.4.1 Tiny 对象分配：mallocgcTiny</h4>
+<h4 id="tiny-对象分配mallocgctiny">7.4.1 Tiny
+对象分配：mallocgcTiny</h4>
 <blockquote>
-<p>用于 &lt; 16B 且无指针的对象，多个对象合并到 16B 块中。<code>mallocgcTiny</code> 进行了以下优化：</p>
+<p>用于 &lt; 16B 且无指针的对象，多个对象合并到 16B
+块中。<code>mallocgcTiny</code> 进行了以下优化：</p>
 </blockquote>
 <ul>
-<li>
-<p>对齐优化：根据大小选择合适的对齐</p>
-</li>
-<li>
-<p>空间复用：多个对象共享 16B 块</p>
-</li>
-<li>
-<p>无锁快速路径：nextFreeFast 尝试无锁获取</p>
-</li>
-<li>
-<p>平均浪费率：约 12.5%（远低于独立分配的 87.5%）</p>
-</li>
+<li><p>对齐优化：根据大小选择合适的对齐</p></li>
+<li><p>空间复用：多个对象共享 16B 块</p></li>
+<li><p>无锁快速路径：nextFreeFast 尝试无锁获取</p></li>
+<li><p>平均浪费率：约 12.5%（远低于独立分配的 87.5%）</p></li>
 </ul>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mallocgcTiny</span><span class="params">(size <span class="type">uintptr</span>, typ *_type)</span></span> (unsafe.Pointer, <span class="type">uintptr</span>) &#123;</span><br><span class="line">    <span class="comment">// ========== 1. 获取 M 和 mcache ==========</span></span><br><span class="line">    mp := acquirem()</span><br><span class="line">    mp.mallocing = <span class="number">1</span></span><br><span class="line"></span><br><span class="line">    c := getMCache(mp)</span><br><span class="line">    off := c.tinyoffset</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 2. 对齐计算 ==========</span></span><br><span class="line">    <span class="keyword">if</span> size&amp;<span class="number">7</span> == <span class="number">0</span> &#123;</span><br><span class="line">        off = alignUp(off, <span class="number">8</span>)   <span class="comment">// 8 字节对齐</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> goarch.PtrSize == <span class="number">4</span> &amp;&amp; size == <span class="number">12</span> &#123;</span><br><span class="line">        off = alignUp(off, <span class="number">8</span>)   <span class="comment">// 32 位特殊情况</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> size&amp;<span class="number">3</span> == <span class="number">0</span> &#123;</span><br><span class="line">        off = alignUp(off, <span class="number">4</span>)   <span class="comment">// 4 字节对齐</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> size&amp;<span class="number">1</span> == <span class="number">0</span> &#123;</span><br><span class="line">        off = alignUp(off, <span class="number">2</span>)   <span class="comment">// 2 字节对齐</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 3. 尝试在现有 tiny block 中分配 ==========</span></span><br><span class="line">    <span class="keyword">if</span> off+size &lt;= maxTinySize &amp;&amp; c.tiny != <span class="number">0</span> &#123;</span><br><span class="line">        x := unsafe.Pointer(c.tiny + off)</span><br><span class="line">        c.tinyoffset = off + size</span><br><span class="line">        c.tinyAllocs++</span><br><span class="line">        mp.mallocing = <span class="number">0</span></span><br><span class="line">        releasem(mp)</span><br><span class="line">        <span class="keyword">return</span> x, maxTinySize</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 4. 需要新的 tiny block ==========</span></span><br><span class="line">    span := c.alloc[tinySpanClass]</span><br><span class="line">    v := nextFreeFast(span)</span><br><span class="line">    <span class="keyword">if</span> v == <span class="number">0</span> &#123;</span><br><span class="line">        v, span, _ = c.nextFree(tinySpanClass)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    x := unsafe.Pointer(v)</span><br><span class="line">    (*[<span class="number">2</span>]<span class="type">uint64</span>)(x)[<span class="number">0</span>] = <span class="number">0</span>  <span class="comment">// 清零前 16 字节</span></span><br><span class="line">    (*[<span class="number">2</span>]<span class="type">uint64</span>)(x)[<span class="number">1</span>] = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 5. 更新 tiny allocator 状态 ==========</span></span><br><span class="line">    <span class="keyword">if</span> !raceenabled &amp;&amp; (size &lt; c.tinyoffset || c.tiny == <span class="number">0</span>) &#123;</span><br><span class="line">        c.tiny = <span class="type">uintptr</span>(x)</span><br><span class="line">        c.tinyoffset = size</span><br><span class="line">    &#125;</span><br><span class="line">    size = maxTinySize</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ... 发布屏障和返回</span></span><br><span class="line">    publicationBarrier()</span><br><span class="line">    <span class="keyword">return</span> x, size</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="7-4-2-小对象无扫描分配：mallocgcSmallNoscan">7.4.2 小对象无扫描分配：mallocgcSmallNoscan</h4>
+<h4 id="小对象无扫描分配mallocgcsmallnoscan">7.4.2
+小对象无扫描分配：mallocgcSmallNoscan</h4>
 <blockquote>
 <p>用于 16B~32KB 且无指针的对象。</p>
 </blockquote>
 <p>关键点：</p>
 <ul>
-<li>
-<p>查表优化：两个查找表覆盖不同大小范围</p>
-</li>
-<li>
-<p>延迟归零：只在需要时归零</p>
-</li>
-<li>
-<p>GC 协作：黑色分配或设置 freeIndexForScan</p>
-</li>
-<li>
-<p>发布屏障：确保内存可见性</p>
-</li>
+<li><p>查表优化：两个查找表覆盖不同大小范围</p></li>
+<li><p>延迟归零：只在需要时归零</p></li>
+<li><p>GC 协作：黑色分配或设置 freeIndexForScan</p></li>
+<li><p>发布屏障：确保内存可见性</p></li>
 </ul>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mallocgcSmallNoscan</span><span class="params">(size <span class="type">uintptr</span>, typ *_type, needzero <span class="type">bool</span>)</span></span> (unsafe.Pointer, <span class="type">uintptr</span>) &#123;</span><br><span class="line">    mp := acquirem()</span><br><span class="line">    mp.mallocing = <span class="number">1</span></span><br><span class="line"></span><br><span class="line">    c := getMCache(mp)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 1. 确定 size class ==========</span></span><br><span class="line">    <span class="keyword">var</span> sizeclass <span class="type">uint8</span></span><br><span class="line">    <span class="keyword">if</span> size &lt;= gc.SmallSizeMax<span class="number">-8</span> &#123;</span><br><span class="line">        sizeclass = gc.SizeToSizeClass8[divRoundUp(size, gc.SmallSizeDiv)]</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        sizeclass = gc.SizeToSizeClass128[divRoundUp(size-gc.SmallSizeMax, gc.LargeSizeDiv)]</span><br><span class="line">    &#125;</span><br><span class="line">    size = <span class="type">uintptr</span>(gc.SizeClassToSize[sizeclass])</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 2. 从 mcache 分配 ==========</span></span><br><span class="line">    spc := makeSpanClass(sizeclass, <span class="literal">true</span>)  <span class="comment">// true = noscan</span></span><br><span class="line">    span := c.alloc[spc]</span><br><span class="line">    v := nextFreeFast(span)</span><br><span class="line">    <span class="keyword">if</span> v == <span class="number">0</span> &#123;</span><br><span class="line">        v, span, checkGCTrigger = c.nextFree(spc)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 3. 按需归零 ==========</span></span><br><span class="line">    x := unsafe.Pointer(v)</span><br><span class="line">    <span class="keyword">if</span> needzero &amp;&amp; span.needzero != <span class="number">0</span> &#123;</span><br><span class="line">        memclrNoHeapPointers(x, size)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 4. 发布屏障 ==========</span></span><br><span class="line">    publicationBarrier()</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 5. GC 期间分配黑色 ==========</span></span><br><span class="line">    <span class="keyword">if</span> writeBarrier.enabled &#123;</span><br><span class="line">        gcmarknewobject(span, <span class="type">uintptr</span>(x))</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        span.freeIndexForScan = span.freeindex</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ... 返回</span></span><br><span class="line">    <span class="keyword">return</span> x, size</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="7-4-3-小对象有扫描分配（无-Header）：mallocgcSmallScanNoHeader">7.4.3 小对象有扫描分配（无 Header）：mallocgcSmallScanNoHeader</h4>
+<h4 id="小对象有扫描分配无-headermallocgcsmallscannoheader">7.4.3
+小对象有扫描分配（无 Header）：mallocgcSmallScanNoHeader</h4>
 <blockquote>
 <p>用于带指针的小对象，且堆位图在 span 中。</p>
 </blockquote>
 <p>关键点：</p>
 <ul>
-<li>
-<p>堆位图设置：heapSetTypeNoHeader 根据类型设置指针位图</p>
-</li>
-<li>
-<p>扫描统计：累加 scanAlloc 用于 GC 调度</p>
-</li>
-<li>
-<p>8 字节优化：64 位平台的特殊处理</p>
-</li>
+<li><p>堆位图设置：heapSetTypeNoHeader 根据类型设置指针位图</p></li>
+<li><p>扫描统计：累加 scanAlloc 用于 GC 调度</p></li>
+<li><p>8 字节优化：64 位平台的特殊处理</p></li>
 </ul>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mallocgcSmallScanNoHeader</span><span class="params">(size <span class="type">uintptr</span>, typ *_type)</span></span> (unsafe.Pointer, <span class="type">uintptr</span>) &#123;</span><br><span class="line">    mp := acquirem()</span><br><span class="line">    mp.mallocing = <span class="number">1</span></span><br><span class="line"></span><br><span class="line">    c := getMCache(mp)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 1. 确定 size class ==========</span></span><br><span class="line">    sizeclass := gc.SizeToSizeClass8[divRoundUp(size, gc.SmallSizeDiv)]</span><br><span class="line">    spc := makeSpanClass(sizeclass, <span class="literal">false</span>)  <span class="comment">// false = scan</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 2. 分配和归零 ==========</span></span><br><span class="line">    span := c.alloc[spc]</span><br><span class="line">    v := nextFreeFast(span)</span><br><span class="line">    <span class="keyword">if</span> v == <span class="number">0</span> &#123;</span><br><span class="line">        v, span, checkGCTrigger = c.nextFree(spc)</span><br><span class="line">    &#125;</span><br><span class="line">    x := unsafe.Pointer(v)</span><br><span class="line">    <span class="keyword">if</span> span.needzero != <span class="number">0</span> &#123;</span><br><span class="line">        memclrNoHeapPointers(x, size)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 3. 设置堆位图（类型信息）==========</span></span><br><span class="line">    <span class="keyword">if</span> goarch.PtrSize == <span class="number">8</span> &amp;&amp; sizeclass == <span class="number">1</span> &#123;</span><br><span class="line">        <span class="comment">// 8 字节 class 在 64 位平台已预设指针位</span></span><br><span class="line">        c.scanAlloc += <span class="number">8</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        c.scanAlloc += heapSetTypeNoHeader(<span class="type">uintptr</span>(x), size, typ, span)</span><br><span class="line">    &#125;</span><br><span class="line">    size = <span class="type">uintptr</span>(gc.SizeClassToSize[sizeclass])</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 4. 发布屏障 + GC 协作 ==========</span></span><br><span class="line">    publicationBarrier()</span><br><span class="line">    <span class="keyword">if</span> writeBarrier.enabled &#123;</span><br><span class="line">        gcmarknewobject(span, <span class="type">uintptr</span>(x))</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        span.freeIndexForScan = span.freeindex</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ... 返回</span></span><br><span class="line">    <span class="keyword">return</span> x, size</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="7-4-4-小对象有扫描分配（有-Header）：mallocgcSmallScanHeader">7.4.4 小对象有扫描分配（有 Header）：mallocgcSmallScanHeader</h4>
+<h4 id="小对象有扫描分配有-headermallocgcsmallscanheader">7.4.4
+小对象有扫描分配（有 Header）：mallocgcSmallScanHeader</h4>
 <blockquote>
 <p>用于带指针的小对象，需要 malloc header 存储类型信息。</p>
 </blockquote>
@@ -465,42 +531,31 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">+------------------+</span><br><span class="line">| *_type (header)  丨  &lt;- 指向类型元数据的指针</span><br><span class="line">+------------------+</span><br><span class="line">| 实际对象数据       |  &lt;- x 指向这里</span><br><span class="line">+------------------+</span><br></pre></td></tr></table></figure>
 <p>为什么需要 Header：</p>
 <ul>
-<li>
-<p>当对象较大且堆位图不在 span 中时，需要额外存储类型信息</p>
-</li>
-<li>
-<p>Header 存储类型指针，GC 可以快速找到对象的类型信息</p>
-</li>
-<li>
-<p>权衡：增加少量空间换取更快的 GC 扫描</p>
-</li>
+<li><p>当对象较大且堆位图不在 span 中时，需要额外存储类型信息</p></li>
+<li><p>Header 存储类型指针，GC 可以快速找到对象的类型信息</p></li>
+<li><p>权衡：增加少量空间换取更快的 GC 扫描</p></li>
 </ul>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mallocgcSmallScanHeader</span><span class="params">(size <span class="type">uintptr</span>, typ *_type)</span></span> (unsafe.Pointer, <span class="type">uintptr</span>) &#123;</span><br><span class="line">    mp := acquirem()</span><br><span class="line">    mp.mallocing = <span class="number">1</span></span><br><span class="line"></span><br><span class="line">    c := getMCache(mp)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 1. 增加 header 空间 ==========</span></span><br><span class="line">    size += gc.MallocHeaderSize</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 2. 确定 size class ==========</span></span><br><span class="line">    <span class="keyword">var</span> sizeclass <span class="type">uint8</span></span><br><span class="line">    <span class="keyword">if</span> size &lt;= gc.SmallSizeMax<span class="number">-8</span> &#123;</span><br><span class="line">        sizeclass = gc.SizeToSizeClass8[divRoundUp(size, gc.SmallSizeDiv)]</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        sizeclass = gc.SizeToSizeClass128[divRoundUp(size-gc.SmallSizeMax, gc.LargeSizeDiv)]</span><br><span class="line">    &#125;</span><br><span class="line">    size = <span class="type">uintptr</span>(gc.SizeClassToSize[sizeclass])</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 3. 分配和归零 ==========</span></span><br><span class="line">    spc := makeSpanClass(sizeclass, <span class="literal">false</span>)</span><br><span class="line">    span := c.alloc[spc]</span><br><span class="line">    v := nextFreeFast(span)</span><br><span class="line">    <span class="keyword">if</span> v == <span class="number">0</span> &#123;</span><br><span class="line">        v, span, checkGCTrigger = c.nextFree(spc)</span><br><span class="line">    &#125;</span><br><span class="line">    x := unsafe.Pointer(v)</span><br><span class="line">    <span class="keyword">if</span> span.needzero != <span class="number">0</span> &#123;</span><br><span class="line">        memclrNoHeapPointers(x, size)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 4. 设置 malloc header ==========</span></span><br><span class="line">    header := (**_type)(x)</span><br><span class="line">    x = add(x, gc.MallocHeaderSize)  <span class="comment">// 跳过 header</span></span><br><span class="line">    c.scanAlloc += heapSetTypeSmallHeader(<span class="type">uintptr</span>(x), size-gc.MallocHeaderSize, typ, header, span)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 5. 发布屏障 + GC 协作 ==========</span></span><br><span class="line">    publicationBarrier()</span><br><span class="line">    <span class="keyword">if</span> writeBarrier.enabled &#123;</span><br><span class="line">        gcmarknewobject(span, <span class="type">uintptr</span>(x)-gc.MallocHeaderSize)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        span.freeIndexForScan = span.freeindex</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ... 返回</span></span><br><span class="line">    <span class="keyword">return</span> x, size</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="7-4-5-大对象分配：mallocgcLarge">7.4.5 大对象分配：mallocgcLarge</h4>
+<h4 id="大对象分配mallocgclarge">7.4.5 大对象分配：mallocgcLarge</h4>
 <blockquote>
 <p>用于 &gt; 32KB 的对象。</p>
 </blockquote>
 <p>大对象优化：</p>
 <ul>
-<li>
-<p>直接分配：绕过 mcache/mcentral，直接从 mheap</p>
-</li>
-<li>
-<p>largeType 字段：避免为大对象创建复杂的位图</p>
-</li>
-<li>
-<p>分块归零：允许抢占，减少延迟</p>
-</li>
-<li>
-<p>量身定做：每个大对象有专属的 span</p>
-</li>
+<li><p>直接分配：绕过 mcache/mcentral，直接从 mheap</p></li>
+<li><p>largeType 字段：避免为大对象创建复杂的位图</p></li>
+<li><p>分块归零：允许抢占，减少延迟</p></li>
+<li><p>量身定做：每个大对象有专属的 span</p></li>
 </ul>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mallocgcLarge</span><span class="params">(size <span class="type">uintptr</span>, typ *_type, needzero <span class="type">bool</span>)</span></span> (unsafe.Pointer, <span class="type">uintptr</span>) &#123;</span><br><span class="line">    mp := acquirem()</span><br><span class="line">    mp.mallocing = <span class="number">1</span></span><br><span class="line"></span><br><span class="line">    c := getMCache(mp)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 1. 直接从 mheap 分配 ==========</span></span><br><span class="line">    span := c.allocLarge(size, typ == <span class="literal">nil</span> || !typ.Pointers())</span><br><span class="line">    span.freeindex = <span class="number">1</span></span><br><span class="line">    span.allocCount = <span class="number">1</span></span><br><span class="line">    span.largeType = <span class="literal">nil</span>  <span class="comment">// 暂时设为 nil，防止 GC 过早扫描</span></span><br><span class="line"></span><br><span class="line">    size = span.elemsize</span><br><span class="line">    x := unsafe.Pointer(span.base())</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 2. 发布屏障 ==========</span></span><br><span class="line">    publicationBarrier()</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 3. GC 协作 ==========</span></span><br><span class="line">    <span class="keyword">if</span> writeBarrier.enabled &#123;</span><br><span class="line">        gcmarknewobject(span, <span class="type">uintptr</span>(x))</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        span.freeIndexForScan = span.freeindex</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 4. 设置类型信息 ==========</span></span><br><span class="line">    <span class="keyword">if</span> typ != <span class="literal">nil</span> &amp;&amp; typ.Pointers() &#123;</span><br><span class="line">        <span class="keyword">if</span> !heapBitsInSpan(span.elemsize) &#123;</span><br><span class="line">            <span class="comment">// 大对象使用 largeType 字段</span></span><br><span class="line">            span.largeType = typ</span><br><span class="line">            <span class="comment">// 发布屏障确保 largeType 可见</span></span><br><span class="line">            publicationBarrier()</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            c.scanAlloc += heapSetTypeLarge(<span class="type">uintptr</span>(x), span.elemsize, typ, span)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ========== 5. 按需归零（可抢占） ==========</span></span><br><span class="line">    <span class="keyword">if</span> needzero &amp;&amp; span.needzero != <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> goexperiment.AllocHeaders &#123;</span><br><span class="line">            memclrNoHeapPointersChunked(size, x)  <span class="comment">// 分块归零</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            memclrNoHeapPointers(x, size)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ... 返回</span></span><br><span class="line">    <span class="keyword">return</span> x, size</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="8-Go-1-20-新增特性">8. Go 1.20+ 新增特性</h2>
-<p>Go 在 1.16 之后的版本中引入了多项重要的内存管理特性，极大地增强了 Go 的能力和灵活性。</p>
-<h3 id="8-1-User-Arena（Go-1-20-）">8.1 User Arena（Go 1.20+）</h3>
-<h4 id="概述">概述</h4>
-<p>User Arena 允许应用程序<strong>手动管理</strong>一组对象的生命周期，所有对象在同一个 arena 中分配，可以一次性释放整个 arena。</p>
+<h2 id="go-1.20-新增特性">8. Go 1.20+ 新增特性</h2>
+<p>Go 在 1.16 之后的版本中引入了多项重要的内存管理特性，极大地增强了 Go
+的能力和灵活性。</p>
+<h3 id="user-arenago-1.20">8.1 User Arena（Go 1.20+）</h3>
+<h4 id="概述-4">概述</h4>
+<p>User Arena
+允许应用程序<strong>手动管理</strong>一组对象的生命周期，所有对象在同一个
+arena 中分配，可以一次性释放整个 arena。</p>
 <h4 id="使用场景">使用场景</h4>
 <ul>
 <li><strong>临时数据处理</strong>：请求处理完后批量释放</li>
@@ -511,18 +566,19 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> mheap <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// mheap 中的 user arena 状态</span></span><br><span class="line">	userArena <span class="keyword">struct</span> &#123;</span><br><span class="line">    arenaHints     *arenaHint   <span class="comment">// 分配提示</span></span><br><span class="line">    quarantineList mSpanList    <span class="comment">// 隔离列表（等待无指针引用）</span></span><br><span class="line">    readyList      mSpanList    <span class="comment">// 就绪列表（可复用）</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> mspan <span class="keyword">struct</span> &#123;</span><br><span class="line">  <span class="comment">// mspan 中的标记</span></span><br><span class="line">  isUserArenaChunk   <span class="type">bool</span>      <span class="comment">// 是否为 user arena chunk</span></span><br><span class="line">  userArenaChunkFree addrRange <span class="comment">// chunk 分配管理</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h4 id="使用示例">使用示例</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;arena&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">processRequest</span><span class="params">(data []<span class="type">byte</span>)</span></span> &#123;</span><br><span class="line">    <span class="comment">// 创建 arena</span></span><br><span class="line">    a := arena.NewArena()</span><br><span class="line">    <span class="keyword">defer</span> a.Free()  <span class="comment">// 批量释放</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 在 arena 中分配对象</span></span><br><span class="line">    obj := arena.New[MyStruct](a)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 使用对象...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="8-2-Weak-Pointer（Go-1-23-）">8.2 Weak Pointer（Go 1.23+）</h3>
-<h4 id="概述-2">概述</h4>
-<p>弱引用机制允许持有对象的引用，但<strong>不阻止 GC 回收</strong>该对象。</p>
-<h4 id="使用场景-2">使用场景</h4>
+<h3 id="weak-pointergo-1.23">8.2 Weak Pointer（Go 1.23+）</h3>
+<h4 id="概述-5">概述</h4>
+<p>弱引用机制允许持有对象的引用，但<strong>不阻止 GC
+回收</strong>该对象。</p>
+<h4 id="使用场景-1">使用场景</h4>
 <ul>
 <li><strong>缓存</strong>：缓存条目可以被 GC 回收</li>
 <li><strong>Observer 模式</strong>：观察者不阻止被观察对象回收</li>
 <li><strong>循环引用打破</strong>：避免内存泄漏</li>
 </ul>
-<h4 id="数据结构-2">数据结构</h4>
+<h4 id="数据结构-1">数据结构</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// mheap 中的弱指针映射</span></span><br><span class="line">immortalWeakHandles immortalWeakHandleMap  <span class="comment">// 不朽对象的弱指针</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Special 记录</span></span><br><span class="line">specialWeakHandle <span class="keyword">struct</span> &#123;</span><br><span class="line">    special special</span><br><span class="line">    handle *atomic.Uintptr  <span class="comment">// 弱指针句柄</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="使用示例-2">使用示例</h4>
+<h4 id="使用示例-1">使用示例</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;weak&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Cache <span class="keyword">struct</span> &#123;</span><br><span class="line">    items <span class="keyword">map</span>[<span class="type">string</span>]weak.Pointer[*Item]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cache)</span></span> Get(key <span class="type">string</span>) *Item &#123;</span><br><span class="line">    wp := c.items[key]</span><br><span class="line">    <span class="keyword">return</span> wp.Value()  <span class="comment">// 可能返回 nil（已被 GC）</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c *Cache)</span></span> Set(key <span class="type">string</span>, item *Item) &#123;</span><br><span class="line">    c.items[key] = weak.Make(item)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h4 id="实现细节">实现细节</h4>
 <ul>
@@ -530,10 +586,11 @@
 <li>对象被回收后，弱指针自动变为 nil</li>
 <li>弱指针转强指针需要确保 span 已清扫</li>
 </ul>
-<h3 id="8-3-Cleanup-机制（Go-1-24-）">8.3 Cleanup 机制（Go 1.24+）</h3>
-<h4 id="概述-3">概述</h4>
-<p>类似 finalizer 但更安全的资源清理机制，<strong>不会使对象复活</strong>。</p>
-<h4 id="Cleanup-vs-Finalizer">Cleanup vs Finalizer</h4>
+<h3 id="cleanup-机制go-1.24">8.3 Cleanup 机制（Go 1.24+）</h3>
+<h4 id="概述-6">概述</h4>
+<p>类似 finalizer
+但更安全的资源清理机制，<strong>不会使对象复活</strong>。</p>
+<h4 id="cleanup-vs-finalizer">Cleanup vs Finalizer</h4>
 <table>
 <thead>
 <tr>
@@ -565,129 +622,127 @@
 </tr>
 </tbody>
 </table>
-<h4 id="数据结构-3">数据结构</h4>
+<h4 id="数据结构-2">数据结构</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// mheap 中的 cleanup ID</span></span><br><span class="line">cleanupID <span class="type">uint64</span>  <span class="comment">// 全局唯一 ID 计数器</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Special 记录</span></span><br><span class="line">specialCleanup <span class="keyword">struct</span> &#123;</span><br><span class="line">    special special</span><br><span class="line">    fn *funcval  <span class="comment">// 清理函数</span></span><br><span class="line">    id <span class="type">uint64</span>    <span class="comment">// 全局唯一 ID</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="使用示例-3">使用示例</h4>
+<h4 id="使用示例-2">使用示例</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;runtime&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Resource <span class="keyword">struct</span> &#123;</span><br><span class="line">    handle <span class="type">uintptr</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewResource</span><span class="params">()</span></span> *Resource &#123;</span><br><span class="line">    r := &amp;Resource&#123;handle: openResource()&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 注册 cleanup（不会使 r 复活）</span></span><br><span class="line">    runtime.AddCleanup(r, <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        closeResource(r.handle)</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> r</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="8-4-Pinner-机制（Go-1-21-）">8.4 Pinner 机制（Go 1.21+）</h3>
-<h4 id="概述-4">概述</h4>
-<p>固定对象在内存中的位置，防止 GC 移动（为未来的移动式 GC 做准备）。</p>
-<h4 id="使用场景-3">使用场景</h4>
+<h3 id="pinner-机制go-1.21">8.4 Pinner 机制（Go 1.21+）</h3>
+<h4 id="概述-7">概述</h4>
+<p>固定对象在内存中的位置，防止 GC 移动（为未来的移动式 GC
+做准备）。</p>
+<h4 id="使用场景-2">使用场景</h4>
 <ul>
 <li><strong>CGO 交互</strong>：C 代码持有 Go 对象指针</li>
 <li><strong>DMA 操作</strong>：硬件直接访问内存</li>
 <li><strong>性能优化</strong>：避免某些热点对象移动</li>
 </ul>
-<h4 id="数据结构-4">数据结构</h4>
+<h4 id="数据结构-3">数据结构</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// mspan 中的 pin 位图</span></span><br><span class="line">pinnerBits *gcBits  <span class="comment">// 标记哪些对象被固定</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Special 记录（支持多次 pin）</span></span><br><span class="line">specialPinCounter <span class="keyword">struct</span> &#123;</span><br><span class="line">    special special</span><br><span class="line">    counter <span class="type">uintptr</span>  <span class="comment">// pin 计数</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="使用示例-4">使用示例</h4>
+<h4 id="使用示例-3">使用示例</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;runtime&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">passToC</span><span class="params">(data []<span class="type">byte</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> pinner runtime.Pinner</span><br><span class="line">    pinner.Pin(&amp;data[<span class="number">0</span>])  <span class="comment">// 固定切片底层数组</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调用 C 函数</span></span><br><span class="line">    C.processData(unsafe.Pointer(&amp;data[<span class="number">0</span>]), C.<span class="type">int</span>(<span class="built_in">len</span>(data)))</span><br><span class="line"></span><br><span class="line">    pinner.Unpin()  <span class="comment">// 解除固定</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="8-5-GreenTeaGC（实验性，Go-1-24-）">8.5 GreenTeaGC（实验性，Go 1.24+）</h3>
-<h4 id="概述-5">概述</h4>
+<h3 id="greenteagc实验性go-1.24">8.5 GreenTeaGC（实验性，Go 1.24+）</h3>
+<h4 id="概述-8">概述</h4>
 <p>实验性的新 GC 算法，旨在进一步降低延迟。</p>
 <h4 id="关键改进">关键改进</h4>
 <ul>
-<li><strong>Span Inline Mark Bits</strong>：将 mark bits 内联到 span 中</li>
+<li><strong>Span Inline Mark Bits</strong>：将 mark bits 内联到 span
+中</li>
 <li><strong>增量标记</strong>：更细粒度的标记控制</li>
 <li><strong>减少停顿</strong>：优化 STW 阶段</li>
 </ul>
-<h4 id="数据结构-5">数据结构</h4>
+<h4 id="数据结构-4">数据结构</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// mspan 中的 GreenTeaGC 字段</span></span><br><span class="line">scanIdx <span class="type">uint16</span>  <span class="comment">// 扫描索引</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// heapArena 中的位图</span></span><br><span class="line">pageUseSpanInlineMarkBits [pagesPerArena / <span class="number">8</span>]<span class="type">uint8</span></span><br></pre></td></tr></table></figure>
 <h4 id="启用方式">启用方式</h4>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GOEXPERIMENT=greentea go build myapp.go</span><br></pre></td></tr></table></figure>
-<h2 id="9-性能优化技巧">9. 性能优化技巧</h2>
-<h3 id="9-1-减少内存分配">9.1 减少内存分配</h3>
-<h4 id="1-复用对象（sync-Pool）">1. 复用对象（sync.Pool）</h4>
+<h2 id="性能优化技巧">9. 性能优化技巧</h2>
+<h3 id="减少内存分配">9.1 减少内存分配</h3>
+<h4 id="复用对象sync.pool">1. 复用对象（sync.Pool）</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> bufferPool = sync.Pool&#123;</span><br><span class="line">    New: <span class="function"><span class="keyword">func</span><span class="params">()</span></span> <span class="keyword">interface</span>&#123;&#125; &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">new</span>(bytes.Buffer)</span><br><span class="line">    &#125;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">process</span><span class="params">()</span></span> &#123;</span><br><span class="line">    buf := bufferPool.Get().(*bytes.Buffer)</span><br><span class="line">    <span class="keyword">defer</span> bufferPool.Put(buf)</span><br><span class="line">    buf.Reset()</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 使用 buf...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="2-预分配切片">2. 预分配切片</h4>
+<h4 id="预分配切片">2. 预分配切片</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 不好</span></span><br><span class="line"><span class="keyword">var</span> items []Item</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000</span>; i++ &#123;</span><br><span class="line">    items = <span class="built_in">append</span>(items, Item&#123;&#125;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 好</span></span><br><span class="line">items := <span class="built_in">make</span>([]Item, <span class="number">0</span>, <span class="number">1000</span>)</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000</span>; i++ &#123;</span><br><span class="line">    items = <span class="built_in">append</span>(items, Item&#123;&#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="3-字符串拼接优化">3. 字符串拼接优化</h4>
+<h4 id="字符串拼接优化">3. 字符串拼接优化</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 不好</span></span><br><span class="line">s := <span class="string">&quot;&quot;</span></span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">100</span>; i++ &#123;</span><br><span class="line">    s += <span class="string">&quot;a&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 好</span></span><br><span class="line"><span class="keyword">var</span> b strings.Builder</span><br><span class="line">b.Grow(<span class="number">100</span>)</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">100</span>; i++ &#123;</span><br><span class="line">    b.WriteString(<span class="string">&quot;a&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line">s := b.String()</span><br></pre></td></tr></table></figure>
-<h3 id="9-2-避免逃逸">9.2 避免逃逸</h3>
-<h4 id="1-返回值而非指针">1. 返回值而非指针</h4>
+<h3 id="避免逃逸">9.2 避免逃逸</h3>
+<h4 id="返回值而非指针">1. 返回值而非指针</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 逃逸</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newPoint</span><span class="params">()</span></span> *Point &#123;</span><br><span class="line">    p := Point&#123;x: <span class="number">1</span>, y: <span class="number">2</span>&#125;</span><br><span class="line">    <span class="keyword">return</span> &amp;p  <span class="comment">// 逃逸</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 不逃逸</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newPoint</span><span class="params">()</span></span> Point &#123;</span><br><span class="line">    <span class="keyword">return</span> Point&#123;x: <span class="number">1</span>, y: <span class="number">2</span>&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="2-使用确定大小的数组">2. 使用确定大小的数组</h4>
+<h4 id="使用确定大小的数组">2. 使用确定大小的数组</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 逃逸</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">process</span><span class="params">()</span></span> &#123;</span><br><span class="line">    data := <span class="built_in">make</span>([]<span class="type">byte</span>, n)  <span class="comment">// 如果 n 不是常量，可能逃逸</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 不逃逸</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">process</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> data [<span class="number">1024</span>]<span class="type">byte</span>  <span class="comment">// 数组在栈上</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="9-3-检测工具">9.3 检测工具</h3>
-<h4 id="逃逸分析">逃逸分析</h4>
+<h3 id="检测工具">9.3 检测工具</h3>
+<h4 id="逃逸分析-1">逃逸分析</h4>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go build -gcflags=<span class="string">&quot;-m&quot;</span> main.go</span><br></pre></td></tr></table></figure>
 <h4 id="内存分析">内存分析</h4>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> _ <span class="string">&quot;net/http/pprof&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        http.ListenAndServe(<span class="string">&quot;localhost:6060&quot;</span>, <span class="literal">nil</span>)</span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 访问 http://localhost:6060/debug/pprof/heap</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="Trace-分析">Trace 分析</h4>
+<h4 id="trace-分析">Trace 分析</h4>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">go <span class="built_in">test</span> -trace=trace.out</span><br><span class="line">go tool trace trace.out</span><br></pre></td></tr></table></figure>
-<hr>
-<h2 id="10-总结">10. 总结</h2>
-<h3 id="10-1-内存模型演进">10.1 内存模型演进</h3>
+<hr />
+<h2 id="总结">10. 总结</h2>
+<h3 id="内存模型演进">10.1 内存模型演进</h3>
 <p>从 Go 1.16 到 Go 1.25.3，内存模型的主要演进方向：</p>
-<ol>
-<li>
-<p><strong>更灵活的内存管理</strong></p>
+<ol type="1">
+<li><p><strong>更灵活的内存管理</strong></p>
 <ul>
 <li>User Arena：用户可控的批量分配/释放</li>
 <li>适应更多场景需求</li>
-</ul>
-</li>
-<li>
-<p><strong>更丰富的引用语义</strong></p>
+</ul></li>
+<li><p><strong>更丰富的引用语义</strong></p>
 <ul>
 <li>Weak Pointer：支持弱引用</li>
 <li>打破循环引用，优化缓存</li>
-</ul>
-</li>
-<li>
-<p><strong>更安全的资源管理</strong></p>
+</ul></li>
+<li><p><strong>更安全的资源管理</strong></p>
 <ul>
 <li>Cleanup 机制：不会使对象复活</li>
 <li>减少 finalizer 带来的问题</li>
-</ul>
-</li>
-<li>
-<p><strong>更好的 CGO 支持</strong></p>
+</ul></li>
+<li><p><strong>更好的 CGO 支持</strong></p>
 <ul>
 <li>Pinner 机制：固定对象位置</li>
 <li>安全地与 C 代码交互</li>
-</ul>
-</li>
-<li>
-<p><strong>持续的 GC 优化</strong></p>
+</ul></li>
+<li><p><strong>持续的 GC 优化</strong></p>
 <ul>
 <li>GreenTeaGC：实验性的低延迟 GC</li>
 <li>Inline mark bits：减少内存开销</li>
-</ul>
-</li>
+</ul></li>
 </ol>
-<h3 id="10-2-核心设计原则">10.2 核心设计原则</h3>
+<h3 id="核心设计原则">10.2 核心设计原则</h3>
 <p>Go 内存分配器的核心设计原则始终如一：</p>
-<ol>
+<ol type="1">
 <li><strong>多层级缓存</strong>：
 <ul>
 <li><strong>本地缓存</strong>：mcache（Per-P，无锁）</li>
 <li><strong>中央索引</strong>：mcentral（按 size class，需要锁）</li>
 <li><strong>全局堆</strong>：mheap（全局，需要全局锁）</li>
 <li><strong>虚拟内存</strong>：heapArena（64MB 单元）</li>
-</ul>
-</li>
+</ul></li>
 <li><strong>减少锁竞争</strong>：Per-P 缓存 + 细粒度锁</li>
 <li><strong>分级管理</strong>：68 个 size class 减少碎片</li>
 <li><strong>延迟归零</strong>：按需清零提高性能</li>
 <li><strong>与 GC 协作</strong>：双缓冲、sweepgen 等机制</li>
 </ol>
-<h3 id="10-3-最佳实践">10.3 最佳实践</h3>
-<ol>
-<li><strong>理解内存分配路径</strong>：优先使用 mcache 的无锁快速路径</li>
+<h3 id="最佳实践">10.3 最佳实践</h3>
+<ol type="1">
+<li><strong>理解内存分配路径</strong>：优先使用 mcache
+的无锁快速路径</li>
 <li><strong>减少逃逸</strong>：让对象尽量在栈上分配</li>
 <li><strong>复用对象</strong>：使用 sync.Pool 减少分配</li>
 <li><strong>预分配容量</strong>：避免 slice/map 反复扩容</li>
-<li><strong>选择合适的特性</strong>：根据场景使用 User Arena、Weak Pointer 等</li>
+<li><strong>选择合适的特性</strong>：根据场景使用 User Arena、Weak
+Pointer 等</li>
 </ol>
-<h3 id="10-4-参考资料">10.4 参考资料</h3>
+<h3 id="参考资料">10.4 参考资料</h3>
 <ul>
 <li><a target="_blank" rel="noopener" href="https://go.dev/doc/">Go 官方文档</a></li>
-<li><a target="_blank" rel="noopener" href="https://github.com/golang/go/tree/master/src/runtime">Go 运行时源码</a></li>
-<li><a target="_blank" rel="noopener" href="http://goog-perftools.sourceforge.net/doc/tcmalloc.html">TCMalloc 论文</a></li>
-<li><a target="_blank" rel="noopener" href="https://github.com/golang/proposal/blob/master/design/44167-gc-pacer-redesign.md">Go GC 设计文档</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/golang/go/tree/master/src/runtime">Go
+运行时源码</a></li>
+<li><a
+target="_blank" rel="noopener" href="http://goog-perftools.sourceforge.net/doc/tcmalloc.html">TCMalloc
+论文</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://github.com/golang/proposal/blob/master/design/44167-gc-pacer-redesign.md">Go
+GC 设计文档</a></li>
 </ul>
-<h2 id="附录：常用命令">附录：常用命令</h2>
+<h2 id="附录常用命令">附录：常用命令</h2>
 <h3 id="内存相关环境变量">内存相关环境变量</h3>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">GOGC=100          <span class="comment"># GC 触发时的堆增长百分比</span></span><br><span class="line">GOMEMLIMIT=4GiB   <span class="comment"># 内存限制（Go 1.19+）</span></span><br><span class="line">GODEBUG=gctrace=1 <span class="comment"># 打印 GC 跟踪信息</span></span><br></pre></td></tr></table></figure>
 <h3 id="性能分析">性能分析</h3>
@@ -698,7 +753,9 @@
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -738,15 +795,22 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA%E5%85%88%E8%A1%8C"><span class="toc-text">结论先行</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%9E%B6%E6%9E%84"><span class="toc-text">核心架构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E7%AD%96%E7%95%A5"><span class="toc-text">内存分配策略</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%8D%8F%E7%A8%8B%E6%A0%88"><span class="toc-text">1. 协程栈</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E4%BD%9C%E7%94%A8"><span class="toc-text">1.1 作用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E4%BD%8D%E7%BD%AE"><span class="toc-text">1.2 位置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E5%9B%BE%E8%A7%A3"><span class="toc-text">1.3 图解</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-%E5%8F%82%E6%95%B0%E4%BC%A0%E9%80%92"><span class="toc-text">1.4 参数传递</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-5-%E6%A0%88%E5%A4%A7%E5%B0%8F"><span class="toc-text">1.5 栈大小</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-6-%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90"><span class="toc-text">1.6 逃逸分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E6%8C%87%E9%92%88%E9%80%83%E9%80%B8"><span class="toc-text">1. 指针逃逸</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E7%A9%BA%E6%8E%A5%E5%8F%A3%E9%80%83%E9%80%B8"><span class="toc-text">2. 空接口逃逸</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E5%A4%A7%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8"><span class="toc-text">3. 大变量逃逸</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-7-%E6%A0%88%E6%89%A9%E5%AE%B9"><span class="toc-text">1.7 栈扩容</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%88%E6%89%A9%E5%AE%B9%E7%AD%96%E7%95%A5%E6%BC%94%E8%BF%9B"><span class="toc-text">栈扩容策略演进</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E5%8D%95%E5%85%83-heapArena"><span class="toc-text">2. 虚拟内存单元 heapArena</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E6%A6%82%E8%BF%B0"><span class="toc-text">2.1 概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%BA%95%E5%B1%82%E7%BB%93%E6%9E%84"><span class="toc-text">2.2 底层结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%88%86%E9%85%8D%E7%AD%96%E7%95%A5%E5%AF%B9%E6%AF%94"><span class="toc-text">2.3 分配策略对比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%8D%95%E5%85%83-mspan"><span class="toc-text">3. 内存管理单元 mspan</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E6%A6%82%E8%BF%B0"><span class="toc-text">3.1 概述</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Size-Class-%E8%A1%A8%EF%BC%88%E9%83%A8%E5%88%86%EF%BC%89"><span class="toc-text">Size Class 表（部分）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%BA%95%E5%B1%82%E7%BB%93%E6%9E%84"><span class="toc-text">3.2 底层结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E5%85%B3%E9%94%AE%E5%AD%97%E6%AE%B5%E8%AF%B4%E6%98%8E"><span class="toc-text">3.3 关键字段说明</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-3-1-%E5%88%86%E9%85%8D%E4%BD%8D%E5%9B%BE%EF%BC%88allocBits%EF%BC%89"><span class="toc-text">3.3.1 分配位图（allocBits）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-3-2-%E5%8F%8C%E7%B4%A2%E5%BC%95%E8%AE%BE%E8%AE%A1%EF%BC%88Go-1-19-%EF%BC%89"><span class="toc-text">3.3.2 双索引设计（Go 1.19+）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-3-2-%E7%8A%B6%E6%80%81%E6%9C%BA"><span class="toc-text">3.3.2 状态机</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E4%B8%AD%E5%BF%83%E7%B4%A2%E5%BC%95-mcentral"><span class="toc-text">4. 中心索引 mcentral</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E6%A6%82%E8%BF%B0"><span class="toc-text">4.1 概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%BA%95%E5%B1%82%E7%BB%93%E6%9E%84"><span class="toc-text">4.2 底层结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E5%8F%8C%E7%BC%93%E5%86%B2%E6%9C%BA%E5%88%B6"><span class="toc-text">4.3 双缓冲机制</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E7%BA%BF%E7%A8%8B%E7%BC%93%E5%AD%98-mcache"><span class="toc-text">5. 线程缓存 mcache</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E6%A6%82%E8%BF%B0"><span class="toc-text">5.1 概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E5%BA%95%E5%B1%82%E7%BB%93%E6%9E%84"><span class="toc-text">5.2 底层结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E4%B8%8E-P-%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-text">5.3 与 P 的关系</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E5%A0%86-mheap"><span class="toc-text">6. 堆 mheap</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E5%BA%95%E5%B1%82%E7%BB%93%E6%9E%84"><span class="toc-text">6.1 底层结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E5%85%B3%E9%94%AE%E8%AE%BE%E8%AE%A1"><span class="toc-text">6.2 关键设计</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E4%BA%8C%E7%BA%A7%E6%98%A0%E5%B0%84%EF%BC%88arenas%EF%BC%89"><span class="toc-text">1. 二级映射（arenas）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Cache-Line-%E5%AF%B9%E9%BD%90"><span class="toc-text">2. Cache Line 对齐</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E9%A1%B5%E5%9B%9E%E6%94%B6%E5%99%A8"><span class="toc-text">3. 页回收器</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D"><span class="toc-text">7. 内存分配</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E5%AF%B9%E8%B1%A1%E5%88%86%E7%BA%A7"><span class="toc-text">7.1 对象分级</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#7-1-1-Tiny-%E5%AF%B9%E8%B1%A1%E5%88%86%E9%85%8D"><span class="toc-text">7.1.1 Tiny 对象分配</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7-1-2-Small-%E5%AF%B9%E8%B1%A1%E5%88%86%E9%85%8D"><span class="toc-text">7.1.2 Small 对象分配</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7-1-3-Large-%E5%AF%B9%E8%B1%A1%E5%88%86%E9%85%8D"><span class="toc-text">7.1.3 Large 对象分配</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-mcache-%E6%9B%BF%E6%8D%A2"><span class="toc-text">7.2 mcache 替换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-mcentral-%E6%89%A9%E5%AE%B9"><span class="toc-text">7.3 mcentral 扩容</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-4-mallocgc-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-text">7.4 mallocgc 源码分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#7-4-1-Tiny-%E5%AF%B9%E8%B1%A1%E5%88%86%E9%85%8D%EF%BC%9AmallocgcTiny"><span class="toc-text">7.4.1 Tiny 对象分配：mallocgcTiny</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7-4-2-%E5%B0%8F%E5%AF%B9%E8%B1%A1%E6%97%A0%E6%89%AB%E6%8F%8F%E5%88%86%E9%85%8D%EF%BC%9AmallocgcSmallNoscan"><span class="toc-text">7.4.2 小对象无扫描分配：mallocgcSmallNoscan</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7-4-3-%E5%B0%8F%E5%AF%B9%E8%B1%A1%E6%9C%89%E6%89%AB%E6%8F%8F%E5%88%86%E9%85%8D%EF%BC%88%E6%97%A0-Header%EF%BC%89%EF%BC%9AmallocgcSmallScanNoHeader"><span class="toc-text">7.4.3 小对象有扫描分配（无 Header）：mallocgcSmallScanNoHeader</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7-4-4-%E5%B0%8F%E5%AF%B9%E8%B1%A1%E6%9C%89%E6%89%AB%E6%8F%8F%E5%88%86%E9%85%8D%EF%BC%88%E6%9C%89-Header%EF%BC%89%EF%BC%9AmallocgcSmallScanHeader"><span class="toc-text">7.4.4 小对象有扫描分配（有 Header）：mallocgcSmallScanHeader</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7-4-5-%E5%A4%A7%E5%AF%B9%E8%B1%A1%E5%88%86%E9%85%8D%EF%BC%9AmallocgcLarge"><span class="toc-text">7.4.5 大对象分配：mallocgcLarge</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-Go-1-20-%E6%96%B0%E5%A2%9E%E7%89%B9%E6%80%A7"><span class="toc-text">8. Go 1.20+ 新增特性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-User-Arena%EF%BC%88Go-1-20-%EF%BC%89"><span class="toc-text">8.1 User Arena（Go 1.20+）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-text">概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-text">使用场景</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B"><span class="toc-text">使用示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-Weak-Pointer%EF%BC%88Go-1-23-%EF%BC%89"><span class="toc-text">8.2 Weak Pointer（Go 1.23+）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0-2"><span class="toc-text">概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF-2"><span class="toc-text">使用场景</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84-2"><span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B-2"><span class="toc-text">使用示例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82"><span class="toc-text">实现细节</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-3-Cleanup-%E6%9C%BA%E5%88%B6%EF%BC%88Go-1-24-%EF%BC%89"><span class="toc-text">8.3 Cleanup 机制（Go 1.24+）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0-3"><span class="toc-text">概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Cleanup-vs-Finalizer"><span class="toc-text">Cleanup vs Finalizer</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84-3"><span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B-3"><span class="toc-text">使用示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-4-Pinner-%E6%9C%BA%E5%88%B6%EF%BC%88Go-1-21-%EF%BC%89"><span class="toc-text">8.4 Pinner 机制（Go 1.21+）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0-4"><span class="toc-text">概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF-3"><span class="toc-text">使用场景</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84-4"><span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B-4"><span class="toc-text">使用示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-5-GreenTeaGC%EF%BC%88%E5%AE%9E%E9%AA%8C%E6%80%A7%EF%BC%8CGo-1-24-%EF%BC%89"><span class="toc-text">8.5 GreenTeaGC（实验性，Go 1.24+）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0-5"><span class="toc-text">概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E6%94%B9%E8%BF%9B"><span class="toc-text">关键改进</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84-5"><span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%90%AF%E7%94%A8%E6%96%B9%E5%BC%8F"><span class="toc-text">启用方式</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#9-%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8A%80%E5%B7%A7"><span class="toc-text">9. 性能优化技巧</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#9-1-%E5%87%8F%E5%B0%91%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D"><span class="toc-text">9.1 减少内存分配</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%A4%8D%E7%94%A8%E5%AF%B9%E8%B1%A1%EF%BC%88sync-Pool%EF%BC%89"><span class="toc-text">1. 复用对象（sync.Pool）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E9%A2%84%E5%88%86%E9%85%8D%E5%88%87%E7%89%87"><span class="toc-text">2. 预分配切片</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%8B%BC%E6%8E%A5%E4%BC%98%E5%8C%96"><span class="toc-text">3. 字符串拼接优化</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-2-%E9%81%BF%E5%85%8D%E9%80%83%E9%80%B8"><span class="toc-text">9.2 避免逃逸</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E8%BF%94%E5%9B%9E%E5%80%BC%E8%80%8C%E9%9D%9E%E6%8C%87%E9%92%88"><span class="toc-text">1. 返回值而非指针</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E4%BD%BF%E7%94%A8%E7%A1%AE%E5%AE%9A%E5%A4%A7%E5%B0%8F%E7%9A%84%E6%95%B0%E7%BB%84"><span class="toc-text">2. 使用确定大小的数组</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-3-%E6%A3%80%E6%B5%8B%E5%B7%A5%E5%85%B7"><span class="toc-text">9.3 检测工具</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90"><span class="toc-text">逃逸分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E5%88%86%E6%9E%90"><span class="toc-text">内存分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Trace-%E5%88%86%E6%9E%90"><span class="toc-text">Trace 分析</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#10-%E6%80%BB%E7%BB%93"><span class="toc-text">10. 总结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#10-1-%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E6%BC%94%E8%BF%9B"><span class="toc-text">10.1 内存模型演进</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-2-%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99"><span class="toc-text">10.2 核心设计原则</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-3-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-text">10.3 最佳实践</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-4-%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">10.4 参考资料</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%99%84%E5%BD%95%EF%BC%9A%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="toc-text">附录：常用命令</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E7%9B%B8%E5%85%B3%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="toc-text">内存相关环境变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90"><span class="toc-text">性能分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90-2"><span class="toc-text">逃逸分析</span></a></li></ol></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA%E5%85%88%E8%A1%8C"><span class="toc-text">结论先行</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%9E%B6%E6%9E%84"><span class="toc-text">核心架构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E7%AD%96%E7%95%A5"><span class="toc-text">内存分配策略</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%8F%E7%A8%8B%E6%A0%88"><span class="toc-text">1. 协程栈</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%9C%E7%94%A8"><span class="toc-text">1.1 作用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%8D%E7%BD%AE"><span class="toc-text">1.2 位置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%BE%E8%A7%A3"><span class="toc-text">1.3 图解</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%82%E6%95%B0%E4%BC%A0%E9%80%92"><span class="toc-text">1.4 参数传递</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%88%E5%A4%A7%E5%B0%8F"><span class="toc-text">1.5 栈大小</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90"><span class="toc-text">1.6 逃逸分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%8C%87%E9%92%88%E9%80%83%E9%80%B8"><span class="toc-text">1. 指针逃逸</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A9%BA%E6%8E%A5%E5%8F%A3%E9%80%83%E9%80%B8"><span class="toc-text">2. 空接口逃逸</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A4%A7%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8"><span class="toc-text">3. 大变量逃逸</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%88%E6%89%A9%E5%AE%B9"><span class="toc-text">1.7 栈扩容</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%88%E6%89%A9%E5%AE%B9%E7%AD%96%E7%95%A5%E6%BC%94%E8%BF%9B"><span class="toc-text">栈扩容策略演进</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E5%8D%95%E5%85%83-heaparena"><span class="toc-text">2. 虚拟内存单元 heapArena</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-text">2.1 概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BA%95%E5%B1%82%E7%BB%93%E6%9E%84"><span class="toc-text">2.2 底层结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%86%E9%85%8D%E7%AD%96%E7%95%A5%E5%AF%B9%E6%AF%94"><span class="toc-text">2.3 分配策略对比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%8D%95%E5%85%83-mspan"><span class="toc-text">3. 内存管理单元 mspan</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0-1"><span class="toc-text">3.1 概述</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#size-class-%E8%A1%A8%E9%83%A8%E5%88%86"><span class="toc-text">Size Class 表（部分）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BA%95%E5%B1%82%E7%BB%93%E6%9E%84-1"><span class="toc-text">3.2 底层结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E5%AD%97%E6%AE%B5%E8%AF%B4%E6%98%8E"><span class="toc-text">3.3 关键字段说明</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%86%E9%85%8D%E4%BD%8D%E5%9B%BEallocbits"><span class="toc-text">3.3.1 分配位图（allocBits）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8F%8C%E7%B4%A2%E5%BC%95%E8%AE%BE%E8%AE%A1go-1.19"><span class="toc-text">3.3.2 双索引设计（Go 1.19+）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%8A%B6%E6%80%81%E6%9C%BA"><span class="toc-text">3.3.2 状态机</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%AD%E5%BF%83%E7%B4%A2%E5%BC%95-mcentral"><span class="toc-text">4. 中心索引 mcentral</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0-2"><span class="toc-text">4.1 概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BA%95%E5%B1%82%E7%BB%93%E6%9E%84-2"><span class="toc-text">4.2 底层结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%8C%E7%BC%93%E5%86%B2%E6%9C%BA%E5%88%B6"><span class="toc-text">4.3 双缓冲机制</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BA%BF%E7%A8%8B%E7%BC%93%E5%AD%98-mcache"><span class="toc-text">5. 线程缓存 mcache</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0-3"><span class="toc-text">5.1 概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BA%95%E5%B1%82%E7%BB%93%E6%9E%84-3"><span class="toc-text">5.2 底层结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8E-p-%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-text">5.3 与 P 的关系</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A0%86-mheap"><span class="toc-text">6. 堆 mheap</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BA%95%E5%B1%82%E7%BB%93%E6%9E%84-4"><span class="toc-text">6.1 底层结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E8%AE%BE%E8%AE%A1"><span class="toc-text">6.2 关键设计</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BA%8C%E7%BA%A7%E6%98%A0%E5%B0%84arenas"><span class="toc-text">1. 二级映射（arenas）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#cache-line-%E5%AF%B9%E9%BD%90"><span class="toc-text">2. Cache Line 对齐</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%A1%B5%E5%9B%9E%E6%94%B6%E5%99%A8"><span class="toc-text">3. 页回收器</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D"><span class="toc-text">7. 内存分配</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%B9%E8%B1%A1%E5%88%86%E7%BA%A7"><span class="toc-text">7.1 对象分级</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#tiny-%E5%AF%B9%E8%B1%A1%E5%88%86%E9%85%8D"><span class="toc-text">7.1.1 Tiny 对象分配</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#small-%E5%AF%B9%E8%B1%A1%E5%88%86%E9%85%8D"><span class="toc-text">7.1.2 Small 对象分配</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#large-%E5%AF%B9%E8%B1%A1%E5%88%86%E9%85%8D"><span class="toc-text">7.1.3 Large 对象分配</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#mcache-%E6%9B%BF%E6%8D%A2"><span class="toc-text">7.2 mcache 替换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#mcentral-%E6%89%A9%E5%AE%B9"><span class="toc-text">7.3 mcentral 扩容</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#mallocgc-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-text">7.4 mallocgc 源码分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#tiny-%E5%AF%B9%E8%B1%A1%E5%88%86%E9%85%8Dmallocgctiny"><span class="toc-text">7.4.1 Tiny
+对象分配：mallocgcTiny</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B0%8F%E5%AF%B9%E8%B1%A1%E6%97%A0%E6%89%AB%E6%8F%8F%E5%88%86%E9%85%8Dmallocgcsmallnoscan"><span class="toc-text">7.4.2
+小对象无扫描分配：mallocgcSmallNoscan</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B0%8F%E5%AF%B9%E8%B1%A1%E6%9C%89%E6%89%AB%E6%8F%8F%E5%88%86%E9%85%8D%E6%97%A0-headermallocgcsmallscannoheader"><span class="toc-text">7.4.3
+小对象有扫描分配（无 Header）：mallocgcSmallScanNoHeader</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B0%8F%E5%AF%B9%E8%B1%A1%E6%9C%89%E6%89%AB%E6%8F%8F%E5%88%86%E9%85%8D%E6%9C%89-headermallocgcsmallscanheader"><span class="toc-text">7.4.4
+小对象有扫描分配（有 Header）：mallocgcSmallScanHeader</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A4%A7%E5%AF%B9%E8%B1%A1%E5%88%86%E9%85%8Dmallocgclarge"><span class="toc-text">7.4.5 大对象分配：mallocgcLarge</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#go-1.20-%E6%96%B0%E5%A2%9E%E7%89%B9%E6%80%A7"><span class="toc-text">8. Go 1.20+ 新增特性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#user-arenago-1.20"><span class="toc-text">8.1 User Arena（Go 1.20+）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0-4"><span class="toc-text">概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-text">使用场景</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B"><span class="toc-text">使用示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#weak-pointergo-1.23"><span class="toc-text">8.2 Weak Pointer（Go 1.23+）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0-5"><span class="toc-text">概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF-1"><span class="toc-text">使用场景</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84-1"><span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B-1"><span class="toc-text">使用示例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82"><span class="toc-text">实现细节</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#cleanup-%E6%9C%BA%E5%88%B6go-1.24"><span class="toc-text">8.3 Cleanup 机制（Go 1.24+）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0-6"><span class="toc-text">概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#cleanup-vs-finalizer"><span class="toc-text">Cleanup vs Finalizer</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84-2"><span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B-2"><span class="toc-text">使用示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#pinner-%E6%9C%BA%E5%88%B6go-1.21"><span class="toc-text">8.4 Pinner 机制（Go 1.21+）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0-7"><span class="toc-text">概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF-2"><span class="toc-text">使用场景</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84-3"><span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B-3"><span class="toc-text">使用示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#greenteagc%E5%AE%9E%E9%AA%8C%E6%80%A7go-1.24"><span class="toc-text">8.5 GreenTeaGC（实验性，Go 1.24+）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0-8"><span class="toc-text">概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E6%94%B9%E8%BF%9B"><span class="toc-text">关键改进</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84-4"><span class="toc-text">数据结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%90%AF%E7%94%A8%E6%96%B9%E5%BC%8F"><span class="toc-text">启用方式</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8A%80%E5%B7%A7"><span class="toc-text">9. 性能优化技巧</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%87%8F%E5%B0%91%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D"><span class="toc-text">9.1 减少内存分配</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A4%8D%E7%94%A8%E5%AF%B9%E8%B1%A1sync.pool"><span class="toc-text">1. 复用对象（sync.Pool）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%A2%84%E5%88%86%E9%85%8D%E5%88%87%E7%89%87"><span class="toc-text">2. 预分配切片</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%8B%BC%E6%8E%A5%E4%BC%98%E5%8C%96"><span class="toc-text">3. 字符串拼接优化</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%81%BF%E5%85%8D%E9%80%83%E9%80%B8"><span class="toc-text">9.2 避免逃逸</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%BF%94%E5%9B%9E%E5%80%BC%E8%80%8C%E9%9D%9E%E6%8C%87%E9%92%88"><span class="toc-text">1. 返回值而非指针</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E7%A1%AE%E5%AE%9A%E5%A4%A7%E5%B0%8F%E7%9A%84%E6%95%B0%E7%BB%84"><span class="toc-text">2. 使用确定大小的数组</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A3%80%E6%B5%8B%E5%B7%A5%E5%85%B7"><span class="toc-text">9.3 检测工具</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90-1"><span class="toc-text">逃逸分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E5%88%86%E6%9E%90"><span class="toc-text">内存分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#trace-%E5%88%86%E6%9E%90"><span class="toc-text">Trace 分析</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">10. 总结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E6%BC%94%E8%BF%9B"><span class="toc-text">10.1 内存模型演进</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99"><span class="toc-text">10.2 核心设计原则</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-text">10.3 最佳实践</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">10.4 参考资料</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%99%84%E5%BD%95%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="toc-text">附录：常用命令</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E7%9B%B8%E5%85%B3%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="toc-text">内存相关环境变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90"><span class="toc-text">性能分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90-2"><span class="toc-text">逃逸分析</span></a></li></ol></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

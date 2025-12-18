@@ -27,18 +27,12 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文以第一性原理为切入点，系统梳理 MySQL Online DDL 的核心原理、发展历程与典型实现方式，结合实际场景分析 Online DDL 的类型、适用性与性能优化策略，并剖析其底层机制与使用注意事项。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000752138.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000807408.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000826173.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000842840.png">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000920326.png">
 <meta property="article:published_time" content="2025-12-17T13:57:00.000Z">
-<meta property="article:modified_time" content="2025-12-18T01:09:57.777Z">
+<meta property="article:modified_time" content="2025-12-18T14:56:53.702Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="MySQL">
 <meta property="article:tag" content="Online-DDL">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000752138.png">
   
   
   
@@ -76,7 +70,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/30/note/note-llm-from-scratch/"><span class="title">读书笔记丨《从零构建大语言模型》</span></a><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/08/30/note/note-llm-from-scratch/"><span class="title">读书笔记丨《从零构建大语言模型》</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -89,7 +83,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/">MySQL</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-12-17T13:57:00.000Z">2025-12-17</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-12-18T01:09:57.777Z">2025-12-18</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-12-17T13:57:00.000Z">2025-12-17</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-12-18T14:56:53.702Z">2025-12-18</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -100,56 +94,75 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>要理解 MySQL 的 Online DDL，我们不能只看语法，必须从<strong>第一性原理</strong>出发，理解数据库在&quot;修改结构&quot;和&quot;读写数据&quot;这两个核心需求之间的矛盾与平衡。</p>
-<p>简单来说，Online DDL 的核心目标是：<strong>在修改表结构（DDL）的同时，不阻塞业务对表的读写操作（DML）。</strong></p>
-<h2 id="1-宏观概述">1. 宏观概述</h2>
-<h3 id="1-1-背景与痛点">1.1 背景与痛点</h3>
+  </div><article class="md-text content"><p>要理解 MySQL 的 Online
+DDL，我们不能只看语法，必须从<strong>第一性原理</strong>出发，理解数据库在"修改结构"和"读写数据"这两个核心需求之间的矛盾与平衡。</p>
+<p>简单来说，Online DDL
+的核心目标是：<strong>在修改表结构（DDL）的同时，不阻塞业务对表的读写操作（DML）。</strong></p>
+<h2 id="宏观概述">1. 宏观概述</h2>
+<h3 id="背景与痛点">1.1 背景与痛点</h3>
 <p>为什么我们需要 Online DDL？</p>
-<p>在 MySQL 5.6 之前，大多数 DDL 操作（如添加索引、添加列）的本质是暴力重构。MySQL 会执行以下步骤：</p>
-<ol>
+<p>在 MySQL 5.6 之前，大多数 DDL
+操作（如添加索引、添加列）的本质是暴力重构。MySQL 会执行以下步骤：</p>
+<ol type="1">
 <li>创建一个新的临时表（新结构）。</li>
 <li><strong>锁住原表</strong>（禁止写入）。</li>
 <li>将原表数据一行行复制到新表。</li>
 <li>删除原表，重命名新表。</li>
 </ol>
-<p>这种方式被称为 <strong>Copy Table</strong> 方式。它的痛点极其明显：在数据量大的表中，DDL 可能运行数小时，期间业务无法写入，这对于高并发互联网应用是灾难性的。</p>
-<p>为了解决这个问题，MySQL 逐步引入了 <strong>In-Place</strong> 和 <strong>Instant</strong> 算法，统称为 Online DDL。</p>
-<h3 id="1-2-从-Copy-到-Instant">1.2 从 Copy 到 Instant</h3>
-<p>理解 Online DDL 的关键在于理解三种算法的演进，这是一个由重到轻的过程：</p>
-<h4 id="1-2-1-COPY（MySQL-5-6-之前）">1.2.1 COPY（MySQL 5.6 之前）</h4>
+<p>这种方式被称为 <strong>Copy Table</strong>
+方式。它的痛点极其明显：在数据量大的表中，DDL
+可能运行数小时，期间业务无法写入，这对于高并发互联网应用是灾难性的。</p>
+<p>为了解决这个问题，MySQL 逐步引入了 <strong>In-Place</strong> 和
+<strong>Instant</strong> 算法，统称为 Online DDL。</p>
+<h3 id="从-copy-到-instant">1.2 从 Copy 到 Instant</h3>
+<p>理解 Online DDL
+的关键在于理解三种算法的演进，这是一个由重到轻的过程：</p>
+<h4 id="copymysql-5.6-之前">1.2.1 COPY（MySQL 5.6 之前）</h4>
 <ul>
-<li><strong>原理</strong>：在 Server 层处理，新建表 -&gt; 导数据 -&gt; 删旧表。</li>
-<li><strong>代价</strong>：极高。I/O 飙升，占用双倍磁盘空间，<strong>全程锁表</strong>（无法写入）。</li>
+<li><strong>原理</strong>：在 Server 层处理，新建表 -&gt; 导数据 -&gt;
+删旧表。</li>
+<li><strong>代价</strong>：极高。I/O
+飙升，占用双倍磁盘空间，<strong>全程锁表</strong>（无法写入）。</li>
 </ul>
-<h4 id="1-2-2-INPLACE（MySQL-5-6-引入，成熟于-5-7）">1.2.2 INPLACE（MySQL 5.6 引入，成熟于 5.7）</h4>
+<h4 id="inplacemysql-5.6-引入成熟于-5.7">1.2.2 INPLACE（MySQL 5.6
+引入，成熟于 5.7）</h4>
 <ul>
-<li><strong>原理</strong>：不再通过 Server 层复制数据，而是由 InnoDB 引擎内部在“原地”进行操作。</li>
-<li><strong>关键机制</strong>：虽然叫 In-Place（原地），但对于重建表的操作（如添加主键），它实际上还是在引擎内部重建了数据文件，但它引入了一个<strong>Row Log（增量日志）</strong>。</li>
+<li><strong>原理</strong>：不再通过 Server 层复制数据，而是由 InnoDB
+引擎内部在“原地”进行操作。</li>
+<li><strong>关键机制</strong>：虽然叫
+In-Place（原地），但对于重建表的操作（如添加主键），它实际上还是在引擎内部重建了数据文件，但它引入了一个<strong>Row
+Log（增量日志）</strong>。</li>
 <li><strong>并发性</strong>：允许 DML（增删改）操作。
 <ul>
 <li>在 DDL 执行期间，业务产生的新数据写入 Row Log。</li>
 <li>DDL 完成数据重组后，再重放 Row Log 中的变更应用到新表空间。</li>
+</ul></li>
 </ul>
-</li>
-</ul>
-<h4 id="1-2-3-INSTANT（MySQL-8-0-引入并持续增强）">1.2.3 INSTANT（MySQL 8.0 引入并持续增强）</h4>
+<h4 id="instantmysql-8.0-引入并持续增强">1.2.3 INSTANT（MySQL 8.0
+引入并持续增强）</h4>
 <ul>
-<li><strong>原理</strong>：只修改数据字典（Metadata）中的元数据，完全不触碰底层数据文件（B+ 树）。</li>
+<li><strong>原理</strong>：只修改数据字典（Metadata）中的元数据，完全不触碰底层数据文件（B+
+树）。</li>
 <li><strong>代价</strong>：几乎为零。耗时通常在毫秒级。</li>
 <li><strong>场景</strong>：MySQL 8.0 支持瞬间添加列，不需要重建表。</li>
 </ul>
-<h2 id="2-底层原理">2. 底层原理</h2>
-<h3 id="2-1-INPLACE">2.1 INPLACE</h3>
-<p>MySQL 5.6 引入，5.7 成熟。它的核心变革在于：<strong>将 DDL 操作下沉到 InnoDB 引擎层，并引入了 Row Log 来暂存并发写入。</strong></p>
-<p>INPLACE 分为两类：需要重建表（Rebuild）和不需要重建表（No-Rebuild）。我们重点讲最复杂的 <strong>Rebuild</strong> 场景（例如：添加主键、删除列、修改列字符集）。</p>
-<hr>
+<h2 id="底层原理">2. 底层原理</h2>
+<h3 id="inplace">2.1 INPLACE</h3>
+<p>MySQL 5.6 引入，5.7 成熟。它的核心变革在于：<strong>将 DDL 操作下沉到
+InnoDB 引擎层，并引入了 Row Log 来暂存并发写入。</strong></p>
+<p>INPLACE
+分为两类：需要重建表（Rebuild）和不需要重建表（No-Rebuild）。我们重点讲最复杂的
+<strong>Rebuild</strong>
+场景（例如：添加主键、删除列、修改列字符集）。</p>
+<hr />
 <p><strong>第一阶段：初始化 (Prepare Phase)</strong></p>
-<ol>
+<ol type="1">
 <li>对表加 <strong>MDL 写锁</strong>（极短时间）。</li>
 <li>获取原表的元数据快照。</li>
-<li><strong>降级锁</strong>：将 MDL 写锁降级为 <strong>MDL 读锁</strong>。此时业务可以正常读写（SELECT/INSERT/UPDATE/DELETE）。</li>
+<li><strong>降级锁</strong>：将 MDL 写锁降级为 <strong>MDL
+读锁</strong>。此时业务可以正常读写（SELECT/INSERT/UPDATE/DELETE）。</li>
 </ol>
-<hr>
+<hr />
 <p><strong>第二阶段：执行 (Execution Phase) —— 最漫长</strong></p>
 <p>这是真正的 Online 阶段。InnoDB 引擎内部做两件事：</p>
 <p><strong>1. 数据重组 (Rebuild Data)</strong>：</p>
@@ -159,254 +172,368 @@
 </ul>
 <p><strong>2. 增量捕获 (Row Log)</strong>：</p>
 <ul>
-<li>在数据重组期间，所有业务产生的 DML（增删改）操作，除了修改原表数据外，还会被记录到一个专门的内存缓冲区：**Row Log **。如果内存存不下，会溢出写入到临时文件中。</li>
+<li>在数据重组期间，所有业务产生的
+DML（增删改）操作，除了修改原表数据外，还会被记录到一个专门的内存缓冲区：<strong>Row
+Log </strong>。如果内存存不下，会溢出写入到临时文件中。</li>
 </ul>
-<hr>
+<hr />
 <p><strong>第三阶段：提交 (Commit Phase)</strong></p>
-<ol>
-<li><strong>升级锁</strong>：再次将 MDL 读锁升级为 <strong>MDL 写锁</strong>（此时业务写入再次短暂阻塞）。</li>
-<li><strong>日志回放 (Apply Log)</strong>：将 <strong>Row Log</strong> 中积累的增量变更，应用到新的表空间中。因为 Row Log 通常比全量数据小得多，所以这个过程很快。</li>
-<li><strong>文件交换</strong>：用新的 <code>.ibd</code> 文件替换旧文件。</li>
+<ol type="1">
+<li><strong>升级锁</strong>：再次将 MDL 读锁升级为 <strong>MDL
+写锁</strong>（此时业务写入再次短暂阻塞）。</li>
+<li><strong>日志回放 (Apply Log)</strong>：将 <strong>Row Log</strong>
+中积累的增量变更，应用到新的表空间中。因为 Row Log
+通常比全量数据小得多，所以这个过程很快。</li>
+<li><strong>文件交换</strong>：用新的 <code>.ibd</code>
+文件替换旧文件。</li>
 <li><strong>释放锁</strong>。</li>
 </ol>
-<hr>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000752138.png" alt=""></p>
+<hr />
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000752138.png" /></p>
 <p>总结：</p>
 <ul>
-<li><strong>核心机制</strong>：<strong>快照数据（基线） + Row Log（增量）</strong>。</li>
-<li><strong>代价</strong>：虽然不阻塞写入，但会消耗大量 CPU 和 IO（同时写原表和 Log），且若 DDL 耗时过长，Row Log 可能撑爆磁盘。</li>
+<li><strong>核心机制</strong>：<strong>快照数据（基线） + Row
+Log（增量）</strong>。</li>
+<li><strong>代价</strong>：虽然不阻塞写入，但会消耗大量 CPU 和
+IO（同时写原表和 Log），且若 DDL 耗时过长，Row Log 可能撑爆磁盘。</li>
 </ul>
 <div class="tag-plugin colorful note" color="red"><div class="title"><strong><p>注意</p>
-</strong></div><div class="body"><p><strong>修改列的数据类型</strong>（例如从 <code>CHAR</code> 改为 <code>INT</code>）通常<strong>必须使用 COPY 算法</strong>。因为底层二进制存储格式变了，必须重写每一行数据，无法 In-Place。</p></div></div>
-<h3 id="2-2-INSTANT">2.2 INSTANT</h3>
-<p>MySQL 8.0 引入，并在 8.0.12 和 8.0.29 版本中大幅增强。它的核心在于：<strong>彻底放弃修改物理数据文件，只修改数据字典（Metadata）。</strong></p>
+</strong></div><div class="body"><p><strong>修改列的数据类型</strong>（例如从 <code>CHAR</code> 改为<code>INT</code>）通常<strong>必须使用 COPY算法</strong>。因为底层二进制存储格式变了，必须重写每一行数据，无法In-Place。</p></div></div>
+<h3 id="instant">2.2 INSTANT</h3>
+<p>MySQL 8.0 引入，并在 8.0.12 和 8.0.29
+版本中大幅增强。它的核心在于：<strong>彻底放弃修改物理数据文件，只修改数据字典（Metadata）。</strong></p>
 <ul>
-<li>MySQL 8.0.12：仅支持追加列。原理很简单，在表定义的元数据中记录一个&quot;列数&quot;标记。旧数据读出来列数不够，就自动补默认值。</li>
-<li>MySQL 8.0.29：支持任意位置加列/删列。原理更加精妙，利用了<strong>行版本控制</strong>。</li>
+<li>MySQL
+8.0.12：仅支持追加列。原理很简单，在表定义的元数据中记录一个"列数"标记。旧数据读出来列数不够，就自动补默认值。</li>
+<li>MySQL
+8.0.29：支持任意位置加列/删列。原理更加精妙，利用了<strong>行版本控制</strong>。</li>
 </ul>
 <p>底层原理流程：</p>
-<ol>
+<ol type="1">
 <li><strong>加锁</strong>：加 MDL 写锁（极短，仅用于修改元数据）。</li>
 <li><strong>修改元数据</strong>：
 <ul>
-<li>在 <code>.SDI</code> (System Data Index) 或数据字典中，更新表的定义。</li>
-<li><strong>关键点</strong>：给表分配一个新的 <strong><code>INSTANT_COLUMN_ID</code></strong>。</li>
-<li>设置新列的 <strong>Default Value</strong>（存储在元数据中，不存磁盘行内）。</li>
-</ul>
-</li>
+<li>在 <code>.SDI</code> (System Data Index)
+或数据字典中，更新表的定义。</li>
+<li><strong>关键点</strong>：给表分配一个新的
+<strong><code>INSTANT_COLUMN_ID</code></strong>。</li>
+<li>设置新列的 <strong>Default
+Value</strong>（存储在元数据中，不存磁盘行内）。</li>
+</ul></li>
 <li><strong>释放锁</strong>。</li>
 </ol>
-<p>当业务执行 <code>SELECT *</code> 时，InnoDB 引擎读取磁盘上的行记录（Row）：</p>
+<p>当业务执行 <code>SELECT *</code> 时，InnoDB
+引擎读取磁盘上的行记录（Row）：</p>
 <ul>
-<li><strong>旧行（DDL 之前写入的）</strong>：行头部的版本信息或列数标记表明它是&quot;老版本&quot;。InnoDB 发现这一行缺少新列，于是从<strong>元数据</strong>中读取该列的默认值，动态拼接并返回给应用。</li>
-<li><strong>新行（DDL 之后写入的）</strong>：按照新的结构物理存储，包含新列的数据。</li>
+<li><strong>旧行（DDL
+之前写入的）</strong>：行头部的版本信息或列数标记表明它是"老版本"。InnoDB
+发现这一行缺少新列，于是从<strong>元数据</strong>中读取该列的默认值，动态拼接并返回给应用。</li>
+<li><strong>新行（DDL
+之后写入的）</strong>：按照新的结构物理存储，包含新列的数据。</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000807408.png" alt=""></p>
-<h2 id="3-风险隐患">3. 风险隐患</h2>
-<h3 id="3-1-INPLACE">3.1 INPLACE</h3>
-<p>虽然 INPLACE 是 “Online”，但在生产环境（特别是大表）直接执行 <code>ALTER TABLE</code> 依然极其危险。</p>
-<h4 id="3-1-1-MDL-锁风暴">3.1.1 MDL 锁风暴</h4>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000807408.png" /></p>
+<h2 id="风险隐患">3. 风险隐患</h2>
+<h3 id="inplace-1">3.1 INPLACE</h3>
+<p>虽然 INPLACE 是 "Online"，但在生产环境（特别是大表）直接执行
+<code>ALTER TABLE</code> 依然极其危险。</p>
+<h4 id="mdl-锁风暴">3.1.1 MDL 锁风暴</h4>
 <p>这是最容易被忽视的风险。</p>
 <ul>
-<li><strong>现象</strong>：你发起一个 Online DDL，理论上不锁表。但是，如果有另一个长事务（比如一个正在运行的慢查询）正在引用这张表，DDL 就会挂起，等待获取 MDL 锁。</li>
-<li><strong>连锁反应</strong>：MySQL 的锁等待队列通常是 <strong>FCFS (First Come First Served)</strong> 或<strong>写锁优先级高于读锁</strong>。DDL 一旦开始等待 MDL 锁，它后面进来的所有正常业务请求（SELECT/UPDATE）全都会被阻塞！瞬间导致连接池爆满，业务挂掉。</li>
-<li><strong>对策</strong>：在执行 DDL 前，务必检查 <code>information_schema.processlist</code>，确保没有长事务或慢查询在操作该表。</li>
+<li><strong>现象</strong>：你发起一个 Online
+DDL，理论上不锁表。但是，如果有另一个长事务（比如一个正在运行的慢查询）正在引用这张表，DDL
+就会挂起，等待获取 MDL 锁。</li>
+<li><strong>连锁反应</strong>：MySQL 的锁等待队列通常是 <strong>FCFS
+(First Come First Served)</strong>
+或<strong>写锁优先级高于读锁</strong>。DDL 一旦开始等待 MDL
+锁，它后面进来的所有正常业务请求（SELECT/UPDATE）全都会被阻塞！瞬间导致连接池爆满，业务挂掉。</li>
+<li><strong>对策</strong>：在执行 DDL 前，务必检查
+<code>information_schema.processlist</code>，确保没有长事务或慢查询在操作该表。</li>
 </ul>
 <blockquote>
 <p>INSTANT 也有这个问题。</p>
 </blockquote>
-<h4 id="3-1-2-主从延迟">3.1.2 主从延迟</h4>
+<h4 id="主从延迟">3.1.2 主从延迟</h4>
 <p>这是 MySQL 主从架构的经典痛点。</p>
 <ul>
-<li><strong>Master</strong>：Online DDL 可以开启多线程（MySQL 8.0+ 支持 parallel DDL），或者只是 Master 机器性能强，跑了 10 分钟做完了。</li>
-<li><strong>Binlog</strong>：DDL 完成后，Master 会往 Binlog 写一句 <code>ALTER TABLE ...</code>。</li>
+<li><strong>Master</strong>：Online DDL 可以开启多线程（MySQL 8.0+ 支持
+parallel DDL），或者只是 Master 机器性能强，跑了 10 分钟做完了。</li>
+<li><strong>Binlog</strong>：DDL 完成后，Master 会往 Binlog 写一句
+<code>ALTER TABLE ...</code>。</li>
 <li><strong>Slave</strong>：
 <ul>
 <li>Slave 的 SQL Thread 是单线程回放 DDL 的（在很多版本配置下）。</li>
-<li>Slave 收到这个 DDL，也开始跑。Master 跑了 10 分钟，Slave 可能也要跑 10 分钟（甚至更久，因为 Slave 配置通常低）。</li>
-<li><strong>后果</strong>：在这 10 分钟内，Slave 忙着做 DDL，无法处理 Master 传过来的其他 Update/Insert Binlog。</li>
-<li><strong>Seconds_Behind_Master 飙升</strong>。读写分离的业务读不到最新数据，产生逻辑错误。</li>
+<li>Slave 收到这个 DDL，也开始跑。Master 跑了 10 分钟，Slave 可能也要跑
+10 分钟（甚至更久，因为 Slave 配置通常低）。</li>
+<li><strong>后果</strong>：在这 10 分钟内，Slave 忙着做 DDL，无法处理
+Master 传过来的其他 Update/Insert Binlog。</li>
+<li><strong>Seconds_Behind_Master
+飙升</strong>。读写分离的业务读不到最新数据，产生逻辑错误。</li>
+</ul></li>
 </ul>
-</li>
-</ul>
-<h4 id="3-1-3-资源争抢与-Buffer-Pool-污染">3.1.3 资源争抢与 Buffer Pool 污染</h4>
-<p>Online DDL（In-Place Rebuild）本质上是一次<strong>全量的读 + 全量的写</strong>。</p>
+<h4 id="资源争抢与-buffer-pool-污染">3.1.3 资源争抢与 Buffer Pool
+污染</h4>
+<p>Online DDL（In-Place Rebuild）本质上是一次<strong>全量的读 +
+全量的写</strong>。</p>
 <ul>
 <li><strong>Buffer Pool 污染</strong>：
 <ul>
-<li>DDL 扫描原表所有数据页。如果表很大，会把 Buffer Pool 里的热数据（业务正在用的数据）挤出去。</li>
-<li>DDL 结束后，业务查询必须重新从磁盘加载数据，导致 <strong>RT (响应时间) 抖动</strong>。</li>
+<li>DDL 扫描原表所有数据页。如果表很大，会把 Buffer Pool
+里的热数据（业务正在用的数据）挤出去。</li>
+<li>DDL 结束后，业务查询必须重新从磁盘加载数据，导致 <strong>RT
+(响应时间) 抖动</strong>。</li>
+</ul></li>
+<li><strong>IO 争抢</strong>：虽然 DDL
+设置了并发度，但它依然会占用大量的磁盘 IOPS 和
+CPU。如果是云盘或机械盘，业务正常的 CRUD 可能会因为 IO 等待而变慢。</li>
 </ul>
-</li>
-<li><strong>IO 争抢</strong>：虽然 DDL 设置了并发度，但它依然会占用大量的磁盘 IOPS 和 CPU。如果是云盘或机械盘，业务正常的 CRUD 可能会因为 IO 等待而变慢。</li>
-</ul>
-<h4 id="3-1-4-Apply-Log-阻塞">3.1.4 Apply Log 阻塞</h4>
-<p>MySQL 为了保证新表和旧表数据<strong>严格一致</strong>，在 Switch（切换）的那一刻，必须保证 Row Log 里的数据全部回放完毕。</p>
+<h4 id="apply-log-阻塞">3.1.4 Apply Log 阻塞</h4>
+<p>MySQL 为了保证新表和旧表数据<strong>严格一致</strong>，在
+Switch（切换）的那一刻，必须保证 Row Log 里的数据全部回放完毕。</p>
 <ul>
-<li><strong>理想情况</strong>：DDL 执行期间，业务写入很少。Row Log 只有几 KB。Step B 在毫秒级完成，用户无感知。</li>
-<li><strong>糟糕情况</strong>：DDL 跑了 1 个小时（全表重组）。这 1 小时内，业务疯狂写入（TPS 很高）。Row Log 积压了 500MB 甚至更多。
+<li><strong>理想情况</strong>：DDL 执行期间，业务写入很少。Row Log
+只有几 KB。Step B 在毫秒级完成，用户无感知。</li>
+<li><strong>糟糕情况</strong>：DDL 跑了 1 个小时（全表重组）。这 1
+小时内，业务疯狂写入（TPS 很高）。Row Log 积压了 500MB 甚至更多。
 <ul>
 <li>到了 Commit 阶段，MySQL 获取写锁。</li>
 <li>开始回放这 500MB 的日志。</li>
 <li><strong>整个回放过程，业务全部被堵在外面！</strong></li>
 <li>如果回放需要 1 分钟，你的系统就挂了 1 分钟。</li>
-</ul>
-</li>
+</ul></li>
 </ul>
 <blockquote>
-<p><strong>第一性原理视角</strong>：这就是 <strong>追赶模型 (Catch-up Model)</strong> 的固有缺陷。如果&quot;增量产生的速度&quot;接近&quot;回放的速度&quot;，或者存量太大，最后的同步阶段就会拉长阻塞窗口。</p>
-<p>MySQL 其实做了一些优化（Iterative Apply），在 Execute 阶段末尾会尝试预先回放一部分日志。但为了保证最终一致性，<strong>最后的一小截尾巴，必须在写锁保护下回放</strong>。如果这截尾巴处理不掉，阻塞就不可避免。</p>
+<p><strong>第一性原理视角</strong>：这就是 <strong>追赶模型 (Catch-up
+Model)</strong>
+的固有缺陷。如果"增量产生的速度"接近"回放的速度"，或者存量太大，最后的同步阶段就会拉长阻塞窗口。</p>
+<p>MySQL 其实做了一些优化（Iterative Apply），在 Execute
+阶段末尾会尝试预先回放一部分日志。但为了保证最终一致性，<strong>最后的一小截尾巴，必须在写锁保护下回放</strong>。如果这截尾巴处理不掉，阻塞就不可避免。</p>
 </blockquote>
-<h4 id="3-1-5-磁盘空间爆满">3.1.5 磁盘空间爆满</h4>
-<p>DDL 执行期间的并发写入（Insert/Update/Delete）不会直接修改正在重建的表，而是暂存在 <code>innodb_online_alter_log</code> 中（内存+磁盘临时文件）。该日志的大小受到 <code>innodb_online_alter_log_max_size</code> 参数的硬性限制（默认仅 128MB）。</p>
-<p>如果 DDL 耗时很久，或者业务写入量很大，填满了这个 Log。<strong>MySQL 会直接报错并回滚整个 DDL 操作</strong>，之前几个小时的 CPU/IO 资源白费。更严重的是，<strong>触发溢出的那个用户事务会被强制回滚</strong>，导致业务报错。</p>
-<h3 id="3-2-INSTANT">3.2 INSTANT</h3>
-<p>天下没有免费的午餐。INSTANT 算法虽然写得快，但它把成本转移到了<strong>读</strong>的时候。</p>
-<h4 id="3-2-1-读放大">3.2.1 读放大</h4>
+<h4 id="磁盘空间爆满">3.1.5 磁盘空间爆满</h4>
+<p>DDL
+执行期间的并发写入（Insert/Update/Delete）不会直接修改正在重建的表，而是暂存在
+<code>innodb_online_alter_log</code>
+中（内存+磁盘临时文件）。该日志的大小受到
+<code>innodb_online_alter_log_max_size</code> 参数的硬性限制（默认仅
+128MB）。</p>
+<p>如果 DDL 耗时很久，或者业务写入量很大，填满了这个 Log。<strong>MySQL
+会直接报错并回滚整个 DDL 操作</strong>，之前几个小时的 CPU/IO
+资源白费。更严重的是，<strong>触发溢出的那个用户事务会被强制回滚</strong>，导致业务报错。</p>
+<h3 id="instant-1">3.2 INSTANT</h3>
+<p>天下没有免费的午餐。INSTANT
+算法虽然写得快，但它把成本转移到了<strong>读</strong>的时候。</p>
+<h4 id="读放大">3.2.1 读放大</h4>
 <ul>
 <li><strong>Copy/Inplace</strong>：数据在物理上已经重写好了。读取时，拿出来的就是完整的行。</li>
-<li><strong>Instant</strong>：物理上的行数据可能只有 3 列，但表定义里有 4 列。每次 <code>SELECT</code> 读取该行时，InnoDB 引擎必须在内存中判断并加上缺失行的默认值。这增加了一点点 CPU 的开销（微乎其微，但存在）。</li>
+<li><strong>Instant</strong>：物理上的行数据可能只有 3 列，但表定义里有
+4 列。每次 <code>SELECT</code> 读取该行时，InnoDB
+引擎必须在内存中判断并加上缺失行的默认值。这增加了一点点 CPU
+的开销（微乎其微，但存在）。</li>
 </ul>
-<h4 id="3-2-2-数据腐烂风险">3.2.2 数据腐烂风险</h4>
-<p>如果你对一张表连续做了 50 次 <code>Instant Add Column</code>，再删几列。表里的数据行就会变得五花八门：有的行是 2023 年的版本，有的行是 2024 年的版本。</p>
+<h4 id="数据腐烂风险">3.2.2 数据腐烂风险</h4>
+<p>如果你对一张表连续做了 50 次
+<code>Instant Add Column</code>，再删几列。表里的数据行就会变得五花八门：有的行是
+2023 年的版本，有的行是 2024 年的版本。</p>
 <p>表结构的元数据会变得非常复杂，解析成本变高。</p>
-<p><strong>建议</strong>：如果一张表经过了极其频繁的 Instant 变更，在低峰期做一次 <code>OPTIMIZE TABLE</code>（这会强制触发 In-Place Rebuild）来把物理数据规整化，是有好处的。</p>
-<h2 id="4-什么时候用哪个">4. 什么时候用哪个</h2>
+<p><strong>建议</strong>：如果一张表经过了极其频繁的 Instant
+变更，在低峰期做一次 <code>OPTIMIZE TABLE</code>（这会强制触发 In-Place
+Rebuild）来把物理数据规整化，是有好处的。</p>
+<h2 id="什么时候用哪个">4. 什么时候用哪个</h2>
 <p>什么时候 INSTANT，什么时候 INPLACE，什么时候 COPY？怎么判断呢？</p>
 <p>判断这三者的核心逻辑，依然遵循<strong>第一性原理：看数据的物理存储是否需要改变</strong>。</p>
-<p>MySQL 在执行 DDL 时，内部遵循一个<strong>懒惰原则</strong>：能偷懒就偷懒。优先级是： <strong>Instant (最懒/只改元数据) &gt; In-Place (勤快/原地修整) &gt; Copy (笨重/推倒重来)</strong>。</p>
-<h4 id="4-1-INSTANT-首选，快乐路径">4.1 INSTANT (首选，快乐路径)</h4>
-<p><strong>原理</strong>：只修改 <code>.SDI</code> (元数据) 或 数据字典。不触碰 B+ 树叶子节点的数据。</p>
+<p>MySQL 在执行 DDL
+时，内部遵循一个<strong>懒惰原则</strong>：能偷懒就偷懒。优先级是：
+<strong>Instant (最懒/只改元数据) &gt; In-Place (勤快/原地修整) &gt;
+Copy (笨重/推倒重来)</strong>。</p>
+<h3 id="instant-首选快乐路径">4.1 INSTANT (首选，快乐路径)</h3>
+<p><strong>原理</strong>：只修改 <code>.SDI</code> (元数据) 或
+数据字典。不触碰 B+ 树叶子节点的数据。</p>
 <p><strong>适用场景</strong>：</p>
 <ul>
 <li><strong>新增列 (Add Column)</strong>：
 <ul>
 <li>MySQL 8.0.12+ 支持（只能加在最后）。</li>
 <li>MySQL 8.0.29+ 支持（任意位置 <code>AFTER column</code>）。</li>
-</ul>
-</li>
+</ul></li>
 <li><strong>删除列 (Drop Column)</strong>：MySQL 8.0.29+ 支持。</li>
 <li><strong>重命名 (Rename)</strong>：表名、列名。</li>
 <li><strong>修改默认值 (Set/Drop Default)</strong>。</li>
 <li><strong>虚拟列 (Virtual Column)</strong>：添加或删除。</li>
-<li><strong>扩展 VARCHAR 长度</strong>：且扩展后字节数 <strong>&lt; 256</strong> (长度前缀保持 1 字节)。</li>
+<li><strong>扩展 VARCHAR 长度</strong>：且扩展后字节数 <strong>&lt;
+256</strong> (长度前缀保持 1 字节)。</li>
 </ul>
-<h4 id="4-2-INPLACE-主流，需谨慎">4.2 INPLACE (主流，需谨慎)</h4>
-<p><strong>原理</strong>：引擎层&quot;原地&quot;重建 B+ 树或索引树。利用 <strong>Row Log</strong> 记录执行期间的并发写入，最后回放。</p>
+<h3 id="inplace-主流需谨慎">4.2 INPLACE (主流，需谨慎)</h3>
+<p><strong>原理</strong>：引擎层"原地"重建 B+ 树或索引树。利用
+<strong>Row Log</strong> 记录执行期间的并发写入，最后回放。</p>
 <p><strong>适用场景</strong>：</p>
 <ul>
 <li><strong>添加索引 (Add Index)</strong>：最常见的场景。</li>
-<li><strong>删除索引 (Drop Index)</strong>：实际上改元数据即可，极快（但在官方分类中常归为 Inplace/Metadata）。</li>
+<li><strong>删除索引 (Drop
+Index)</strong>：实际上改元数据即可，极快（但在官方分类中常归为
+Inplace/Metadata）。</li>
 <li><strong>整理表碎片 (Optimize Table)</strong>：强制触发生效。</li>
-<li><strong>修改 Row Format</strong>：如 <code>Compact</code> -&gt; <code>Dynamic</code>。</li>
+<li><strong>修改 Row Format</strong>：如 <code>Compact</code> -&gt;
+<code>Dynamic</code>。</li>
 </ul>
 <blockquote>
-<p><strong>风险提示</strong>：虽不锁表，但消耗大量 IO 和 CPU，且最后 Apply Log 阶段如果追不上，可能短暂阻塞。<strong>务必避开业务高峰。</strong></p>
+<p><strong>风险提示</strong>：虽不锁表，但消耗大量 IO 和 CPU，且最后
+Apply Log
+阶段如果追不上，可能短暂阻塞。<strong>务必避开业务高峰。</strong></p>
 </blockquote>
-<h4 id="4-3-COPY-禁区，保底方案">4.3 COPY (禁区，保底方案)</h4>
-<p><strong>原理</strong>：数据的<strong>二进制存储格式</strong>发生了根本变化，引擎无法处理，必须由 Server 层建立新表，一行行读出来清洗、转换、写入。</p>
+<h3 id="copy-禁区保底方案">4.3 COPY (禁区，保底方案)</h3>
+<p><strong>原理</strong>：数据的<strong>二进制存储格式</strong>发生了根本变化，引擎无法处理，必须由
+Server 层建立新表，一行行读出来清洗、转换、写入。</p>
 <p><strong>适用场景</strong>：</p>
 <ul>
-<li>
-<p><strong>修改字段数据类型</strong>：如 <code>INT</code> -&gt; <code>BIGINT</code>, <code>VARCHAR</code> -&gt; <code>INT</code>。</p>
-</li>
-<li>
-<p><strong>修改字符集</strong>：如 <code>utf8</code> -&gt; <code>utf8mb4</code>。</p>
-</li>
-<li>
-<p><strong>删除主键 (Drop Primary Key)</strong>。</p>
-</li>
-<li>
-<p><strong>扩展 VARCHAR 长度</strong>：当从 &lt; 256 变为 ≥ 256 字节时（字节记录长度发生变化）。</p>
+<li><p><strong>修改字段数据类型</strong>：如 <code>INT</code> -&gt;
+<code>BIGINT</code>, <code>VARCHAR</code> -&gt;
+<code>INT</code>。</p></li>
+<li><p><strong>修改字符集</strong>：如 <code>utf8</code> -&gt;
+<code>utf8mb4</code>。</p></li>
+<li><p><strong>删除主键 (Drop Primary Key)</strong>。</p></li>
+<li><p><strong>扩展 VARCHAR 长度</strong>：当从 &lt; 256 变为 ≥ 256
+字节时（字节记录长度发生变化）。</p>
 <blockquote>
-<p>MySQL 8.0.29+ 的 INSTANT 甚至支持跨越 256 字节的 VARCHAR 扩展（只要不修改数据本身）。</p>
-</blockquote>
-</li>
-<li>
-<p><strong>MySQL 5.6 之前的大部分操作</strong>。</p>
-</li>
+<p>MySQL 8.0.29+ 的 INSTANT 甚至支持跨越 256 字节的 VARCHAR
+扩展（只要不修改数据本身）。</p>
+</blockquote></li>
+<li><p><strong>MySQL 5.6 之前的大部分操作</strong>。</p></li>
 </ul>
 <blockquote>
-<p><strong>警告</strong>：<strong>全程锁写入</strong>。线上大表严禁直接执行，必须使用 <code>gh-ost</code> 或 <code>pt-osc</code>。</p>
+<p><strong>警告</strong>：<strong>全程锁写入</strong>。线上大表严禁直接执行，必须使用
+<code>gh-ost</code> 或 <code>pt-osc</code>。</p>
 </blockquote>
-<h4 id="4-4-最佳实践">4.4 最佳实践</h4>
-<p>不要让 MySQL 帮你选，<strong>显式指定算法</strong>，让潜在的 COPY 暴露出来：</p>
+<h3 id="最佳实践">4.4 最佳实践</h3>
+<p>不要让 MySQL 帮你选，<strong>显式指定算法</strong>，让潜在的 COPY
+暴露出来：</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 你的防御性写法</span></span><br><span class="line"><span class="keyword">ALTER TABLE</span> your_table</span><br><span class="line"><span class="keyword">ADD</span> INDEX idx_xxx (xxx),</span><br><span class="line">ALGORITHM<span class="operator">=</span>INPLACE,  <span class="comment">-- 强制要求原地执行</span></span><br><span class="line">LOCK<span class="operator">=</span><span class="keyword">NONE</span>;          <span class="comment">-- 强制要求不锁表</span></span><br></pre></td></tr></table></figure>
 <ul>
 <li>如果 MySQL 能够满足（是 Instant 或 Inplace），它就执行。</li>
-<li>如果 MySQL 发现这事儿必须 COPY（要锁表），它会<strong>直接报错</strong>。</li>
+<li>如果 MySQL 发现这事儿必须
+COPY（要锁表），它会<strong>直接报错</strong>。</li>
 </ul>
 <p>如下所示：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; ALTER TABLE t_online_ddl MODIFY COLUMN val BIGINT, ALGORITHM=INPLACE, LOCK=NONE;</span><br><span class="line"></span><br><span class="line">ERROR 1846 (0A000): ALGORITHM=INPLACE is not supported. Reason: Cannot change column <span class="built_in">type</span> INPLACE. Try ALGORITHM=COPY.</span><br></pre></td></tr></table></figure>
-<h2 id="5-其他工具">5. 其他工具</h2>
-<p>原生 Online DDL 还是存在一切痛点，尤其是 INPLACE 和 COPY。所以出现了 <code>pt-online-schema-change (pt-osc)</code> 和 <code>github-online-schema-change (gh-ost)</code> 这两个工具。</p>
-<p>它们的核心思想都是 <strong>影子表（Shadow Table）策略</strong>：建一张新表，同步数据，最后切换。</p>
+<h2 id="其他工具">5. 其他工具</h2>
+<p>原生 Online DDL 还是存在一切痛点，尤其是 INPLACE 和 COPY。所以出现了
+<code>pt-online-schema-change (pt-osc)</code> 和
+<code>github-online-schema-change (gh-ost)</code> 这两个工具。</p>
+<p>它们的核心思想都是 <strong>影子表（Shadow
+Table）策略</strong>：建一张新表，同步数据，最后切换。</p>
 <p>区别在于：<strong>怎么同步增量数据？</strong></p>
-<h3 id="5-1-pt-osc">5.1 pt-osc</h3>
+<h3 id="pt-osc">5.1 pt-osc</h3>
 <blockquote>
 <p>pt-osc 是 Percona Toolkit 的一部分，是老牌的方案。</p>
 </blockquote>
 <div class="tag-plugin colorful note" color="red"><div class="title"><strong><p>核心原理</p>
 </strong></div><div class="body"><p>数据库触发器 (Database Triggers)。</p></div></div>
 <p>工作流程：</p>
-<ol>
-<li><strong>创建影子表</strong>：创建一个和原表结构一样的新表 <code>_table_new</code>。</li>
-<li><strong>修改结构</strong>：在新表上执行 <code>ALTER TABLE</code>（比如加字段）。</li>
-<li><strong>创建触发器 (关键)</strong>：在原表上创建 3 个触发器（<strong>AFTER INSERT, AFTER UPDATE, AFTER DELETE</strong>）。这意味着：每当业务向原表写入一行数据，MySQL 会自动触发一个动作，把这行数据的变更同步写入到新表中。</li>
-<li><strong>拷贝存量数据</strong>：工具开始分批次（Chunk）把原表的历史数据 <code>INSERT IGNORE</code> 到新表中。</li>
-<li><strong>原子切换</strong>：数据拷贝完后，利用 <code>RENAME TABLE</code> 原子操作，把原表改名，新表上位。</li>
+<ol type="1">
+<li><strong>创建影子表</strong>：创建一个和原表结构一样的新表
+<code>_table_new</code>。</li>
+<li><strong>修改结构</strong>：在新表上执行
+<code>ALTER TABLE</code>（比如加字段）。</li>
+<li><strong>创建触发器 (关键)</strong>：在原表上创建 3
+个触发器（<strong>AFTER INSERT, AFTER UPDATE, AFTER
+DELETE</strong>）。这意味着：每当业务向原表写入一行数据，MySQL
+会自动触发一个动作，把这行数据的变更同步写入到新表中。</li>
+<li><strong>拷贝存量数据</strong>：工具开始分批次（Chunk）把原表的历史数据
+<code>INSERT IGNORE</code> 到新表中。</li>
+<li><strong>原子切换</strong>：数据拷贝完后，利用
+<code>RENAME TABLE</code> 原子操作，把原表改名，新表上位。</li>
 </ol>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000826173.png" alt=""></p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000826173.png" /></p>
 <p>优点：</p>
 <ul>
 <li><strong>可靠</strong>：基于数据库内部机制，数据一致性强。</li>
-<li><strong>兼容性</strong>：支持所有 Binlog 格式（Statement/Row/Mixed）。</li>
+<li><strong>兼容性</strong>：支持所有 Binlog
+格式（Statement/Row/Mixed）。</li>
 </ul>
 <p>缺点：</p>
 <ul>
-<li><strong>同步阻塞</strong>：触发器是和业务 SQL <strong>在同一个事务</strong> 里执行的。
+<li><strong>同步阻塞</strong>：触发器是和业务 SQL
+<strong>在同一个事务</strong> 里执行的。
 <ul>
-<li>如果你的业务 SQL 执行需 1ms，加上触发器写新表可能变成 2ms。这直接导致<strong>写性能下降</strong>。</li>
+<li>如果你的业务 SQL 执行需 1ms，加上触发器写新表可能变成
+2ms。这直接导致<strong>写性能下降</strong>。</li>
 <li>如果触发器写新表失败（比如锁等待），你的业务 SQL 也会回滚失败！</li>
+</ul></li>
+<li><strong>元数据锁
+(MDL)</strong>：创建和删除触发器的瞬间，需要锁表（MDL
+写锁），在高并发下可能导致拥堵。</li>
 </ul>
-</li>
-<li><strong>元数据锁 (MDL)</strong>：创建和删除触发器的瞬间，需要锁表（MDL 写锁），在高并发下可能导致拥堵。</li>
-</ul>
-<h3 id="5-2-gh-ost">5.2 gh-ost</h3>
+<h3 id="gh-ost">5.2 gh-ost</h3>
 <div class="tag-plugin colorful note" color="red"><div class="title"><strong><p>核心原理</p>
 </strong></div><div class="body"><p>模拟从库 (Binlog Simulation)。</p></div></div>
-<p>GitHub 在被 <code>pt-osc</code> 的触发器搞了几次故障后，开发了 <code>gh-ost</code>。它彻底抛弃了触发器。</p>
+<p>GitHub 在被 <code>pt-osc</code> 的触发器搞了几次故障后，开发了
+<code>gh-ost</code>。它彻底抛弃了触发器。</p>
 <p>工作流程：</p>
-<ol>
+<ol type="1">
 <li><strong>创建影子表</strong>：同上，建新表、改结构。</li>
-<li><strong>伪装成从库</strong>：<code>gh-ost</code> 进程把自己伪装成一个 MySQL Slave，连接到 Master（或者真实的 Slave）。它请求 Dump <strong>Binlog</strong> 流。</li>
-<li><strong>监听 Binlog</strong>：业务在原表写入数据，产生 Binlog。<code>gh-ost</code> 读取 Binlog，将解析出来的 Binlog 事件（Insert/Update/Delete），转换成 SQL 语句，并在影子表上回放。</li>
+<li><strong>伪装成从库</strong>：<code>gh-ost</code>
+进程把自己伪装成一个 MySQL Slave，连接到 Master（或者真实的
+Slave）。它请求 Dump <strong>Binlog</strong> 流。</li>
+<li><strong>监听 Binlog</strong>：业务在原表写入数据，产生
+Binlog。<code>gh-ost</code> 读取 Binlog，将解析出来的 Binlog
+事件（Insert/Update/Delete），转换成 SQL 语句，并在影子表上回放。</li>
 <li><strong>拷贝存量数据</strong>：同上，分批拷贝历史数据。</li>
-<li><strong>原子切换</strong>：因为 <code>gh-ost</code> 是异步的，所以切换的时候必须有&quot;同步&quot;辅助方案。所以它使用一种特殊的机制（Cut-over）进行表名切换。</li>
+<li><strong>原子切换</strong>：因为 <code>gh-ost</code>
+是异步的，所以切换的时候必须有"同步"辅助方案。所以它使用一种特殊的机制（Cut-over）进行表名切换。</li>
 </ol>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000842840.png" alt=""></p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000842840.png" /></p>
 <p>Cut-over 过程：</p>
-<ol>
-<li><strong>制造阻塞</strong>：<code>gh-ost</code> 会建立一个连接 C1，执行 <code>LOCK TABLES tbl WRITE;</code>。这时候，<strong>所有</strong>业务线程想写这张表，都会被堵塞住（Blocked）。原表被冻结了，不再会有新数据写入（这就消除了追不上的问题）。</li>
-<li><strong>发起改名</strong>：<code>gh-ost</code> 建立另一个连接 C2，执行 <code>RENAME TABLE tbl TO tbl_old, ghost_tbl TO tbl;</code>。这条 SQL 也会被 C1 的锁堵塞住，<strong>卡在 MySQL 的执行队列里</strong>。</li>
-<li><strong>插队机制</strong>：此时，MySQL 的锁等待队列里可能排着一堆请求。但是！<strong><code>RENAME</code> 等 DDL 操作的优先级高于 <code>INSERT/UPDATE</code> 等 DML 操作。</strong> 所以，虽然大家都在排队，但 MySQL 会把 C2 的 Rename 请求<strong>提到最前面</strong>（仅次于持有锁的 C1）。</li>
-<li><strong>瞬间释放</strong>：<code>gh-ost</code> 确认 C2 已经乖乖排在队首后，C1 执行 <code>UNLOCK TABLES;</code>。锁一释放，排在队首的 C2（Rename）瞬间执行。因为 C2 优先级最高，没有任何业务写入能插到 C1 释放和 C2 执行这两个动作中间。</li>
+<ol type="1">
+<li><strong>制造阻塞</strong>：<code>gh-ost</code> 会建立一个连接
+C1，执行
+<code>LOCK TABLES tbl WRITE;</code>。这时候，<strong>所有</strong>业务线程想写这张表，都会被堵塞住（Blocked）。原表被冻结了，不再会有新数据写入（这就消除了追不上的问题）。</li>
+<li><strong>发起改名</strong>：<code>gh-ost</code> 建立另一个连接
+C2，执行
+<code>RENAME TABLE tbl TO tbl_old, ghost_tbl TO tbl;</code>。这条 SQL
+也会被 C1 的锁堵塞住，<strong>卡在 MySQL 的执行队列里</strong>。</li>
+<li><strong>插队机制</strong>：此时，MySQL
+的锁等待队列里可能排着一堆请求。但是！<strong><code>RENAME</code> 等 DDL
+操作的优先级高于 <code>INSERT/UPDATE</code> 等 DML 操作。</strong>
+所以，虽然大家都在排队，但 MySQL 会把 C2 的 Rename
+请求<strong>提到最前面</strong>（仅次于持有锁的 C1）。</li>
+<li><strong>瞬间释放</strong>：<code>gh-ost</code> 确认 C2
+已经乖乖排在队首后，C1 执行
+<code>UNLOCK TABLES;</code>。锁一释放，排在队首的
+C2（Rename）瞬间执行。因为 C2 优先级最高，没有任何业务写入能插到 C1
+释放和 C2 执行这两个动作中间。</li>
 </ol>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000920326.png" alt=""></p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251218000920326.png" /></p>
 <p>优点：</p>
 <ul>
-<li><strong>解耦</strong>：<code>gh-ost</code> 是在<strong>应用层</strong>（或者说外部工具层）回放数据。它和业务的写操作完全<strong>异步</strong>。</li>
-<li><strong>轻量</strong>：业务 SQL 写入原表后就结束了，不需要等新表写入。<strong>不影响业务响应时间</strong>。</li>
-<li><strong>可暂停/限速</strong>：这是 <code>gh-ost</code> 的杀手锏。如果发现数据库负载高了，<code>gh-ost</code> 可以瞬间<strong>暂停</strong>读取 Binlog，甚至在拷贝数据的过程中随时停下来睡觉。这是触发器做不到的。</li>
+<li><strong>解耦</strong>：<code>gh-ost</code>
+是在<strong>应用层</strong>（或者说外部工具层）回放数据。它和业务的写操作完全<strong>异步</strong>。</li>
+<li><strong>轻量</strong>：业务 SQL
+写入原表后就结束了，不需要等新表写入。<strong>不影响业务响应时间</strong>。</li>
+<li><strong>可暂停/限速</strong>：这是 <code>gh-ost</code>
+的杀手锏。如果发现数据库负载高了，<code>gh-ost</code>
+可以瞬间<strong>暂停</strong>读取
+Binlog，甚至在拷贝数据的过程中随时停下来睡觉。这是触发器做不到的。</li>
 </ul>
 <p>缺点：</p>
 <ul>
-<li><strong>依赖 Row 格式</strong>：必须开启 Binlog <code>row</code> 模式（现代 MySQL 标配）。</li>
-<li><strong>复杂性</strong>：架构比 <code>pt-osc</code> 复杂，需要处理 Binlog 解析。</li>
+<li><strong>依赖 Row 格式</strong>：必须开启 Binlog <code>row</code>
+模式（现代 MySQL 标配）。</li>
+<li><strong>复杂性</strong>：架构比 <code>pt-osc</code> 复杂，需要处理
+Binlog 解析。</li>
 </ul>
-<h2 id="6-总结">6. 总结</h2>
-<p>回到<strong>第一性原理</strong>：Online DDL 的本质，是在&quot;修改表结构&quot;与&quot;保持业务可用&quot;之间寻找平衡点。</p>
+<h2 id="总结">6. 总结</h2>
+<p>回到<strong>第一性原理</strong>：Online DDL
+的本质，是在"修改表结构"与"保持业务可用"之间寻找平衡点。</p>
 <table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 39%" />
+<col style="width: 21%" />
+<col style="width: 26%" />
+</colgroup>
 <thead>
 <tr>
 <th>算法</th>
@@ -436,13 +563,20 @@
 </tr>
 </tbody>
 </table>
-<p>无论哪种算法，<strong>MDL 锁</strong>始终是最隐蔽的杀手。一个长事务就能让整个 DDL 链路瘫痪。</p>
+<p>无论哪种算法，<strong>MDL
+锁</strong>始终是最隐蔽的杀手。一个长事务就能让整个 DDL 链路瘫痪。</p>
 <ul>
-<li><strong>INPLACE</strong>：主从延迟、Buffer Pool 污染、Apply Log 阻塞、磁盘撑爆。</li>
-<li><strong>INSTANT</strong>：读放大、数据腐烂（频繁变更后需定期 OPTIMIZE）。</li>
+<li><strong>INPLACE</strong>：主从延迟、Buffer Pool 污染、Apply Log
+阻塞、磁盘撑爆。</li>
+<li><strong>INSTANT</strong>：读放大、数据腐烂（频繁变更后需定期
+OPTIMIZE）。</li>
 </ul>
 <p>工具选型：</p>
 <table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 77%" />
+</colgroup>
 <thead>
 <tr>
 <th>场景</th>
@@ -465,23 +599,29 @@
 </tbody>
 </table>
 <p>生产环境黄金法则：</p>
-<ol>
-<li><strong>永远显式指定算法</strong>：<code>ALGORITHM=INPLACE, LOCK=NONE</code>，让潜在的 COPY 暴露出来。</li>
+<ol type="1">
+<li><strong>永远显式指定算法</strong>：<code>ALGORITHM=INPLACE, LOCK=NONE</code>，让潜在的
+COPY 暴露出来。</li>
 <li><strong>执行前检查长事务</strong>：<code>SELECT * FROM information_schema.processlist WHERE TIME &gt; 10;</code></li>
 <li><strong>避开高峰期</strong>：再 Online 的 DDL，也会消耗资源。</li>
-<li><strong>大表用工具</strong>：超过 100 万行，优先考虑 <code>gh-ost</code>。</li>
-<li><strong>监控主从延迟</strong>：<code>Seconds_Behind_Master</code> 是你的生命线。</li>
+<li><strong>大表用工具</strong>：超过 100 万行，优先考虑
+<code>gh-ost</code>。</li>
+<li><strong>监控主从延迟</strong>：<code>Seconds_Behind_Master</code>
+是你的生命线。</li>
 </ol>
-<hr>
+<hr />
 <p><strong>一句话总结</strong>：</p>
 <blockquote>
-<p>Online DDL 不是银弹。它只是把&quot;长时间锁表&quot;变成了&quot;短时间锁表 + 长时间后台作业&quot;。理解它的边界，才能用好它。</p>
+<p>Online DDL 不是银弹。它只是把"长时间锁表"变成了"短时间锁表 +
+长时间后台作业"。理解它的边界，才能用好它。</p>
 </blockquote>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -521,15 +661,21 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%AE%8F%E8%A7%82%E6%A6%82%E8%BF%B0"><span class="toc-text">1. 宏观概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E8%83%8C%E6%99%AF%E4%B8%8E%E7%97%9B%E7%82%B9"><span class="toc-text">1.1 背景与痛点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E4%BB%8E-Copy-%E5%88%B0-Instant"><span class="toc-text">1.2 从 Copy 到 Instant</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-1-COPY%EF%BC%88MySQL-5-6-%E4%B9%8B%E5%89%8D%EF%BC%89"><span class="toc-text">1.2.1 COPY（MySQL 5.6 之前）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-2-INPLACE%EF%BC%88MySQL-5-6-%E5%BC%95%E5%85%A5%EF%BC%8C%E6%88%90%E7%86%9F%E4%BA%8E-5-7%EF%BC%89"><span class="toc-text">1.2.2 INPLACE（MySQL 5.6 引入，成熟于 5.7）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-3-INSTANT%EF%BC%88MySQL-8-0-%E5%BC%95%E5%85%A5%E5%B9%B6%E6%8C%81%E7%BB%AD%E5%A2%9E%E5%BC%BA%EF%BC%89"><span class="toc-text">1.2.3 INSTANT（MySQL 8.0 引入并持续增强）</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86"><span class="toc-text">2. 底层原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-INPLACE"><span class="toc-text">2.1 INPLACE</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-INSTANT"><span class="toc-text">2.2 INSTANT</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E9%A3%8E%E9%99%A9%E9%9A%90%E6%82%A3"><span class="toc-text">3. 风险隐患</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-INPLACE"><span class="toc-text">3.1 INPLACE</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-1-1-MDL-%E9%94%81%E9%A3%8E%E6%9A%B4"><span class="toc-text">3.1.1 MDL 锁风暴</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-1-2-%E4%B8%BB%E4%BB%8E%E5%BB%B6%E8%BF%9F"><span class="toc-text">3.1.2 主从延迟</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-1-3-%E8%B5%84%E6%BA%90%E4%BA%89%E6%8A%A2%E4%B8%8E-Buffer-Pool-%E6%B1%A1%E6%9F%93"><span class="toc-text">3.1.3 资源争抢与 Buffer Pool 污染</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-1-4-Apply-Log-%E9%98%BB%E5%A1%9E"><span class="toc-text">3.1.4 Apply Log 阻塞</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-1-5-%E7%A3%81%E7%9B%98%E7%A9%BA%E9%97%B4%E7%88%86%E6%BB%A1"><span class="toc-text">3.1.5 磁盘空间爆满</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-INSTANT"><span class="toc-text">3.2 INSTANT</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-2-1-%E8%AF%BB%E6%94%BE%E5%A4%A7"><span class="toc-text">3.2.1 读放大</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-2-2-%E6%95%B0%E6%8D%AE%E8%85%90%E7%83%82%E9%A3%8E%E9%99%A9"><span class="toc-text">3.2.2 数据腐烂风险</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E7%94%A8%E5%93%AA%E4%B8%AA"><span class="toc-text">4. 什么时候用哪个</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#4-1-INSTANT-%E9%A6%96%E9%80%89%EF%BC%8C%E5%BF%AB%E4%B9%90%E8%B7%AF%E5%BE%84"><span class="toc-text">4.1 INSTANT (首选，快乐路径)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-2-INPLACE-%E4%B8%BB%E6%B5%81%EF%BC%8C%E9%9C%80%E8%B0%A8%E6%85%8E"><span class="toc-text">4.2 INPLACE (主流，需谨慎)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-3-COPY-%E7%A6%81%E5%8C%BA%EF%BC%8C%E4%BF%9D%E5%BA%95%E6%96%B9%E6%A1%88"><span class="toc-text">4.3 COPY (禁区，保底方案)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-4-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-text">4.4 最佳实践</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%85%B6%E4%BB%96%E5%B7%A5%E5%85%B7"><span class="toc-text">5. 其他工具</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-pt-osc"><span class="toc-text">5.1 pt-osc</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-gh-ost"><span class="toc-text">5.2 gh-ost</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E6%80%BB%E7%BB%93"><span class="toc-text">6. 总结</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%8F%E8%A7%82%E6%A6%82%E8%BF%B0"><span class="toc-text">1. 宏观概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%83%8C%E6%99%AF%E4%B8%8E%E7%97%9B%E7%82%B9"><span class="toc-text">1.1 背景与痛点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%8E-copy-%E5%88%B0-instant"><span class="toc-text">1.2 从 Copy 到 Instant</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#copymysql-5.6-%E4%B9%8B%E5%89%8D"><span class="toc-text">1.2.1 COPY（MySQL 5.6 之前）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#inplacemysql-5.6-%E5%BC%95%E5%85%A5%E6%88%90%E7%86%9F%E4%BA%8E-5.7"><span class="toc-text">1.2.2 INPLACE（MySQL 5.6
+引入，成熟于 5.7）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#instantmysql-8.0-%E5%BC%95%E5%85%A5%E5%B9%B6%E6%8C%81%E7%BB%AD%E5%A2%9E%E5%BC%BA"><span class="toc-text">1.2.3 INSTANT（MySQL 8.0
+引入并持续增强）</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86"><span class="toc-text">2. 底层原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#inplace"><span class="toc-text">2.1 INPLACE</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#instant"><span class="toc-text">2.2 INSTANT</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A3%8E%E9%99%A9%E9%9A%90%E6%82%A3"><span class="toc-text">3. 风险隐患</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#inplace-1"><span class="toc-text">3.1 INPLACE</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#mdl-%E9%94%81%E9%A3%8E%E6%9A%B4"><span class="toc-text">3.1.1 MDL 锁风暴</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%BB%E4%BB%8E%E5%BB%B6%E8%BF%9F"><span class="toc-text">3.1.2 主从延迟</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%B5%84%E6%BA%90%E4%BA%89%E6%8A%A2%E4%B8%8E-buffer-pool-%E6%B1%A1%E6%9F%93"><span class="toc-text">3.1.3 资源争抢与 Buffer Pool
+污染</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#apply-log-%E9%98%BB%E5%A1%9E"><span class="toc-text">3.1.4 Apply Log 阻塞</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%A3%81%E7%9B%98%E7%A9%BA%E9%97%B4%E7%88%86%E6%BB%A1"><span class="toc-text">3.1.5 磁盘空间爆满</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#instant-1"><span class="toc-text">3.2 INSTANT</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%BB%E6%94%BE%E5%A4%A7"><span class="toc-text">3.2.1 读放大</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E8%85%90%E7%83%82%E9%A3%8E%E9%99%A9"><span class="toc-text">3.2.2 数据腐烂风险</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E7%94%A8%E5%93%AA%E4%B8%AA"><span class="toc-text">4. 什么时候用哪个</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#instant-%E9%A6%96%E9%80%89%E5%BF%AB%E4%B9%90%E8%B7%AF%E5%BE%84"><span class="toc-text">4.1 INSTANT (首选，快乐路径)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#inplace-%E4%B8%BB%E6%B5%81%E9%9C%80%E8%B0%A8%E6%85%8E"><span class="toc-text">4.2 INPLACE (主流，需谨慎)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#copy-%E7%A6%81%E5%8C%BA%E4%BF%9D%E5%BA%95%E6%96%B9%E6%A1%88"><span class="toc-text">4.3 COPY (禁区，保底方案)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-text">4.4 最佳实践</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B6%E4%BB%96%E5%B7%A5%E5%85%B7"><span class="toc-text">5. 其他工具</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#pt-osc"><span class="toc-text">5.1 pt-osc</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#gh-ost"><span class="toc-text">5.2 gh-ost</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">6. 总结</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

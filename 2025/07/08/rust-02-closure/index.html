@@ -69,7 +69,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/08/30/note/note-llm-from-scratch/"><span class="title">读书笔记丨《从零构建大语言模型》</span></a><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/08/30/note/note-llm-from-scratch/"><span class="title">读书笔记丨《从零构建大语言模型》</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -93,67 +93,94 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>笔者之前一直不理解 Rust 中关于闭包的 Fn/FnMut/FnOnce 这 3 个 trait 的包含关系。通过一段时间的学习和分析，终于找到了我思维上的一个错误点 ，特此梳理此文，方便日后查询。</p>
+  </div><article class="md-text content"><p>笔者之前一直不理解 Rust 中关于闭包的 Fn/FnMut/FnOnce 这 3 个 trait
+的包含关系。通过一段时间的学习和分析，终于找到了我思维上的一个错误点
+，特此梳理此文，方便日后查询。</p>
 <p>我之前的理解是这样的：</p>
 <blockquote>
-<p>Fn 只需要引用，所以要求是最容易满足的。FnMut 需要的是可变引用，所以能满足 FnMut，一定能满足 Fn。FnOnce 需要的是所有权，那都有所有权了 ，&amp;mut 和 &amp; 肯定就不在话下了。所以满足 FnOnce 的，一定是 Fn 和 FnMut。满足 FnMut 的，不一定是 FnOnce，但是一定是 Fn。</p>
+<p>Fn 只需要引用，所以要求是最容易满足的。FnMut
+需要的是可变引用，所以能满足 FnMut，一定能满足 Fn。FnOnce
+需要的是所有权，那都有所有权了 ，&amp;mut 和 &amp;
+肯定就不在话下了。所以满足 FnOnce 的，一定是 Fn 和 FnMut。满足 FnMut
+的，不一定是 FnOnce，但是一定是 Fn。</p>
 </blockquote>
-<p>我的错误点在于：在<strong>闭包实现者</strong>的角度想&quot;我拥有什么权限&quot;。</p>
-<p>正确的思路应该是：<u>站在<strong>函数调用者</strong>的角度想&quot;我得到了什么承诺&quot;</u>。这才是 Trait 设计的本质，即是能力的声明，更是限制的承诺。</p>
-<hr>
-<h3 id="核心关键：承诺越强，限制越多，类型越“小”">核心关键：承诺越强，限制越多，类型越“小”</h3>
-<p><code>Fn</code>, <code>FnMut</code>, <code>FnOnce</code> 这三个 Trait，本质上是闭包对<strong>调用者</strong>做出的三种不同强度的<strong>承诺</strong>。</p>
-<ol>
+<p>我的错误点在于：在<strong>闭包实现者</strong>的角度想"我拥有什么权限"。</p>
+<p>正确的思路应该是：<u>站在<strong>函数调用者</strong>的角度想"我得到了什么承诺"</u>。这才是
+Trait 设计的本质，即是能力的声明，更是限制的承诺。</p>
+<hr />
+<h3
+id="核心关键承诺越强限制越多类型越小">核心关键：承诺越强，限制越多，类型越“小”</h3>
+<p><code>Fn</code>, <code>FnMut</code>, <code>FnOnce</code> 这三个
+Trait，本质上是闭包对<strong>调用者</strong>做出的三种不同强度的<strong>承诺</strong>。</p>
+<ol type="1">
 <li><strong><code>Fn</code> 的承诺 (最强的承诺)</strong>
 <ul>
-<li><strong>承诺内容</strong>：调用我，只需要对我进行不可变借用 (<code>&amp;self</code>)。你甚至可以同时在多个线程里调用我。我保证不会改变任何东西，也不会消耗掉自己。</li>
+<li><strong>承诺内容</strong>：调用我，只需要对我进行不可变借用
+(<code>&amp;self</code>)。你甚至可以同时在多个线程里调用我。我保证不会改变任何东西，也不会消耗掉自己。</li>
 <li><strong>对闭包的限制</strong>：为了兑现这个最强的承诺，闭包自身受到的限制也最大。它<strong>只能</strong>不可变地借用环境中的变量。</li>
 <li><strong>调用者的自由</strong>：调用者获得了最大的自由，可以随心所欲地、不限次数地调用这个闭包。</li>
-</ul>
-</li>
+</ul></li>
 <li><strong><code>FnMut</code> 的承诺 (中等的承诺)</strong>
 <ul>
-<li><strong>承诺内容</strong>：调用我，需要对我进行可变借用 (<code>&amp;mut self</code>)。这意味着你不能同时调用我，但可以一个接一个地调用。我可能会改变我内部的状态。</li>
+<li><strong>承诺内容</strong>：调用我，需要对我进行可变借用
+(<code>&amp;mut self</code>)。这意味着你不能同时调用我，但可以一个接一个地调用。我可能会改变我内部的状态。</li>
 <li><strong>对闭包的限制</strong>：限制有所放宽。闭包可以<strong>可变地</strong>借用环境变量。</li>
 <li><strong>调用者的自由</strong>：调用者的自由受到了一些限制，不能并发调用了。</li>
-</ul>
-</li>
+</ul></li>
 <li><strong><code>FnOnce</code> 的承诺 (最弱的承诺)</strong>
 <ul>
-<li><strong>承诺内容</strong>：你<strong>只能</strong>调用我一次 (<code>self</code>)。调用之后，我就会被消耗掉，不复存在。</li>
+<li><strong>承诺内容</strong>：你<strong>只能</strong>调用我一次
+(<code>self</code>)。调用之后，我就会被消耗掉，不复存在。</li>
 <li><strong>对闭包的限制</strong>：对闭包自身的限制最小。它可以随心所欲，甚至可以拿走环境变量的<strong>所有权</strong>。</li>
 <li><strong>调用者的自由</strong>：调用者只拥有一次调用的机会，自由度最低。</li>
-</ul>
-</li>
+</ul></li>
 </ol>
 <h3 id="将之前的逻辑反过来思考">将之前的逻辑反过来思考</h3>
-<p>用&quot;承诺&quot;的视角：</p>
+<p>用"承诺"的视角：</p>
 <ul>
-<li><strong>错误想法</strong>：<code>FnOnce</code> 有所有权，最厉害，所以它包含了 <code>FnMut</code> 和 <code>Fn</code>。</li>
-<li><strong>正确的逻辑</strong>：一个闭包如果能做出 <code>Fn</code> 的承诺（最强承诺），那么它自然也能满足 <code>FnMut</code>（中等承诺）和 <code>FnOnce</code>（最弱承诺）的要求。</li>
+<li><strong>错误想法</strong>：<code>FnOnce</code>
+有所有权，最厉害，所以它包含了 <code>FnMut</code> 和
+<code>Fn</code>。</li>
+<li><strong>正确的逻辑</strong>：一个闭包如果能做出 <code>Fn</code>
+的承诺（最强承诺），那么它自然也能满足 <code>FnMut</code>（中等承诺）和
+<code>FnOnce</code>（最弱承诺）的要求。</li>
 </ul>
 <p>这就像一个人的信用评级：</p>
 <ul>
-<li>一个能被评为 <strong>AAA 级信用 (<code>Fn</code>)</strong> 的人，向他借钱（调用他）风险极低，可以随时借。他自然也满足 <strong>AA 级 (<code>FnMut</code>)</strong> 和 <strong>A 级 (<code>FnOnce</code>)</strong> 的标准。</li>
-<li>一个被评为 <strong>AA 级信用 (<code>FnMut</code>)</strong> 的人，满足不了 AAA 级的苛刻标准，但他肯定满足 A 级的基本标准。</li>
-<li>一个只有 <strong>A 级信用 (<code>FnOnce</code>)</strong> 的人，意味着和他交易有风险，只能“一次性买卖”，他肯定满足不了 AA 级和 AAA 级的要求。</li>
+<li>一个能被评为 <strong>AAA 级信用 (<code>Fn</code>)</strong>
+的人，向他借钱（调用他）风险极低，可以随时借。他自然也满足 <strong>AA 级
+(<code>FnMut</code>)</strong> 和 <strong>A 级
+(<code>FnOnce</code>)</strong> 的标准。</li>
+<li>一个被评为 <strong>AA 级信用 (<code>FnMut</code>)</strong>
+的人，满足不了 AAA 级的苛刻标准，但他肯定满足 A 级的基本标准。</li>
+<li>一个只有 <strong>A 级信用 (<code>FnOnce</code>)</strong>
+的人，意味着和他交易有风险，只能“一次性买卖”，他肯定满足不了 AA 级和 AAA
+级的要求。</li>
 </ul>
 <p>所以，这个关系是：</p>
 <ul>
-<li>凡是 <code>Fn</code>，必然是 <code>FnMut</code> 和 <code>FnOnce</code>。</li>
-<li>凡是 <code>FnMut</code>，必然是 <code>FnOnce</code>，但不一定是 <code>Fn</code>。</li>
-<li><code>FnOnce</code> 最为宽泛，它不承诺自己是 <code>FnMut</code> 或 <code>Fn</code>。</li>
+<li>凡是 <code>Fn</code>，必然是 <code>FnMut</code> 和
+<code>FnOnce</code>。</li>
+<li>凡是 <code>FnMut</code>，必然是 <code>FnOnce</code>，但不一定是
+<code>Fn</code>。</li>
+<li><code>FnOnce</code> 最为宽泛，它不承诺自己是 <code>FnMut</code> 或
+<code>Fn</code>。</li>
 </ul>
 <h3 id="代码验证">代码验证</h3>
 <p>我们用一个具体的例子来印证这个理论。</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 一个函数，它要求一个“AAA信用”的闭包</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">call_repeatedly</span>&lt;F: <span class="title function_ invoke__">Fn</span>()&gt;(closure: F) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;--- Calling an Fn closure ---&quot;</span>);</span><br><span class="line">    <span class="title function_ invoke__">closure</span>();</span><br><span class="line">    <span class="title function_ invoke__">closure</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 一个函数，它要求一个“AA信用”的闭包</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">call_mutably</span>&lt;F: <span class="title function_ invoke__">FnMut</span>()&gt;(<span class="keyword">mut</span> closure: F) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;--- Calling an FnMut closure ---&quot;</span>);</span><br><span class="line">    <span class="title function_ invoke__">closure</span>();</span><br><span class="line">    <span class="title function_ invoke__">closure</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 一个函数，它只要求“A信用”的闭包</span></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">call_once</span>&lt;F: <span class="title function_ invoke__">FnOnce</span>()&gt;(closure: F) &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;--- Calling an FnOnce closure ---&quot;</span>);</span><br><span class="line">    <span class="title function_ invoke__">closure</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">my_string</span> = <span class="type">String</span>::<span class="title function_ invoke__">from</span>(<span class="string">&quot;Hello&quot;</span>);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">owned_string</span> = <span class="type">String</span>::<span class="title function_ invoke__">from</span>(<span class="string">&quot;World&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1. 这是一个 Fn 闭包，因为它只对 my_string 进行了不可变借用。</span></span><br><span class="line">    <span class="comment">// 它做出了最强的承诺。</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">closure_fn</span> = || &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;Fn says: &#123;&#125;&quot;</span>, my_string);</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 2. 这是一个 FnMut 闭包，因为它对 my_string 进行了可变借用。</span></span><br><span class="line">    <span class="comment">// 它只能做出中等承诺。</span></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">closure_fn_mut</span> = || &#123;</span><br><span class="line">        my_string.<span class="title function_ invoke__">push_str</span>(<span class="string">&quot;!&quot;</span>);</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;FnMut says: &#123;&#125;&quot;</span>, my_string);</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 3. 这是一个 FnOnce 闭包，因为它夺走了 owned_string 的所有权。</span></span><br><span class="line">    <span class="comment">// 它只能做出最弱的承诺。</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">closure_fn_once</span> = || &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">consumed</span> = owned_string;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;FnOnce says: &#123;&#125;&quot;</span>, consumed);</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// --- 开始验证 ---</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// `closure_fn` (AAA级) 可以满足所有要求</span></span><br><span class="line">    <span class="title function_ invoke__">call_repeatedly</span>(closure_fn);</span><br><span class="line">    <span class="title function_ invoke__">call_mutably</span>(closure_fn);</span><br><span class="line">    <span class="title function_ invoke__">call_once</span>(closure_fn);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// `closure_fn_mut` (AA级) 满足不了 AAA 级的要求</span></span><br><span class="line">    <span class="comment">// call_repeatedly(closure_fn_mut); // 编译错误！因为它改变了环境，不满足 Fn 的要求</span></span><br><span class="line">    <span class="title function_ invoke__">call_mutably</span>(&amp;<span class="keyword">mut</span> closure_fn_mut);</span><br><span class="line">    <span class="title function_ invoke__">call_once</span>(&amp;<span class="keyword">mut</span> closure_fn_mut);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// `closure_fn_once` (A级) 只能满足最基本的要求</span></span><br><span class="line">    <span class="comment">// call_repeatedly(closure_fn_once); // 编译错误！</span></span><br><span class="line">    <span class="comment">// call_mutably(closure_fn_once);    // 编译错误！因为它被调用后就没了，不能调用第二次</span></span><br><span class="line">    <span class="title function_ invoke__">call_once</span>(closure_fn_once);</span><br><span class="line">    <span class="comment">// call_once(closure_fn_once); // 再次调用也会编译错误，因为它已经被消耗了</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h3 id="总结">总结</h3>
-<p>在 Rust 的 Trait 系统中，一个类型如果满足更强的承诺（<code>Fn</code>），它就能被用在要求较弱承诺（<code>FnMut</code>, <code>FnOnce</code>）的任何地方。这就是为什么 <code>Fn</code> 是最小、最核心的那个集合。</p>
+<p>在 Rust 的 Trait
+系统中，一个类型如果满足更强的承诺（<code>Fn</code>），它就能被用在要求较弱承诺（<code>FnMut</code>,
+<code>FnOnce</code>）的任何地方。这就是为什么 <code>Fn</code>
+是最小、最核心的那个集合。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -193,15 +220,18 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%85%B3%E9%94%AE%EF%BC%9A%E6%89%BF%E8%AF%BA%E8%B6%8A%E5%BC%BA%EF%BC%8C%E9%99%90%E5%88%B6%E8%B6%8A%E5%A4%9A%EF%BC%8C%E7%B1%BB%E5%9E%8B%E8%B6%8A%E2%80%9C%E5%B0%8F%E2%80%9D"><span class="toc-text">核心关键：承诺越强，限制越多，类型越“小”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B0%86%E4%B9%8B%E5%89%8D%E7%9A%84%E9%80%BB%E8%BE%91%E5%8F%8D%E8%BF%87%E6%9D%A5%E6%80%9D%E8%80%83"><span class="toc-text">将之前的逻辑反过来思考</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E9%AA%8C%E8%AF%81"><span class="toc-text">代码验证</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%85%B3%E9%94%AE%E6%89%BF%E8%AF%BA%E8%B6%8A%E5%BC%BA%E9%99%90%E5%88%B6%E8%B6%8A%E5%A4%9A%E7%B1%BB%E5%9E%8B%E8%B6%8A%E5%B0%8F"><span class="toc-text">核心关键：承诺越强，限制越多，类型越“小”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B0%86%E4%B9%8B%E5%89%8D%E7%9A%84%E9%80%BB%E8%BE%91%E5%8F%8D%E8%BF%87%E6%9D%A5%E6%80%9D%E8%80%83"><span class="toc-text">将之前的逻辑反过来思考</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E9%AA%8C%E8%AF%81"><span class="toc-text">代码验证</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
