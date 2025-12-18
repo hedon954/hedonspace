@@ -71,7 +71,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/18/mysql/mysql-transaction/"><span class="title">MySQL 底层原理丨事务的实现（及三种日志）</span></a><a class="item title" href="/2025/12/18/kafka/kafka-why-kafka-so-fast/"><span class="title">[object Object]</span></a><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -95,32 +95,33 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>本系列文章通过逐章回答<a target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of Software Architecture》</a>（下文简称 FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第五章</u>内容。</p>
+  </div><article class="md-text content"><p>本系列文章通过逐章回答<a
+target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of
+Software Architecture》</a>（下文简称
+FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第五章</u>内容。</p>
 <p>本章的课后题是：</p>
-<ol>
-<li>
-<p>Give a reason why it is a good practice to limit the number of characteristics (“-ilities”) an architecture should support.</p>
-<p>举一个例子来说明为什么限制系统中支持的架构特性的数量的有必要的。</p>
-</li>
-<li>
-<p>True or false: most architecture characteristics come from business requirements and user stories.</p>
-<p>大多数的架构特性都来自于业务需求和用户故事，这对吗？</p>
-</li>
-<li>
-<p>If a business stakeholder states that time-to-market (i.e., getting new features and bug fixes pushed out to users as fast as possible) is the most important business concern, which architecture characteristics would the architecture need to support?</p>
-<p>如果一个业务利益相关者将上市时间（比如以最快的速度实现新功能和修复 BUG）视为最重要的需求点，这个时候需要支持什么样的架构特性？</p>
-</li>
-<li>
-<p>What is the difference between scalability and elasticity?</p>
-<p>可伸缩性（scalability） 和弹性（elasticity）的区别是什么？</p>
-</li>
-<li>
-<p>You find out that your company is about to undergo several major acquisitions to significantly increase its customer base. Which architectural characteristics should you be worried about?</p>
-<p>如果你发现了你的公司进行了几次重大收购以大幅增加其客户群，这个时候你应该考虑什么架构特性？</p>
-</li>
+<ol type="1">
+<li><p>Give a reason why it is a good practice to limit the number of
+characteristics (“-ilities”) an architecture should support.</p>
+<p>举一个例子来说明为什么限制系统中支持的架构特性的数量的有必要的。</p></li>
+<li><p>True or false: most architecture characteristics come from
+business requirements and user stories.</p>
+<p>大多数的架构特性都来自于业务需求和用户故事，这对吗？</p></li>
+<li><p>If a business stakeholder states that time-to-market (i.e.,
+getting new features and bug fixes pushed out to users as fast as
+possible) is the most important business concern, which architecture
+characteristics would the architecture need to support?</p>
+<p>如果一个业务利益相关者将上市时间（比如以最快的速度实现新功能和修复
+BUG）视为最重要的需求点，这个时候需要支持什么样的架构特性？</p></li>
+<li><p>What is the difference between scalability and elasticity?</p>
+<p>可伸缩性（scalability） 和弹性（elasticity）的区别是什么？</p></li>
+<li><p>You find out that your company is about to undergo several major
+acquisitions to significantly increase its customer base. Which
+architectural characteristics should you be worried about?</p>
+<p>如果你发现了你的公司进行了几次重大收购以大幅增加其客户群，这个时候你应该考虑什么架构特性？</p></li>
 </ol>
-<hr>
-<h1>架构特性不是越多越好</h1>
+<hr />
+<h1 id="架构特性不是越多越好">架构特性不是越多越好</h1>
 <ul>
 <li><strong>增加系统设计的复杂性</strong>：每增加一个架构特性，都会使整个系统设计变得更加复杂。支持过多的架构特性会导致在架构师和开发人员开始解决核心业务问题之前，系统就变得越来越复杂。</li>
 <li><strong>分散对核心问题的关注</strong>：架构特性定义了系统的成功标准，通常与系统的功能性正交，关注的是“如何”实现需求以及“为什么”做出某些选择。然而，如果过度追求特性数量，可能会导致偏离原始的业务问题，即开发软件的最初动机。</li>
@@ -130,14 +131,18 @@
 <li><strong>设计应由业务驱动</strong>：领域驱动设计（DDD）的核心思想在于让业务领域驱动软件设计决策。这意味着设计决策应该基于业务领域的需求和战略，而非盲目地堆砌所有可能的架构特性。</li>
 </ul>
 <p>因此，与领域利益相关者合作时，架构师应努力使最终的架构特性列表尽可能短，因为每个特性都会增加总体系统设计的复杂性。</p>
-<h1>如何识别架构特性</h1>
-<ol>
+<h1 id="如何识别架构特性">如何识别架构特性</h1>
+<ol type="1">
 <li>从领域焦点中识别架构特性</li>
 <li>从业务需求中识别架构特性</li>
 </ol>
-<p>这里面的一大难点就是：<strong>业务方与开发方使用的不是同一种&quot;语言&quot;</strong>。双方对同一件事情的关注点是不一样的，所以表述出来的述求，也是不同的。</p>
+<p>这里面的一大难点就是：<strong>业务方与开发方使用的不是同一种"语言"</strong>。双方对同一件事情的关注点是不一样的，所以表述出来的述求，也是不同的。</p>
 <p>所以在识别架构特性的时候，架构师的职责就是需要将业务领域的关注点和架构特性进行对应。比如：</p>
 <table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 81%" />
+</colgroup>
 <thead>
 <tr>
 <th>Domain Concern</th>
@@ -147,19 +152,25 @@
 <tbody>
 <tr>
 <td>Mergers and acquisitions 合并与收购</td>
-<td>互操作性 interoperability<br>可扩展性 scalability<br>适配性 adaptability<br>可扩展性 extensibility</td>
+<td>互操作性 interoperability<br>可扩展性 scalability<br>适配性
+adaptability<br>可扩展性 extensibility</td>
 </tr>
 <tr>
 <td>Time to market 上市时间</td>
-<td>灵活性 agility<br>可测试性 testability<br>可部署性 deployability</td>
+<td>灵活性 agility<br>可测试性 testability<br>可部署性
+deployability</td>
 </tr>
 <tr>
 <td>User satisfaction 用户满意度</td>
-<td>性能 performance<br>可用性 availability<br>容错性 fault tolerance<br>可测试性 testability<br>可部署性 deployability<br>灵活性 agility<br>安全性 security</td>
+<td>性能 performance<br>可用性 availability<br>容错性 fault
+tolerance<br>可测试性 testability<br>可部署性 deployability<br>灵活性
+agility<br>安全性 security</td>
 </tr>
 <tr>
 <td>Competitive advantage 竞争优势</td>
-<td>灵活性 agility<br/>可测试性 testability<br/>可部署性 deployability<br/>可扩展性 scalability<br/>可用性 availability<br/>容错性 fault tolerance</td>
+<td>灵活性 agility<br/>可测试性 testability<br/>可部署性
+deployability<br/>可扩展性 scalability<br/>可用性
+availability<br/>容错性 fault tolerance</td>
 </tr>
 <tr>
 <td>Time and budget 时间和预算</td>
@@ -167,18 +178,22 @@
 </tr>
 </tbody>
 </table>
-<p>另外， 随着业务的发展，关注点也是在不断发生变化的，这个时候，架构所侧重的架构特性也是随之改变的。</p>
-<h1>可扩展性 vs 弹性</h1>
+<p>另外，
+随着业务的发展，关注点也是在不断发生变化的，这个时候，架构所侧重的架构特性也是随之改变的。</p>
+<h1 id="可扩展性-vs-弹性">可扩展性 vs 弹性</h1>
 <ul>
 <li><strong>可伸缩性（Scalability）</strong>：<u>指的是系统在用户或请求数量增加时，仍然能够维持性能和运行的能力</u>。它衡量的是系统在负载线性增加时，性能是否能够保持相应的线性增长。例如，如果一个系统在用户增加一倍时，其性能也能线性提升，那么它就是可伸缩的。这通常通过增加资源（如服务器实例）来实现，以应对持续增长的用户数量。</li>
-<li><strong>弹性（Elasticity）</strong>：<u>指的是系统处理请求突发性增长的能力</u>。它关注的是系统如何有效地应对不可预测和可变的用户流量高峰。例如，音乐会售票系统在门票开售时会经历用户流量的突然飙升，这需要高弹性的支持。一个具有弹性的系统能够在流量高峰时动态地启动新的处理单元（Processing Units），并在负载降低时关闭它们</li>
+<li><strong>弹性（Elasticity）</strong>：<u>指的是系统处理请求突发性增长的能力</u>。它关注的是系统如何有效地应对不可预测和可变的用户流量高峰。例如，音乐会售票系统在门票开售时会经历用户流量的突然飙升，这需要高弹性的支持。一个具有弹性的系统能够在流量高峰时动态地启动新的处理单元（Processing
+Units），并在负载降低时关闭它们</li>
 </ul>
 <p>简而言之，可伸缩性是关于处理增加的负载并保持性能，而弹性是关于处理突发性、不可预测的负载波动。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -218,15 +233,18 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">架构特性不是越多越好</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">如何识别架构特性</span></a></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">可扩展性 vs 弹性</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E7%89%B9%E6%80%A7%E4%B8%8D%E6%98%AF%E8%B6%8A%E5%A4%9A%E8%B6%8A%E5%A5%BD"><span class="toc-text">架构特性不是越多越好</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E8%AF%86%E5%88%AB%E6%9E%B6%E6%9E%84%E7%89%B9%E6%80%A7"><span class="toc-text">如何识别架构特性</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%AF%E6%89%A9%E5%B1%95%E6%80%A7-vs-%E5%BC%B9%E6%80%A7"><span class="toc-text">可扩展性 vs 弹性</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

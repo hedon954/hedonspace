@@ -27,14 +27,12 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文分析了分库分表环境下分页查询的本质难点，详细讲解了全局排序（Broadcast &amp; Merge）、分片本地分页的误区、深分页的性能瓶颈，并对游标分页与业务折衷等优化方案进行了总结。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251206140030292.png">
 <meta property="article:published_time" content="2025-12-06T05:41:20.000Z">
 <meta property="article:modified_time" content="2025-12-06T07:32:04.123Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="分库分表">
 <meta property="article:tag" content="分页查询">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251206140030292.png">
   
   
   
@@ -72,7 +70,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/18/mysql/mysql-transaction/"><span class="title">MySQL 底层原理丨事务的实现（及三种日志）</span></a><a class="item title" href="/2025/12/18/kafka/kafka-why-kafka-so-fast/"><span class="title">[object Object]</span></a><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -96,114 +94,173 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>分库分表（Sharding）后的分页查询问题，本质上是 <strong>「局部有序」与「全局有序」之间的矛盾</strong>。</p>
-<p>在单表场景下，数据库利用 B+ 树索引可以快速定位 offset；但在分片环境下，数据分散在不同的物理节点，没有任何一个节点拥有全局视图。</p>
+  </div><article class="md-text content"><p>分库分表（Sharding）后的分页查询问题，本质上是
+<strong>「局部有序」与「全局有序」之间的矛盾</strong>。</p>
+<p>在单表场景下，数据库利用 B+ 树索引可以快速定位
+offset；但在分片环境下，数据分散在不同的物理节点，没有任何一个节点拥有全局视图。</p>
 <blockquote>
-<p>当然，在单表场景下，如果 offset 太大，依旧需要白白扫前面的 offset 条数据，然后才取 limit 要的数据，很浪费。</p>
+<p>当然，在单表场景下，如果 offset 太大，依旧需要白白扫前面的 offset
+条数据，然后才取 limit 要的数据，很浪费。</p>
 </blockquote>
-<p>我们可以从 <strong>问题本源（第一性原理）</strong>、<strong>通用方案</strong>、<strong>深度分页优化</strong> 以及 <strong>业务折衷</strong> 四个层面来思考解决方案。</p>
-<h3 id="1-为何分表后分页变难了？">1. 为何分表后分页变难了？</h3>
-<p>假设我们有 3 个分片（Node A, Node B, Node C），按照 ID 取模分片。现在我们要按时间排序，查询第 10 页的数据（每页 10 条，即 <code>LIMIT 10 OFFSET 90</code>）。</p>
-<h4 id="1-1-错误的直觉">1.1 错误的直觉</h4>
-<p>直觉告诉我们：在每个分片上执行 <code>LIMIT 10 OFFSET 90</code>，然后把结果拿回来合并。</p>
-<p><strong>这是错误的</strong>。因为 Node A/B/C 的第 91 条数据，可能是全局第 91 条，也可能是全局第 1 条（如果 Node A 的数据时间都很新），也可能是全局第 270 条。你无法确定每个分片内部数据的<strong>全局相对位置</strong>。</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251206140030292.png" alt=""></p>
-<h4 id="1-2-正确但低效的做法（Broadcast-Merge）">1.2 正确但低效的做法（Broadcast &amp; Merge）</h4>
+<p>我们可以从
+<strong>问题本源（第一性原理）</strong>、<strong>通用方案</strong>、<strong>深度分页优化</strong>
+以及 <strong>业务折衷</strong> 四个层面来思考解决方案。</p>
+<h3 id="为何分表后分页变难了">1. 为何分表后分页变难了？</h3>
+<p>假设我们有 3 个分片（Node A, Node B, Node C），按照 ID
+取模分片。现在我们要按时间排序，查询第 10 页的数据（每页 10 条，即
+<code>LIMIT 10 OFFSET 90</code>）。</p>
+<h4 id="错误的直觉">1.1 错误的直觉</h4>
+<p>直觉告诉我们：在每个分片上执行
+<code>LIMIT 10 OFFSET 90</code>，然后把结果拿回来合并。</p>
+<p><strong>这是错误的</strong>。因为 Node A/B/C 的第 91
+条数据，可能是全局第 91 条，也可能是全局第 1 条（如果 Node A
+的数据时间都很新），也可能是全局第 270
+条。你无法确定每个分片内部数据的<strong>全局相对位置</strong>。</p>
+<p><img
+src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20251206140030292.png" /></p>
+<h4 id="正确但低效的做法broadcast-merge">1.2 正确但低效的做法（Broadcast
+&amp; Merge）</h4>
 <p>为了保证数据的准确性，你必须确保不错过任何可能的记录。</p>
 <ul>
-<li>你需要向 <strong>所有分片</strong> 发送请求：<code>SELECT * FROM table ORDER BY time LIMIT 100</code> (OFFSET + LIMIT)。</li>
-<li>汇总所有分片返回的数据：$3 \times 100 = 300$ 条。</li>
+<li>你需要向 <strong>所有分片</strong>
+发送请求：<code>SELECT * FROM table ORDER BY time LIMIT 100</code>
+(OFFSET + LIMIT)。</li>
+<li>汇总所有分片返回的数据：<span class="math inline">\(3 \times 100 =
+300\)</span> 条。</li>
 <li>在内存中对这 300 条数据进行全局排序。</li>
 <li>取第 91-100 条，抛弃其余 270 条。</li>
 </ul>
-<p>这种做法被称为 全局视野法。它的代价是随着页码（OFFSET）的增加，查询代价呈指数级（或线性倍数）增长。</p>
-<p>如果用户查询第 10,000 页（Offset 100,000, Limit 10），有 N 个分片：</p>
+<p>这种做法被称为
+全局视野法。它的代价是随着页码（OFFSET）的增加，查询代价呈指数级（或线性倍数）增长。</p>
+<p>如果用户查询第 10,000 页（Offset 100,000, Limit 10），有 N
+个分片：</p>
 <ul>
-<li><strong>网络 I/O：</strong> 需要传输 $N \times (100,000 + 10)$ 条数据。</li>
-<li><strong>内存 CPU：</strong> 应用层或中间件需要对 $N \times 100,010$ 条数据进行排序。</li>
+<li><strong>网络 I/O：</strong> 需要传输 <span class="math inline">\(N
+\times (100,000 + 10)\)</span> 条数据。</li>
+<li><strong>内存 CPU：</strong> 应用层或中间件需要对 <span
+class="math inline">\(N \times 100,010\)</span> 条数据进行排序。</li>
 </ul>
 <p>这就是著名的 <strong>分库分表深分页（Deep Paging）问题</strong>。</p>
-<h3 id="2-通用解决方案">2. 通用解决方案</h3>
+<h3 id="通用解决方案">2. 通用解决方案</h3>
 <p>针对上述问题，工界通常有以下几种演进方案：</p>
 <ul>
 <li>全局视野法：中间件代理，即上述的 broadcast &amp; merge。</li>
 <li>二次查询法：新增一个全局 ID 映射表，先查 ID 后查数据。</li>
 <li>同步至异构数据源：利用专门的 OLAP 数据库进行处理。</li>
 </ul>
-<h4 id="2-1-全局视野法（中间件代理）">2.1 全局视野法（中间件代理）</h4>
-<p>即上述的 “Broadcast &amp; Merge”。</p>
+<h4 id="全局视野法中间件代理">2.1 全局视野法（中间件代理）</h4>
+<p>即上述的 "Broadcast &amp; Merge"。</p>
 <ul>
-<li><strong>实现：</strong> 依赖 ShardingSphere、MyCat 等中间件，或者在代码层并发调用。</li>
-<li><strong>适用场景：</strong> 分页深度较浅（前 10-20 页），对性能要求不极致的后台管理系统。</li>
-<li><strong>缺点：</strong> 越往后翻，数据库压力越大，最终会导致 OOM（内存溢出）或超时。</li>
+<li><strong>实现：</strong> 依赖 ShardingSphere、MyCat
+等中间件，或者在代码层并发调用。</li>
+<li><strong>适用场景：</strong> 分页深度较浅（前 10-20
+页），对性能要求不极致的后台管理系统。</li>
+<li><strong>缺点：</strong> 越往后翻，数据库压力越大，最终会导致
+OOM（内存溢出）或超时。</li>
 </ul>
-<h4 id="2-2-二次查询法（全局-ID-映射）">2.2 二次查询法（全局 ID 映射）</h4>
-<p>如果必须精确分页且页码较深，可以建立一张 <strong>「索引表」</strong>。</p>
+<h4 id="二次查询法全局-id-映射">2.2 二次查询法（全局 ID 映射）</h4>
+<p>如果必须精确分页且页码较深，可以建立一张
+<strong>「索引表」</strong>。</p>
 <ul>
-<li><strong>原理：</strong> 建立一张只有 <code>(排序字段, 主键 ID)</code> 的表，这张表<strong>不分片</strong>（或者按照排序字段分片）。</li>
+<li><strong>原理：</strong> 建立一张只有
+<code>(排序字段, 主键 ID)</code>
+的表，这张表<strong>不分片</strong>（或者按照排序字段分片）。</li>
 <li><strong>步骤：</strong>
-<ol>
-<li>先在索引表中执行 <code>LIMIT 10 OFFSET N</code>，拿到 10 个 ID。</li>
-<li>拿着这 10 个 ID，去各个分片中查询具体数据（利用 <code>IN</code> 查询，命中分片键）。</li>
-</ol>
-</li>
-<li><strong>适用场景：</strong> 排序字段单一，且索引表数据量在单机可承受范围内（例如数据量虽大但每行很小）。</li>
+<ol type="1">
+<li>先在索引表中执行 <code>LIMIT 10 OFFSET N</code>，拿到 10 个
+ID。</li>
+<li>拿着这 10 个 ID，去各个分片中查询具体数据（利用 <code>IN</code>
+查询，命中分片键）。</li>
+</ol></li>
+<li><strong>适用场景：</strong>
+排序字段单一，且索引表数据量在单机可承受范围内（例如数据量虽大但每行很小）。</li>
 <li><strong>缺点：</strong> 多了一次查询；索引表本身可能成为瓶颈。</li>
 </ul>
-<h4 id="2-3-同步至异构数据源（大数据方案）">2.3 同步至异构数据源（大数据方案）</h4>
-<p>这是最通用的重型解决方案。MySQL 只做 OLTP（事务处理），复杂的查询交给专门的检索引擎。</p>
+<h4 id="同步至异构数据源大数据方案">2.3
+同步至异构数据源（大数据方案）</h4>
+<p>这是最通用的重型解决方案。MySQL 只做
+OLTP（事务处理），复杂的查询交给专门的检索引擎。</p>
 <ul>
-<li><strong>原理：</strong> 通过 Binlog（Canal/Debezium）将数据实时同步到 <strong>Elasticsearch (ES)</strong> 或 <strong>ClickHouse</strong>。</li>
-<li><strong>步骤：</strong> 分页查询直接走 ES，ES 天然支持分布式搜索和排序。拿到 ID 后，如果需要最新鲜的详情，再回查 MySQL（可选）。</li>
-<li><strong>适用场景：</strong> C 端搜索、复杂条件筛选、海量数据分页。</li>
-<li><strong>缺点：</strong> 架构复杂，存在数据同步延迟（秒级或毫秒级）。</li>
+<li><strong>原理：</strong> 通过
+Binlog（Canal/Debezium）将数据实时同步到 <strong>Elasticsearch
+(ES)</strong> 或 <strong>ClickHouse</strong>。</li>
+<li><strong>步骤：</strong> 分页查询直接走 ES，ES
+天然支持分布式搜索和排序。拿到 ID 后，如果需要最新鲜的详情，再回查
+MySQL（可选）。</li>
+<li><strong>适用场景：</strong> C
+端搜索、复杂条件筛选、海量数据分页。</li>
+<li><strong>缺点：</strong>
+架构复杂，存在数据同步延迟（秒级或毫秒级）。</li>
 </ul>
-<h3 id="3-深度分页的优化技巧">3. 深度分页的优化技巧</h3>
-<p>如果不想引入 ES，必须在 MySQL 体系内解决深分页，可以使用以下方法：</p>
+<h3 id="深度分页的优化技巧">3. 深度分页的优化技巧</h3>
+<p>如果不想引入 ES，必须在 MySQL
+体系内解决深分页，可以使用以下方法：</p>
 <ul>
 <li>游标法：不用 offset，改用 where + limit。</li>
 <li>只有 ID 的全局排序：分片只查询 ID，然后再逐个去查询其他字段。</li>
 </ul>
-<h4 id="3-1-游标法">3.1 游标法</h4>
-<p>这是最高效的方案，将 $O(N)$ 的复杂度降为 $O(1)$。</p>
+<h4 id="游标法">3.1 游标法</h4>
+<p>这是最高效的方案，将 <span class="math inline">\(O(N)\)</span>
+的复杂度降为 <span class="math inline">\(O(1)\)</span>。</p>
 <ul>
-<li><strong>核心思想：</strong> 抛弃 <code>OFFSET</code>，使用 <strong>“上一页的最后一条记录”</strong> 作为锚点。</li>
-<li><strong>前提：</strong> 排序字段必须有唯一性（通常用 <code>order by time, id</code>）。</li>
+<li><strong>核心思想：</strong> 抛弃 <code>OFFSET</code>，使用
+<strong>"上一页的最后一条记录"</strong> 作为锚点。</li>
+<li><strong>前提：</strong> 排序字段必须有唯一性（通常用
+<code>order by time, id</code>）。</li>
 <li><strong>SQL 变化：</strong>
 <ul>
-<li>第 1 页：<code>LIMIT 10</code> -&gt; 记录最后一条的 <code>time=T1, id=ID1</code>。</li>
-<li>第 2 页：<code>WHERE time &lt; T1 OR (time = T1 AND id &lt; ID1) ORDER BY time DESC, id DESC LIMIT 10</code>。</li>
-</ul>
-</li>
-<li><strong>优点：</strong> 无论翻到第几万页，每个分片只需要扫描 10 条数据，性能恒定。</li>
-<li><strong>缺点：</strong> <strong>不支持跳页</strong>（只能点击&quot;下一页&quot;或&quot;加载更多&quot;），不适合需要跳转到&quot;第 X 页&quot;的场景。适用于 App 的无限流（Feed 流）。</li>
+<li>第 1 页：<code>LIMIT 10</code> -&gt; 记录最后一条的
+<code>time=T1, id=ID1</code>。</li>
+<li>第 2
+页：<code>WHERE time &lt; T1 OR (time = T1 AND id &lt; ID1) ORDER BY time DESC, id DESC LIMIT 10</code>。</li>
+</ul></li>
+<li><strong>优点：</strong> 无论翻到第几万页，每个分片只需要扫描 10
+条数据，性能恒定。</li>
+<li><strong>缺点：</strong>
+<strong>不支持跳页</strong>（只能点击"下一页"或"加载更多"），不适合需要跳转到"第
+X 页"的场景。适用于 App 的无限流（Feed 流）。</li>
 </ul>
 <blockquote>
-<p>单表场景其实也建议使用这个方案，不然 offset 会白白扫描很多的数据。</p>
+<p>单表场景其实也建议使用这个方案，不然 offset
+会白白扫描很多的数据。</p>
 </blockquote>
-<h4 id="3-2-只有-ID-的全局排序">3.2 只有 ID 的全局排序</h4>
+<h4 id="只有-id-的全局排序">3.2 只有 ID 的全局排序</h4>
 <p>如果必须支持跳页，可以结合方案一进行优化。</p>
 <p><strong>步骤：</strong></p>
-<ol>
-<li>每个分片只查询 <code>id</code> 和 <code>排序字段</code>（不查询 <code>select *</code>），减少网络传输和内存消耗。</li>
+<ol type="1">
+<li>每个分片只查询 <code>id</code> 和 <code>排序字段</code>（不查询
+<code>select *</code>），减少网络传输和内存消耗。</li>
 <li>在内存中对 ID 列表排序，截取需要的 ID。</li>
 <li>用 ID 回表查询完整数据。</li>
 </ol>
-<p><strong>效果：</strong> 缓解了网络带宽压力，但没有解决数据库扫描的 I/O 压力。</p>
-<h3 id="4-业务折衷与产品设计">4. 业务折衷与产品设计</h3>
+<p><strong>效果：</strong> 缓解了网络带宽压力，但没有解决数据库扫描的
+I/O 压力。</p>
+<h3 id="业务折衷与产品设计">4. 业务折衷与产品设计</h3>
 <p>很多时候，技术上的难题可以通过修改产品逻辑来规避。</p>
-<h4 id="4-1-限制最大页码">4.1 限制最大页码</h4>
-<p>真的有用户会看电商商品的第 5000 页吗？通常 Google 搜索也只给你看前几十页。</p>
+<h4 id="限制最大页码">4.1 限制最大页码</h4>
+<p>真的有用户会看电商商品的第 5000 页吗？通常 Google
+搜索也只给你看前几十页。</p>
 <blockquote>
-<p>可以限制只能查看前 100 页。超过 100 页提示“请输入更精确的搜索条件”。</p>
+<p>可以限制只能查看前 100 页。超过 100
+页提示“请输入更精确的搜索条件”。</p>
 </blockquote>
-<h4 id="4-2-牺牲精度（模糊分页）">4.2 牺牲精度（模糊分页）</h4>
-<p>当数据量达到亿级，用户并不在乎显示的 “共 10000+ 条” 是否精确，也不在乎第 100 页的第一条数据和第 99 页的最后一条是否严格连续。</p>
+<h4 id="牺牲精度模糊分页">4.2 牺牲精度（模糊分页）</h4>
+<p>当数据量达到亿级，用户并不在乎显示的 "共 10000+ 条"
+是否精确，也不在乎第 100 页的第一条数据和第 99
+页的最后一条是否严格连续。</p>
 <blockquote>
-<p>可以每个分片各取一部分数据，按照某种权重拼凑一页给用户。或者，每隔一定时间预计算一次全局 Count。</p>
+<p>可以每个分片各取一部分数据，按照某种权重拼凑一页给用户。或者，每隔一定时间预计算一次全局
+Count。</p>
 </blockquote>
-<h3 id="5-总结">5. 总结</h3>
-<table>
+<h3 id="总结">5. 总结</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 18%" />
+<col style="width: 22%" />
+<col style="width: 16%" />
+<col style="width: 21%" />
+</colgroup>
 <thead>
 <tr>
 <th><strong>方案</strong></th>
@@ -217,28 +274,29 @@
 <tr>
 <td><strong>全局视野 (Standard)</strong></td>
 <td>中间件广播合并</td>
-<td>$O(Offset \times Shards)$</td>
+<td><span class="math inline">\(O(Offset \times Shards)\)</span></td>
 <td>后台管理，前几页</td>
 <td>开发成本最低，深分页必死</td>
 </tr>
 <tr>
 <td><strong>异构索引 (ES)</strong></td>
 <td>MySQL -&gt; ES</td>
-<td>$O(1)$ ~ $O(logN)$</td>
+<td><span class="math inline">\(O(1)\)</span> ~ <span
+class="math inline">\(O(logN)\)</span></td>
 <td>C 端搜索，复杂查询</td>
 <td>架构重，有延迟</td>
 </tr>
 <tr>
 <td><strong>游标法 (Seek)</strong></td>
 <td><code>WHERE id &gt; last_id</code></td>
-<td>$O(1)$</td>
+<td><span class="math inline">\(O(1)\)</span></td>
 <td>移动端 Feed 流</td>
 <td><strong>性能最好</strong>，但不能跳页</td>
 </tr>
 <tr>
 <td><strong>二次查询</strong></td>
 <td>全局索引表</td>
-<td>$O(logN)$</td>
+<td><span class="math inline">\(O(logN)\)</span></td>
 <td>排序维度单一</td>
 <td>维护额外的表</td>
 </tr>
@@ -246,14 +304,20 @@
 </table>
 <p>推荐方案：</p>
 <ul>
-<li><strong>首选游标法（Cursor-based pagination）</strong>：设计 API 时，参数不要用 <code>page_number</code>，而是用 <code>next_cursor</code>（加密的 token，包含上一页的 ID）。这是现代 API（如 Twitter, Stripe）的标准做法。</li>
-<li><strong>兜底方案</strong>：如果必须用传统分页，限制 <code>max_offset</code>。</li>
+<li><strong>首选游标法（Cursor-based pagination）</strong>：设计 API
+时，参数不要用 <code>page_number</code>，而是用
+<code>next_cursor</code>（加密的 token，包含上一页的 ID）。这是现代
+API（如 Twitter, Stripe）的标准做法。</li>
+<li><strong>兜底方案</strong>：如果必须用传统分页，限制
+<code>max_offset</code>。</li>
 </ul>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -293,15 +357,20 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E4%B8%BA%E4%BD%95%E5%88%86%E8%A1%A8%E5%90%8E%E5%88%86%E9%A1%B5%E5%8F%98%E9%9A%BE%E4%BA%86%EF%BC%9F"><span class="toc-text">1. 为何分表后分页变难了？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-%E9%94%99%E8%AF%AF%E7%9A%84%E7%9B%B4%E8%A7%89"><span class="toc-text">1.1 错误的直觉</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-%E6%AD%A3%E7%A1%AE%E4%BD%86%E4%BD%8E%E6%95%88%E7%9A%84%E5%81%9A%E6%B3%95%EF%BC%88Broadcast-Merge%EF%BC%89"><span class="toc-text">1.2 正确但低效的做法（Broadcast &amp; Merge）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E9%80%9A%E7%94%A8%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="toc-text">2. 通用解决方案</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-%E5%85%A8%E5%B1%80%E8%A7%86%E9%87%8E%E6%B3%95%EF%BC%88%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%BB%A3%E7%90%86%EF%BC%89"><span class="toc-text">2.1 全局视野法（中间件代理）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-%E4%BA%8C%E6%AC%A1%E6%9F%A5%E8%AF%A2%E6%B3%95%EF%BC%88%E5%85%A8%E5%B1%80-ID-%E6%98%A0%E5%B0%84%EF%BC%89"><span class="toc-text">2.2 二次查询法（全局 ID 映射）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-%E5%90%8C%E6%AD%A5%E8%87%B3%E5%BC%82%E6%9E%84%E6%95%B0%E6%8D%AE%E6%BA%90%EF%BC%88%E5%A4%A7%E6%95%B0%E6%8D%AE%E6%96%B9%E6%A1%88%EF%BC%89"><span class="toc-text">2.3 同步至异构数据源（大数据方案）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E6%B7%B1%E5%BA%A6%E5%88%86%E9%A1%B5%E7%9A%84%E4%BC%98%E5%8C%96%E6%8A%80%E5%B7%A7"><span class="toc-text">3. 深度分页的优化技巧</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-1-%E6%B8%B8%E6%A0%87%E6%B3%95"><span class="toc-text">3.1 游标法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-2-%E5%8F%AA%E6%9C%89-ID-%E7%9A%84%E5%85%A8%E5%B1%80%E6%8E%92%E5%BA%8F"><span class="toc-text">3.2 只有 ID 的全局排序</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E4%B8%9A%E5%8A%A1%E6%8A%98%E8%A1%B7%E4%B8%8E%E4%BA%A7%E5%93%81%E8%AE%BE%E8%AE%A1"><span class="toc-text">4. 业务折衷与产品设计</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#4-1-%E9%99%90%E5%88%B6%E6%9C%80%E5%A4%A7%E9%A1%B5%E7%A0%81"><span class="toc-text">4.1 限制最大页码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-2-%E7%89%BA%E7%89%B2%E7%B2%BE%E5%BA%A6%EF%BC%88%E6%A8%A1%E7%B3%8A%E5%88%86%E9%A1%B5%EF%BC%89"><span class="toc-text">4.2 牺牲精度（模糊分页）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E6%80%BB%E7%BB%93"><span class="toc-text">5. 总结</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BD%95%E5%88%86%E8%A1%A8%E5%90%8E%E5%88%86%E9%A1%B5%E5%8F%98%E9%9A%BE%E4%BA%86"><span class="toc-text">1. 为何分表后分页变难了？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%94%99%E8%AF%AF%E7%9A%84%E7%9B%B4%E8%A7%89"><span class="toc-text">1.1 错误的直觉</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A3%E7%A1%AE%E4%BD%86%E4%BD%8E%E6%95%88%E7%9A%84%E5%81%9A%E6%B3%95broadcast-merge"><span class="toc-text">1.2 正确但低效的做法（Broadcast
+&amp; Merge）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%9A%E7%94%A8%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="toc-text">2. 通用解决方案</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%A8%E5%B1%80%E8%A7%86%E9%87%8E%E6%B3%95%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%BB%A3%E7%90%86"><span class="toc-text">2.1 全局视野法（中间件代理）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BA%8C%E6%AC%A1%E6%9F%A5%E8%AF%A2%E6%B3%95%E5%85%A8%E5%B1%80-id-%E6%98%A0%E5%B0%84"><span class="toc-text">2.2 二次查询法（全局 ID 映射）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%90%8C%E6%AD%A5%E8%87%B3%E5%BC%82%E6%9E%84%E6%95%B0%E6%8D%AE%E6%BA%90%E5%A4%A7%E6%95%B0%E6%8D%AE%E6%96%B9%E6%A1%88"><span class="toc-text">2.3
+同步至异构数据源（大数据方案）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B7%B1%E5%BA%A6%E5%88%86%E9%A1%B5%E7%9A%84%E4%BC%98%E5%8C%96%E6%8A%80%E5%B7%A7"><span class="toc-text">3. 深度分页的优化技巧</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%B8%B8%E6%A0%87%E6%B3%95"><span class="toc-text">3.1 游标法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8F%AA%E6%9C%89-id-%E7%9A%84%E5%85%A8%E5%B1%80%E6%8E%92%E5%BA%8F"><span class="toc-text">3.2 只有 ID 的全局排序</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%9A%E5%8A%A1%E6%8A%98%E8%A1%B7%E4%B8%8E%E4%BA%A7%E5%93%81%E8%AE%BE%E8%AE%A1"><span class="toc-text">4. 业务折衷与产品设计</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%99%90%E5%88%B6%E6%9C%80%E5%A4%A7%E9%A1%B5%E7%A0%81"><span class="toc-text">4.1 限制最大页码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%89%BA%E7%89%B2%E7%B2%BE%E5%BA%A6%E6%A8%A1%E7%B3%8A%E5%88%86%E9%A1%B5"><span class="toc-text">4.2 牺牲精度（模糊分页）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">5. 总结</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>

@@ -71,7 +71,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/18/mysql/mysql-transaction/"><span class="title">MySQL 底层原理丨事务的实现（及三种日志）</span></a><a class="item title" href="/2025/12/18/kafka/kafka-why-kafka-so-fast/"><span class="title">[object Object]</span></a><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a><a class="item title" href="/2025/11/19/go/go-gc-green-tea-gc/"><span class="title">Go 底层原理丨垃圾回收（green tea gc）</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -95,60 +95,64 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>本系列文章通过逐章回答<a target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of Software Architecture》</a>（下文简称 FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第四章</u>内容。</p>
+  </div><article class="md-text content"><p>本系列文章通过逐章回答<a
+target="_blank" rel="noopener" href="https://fundamentalsofsoftwarearchitecture.com/">《Fundamentals of
+Software Architecture》</a>（下文简称
+FOSA）一书中的课后思考题，来深入理解书中的核心概念和理论，从而提升我们的软件架构设计能力。本篇为<u>第四章</u>内容。</p>
 <p>本章的课后题是：</p>
-<ol>
-<li>
-<p>What three criteria must an attribute meet to be considered an architecture characteristic?</p>
-<p>一个属性要被认定为架构特性，必须满足哪三个条件？</p>
-</li>
-<li>
-<p>What is the difference between an implicit characteristic and an explicit one? Provide an example of each.</p>
-<p>隐性特性和显性特性的区别是什么？请分别举一个例子。</p>
-</li>
-<li>
-<p>Provide an example of an operational characteristic.</p>
-<p>提供一个操作特性的例子。</p>
-</li>
-<li>
-<p>Provide an example of a structural characteristic.</p>
-<p>提供一个结构特性的例子。</p>
-</li>
-<li>
-<p>Provide an example of a cross-cutting characteristic.</p>
-<p>提供一个交叉特性的例子。</p>
-</li>
-<li>
-<p>Which architecture characteristic is more important to strive for—availability or performance?</p>
-<p>在架构特性中，更应努力追求的是可用性还是性能？</p>
-</li>
+<ol type="1">
+<li><p>What three criteria must an attribute meet to be considered an
+architecture characteristic?</p>
+<p>一个属性要被认定为架构特性，必须满足哪三个条件？</p></li>
+<li><p>What is the difference between an implicit characteristic and an
+explicit one? Provide an example of each.</p>
+<p>隐性特性和显性特性的区别是什么？请分别举一个例子。</p></li>
+<li><p>Provide an example of an operational characteristic.</p>
+<p>提供一个操作特性的例子。</p></li>
+<li><p>Provide an example of a structural characteristic.</p>
+<p>提供一个结构特性的例子。</p></li>
+<li><p>Provide an example of a cross-cutting characteristic.</p>
+<p>提供一个交叉特性的例子。</p></li>
+<li><p>Which architecture characteristic is more important to strive
+for—availability or performance?</p>
+<p>在架构特性中，更应努力追求的是可用性还是性能？</p></li>
 </ol>
-<hr>
+<hr />
 <h2 id="架构特性定义">架构特性定义</h2>
-<p>一个属性要成为架构特性（Architecture Characteristics），需至少满足 3 个条件：</p>
-<ol>
-<li><strong>指定非领域设计考量</strong>：架构特性关注的是应用程序&quot;如何&quot;实现需求以及做出某些选择&quot;为何&quot;的原因，而不是应用程序&quot;应该做什么&quot;的业务需求。例如，性能水平通常不会出现在需求文档中，但却是重要的架构特性。</li>
+<p>一个属性要成为架构特性（Architecture Characteristics），需至少满足 3
+个条件：</p>
+<ol type="1">
+<li><strong>指定非领域设计考量</strong>：架构特性关注的是应用程序"如何"实现需求以及做出某些选择"为何"的原因，而不是应用程序"应该做什么"的业务需求。例如，性能水平通常不会出现在需求文档中，但却是重要的架构特性。</li>
 <li><strong>影响设计的某个结构方面</strong>：如果一个架构特性需要特殊结构考虑才能成功，那么它就会上升到架构特性的层面。例如，一般的安全性对于几乎所有项目都是必需的，但当需要设计特定的模块、组件或服务来隔离关键安全问题时，安全才成为一个架构特性。</li>
 <li><strong>对应用程序的成功至关重要</strong>：应用程序可以支持大量的架构特性，但并非所有都应该被支持。支持每个架构特性都会增加设计的复杂性，因此，架构师的关键任务是选择最少的、对应用程序成功至关重要或重要的架构特性，而不是尽可能多的。</li>
 </ol>
 <h2 id="显性-隐性">显性 &amp; 隐性</h2>
 <ul>
-<li>
-<p><strong>显性架构特性 (Explicit Architecture Characteristics)</strong> 是在需求规范中明确列出的，作为必要设计的一部分。它们通常直接出现在需求文档或其他具体说明中。</p>
+<li><p><strong>显性架构特性 (Explicit Architecture
+Characteristics)</strong>
+是在需求规范中明确列出的，作为必要设计的一部分。它们通常直接出现在需求文档或其他具体说明中。</p>
 <blockquote>
-<p>在书中的 Silicon Sandwiches 的案例中，用户数量（“当前数千，未来可能数百万”）就隐含地要求了可伸缩性 (Scalability)，即在不严重降低性能的情况下处理大量并发用户的能力。虽然需求没有明确提出可伸缩性，但从用户数量的描述中可以推断出来</p>
-</blockquote>
-</li>
-<li>
-<p><strong>隐性架构特性 (Implicit Architecture Characteristics)</strong> 很少出现在需求文档中，但它们对于项目的成功是必需的。架构师必须利用他们对问题领域的知识，在分析阶段发现这些特征。</p>
+<p>在书中的 Silicon Sandwiches
+的案例中，用户数量（“当前数千，未来可能数百万”）就隐含地要求了可伸缩性
+(Scalability)，即在不严重降低性能的情况下处理大量并发用户的能力。虽然需求没有明确提出可伸缩性，但从用户数量的描述中可以推断出来</p>
+</blockquote></li>
+<li><p><strong>隐性架构特性 (Implicit Architecture
+Characteristics)</strong>
+很少出现在需求文档中，但它们对于项目的成功是必需的。架构师必须利用他们对问题领域的知识，在分析阶段发现这些特征。</p>
 <blockquote>
-<p>可用性 (Availability) 是一种隐性特征，它确保用户可以访问系统。与可用性密切相关的是可靠性 (Reliability)，它确保网站在交互过程中保持正常运行，不会出现连接中断等问题。这些特征通常不会在设计文档中明确指定，但对于几乎所有应用程序都至关重要。</p>
-</blockquote>
-</li>
+<p>可用性 (Availability)
+是一种隐性特征，它确保用户可以访问系统。与可用性密切相关的是可靠性
+(Reliability)，它确保网站在交互过程中保持正常运行，不会出现连接中断等问题。这些特征通常不会在设计文档中明确指定，但对于几乎所有应用程序都至关重要。</p>
+</blockquote></li>
 </ul>
 <h2 id="操作特性">操作特性</h2>
-<p>操作性架构特性涵盖了系统的<strong>运行能力</strong>，例如性能、可伸缩性、弹性、可用性和可靠性等。这些特性通常与运营和 DevOps 关注点高度重叠。</p>
+<p>操作性架构特性涵盖了系统的<strong>运行能力</strong>，例如性能、可伸缩性、弹性、可用性和可靠性等。这些特性通常与运营和
+DevOps 关注点高度重叠。</p>
 <table>
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 90%" />
+</colgroup>
 <thead>
 <tr>
 <th>特性</th>
@@ -158,7 +162,8 @@
 <tbody>
 <tr>
 <td>Availability</td>
-<td>系统需要保持可用的时间长度；例如，如果需要 24/7 可用，则需要采取措施确保系统始终可用。它指的是软件可操作和可访问的程度。</td>
+<td>系统需要保持可用的时间长度；例如，如果需要 24/7
+可用，则需要采取措施确保系统始终可用。它指的是软件可操作和可访问的程度。</td>
 </tr>
 <tr>
 <td>Continuity</td>
@@ -189,6 +194,10 @@
 <h2 id="结构特性">结构特性</h2>
 <p>结构性架构特性关注<strong>代码结构</strong>。在许多情况下，架构师对代码质量问题负有独立或共同的责任，例如良好的模块化、组件间的受控耦合、可读性强的代码以及其他内部质量评估。</p>
 <table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 85%" />
+</colgroup>
 <thead>
 <tr>
 <th>特性</th>
@@ -233,6 +242,10 @@
 <h2 id="交叉特性">交叉特性</h2>
 <p>交叉架构特性指的是那些难以归类或超出传统类别，但却形成重要设计约束和考虑的特性。</p>
 <table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 89%" />
+</colgroup>
 <thead>
 <tr>
 <th>特性</th>
@@ -258,7 +271,8 @@
 </tr>
 <tr>
 <td>Legal</td>
-<td>系统在哪些法律约束下运行（数据保护、萨班斯-奥克斯利法案、GDPR 等）？公司需要哪些保留权利？关于应用程序构建或部署方式的任何规定。</td>
+<td>系统在哪些法律约束下运行（数据保护、萨班斯-奥克斯利法案、GDPR
+等）？公司需要哪些保留权利？关于应用程序构建或部署方式的任何规定。</td>
 </tr>
 <tr>
 <td>Privacy</td>
@@ -279,24 +293,28 @@
 </tbody>
 </table>
 <h2 id="可用性-vs-性能">可用性 vs 性能</h2>
-<p>在架构特性中，没有绝对的&quot;更重要&quot;之分，只有权衡取舍 (trade-offs)。这是软件架构的第一定律。架构师很少能够设计一个系统来最大化每一个架构特性。</p>
+<p>在架构特性中，没有绝对的"更重要"之分，只有权衡取舍
+(trade-offs)。这是软件架构的第一定律。架构师很少能够设计一个系统来最大化每一个架构特性。</p>
 <p>可用性和性能之间的选择取决于具体的业务驱动因素、环境和一系列其他因素。例如：</p>
 <ul>
 <li><strong>业务需求</strong>：
 <ul>
 <li>如果一个系统对用户来说必须始终可用，即使偶尔慢一点也可以接受，那么可用性可能是更高的优先级。例如，一个紧急服务系统或金融交易系统，即使延迟增加，也必须确保服务不中断。</li>
 <li>如果业务目标是提供极快的响应时间，即使偶尔停机也能接受，那么性能可能更重要。例如，高频交易系统，毫秒级的延迟都可能导致巨大损失。</li>
-</ul>
-</li>
+</ul></li>
 <li><strong>相互影响与权衡</strong>：提升某一个架构特性往往会对其他特性产生负面影响。例如，为了提高安全性，可能需要进行更多的加密和间接操作，这几乎肯定会负面影响性能。</li>
 <li><strong>上下文决定</strong>：不同的系统部分可能需要不同的优先级。例如，在一个在线拍卖系统中，拍卖师界面的可用性和可靠性可能比单个竞拍者界面的可用性更关键。</li>
 </ul>
-<p>因此，架构师的工作是分析这些权衡，并根据特定情况选择&quot;最不差的架构&quot;（least worst architecture）。这要求架构师深入理解业务领域，并与所有相关利益方（包括开发人员、业务分析师、产品负责人等）进行协作，而不是孤立地做出决策。</p>
+<p>因此，架构师的工作是分析这些权衡，并根据特定情况选择"最不差的架构"（least
+worst
+architecture）。这要求架构师深入理解业务领域，并与所有相关利益方（包括开发人员、业务分析师、产品负责人等）进行协作，而不是孤立地做出决策。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
+4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -336,8 +354,11 @@
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
-本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
+target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
+1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
+target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
+4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
