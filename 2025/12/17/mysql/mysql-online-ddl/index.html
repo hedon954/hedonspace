@@ -28,7 +28,7 @@
 <meta property="og:description" content="本文以第一性原理为切入点，系统梳理 MySQL Online DDL 的核心原理、发展历程与典型实现方式，结合实际场景分析 Online DDL 的类型、适用性与性能优化策略，并剖析其底层机制与使用注意事项。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-12-17T13:57:00.000Z">
-<meta property="article:modified_time" content="2025-12-18T14:56:53.702Z">
+<meta property="article:modified_time" content="2025-12-18T14:58:26.393Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="MySQL">
 <meta property="article:tag" content="Online-DDL">
@@ -83,7 +83,7 @@
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a> <span class="sep"></span> <a class="cap breadcrumb-link" href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/MySQL/">MySQL</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-12-17T13:57:00.000Z">2025-12-17</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-12-18T14:56:53.702Z">2025-12-18</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-12-17T13:57:00.000Z">2025-12-17</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-12-18T14:58:26.393Z">2025-12-18</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -418,7 +418,8 @@ COPY（要锁表），它会<strong>直接报错</strong>。</li>
 <h2 id="其他工具">5. 其他工具</h2>
 <p>原生 Online DDL 还是存在一切痛点，尤其是 INPLACE 和 COPY。所以出现了
 <code>pt-online-schema-change (pt-osc)</code> 和
-<code>github-online-schema-change (gh-ost)</code> 这两个工具。</p>
+<code>github-online-schema-migration-tool (gh-ost)</code>
+这两个工具。</p>
 <p>它们的核心思想都是 <strong>影子表（Shadow
 Table）策略</strong>：建一张新表，同步数据，最后切换。</p>
 <p>区别在于：<strong>怎么同步增量数据？</strong></p>
