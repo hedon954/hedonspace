@@ -27,6 +27,8 @@
 <meta property="og:site_name" content="HedonWang">
 <meta property="og:description" content="本文从 PyTorch 的核心设计出发，通过一个简单的例子，帮助读者理解 PyTorch 的核心设计，包括张量、自动求导、神经网络等。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250818155654972.png">
+<meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250819154449744.png">
 <meta property="og:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250818160244493.png">
 <meta property="article:published_time" content="2025-08-18T07:31:00.000Z">
 <meta property="article:modified_time" content="2025-08-25T15:15:59.965Z">
@@ -36,7 +38,7 @@
 <meta property="article:tag" content="大模型">
 <meta property="article:tag" content="PyTorch">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250818160244493.png">
+<meta name="twitter:image" content="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250818155654972.png">
   
   
   
@@ -74,7 +76,7 @@
 <div class="widgets">
 
 
-<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/18/kafka/kafka-why-kafka-so-fast/"><span class="title">[object Object]</span></a><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a><a class="item title" href="/2025/07/03/ai-rag-tech-complete/"><span class="title">RAG 全栈技术</span></a></div></widget>
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2025/12/18/mysql/mysql-transaction/"><span class="title">MySQL 底层原理丨事务的实现（及三种日志）</span></a><a class="item title" href="/2025/12/18/kafka/kafka-why-kafka-so-fast/"><span class="title">[object Object]</span></a><a class="item title" href="/2025/12/17/mysql/mysql-online-ddl/"><span class="title">MySQL 底层原理丨Online DDL</span></a><a class="item title" href="/2025/12/17/mysql/mysql-master-slave-new-questions/"><span class="title">MySQL 底层原理丨主从复制带来的新问题</span></a><a class="item title" href="/2025/12/17/mysql/mysql-lock/"><span class="title">MySQL 底层原理丨锁</span></a><a class="item title" href="/2025/04/08/mysql/mysql-ibd/"><span class="title">一步步推导出 MySQL 数据的底层存储结构</span></a><a class="item title" href="/2025/12/08/mysql/mysql-binlog-practice/"><span class="title">MySQL Binlog 实践 CDC</span></a><a class="item title" href="/2025/11/22/go/go-channel/"><span class="title">Go 底层原理丨channel</span></a><a class="item title" href="/2025/11/21/go/go-lock/"><span class="title">Go 底层原理丨锁</span></a><a class="item title" href="/2025/04/13/ai-rag-tech-overview/"><span class="title">RAG 技术概览</span></a></div></widget>
 </div>
 
 </div></aside><div class="l_main" id="main">
@@ -98,400 +100,259 @@
     </div>
     
   </div>
-  </div><article class="md-text content"><p>如果你正在学习 PyTorch，你很可能和我最初一样，有这样的困惑：PyTorch
-的 API 太多了，像一片望不到边的海洋。今天记住
-<code>view</code>，明天忘了 <code>permute</code>；刚学会
-<code>Dataset</code>，又对 <code>DataLoader</code> 的
-<code>num_workers</code>
-感到神秘。靠死记硬背来学习，不仅效率低下，而且无法真正建立起解决复杂问题的能力。</p>
-<p>这篇博文的目的，就是为了打破这种困境。我们将不再孤立地看待
-API，而是从深度学习项目的<strong>第一性原理</strong>出发，去理解：</p>
+  </div><article class="md-text content"><p>如果你正在学习 PyTorch，你很可能和我最初一样，有这样的困惑：PyTorch 的 API 太多了，像一片望不到边的海洋。今天记住 <code>view</code>，明天忘了 <code>permute</code>；刚学会 <code>Dataset</code>，又对 <code>DataLoader</code> 的 <code>num_workers</code> 感到神秘。靠死记硬背来学习，不仅效率低下，而且无法真正建立起解决复杂问题的能力。</p>
+<p>这篇博文的目的，就是为了打破这种困境。我们将不再孤立地看待 API，而是从深度学习项目的<strong>第一性原理</strong>出发，去理解：</p>
 <ul>
-<li><strong>为什么会有这些 API？</strong>
-它们各自解决了什么核心问题？</li>
-<li><strong>它们之间是什么关系？</strong>
-如何协同工作，共同完成一个任务？</li>
+<li><strong>为什么会有这些 API？</strong> 它们各自解决了什么核心问题？</li>
+<li><strong>它们之间是什么关系？</strong> 如何协同工作，共同完成一个任务？</li>
 </ul>
 <p>我们将从两个层面来构建你的 PyTorch 知识体系：</p>
-<ol type="1">
-<li><strong>宏观篇：思维骨架</strong> -
-搭建一个完整的深度学习项目工作流，理解 PyTorch 的顶层设计。</li>
-<li><strong>微观篇：数据血液</strong> - 深入模型内部，掌控作为“血液”的
-Tensor（张量）如何在其间流动和变换。</li>
+<ol>
+<li><strong>宏观篇：思维骨架</strong> - 搭建一个完整的深度学习项目工作流，理解 PyTorch 的顶层设计。</li>
+<li><strong>微观篇：数据血液</strong> - 深入模型内部，掌控作为“血液”的 Tensor（张量）如何在其间流动和变换。</li>
 </ol>
-<h2 id="宏观篇搭建你的-pytorch-思维骨架">宏观篇：搭建你的 PyTorch
-思维骨架</h2>
-<h3 id="pytorch-的核心设计哲学灵活与直观">1. PyTorch
-的核心设计哲学：灵活与直观</h3>
+<h2 id="宏观篇：搭建你的-PyTorch-思维骨架">宏观篇：搭建你的 PyTorch 思维骨架</h2>
+<h3 id="1-PyTorch-的核心设计哲学：灵活与直观">1. PyTorch 的核心设计哲学：灵活与直观</h3>
 <p>要理解 PyTorch，首先要理解它的两个核心特点：</p>
-<ol type="1">
+<ol>
 <li>动态计算图（Dynamic Computational Graph）</li>
 <li>Python 优先（Python-First）</li>
 </ol>
-<p><strong>动态计算图</strong>：这是 PyTorch 与早期 TensorFlow
-(TensorFlow 1.x)
-最大的区别。传统的静态图是"先定义，后执行"，你必须先构建一个完整的计算图，然后才能送入数据。而
-PyTorch
-的动态图是"即时执行"(Define-by-Run)，计算图的构建和计算是同时发生的。</p>
+<p><strong>动态计算图</strong>：这是 PyTorch 与早期 TensorFlow (TensorFlow 1.x) 最大的区别。传统的静态图是&quot;先定义，后执行&quot;，你必须先构建一个完整的计算图，然后才能送入数据。而 PyTorch 的动态图是&quot;即时执行&quot;(Define-by-Run)，计算图的构建和计算是同时发生的。</p>
 <ul>
-<li><strong>解决了什么问题？</strong>
-极大地增强了灵活性。对于处理动态输入（如长度可变的文本）的 NLP
-任务，或者需要复杂控制流（如循环、条件判断）的模型，动态图非常直观和方便。调试也变得异常简单，你可以像调试普通
-Python 代码一样，随时停下来查看中间变量的值。</li>
-<li><strong>对应的 API 体现：</strong> 你写的每一行 PyTorch
-计算代码（例如
-<code>c = a + b</code>），都在动态地构建一个微小的计算图。你不需要任何特殊的
-session 或 placeholder。</li>
+<li><strong>解决了什么问题？</strong> 极大地增强了灵活性。对于处理动态输入（如长度可变的文本）的 NLP 任务，或者需要复杂控制流（如循环、条件判断）的模型，动态图非常直观和方便。调试也变得异常简单，你可以像调试普通 Python 代码一样，随时停下来查看中间变量的值。</li>
+<li><strong>对应的 API 体现：</strong> 你写的每一行 PyTorch 计算代码（例如 <code>c = a + b</code>），都在动态地构建一个微小的计算图。你不需要任何特殊的 session 或 placeholder。</li>
 </ul>
-<p><strong>Python 优先</strong>：PyTorch 深度整合在 Python
-生态中，其设计充满了 Pythonic
-的风格。它感觉不像是一个独立的程序，更像是一个 Python 的超强数学和 GPU
-计算库。</p>
+<p><strong>Python 优先</strong>：PyTorch 深度整合在 Python 生态中，其设计充满了 Pythonic 的风格。它感觉不像是一个独立的程序，更像是一个 Python 的超强数学和 GPU 计算库。</p>
 <ul>
-<li><strong>解决了什么问题？</strong>
-降低了学习门槛，提高了开发效率。研究人员和开发者可以用最熟悉的方式快速迭代想法。</li>
-<li><strong>对应的 API 体现：</strong> 你会发现 PyTorch 的类（如
-<code>nn.Module</code>）、数据结构（如 <code>Tensor</code>
-的操作）和整体编程范式都与 NumPy 等常见 Python 库非常相似。</li>
+<li><strong>解决了什么问题？</strong> 降低了学习门槛，提高了开发效率。研究人员和开发者可以用最熟悉的方式快速迭代想法。</li>
+<li><strong>对应的 API 体现：</strong> 你会发现 PyTorch 的类（如 <code>nn.Module</code>）、数据结构（如 <code>Tensor</code> 的操作）和整体编程范式都与 NumPy 等常见 Python 库非常相似。</li>
 </ul>
-<h3 id="典型的深度学习流程与-pytorch-api-的映射">2. 典型的深度学习流程与
-PyTorch API 的映射</h3>
-<p>我们可以将一个完整的深度学习项目分为几个核心阶段。PyTorch 的 API
-设计就是为了服务于这个流程中的每一步。</p>
-<ol type="1">
+<h3 id="2-典型的深度学习流程与-PyTorch-API-的映射">2. 典型的深度学习流程与 PyTorch API 的映射</h3>
+<p>我们可以将一个完整的深度学习项目分为几个核心阶段。PyTorch 的 API 设计就是为了服务于这个流程中的每一步。</p>
+<ol>
 <li>数据准备（The Fuel）</li>
 <li>模型构建（The Engine）</li>
 <li>训练循环（The Driving Process）</li>
 </ol>
-<figure>
-<img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250818155654972.png"
-alt="典型的深度学习流程与 PyTorch API 的映射" />
-<figcaption aria-hidden="true">典型的深度学习流程与 PyTorch API
-的映射</figcaption>
-</figure>
-<h4 id="阶段-1数据准备-the-fuel">阶段 1：数据准备 (The Fuel)</h4>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250818155654972.png" alt="典型的深度学习流程与 PyTorch API 的映射"></p>
+<h4 id="阶段-1：数据准备-The-Fuel">阶段 1：数据准备 (The Fuel)</h4>
 <p><strong>面临的问题：</strong></p>
-<ol type="1">
+<ol>
 <li>原始数据格式各异，如何统一读取？</li>
 <li>数据集可能非常大，无法一次性载入内存，怎么办？</li>
-<li>训练时需要对数据进行批量 (batching)、打乱 (shuffling) 和预处理
-(preprocessing)，如何高效实现？</li>
+<li>训练时需要对数据进行批量 (batching)、打乱 (shuffling) 和预处理 (preprocessing)，如何高效实现？</li>
 <li>如何利用多核 CPU 来加速数据加载，避免 GPU 等待？</li>
 </ol>
-<p><strong>PyTorch 的解决方案 (核心 API):</strong>
-<code>torch.utils.data.Dataset</code> 和
-<code>torch.utils.data.DataLoader</code></p>
+<p><strong>PyTorch 的解决方案 (核心 API):</strong> <code>torch.utils.data.Dataset</code> 和 <code>torch.utils.data.DataLoader</code></p>
 <p><strong>API 关系与解析：</strong></p>
 <ul>
-<li><code>Dataset</code>：<strong>它定义了"数据集"是什么</strong>。这是一个抽象类，你只需要继承它并实现两个方法：<code>__len__</code>(返回数据集大小)
-和 <code>__getitem__</code> (根据索引 <code>idx</code>
-返回一条数据)。它解决了“如何获取单条数据”的问题，将数据访问的逻辑封装起来。</li>
-<li><code>DataLoader</code>：<strong>它定义了"如何使用数据集"</strong>。它接收一个
-<code>Dataset</code> 对象，并在此基础上，优雅地解决了所有工程问题：
+<li><code>Dataset</code>：<strong>它定义了&quot;数据集&quot;是什么</strong>。这是一个抽象类，你只需要继承它并实现两个方法：<code>__len__</code>(返回数据集大小) 和 <code>__getitem__</code> (根据索引 <code>idx</code> 返回一条数据)。它解决了“如何获取单条数据”的问题，将数据访问的逻辑封装起来。</li>
+<li><code>DataLoader</code>：<strong>它定义了&quot;如何使用数据集&quot;</strong>。它接收一个 <code>Dataset</code> 对象，并在此基础上，优雅地解决了所有工程问题：
 <ul>
 <li><code>batch_size</code>：自动将单条数据打包成一个 batch。</li>
-<li><code>shuffle=True</code>：在每个 epoch
-开始时自动打乱数据顺序。</li>
+<li><code>shuffle=True</code>：在每个 epoch 开始时自动打乱数据顺序。</li>
 <li><code>num_workers</code>：启动多个子进程并行加载数据，极大地提高了数据供给效率。</li>
-<li><code>collate_fn</code>：自定义如何将多条样本合并成一个
-batch，对于处理非标准数据（如不同长度的句子）非常有用。</li>
-</ul></li>
+<li><code>collate_fn</code>：自定义如何将多条样本合并成一个 batch，对于处理非标准数据（如不同长度的句子）非常有用。</li>
 </ul>
-<p><strong>一句话总结：<u><code>Dataset</code>
-负责“取”，<code>DataLoader</code>
-负责“送”。它们共同解决了数据供给的效率和标准化问题</u>。</strong></p>
-<p><img
-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250819154449744.png" /></p>
-<h4 id="阶段-2模型构建-the-engine">阶段 2：模型构建 (The Engine)</h4>
+</li>
+</ul>
+<p><strong>一句话总结：<u><code>Dataset</code> 负责“取”，<code>DataLoader</code> 负责“送”。它们共同解决了数据供给的效率和标准化问题</u>。</strong></p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250819154449744.png" alt=""></p>
+<h4 id="阶段-2：模型构建-The-Engine">阶段 2：模型构建 (The Engine)</h4>
 <p><strong>面临的问题：</strong></p>
-<ol type="1">
+<ol>
 <li>如何定义一个神经网络结构？</li>
-<li>网络中包含大量需要学习的参数（权重 <code>weights</code> 和偏置
-<code>biases</code>），如何有效地管理它们？</li>
+<li>网络中包含大量需要学习的参数（权重 <code>weights</code> 和偏置 <code>biases</code>），如何有效地管理它们？</li>
 <li>如何实现前向传播 (forward pass) 的计算逻辑？</li>
 <li>如何方便地在 CPU 和 GPU 之间切换模型？</li>
 </ol>
-<p><strong>PyTorch 的解决方案 (核心 API):</strong>
-<code>torch.nn.Module</code></p>
+<p><strong>PyTorch 的解决方案 (核心 API):</strong> <code>torch.nn.Module</code></p>
 <p><strong>API 关系与解析：</strong></p>
 <ul>
-<li><p><code>torch.Tensor</code>：<strong>这是 PyTorch
-的基石</strong>。它不仅仅是一个像 NumPy <code>ndarray</code>
-一样的多维数组，它还承载了另外两个至关重要的信息：</p>
+<li>
+<p><code>torch.Tensor</code>：<strong>这是 PyTorch 的基石</strong>。它不仅仅是一个像 NumPy <code>ndarray</code> 一样的多维数组，它还承载了另外两个至关重要的信息：</p>
 <ul>
 <li><code>grad_fn</code>：指向创建这个张量的函数，用于构建反向传播的计算图。</li>
-<li><code>grad</code>：存储该张量的梯度。 你可以通过
-<code>tensor.to('cuda')</code> 轻松地将其移动到 GPU。</li>
-</ul></li>
-<li><p><code>torch.nn.Module</code>：<strong>所有神经网络层的基类</strong>。你可以把它想象成一个容器或一个零件。</p>
-<ul>
-<li>在 <code>__init__</code> 方法中，我们定义模型的"零件"，例如
-<code>self.conv1 = nn.Conv2d(...)</code>，<code>self.fc1 = nn.Linear(...)</code>。当你定义这些层时，PyTorch
-会自动将它们的参数注册到这个 <code>Module</code> 中。</li>
-<li>在 <code>forward</code>
-方法中，我们定义这些"零件"如何连接起来，完成从输入到输出的计算。</li>
-</ul></li>
-<li><p><strong>为什么需要 <code>nn.Module</code>
-而不是直接用函数？</strong></p>
-<p>因为 <code>nn.Module</code> 帮你自动处理了参数管理。你只需要调用
-<code>model.parameters()</code>
-就可以获取模型中所有需要训练的参数，而不需要手动去追踪每一个权重和偏置。它还提供了
-<code>model.train()</code> 和 <code>model.eval()</code>
-模式切换等便利功能，用于控制 <code>Dropout</code> 和
-<code>BatchNorm</code> 等层的行为。</p></li>
+<li><code>grad</code>：存储该张量的梯度。 你可以通过 <code>tensor.to('cuda')</code> 轻松地将其移动到 GPU。</li>
 </ul>
-<p><strong>一句话总结：<u>我们用 <code>Tensor</code> 作为数据流，用
-<code>nn.Module</code> 将神经网络的“骨架”和“参数”组织起来，并在
-<code>forward</code>
-方法中定义数据如何在这个骨架中流动。</u></strong></p>
-<h4 id="阶段-3训练循环-the-driving-process">阶段 3：训练循环 (The
-Driving Process)</h4>
+</li>
+<li>
+<p><code>torch.nn.Module</code>：<strong>所有神经网络层的基类</strong>。你可以把它想象成一个容器或一个零件。</p>
+<ul>
+<li>在 <code>__init__</code> 方法中，我们定义模型的&quot;零件&quot;，例如 <code>self.conv1 = nn.Conv2d(...)</code>，<code>self.fc1 = nn.Linear(...)</code>。当你定义这些层时，PyTorch 会自动将它们的参数注册到这个 <code>Module</code> 中。</li>
+<li>在 <code>forward</code> 方法中，我们定义这些&quot;零件&quot;如何连接起来，完成从输入到输出的计算。</li>
+</ul>
+</li>
+<li>
+<p><strong>为什么需要 <code>nn.Module</code> 而不是直接用函数？</strong></p>
+<p>因为 <code>nn.Module</code> 帮你自动处理了参数管理。你只需要调用 <code>model.parameters()</code> 就可以获取模型中所有需要训练的参数，而不需要手动去追踪每一个权重和偏置。它还提供了 <code>model.train()</code> 和 <code>model.eval()</code> 模式切换等便利功能，用于控制 <code>Dropout</code> 和 <code>BatchNorm</code> 等层的行为。</p>
+</li>
+</ul>
+<p><strong>一句话总结：<u>我们用 <code>Tensor</code> 作为数据流，用 <code>nn.Module</code> 将神经网络的“骨架”和“参数”组织起来，并在 <code>forward</code> 方法中定义数据如何在这个骨架中流动。</u></strong></p>
+<h4 id="阶段-3：训练循环-The-Driving-Process">阶段 3：训练循环 (The Driving Process)</h4>
 <p>这是整个流程的核心，涉及到损失计算、反向传播和参数更新。</p>
 <p><strong>面临的问题：</strong></p>
-<ol type="1">
+<ol>
 <li>模型输出和真实标签之间的差距（损失）如何计算？</li>
 <li>如何根据损失计算出模型中每个参数的梯度 (gradient)？</li>
 <li>如何根据梯度来更新参数，以使损失变小？</li>
 </ol>
-<p><strong>PyTorch 的解决方案 (核心 API):</strong>
-<code>torch.autograd</code>, <code>loss functions</code>,
-<code>torch.optim</code></p>
+<p><strong>PyTorch 的解决方案 (核心 API):</strong> <code>torch.autograd</code>, <code>loss functions</code>, <code>torch.optim</code></p>
 <p><strong>API 关系与解析：</strong></p>
-<ol type="1">
-<li><strong>损失函数 (Loss Function)</strong> - 例如
-<code>nn.CrossEntropyLoss</code>, <code>nn.MSELoss</code>
+<ol>
+<li><strong>损失函数 (Loss Function)</strong> - 例如 <code>nn.CrossEntropyLoss</code>, <code>nn.MSELoss</code>
 <ul>
-<li><strong>作用：</strong> 衡量模型预测值 <code>output</code> 和真实值
-<code>target</code> 之间的差距，计算出一个标量值 <code>loss</code>。这个
-<code>loss</code> 就是我们优化的目标，我们希望它越小越好。</li>
-</ul></li>
-<li><strong>自动求导系统 (Autograd)</strong> -
-<code>loss.backward()</code>
+<li><strong>作用：</strong> 衡量模型预测值 <code>output</code> 和真实值 <code>target</code> 之间的差距，计算出一个标量值 <code>loss</code>。这个 <code>loss</code> 就是我们优化的目标，我们希望它越小越好。</li>
+</ul>
+</li>
+<li><strong>自动求导系统 (Autograd)</strong> - <code>loss.backward()</code>
 <ul>
-<li><strong>作用：</strong> 这是 PyTorch 的魔法核心。当你对一个
-<code>requires_grad=True</code> 的 <code>Tensor</code>（我们的
-<code>loss</code> 就是）调用 <code>.backward()</code> 方法时，PyTorch
-会自动沿着计算图反向传播，计算出图中所有 <code>requires_grad=True</code>
-的叶子节点（也就是我们模型的参数 <code>model.parameters()</code>）相对于
-<code>loss</code>的梯度，并把结果累加到这些参数的 <code>.grad</code>
-属性上。</li>
-<li><strong>它解决了什么？</strong>
-解决了深度学习中最复杂、最容易出错的数学问题——梯度计算。你不需要手动去推导和实现链式法则。</li>
-</ul></li>
-<li><strong>优化器 (Optimizer)</strong> - <code>torch.optim</code> (例如
-<code>optim.SGD</code>, <code>optim.Adam</code>)
+<li><strong>作用：</strong> 这是 PyTorch 的魔法核心。当你对一个 <code>requires_grad=True</code> 的 <code>Tensor</code>（我们的 <code>loss</code> 就是）调用 <code>.backward()</code> 方法时，PyTorch 会自动沿着计算图反向传播，计算出图中所有 <code>requires_grad=True</code> 的叶子节点（也就是我们模型的参数 <code>model.parameters()</code>）相对于 <code>loss</code>的梯度，并把结果累加到这些参数的 <code>.grad</code> 属性上。</li>
+<li><strong>它解决了什么？</strong> 解决了深度学习中最复杂、最容易出错的数学问题——梯度计算。你不需要手动去推导和实现链式法则。</li>
+</ul>
+</li>
+<li><strong>优化器 (Optimizer)</strong> - <code>torch.optim</code> (例如 <code>optim.SGD</code>, <code>optim.Adam</code>)
 <ul>
 <li><strong>作用：</strong> 它根据计算出的梯度来更新模型的参数。</li>
-<li><strong>工作流程（三步曲）：</strong> a.
-<code>optimizer.zero_grad()</code>：清空上一轮迭代中累积的梯度。因为
-PyTorch 的梯度是累加的 (<code>+=</code>)，所以每轮更新前必须手动清零。
-b. <code>loss.backward()</code>：计算当前 batch 的梯度。 c.
-<code>optimizer.step()</code>：根据梯度更新参数。优化器会根据自身的算法（如
-SGD, Adam）来执行 <code>w = w - learning_rate * w.grad</code>
-这样的更新操作。</li>
-</ul></li>
+<li><strong>工作流程（三步曲）：</strong> a. <code>optimizer.zero_grad()</code>：清空上一轮迭代中累积的梯度。因为 PyTorch 的梯度是累加的 (<code>+=</code>)，所以每轮更新前必须手动清零。 b. <code>loss.backward()</code>：计算当前 batch 的梯度。 c. <code>optimizer.step()</code>：根据梯度更新参数。优化器会根据自身的算法（如 SGD, Adam）来执行 <code>w = w - learning_rate * w.grad</code> 这样的更新操作。</li>
+</ul>
+</li>
 </ol>
-<p><strong>一句话总结：<u><code>损失函数</code>
-告诉我们"错的有多离谱"，<code>loss.backward()</code>
-告诉我们"每个参数应该朝哪个方向改"，<code>optimizer.step()</code>
-负责"实际去改这些参数"。这三者构成了训练的核心闭环</u>。</strong></p>
-<h3 id="代码示例">3. 代码示例</h3>
+<p><strong>一句话总结：<u><code>损失函数</code> 告诉我们&quot;错的有多离谱&quot;，<code>loss.backward()</code> 告诉我们&quot;每个参数应该朝哪个方向改&quot;，<code>optimizer.step()</code> 负责&quot;实际去改这些参数&quot;。这三者构成了训练的核心闭环</u>。</strong></p>
+<h3 id="3-代码示例">3. 代码示例</h3>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</span><br><span class="line"><span class="keyword">from</span> torch.utils.data <span class="keyword">import</span> TensorDataset, DataLoader</span><br><span class="line"></span><br><span class="line"><span class="comment"># 1. 数据准备 (Data Preparation)</span></span><br><span class="line"><span class="comment"># 假设我们有 100 个样本，每个样本 10 个特征，标签是 0 或 1</span></span><br><span class="line">X_train = torch.randn(<span class="number">100</span>, <span class="number">10</span>)</span><br><span class="line">y_train = torch.randint(<span class="number">0</span>, <span class="number">2</span>, (<span class="number">100</span>,)).<span class="built_in">float</span>()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用 Dataset 和 DataLoader 封装数据</span></span><br><span class="line"><span class="comment"># TensorDataset 是一个方便的包装器</span></span><br><span class="line">dataset = TensorDataset(X_train, y_train)</span><br><span class="line"><span class="comment"># DataLoader 负责批量、打乱等</span></span><br><span class="line">dataloader = DataLoader(dataset, batch_size=<span class="number">16</span>, shuffle=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 模型构建 (Model Building)</span></span><br><span class="line"><span class="comment"># 继承 nn.Module 来定义我们自己的模型</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SimpleModel</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="built_in">super</span>().__init__()</span><br><span class="line">        <span class="comment"># 在 __init__ 中定义模型的层（零件）</span></span><br><span class="line">        <span class="variable language_">self</span>.layer1 = nn.Linear(<span class="number">10</span>, <span class="number">5</span>) <span class="comment"># 输入 10 特征，输出 5 特征</span></span><br><span class="line">        <span class="variable language_">self</span>.activation = nn.ReLU()</span><br><span class="line">        <span class="variable language_">self</span>.layer2 = nn.Linear(<span class="number">5</span>, <span class="number">1</span>)  <span class="comment"># 输入 5 特征，输出 1 特征</span></span><br><span class="line">        <span class="variable language_">self</span>.sigmoid = nn.Sigmoid()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x</span>):</span><br><span class="line">        <span class="comment"># 在 forward 中定义数据如何流动</span></span><br><span class="line">        x = <span class="variable language_">self</span>.layer1(x)</span><br><span class="line">        x = <span class="variable language_">self</span>.activation(x)</span><br><span class="line">        x = <span class="variable language_">self</span>.layer2(x)</span><br><span class="line">        x = <span class="variable language_">self</span>.sigmoid(x)</span><br><span class="line">        <span class="keyword">return</span> x</span><br><span class="line"></span><br><span class="line">model = SimpleModel()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 定义损失函数和优化器 (Loss &amp; Optimizer)</span></span><br><span class="line">criterion = nn.BCELoss() <span class="comment"># 二分类交叉熵损失</span></span><br><span class="line">optimizer = torch.optim.SGD(model.parameters(), lr=<span class="number">0.01</span>) <span class="comment"># 随机梯度下降优化器</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. 训练循环 (Training Loop)</span></span><br><span class="line">num_epochs = <span class="number">5</span></span><br><span class="line"><span class="keyword">for</span> epoch <span class="keyword">in</span> <span class="built_in">range</span>(num_epochs):</span><br><span class="line">    <span class="keyword">for</span> inputs, labels <span class="keyword">in</span> dataloader: <span class="comment"># DataLoader 自动提供 batch</span></span><br><span class="line">        <span class="comment"># a. 前向传播</span></span><br><span class="line">        outputs = model(inputs)</span><br><span class="line">        loss = criterion(outputs.squeeze(), labels)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># b. 反向传播与优化（三步曲）</span></span><br><span class="line">        optimizer.zero_grad()  <span class="comment"># 1. 梯度清零</span></span><br><span class="line">        loss.backward()        <span class="comment"># 2. 计算梯度</span></span><br><span class="line">        optimizer.step()       <span class="comment"># 3. 更新参数</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;Epoch [<span class="subst">&#123;epoch+<span class="number">1</span>&#125;</span>/<span class="subst">&#123;num_epochs&#125;</span>], Loss: <span class="subst">&#123;loss.item():<span class="number">.4</span>f&#125;</span>&#x27;</span>)</span><br></pre></td></tr></table></figure>
 <blockquote>
-<p>或者可以参考笔者在学习 <a
-target="_blank" rel="noopener" href="https://github.com/rasbt/LLMs-from-scratch">Build a Large Language
-Model (From Scratch)</a> 一书时实践的训练 GPT-2 大模型的<a
-target="_blank" rel="noopener" href="https://github.com/hedon-ai-road/llm-from-scratch/blob/main/5-%E8%AE%AD%E7%BB%83%E5%A4%A7%E6%A8%A1%E5%9E%8B.ipynb">代码</a>，会更复杂具体些。</p>
+<p>或者可以参考笔者在学习 <a target="_blank" rel="noopener" href="https://github.com/rasbt/LLMs-from-scratch">Build a Large Language Model (From Scratch)</a> 一书时实践的训练 GPT-2 大模型的<a target="_blank" rel="noopener" href="https://github.com/hedon-ai-road/llm-from-scratch/blob/main/5-%E8%AE%AD%E7%BB%83%E5%A4%A7%E6%A8%A1%E5%9E%8B.ipynb">代码</a>，会更复杂具体些。</p>
 </blockquote>
-<p>现在再回过头看 PyTorch 的众多
-API，你会发现它们都可以归入上述的框架中：</p>
+<p>现在再回过头看 PyTorch 的众多 API，你会发现它们都可以归入上述的框架中：</p>
 <ul>
-<li><strong>数据层
-(<code>torch.utils.data</code>)</strong>：一切为了高效、标准地提供数据。</li>
-<li><strong>模型层
-(<code>torch.nn</code>)</strong>：一切为了灵活、方便地搭建和管理模型。<code>nn.Conv2d</code>,
-<code>nn.LSTM</code>, <code>nn.Transformer</code> 都是预先实现好的
-<code>nn.Module</code> "零件"。<code>nn.functional</code>
-里是对应的无状态函数版本（例如 <code>F.relu</code>），通常在
-<code>forward</code> 中使用。</li>
-<li><strong>自动求导层
-(<code>torch.autograd</code>)</strong>：训练的幕后英雄，默默地处理最复杂的数学。</li>
-<li><strong>优化层
-(<code>torch.optim</code>)</strong>：应用梯度的不同策略，决定了模型参数如何被更新。</li>
-<li><strong>基础 (<code>torch</code>)</strong>：核心数据结构
-<code>Tensor</code> 以及大量的数学运算。</li>
+<li><strong>数据层 (<code>torch.utils.data</code>)</strong>：一切为了高效、标准地提供数据。</li>
+<li><strong>模型层 (<code>torch.nn</code>)</strong>：一切为了灵活、方便地搭建和管理模型。<code>nn.Conv2d</code>, <code>nn.LSTM</code>, <code>nn.Transformer</code> 都是预先实现好的 <code>nn.Module</code> “零件”。<code>nn.functional</code> 里是对应的无状态函数版本（例如 <code>F.relu</code>），通常在 <code>forward</code> 中使用。</li>
+<li><strong>自动求导层 (<code>torch.autograd</code>)</strong>：训练的幕后英雄，默默地处理最复杂的数学。</li>
+<li><strong>优化层 (<code>torch.optim</code>)</strong>：应用梯度的不同策略，决定了模型参数如何被更新。</li>
+<li><strong>基础 (<code>torch</code>)</strong>：核心数据结构 <code>Tensor</code> 以及大量的数学运算。</li>
 </ul>
-<h2 id="微观篇掌控-tensor-的七十二变">微观篇：掌控 Tensor
-的"七十二变"</h2>
-<p>如果说理解工作流是掌握了"骨架"，那么理解 Tensor
-的形状变化就是掌握了"血液"在骨架中的流动方式。几乎 80% 的 PyTorch 新手
-bug 都和 Tensor shape（张量形状）不匹配有关。</p>
-<p>延续之前的思路，我们依然不孤立地看 API，而是将它们放入
-<strong>"为什么需要变 -&gt; 在哪里变 -&gt; 如何变"</strong>
-的逻辑框架中，由浅入深地进行拆解。</p>
-<h3 id="核心心智模型shape-is-semantics形状即语义">1. 核心心智模型：Shape
-is Semantics（形状即语义）</h3>
-<p>在深入 API 之前，请先建立一个最重要的心智模型：<u><strong>Tensor
-的每一个维度 (dimension) 都有其特定的语义含义</strong></u>。</p>
-<p>一个典型的 4D Tensor <code>(B, C, H, W)</code> 在计算机视觉中，其形状
-<code>(16, 3, 224, 224)</code> 并不是一串孤立的数字，它的意思是：</p>
+<h2 id="微观篇：掌控-Tensor-的-七十二变">微观篇：掌控 Tensor 的&quot;七十二变&quot;</h2>
+<p>如果说理解工作流是掌握了&quot;骨架&quot;，那么理解 Tensor 的形状变化就是掌握了&quot;血液&quot;在骨架中的流动方式。几乎 80% 的 PyTorch 新手 bug 都和 Tensor shape（张量形状）不匹配有关。</p>
+<p>延续之前的思路，我们依然不孤立地看 API，而是将它们放入 <strong>“为什么需要变 -&gt; 在哪里变 -&gt; 如何变”</strong> 的逻辑框架中，由浅入深地进行拆解。</p>
+<h3 id="1-核心心智模型：Shape-is-Semantics（形状即语义）">1. 核心心智模型：Shape is Semantics（形状即语义）</h3>
+<p>在深入 API 之前，请先建立一个最重要的心智模型：<u><strong>Tensor 的每一个维度 (dimension) 都有其特定的语义含义</strong></u>。</p>
+<p>一个典型的 4D Tensor <code>(B, C, H, W)</code> 在计算机视觉中，其形状 <code>(16, 3, 224, 224)</code> 并不是一串孤立的数字，它的意思是：</p>
 <ul>
-<li><strong>B (Batch size) = 16</strong>: 这个 Tensor 里有 16
-张独立的图像。</li>
-<li><strong>C (Channels) = 3</strong>: 每张图像有 3 个通道（R, G,
-B）。</li>
+<li><strong>B (Batch size) = 16</strong>: 这个 Tensor 里有 16 张独立的图像。</li>
+<li><strong>C (Channels) = 3</strong>: 每张图像有 3 个通道（R, G, B）。</li>
 <li><strong>H (Height) = 224</strong>: 每张图像的高度是 224 像素。</li>
 <li><strong>W (Width) = 224</strong>: 每张图像的宽度是 224 像素。</li>
 </ul>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250818160244493.png" alt="Tensor 的每一个维度都有其特定的语义含义" style="zoom:50%;" /></p>
-<p><strong>所有形状变换的根本原因，都是为了匹配下游操作（比如一个网络层）所期望的"语义"。</strong>
-当你遇到形状错误时，不要只想着"我要把这个 <code>(16, 512)</code> 变成
-<code>(16, 1, 512)</code>"，而应该去想："我当前的数据语义是
-<code>(批量, 特征)</code>，但下一层需要的是
-<code>(批量, 通道, 长度)</code>，所以我需要增加一个'通道'维"。</p>
+<img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://hedonspace.oss-cn-beijing.aliyuncs.com/img/image-20250818160244493.png" alt="Tensor 的每一个维度都有其特定的语义含义" style="zoom:50%;" />
+<p><strong>所有形状变换的根本原因，都是为了匹配下游操作（比如一个网络层）所期望的&quot;语义&quot;。</strong> 当你遇到形状错误时，不要只想着&quot;我要把这个 <code>(16, 512)</code> 变成 <code>(16, 1, 512)</code>&quot;，而应该去想：“我当前的数据语义是 <code>(批量, 特征)</code>，但下一层需要的是 <code>(批量, 通道, 长度)</code>，所以我需要增加一个’通道’维”。</p>
 <p>带着这个心智模型，我们来看 Tensor 的形状变换在整个流程中的角色。</p>
-<h3 id="tensor-形状变换的场景与动机">2. Tensor 形状变换的场景与动机</h3>
-<h4 id="阶段-1数据准备阶段-标准化">阶段 1：数据准备阶段 (标准化)</h4>
-<p><strong>面临的问题：</strong> 原始数据（例如一张磁盘上的 JPEG
-图片）并不是 Tensor。即使转换成了
-Tensor，其维度也可能不符合模型训练的需要。</p>
-<p><strong>核心动机：</strong>
-<strong>标准化</strong>。将千差万别的单个数据点，统一成可以被模型批量处理的标准格式。</p>
+<h3 id="2-Tensor-形状变换的场景与动机">2. Tensor 形状变换的场景与动机</h3>
+<h4 id="阶段-1：数据准备阶段-标准化">阶段 1：数据准备阶段 (标准化)</h4>
+<p><strong>面临的问题：</strong> 原始数据（例如一张磁盘上的 JPEG 图片）并不是 Tensor。即使转换成了 Tensor，其维度也可能不符合模型训练的需要。</p>
+<p><strong>核心动机：</strong> <strong>标准化</strong>。将千差万别的单个数据点，统一成可以被模型批量处理的标准格式。</p>
 <p><strong>关键变换：增加 Batch 维度</strong></p>
 <ul>
-<li><p><strong>为什么？</strong>
-深度学习训练是基于"小批量梯度下降"(Mini-batch Gradient Descent)
-的。我们不会一次只喂给模型一张图片，而是喂一批。这有两个好处：</p>
-<ol type="1">
+<li>
+<p><strong>为什么？</strong> 深度学习训练是基于&quot;小批量梯度下降&quot;(Mini-batch Gradient Descent) 的。我们不会一次只喂给模型一张图片，而是喂一批。这有两个好处：</p>
+<ol>
 <li>硬件（特别是 GPU）并行处理一个 batch 的数据效率极高；</li>
-<li>一个 batch
-的平均梯度比单个样本的梯度更能代表整体数据，使训练更稳定。</li>
-</ol></li>
-<li><p><strong>如何实现？</strong></p>
+<li>一个 batch 的平均梯度比单个样本的梯度更能代表整体数据，使训练更稳定。</li>
+</ol>
+</li>
+<li>
+<p><strong>如何实现？</strong></p>
 <ul>
-<li><p><strong>自动处理：</strong> <code>DataLoader</code> 在你从
-<code>Dataset</code> 取数据时，会自动帮你把多个单一样本堆叠 (stack)
-在一起，在最前面增加一个 Batch 维度。如果你从 <code>Dataset</code>
-取出的单张图片 Tensor 是 <code>(C, H, W)</code>，<code>DataLoader</code>
-会输出一个 <code>(B, C, H, W)</code> 的 Tensor。</p></li>
-<li><p><strong>手动处理：</strong> 如果你只有一个样本，但模型需要一个
-batch 输入，你可以使用 <code>torch.unsqueeze(0)</code> 在第 0
-维增加一个维度。</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 一张图片，形状为 (3, 224, 224)</span></span><br><span class="line">single_image = torch.randn(<span class="number">3</span>, <span class="number">224</span>, <span class="number">224</span>)</span><br><span class="line"><span class="comment"># 模型需要 batch 输入，手动增加 batch 维</span></span><br><span class="line"><span class="comment"># 形状变为 (1, 3, 224, 224)</span></span><br><span class="line">batched_image = single_image.unsqueeze(<span class="number">0</span>)</span><br></pre></td></tr></table></figure></li>
-</ul></li>
+<li>
+<p><strong>自动处理：</strong> <code>DataLoader</code> 在你从 <code>Dataset</code> 取数据时，会自动帮你把多个单一样本堆叠 (stack) 在一起，在最前面增加一个 Batch 维度。如果你从 <code>Dataset</code> 取出的单张图片 Tensor 是 <code>(C, H, W)</code>，<code>DataLoader</code> 会输出一个 <code>(B, C, H, W)</code> 的 Tensor。</p>
+</li>
+<li>
+<p><strong>手动处理：</strong> 如果你只有一个样本，但模型需要一个 batch 输入，你可以使用 <code>torch.unsqueeze(0)</code> 在第 0 维增加一个维度。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 一张图片，形状为 (3, 224, 224)</span></span><br><span class="line">single_image = torch.randn(<span class="number">3</span>, <span class="number">224</span>, <span class="number">224</span>)</span><br><span class="line"><span class="comment"># 模型需要 batch 输入，手动增加 batch 维</span></span><br><span class="line"><span class="comment"># 形状变为 (1, 3, 224, 224)</span></span><br><span class="line">batched_image = single_image.unsqueeze(<span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+</li>
 </ul>
-<h4 id="阶段-2模型内部-forward-传播-从一种形态到另一种形态">阶段
-2：模型内部 (<code>forward</code> 传播) (从一种形态到另一种形态)</h4>
+</li>
+</ul>
+<h4 id="阶段-2：模型内部-forward-传播-从一种形态到另一种形态">阶段 2：模型内部 (<code>forward</code> 传播) (从一种形态到另一种形态)</h4>
 <p>这是形状变换最频繁、最核心的区域。</p>
 <ul>
-<li><strong>面临的问题：</strong>
-数据在流经不同类型的神经网络层时，需要符合每一层对输入形状的特定要求。</li>
-<li><strong>核心动机：</strong>
-<strong>匹配接口</strong>。就像不同规格的管道需要转接头一样，不同网络层之间需要形状变换来“转接”。</li>
+<li><strong>面临的问题：</strong> 数据在流经不同类型的神经网络层时，需要符合每一层对输入形状的特定要求。</li>
+<li><strong>核心动机：</strong> <strong>匹配接口</strong>。就像不同规格的管道需要转接头一样，不同网络层之间需要形状变换来“转接”。</li>
 </ul>
 <p>下面是几种最常见的变换场景：</p>
-<p><strong>场景 A: "压平" - 从卷积到全连接</strong></p>
+<p><strong>场景 A: “压平” - 从卷积到全连接</strong></p>
 <ul>
-<li><p><strong>为什么？</strong> 卷积层 (<code>nn.Conv2d</code>)
-非常擅长处理具有空间结构的数据（如图像），它的输出通常是 4D 的
-<code>(B, C_out, H_out, W_out)</code>，保留了空间信息。但是，全连接层
-(<code>nn.Linear</code>) 通常用于最后阶段的分类或回归，它期望的输入是 2D
-的
-<code>(B, num_features)</code>，即把每个样本的所有特征"拉平"成一个长向量。</p></li>
-<li><p><strong>如何实现？</strong> <code>view</code>,
-<code>reshape</code>, <code>flatten</code></p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 假设经过卷积和池化后，输出形状为 (16, 64, 7, 7)</span></span><br><span class="line">conv_output = torch.randn(<span class="number">16</span>, <span class="number">64</span>, <span class="number">7</span>, <span class="number">7</span>)</span><br><span class="line"><span class="comment"># 我们需要将其送入一个 nn.Linear(64 * 7 * 7, 100) 的层</span></span><br><span class="line"><span class="comment"># batch_size 维度需要保留</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法1: 使用 view (效率高，但不保证内存连续)</span></span><br><span class="line"><span class="comment"># -1 会自动计算该维度的大小</span></span><br><span class="line">linear_input = conv_output.view(<span class="number">16</span>, -<span class="number">1</span>) <span class="comment"># 形状变为 (16, 3136)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法2: 使用 reshape (更安全，会自动处理内存问题)</span></span><br><span class="line">linear_input = conv_output.reshape(<span class="number">16</span>, -<span class="number">1</span>) <span class="comment"># 形状变为 (16, 3136)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法3: 使用 flatten (更语义化，推荐)</span></span><br><span class="line"><span class="comment"># start_dim=1 表示从第1个维度（Channels 维）开始压平</span></span><br><span class="line">linear_input = torch.flatten(conv_output, start_dim=<span class="number">1</span>) <span class="comment"># 形状变为 (16, 3136)</span></span><br></pre></td></tr></table></figure></li>
+<li>
+<p><strong>为什么？</strong> 卷积层 (<code>nn.Conv2d</code>) 非常擅长处理具有空间结构的数据（如图像），它的输出通常是 4D 的 <code>(B, C_out, H_out, W_out)</code>，保留了空间信息。但是，全连接层 (<code>nn.Linear</code>) 通常用于最后阶段的分类或回归，它期望的输入是 2D 的 <code>(B, num_features)</code>，即把每个样本的所有特征&quot;拉平&quot;成一个长向量。</p>
+</li>
+<li>
+<p><strong>如何实现？</strong> <code>view</code>, <code>reshape</code>, <code>flatten</code></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 假设经过卷积和池化后，输出形状为 (16, 64, 7, 7)</span></span><br><span class="line">conv_output = torch.randn(<span class="number">16</span>, <span class="number">64</span>, <span class="number">7</span>, <span class="number">7</span>)</span><br><span class="line"><span class="comment"># 我们需要将其送入一个 nn.Linear(64 * 7 * 7, 100) 的层</span></span><br><span class="line"><span class="comment"># batch_size 维度需要保留</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法1: 使用 view (效率高，但不保证内存连续)</span></span><br><span class="line"><span class="comment"># -1 会自动计算该维度的大小</span></span><br><span class="line">linear_input = conv_output.view(<span class="number">16</span>, -<span class="number">1</span>) <span class="comment"># 形状变为 (16, 3136)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法2: 使用 reshape (更安全，会自动处理内存问题)</span></span><br><span class="line">linear_input = conv_output.reshape(<span class="number">16</span>, -<span class="number">1</span>) <span class="comment"># 形状变为 (16, 3136)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法3: 使用 flatten (更语义化，推荐)</span></span><br><span class="line"><span class="comment"># start_dim=1 表示从第1个维度（Channels 维）开始压平</span></span><br><span class="line">linear_input = torch.flatten(conv_output, start_dim=<span class="number">1</span>) <span class="comment"># 形状变为 (16, 3136)</span></span><br></pre></td></tr></table></figure>
+</li>
 </ul>
-<p><strong>场景 B: "换位" - 调整维度顺序</strong></p>
+<p><strong>场景 B: “换位” - 调整维度顺序</strong></p>
 <ul>
-<li><p><strong>为什么？</strong>
-不同的库或特定的层对维度的语义顺序有不同的要求。</p>
+<li>
+<p><strong>为什么？</strong> 不同的库或特定的层对维度的语义顺序有不同的要求。</p>
 <ul>
-<li><strong>经典案例 1 (图像)：</strong> Matplotlib 或 OpenCV
-处理图像时，通道维通常在最后 <code>(H, W, C)</code>。而 PyTorch
-的卷积层要求通道维在前 <code>(C, H, W)</code>。</li>
-<li><strong>经典案例 2 (NLP)：</strong> PyTorch 的
-<code>nn.Transformer</code> 默认期望的输入是
-<code>(序列长度, 批量大小, 特征维度)</code>，而很多时候我们处理数据时更习惯
-<code>(批量大小, 序列长度, 特征维度)</code>。</li>
-</ul></li>
-<li><p><strong>如何实现？</strong> <code>permute</code></p>
+<li><strong>经典案例 1 (图像)：</strong> Matplotlib 或 OpenCV 处理图像时，通道维通常在最后 <code>(H, W, C)</code>。而 PyTorch 的卷积层要求通道维在前 <code>(C, H, W)</code>。</li>
+<li><strong>经典案例 2 (NLP)：</strong> PyTorch 的 <code>nn.Transformer</code> 默认期望的输入是 <code>(序列长度, 批量大小, 特征维度)</code>，而很多时候我们处理数据时更习惯 <code>(批量大小, 序列长度, 特征维度)</code>。</li>
+</ul>
+</li>
+<li>
+<p><strong>如何实现？</strong> <code>permute</code></p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 案例1: H, W, C -&gt; C, H, W</span></span><br><span class="line">image_hwc = torch.randn(<span class="number">224</span>, <span class="number">224</span>, <span class="number">3</span>)</span><br><span class="line"><span class="comment"># permute 接收新的维度顺序</span></span><br><span class="line">image_chw = image_hwc.permute(<span class="number">2</span>, <span class="number">0</span>, <span class="number">1</span>) <span class="comment"># 形状变为 (3, 224, 224)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 案例2: Batch-first -&gt; Seq-first for Transformer</span></span><br><span class="line">nlp_batch_first = torch.randn(<span class="number">16</span>, <span class="number">100</span>, <span class="number">512</span>) <span class="comment"># (B, Seq, Feat)</span></span><br><span class="line"><span class="comment"># 交换第 0 维和第 1 维</span></span><br><span class="line">nlp_seq_first = nlp_batch_first.permute(<span class="number">1</span>, <span class="number">0</span>, <span class="number">2</span>) <span class="comment"># 形状变为 (100, 16, 512)</span></span><br></pre></td></tr></table></figure>
-<p><code>transpose(dim1, dim2)</code> 是 <code>permute</code>
-的一个特例，它只能交换两个维度。</p></li>
+<p><code>transpose(dim1, dim2)</code> 是 <code>permute</code> 的一个特例，它只能交换两个维度。</p>
+</li>
 </ul>
-<p><strong>场景 C: "增删" - 增加或移除"占位"维度</strong></p>
+<p><strong>场景 C: “增删” - 增加或移除&quot;占位&quot;维度</strong></p>
 <ul>
-<li><p><strong>为什么？</strong> 有时为了进行广播 (broadcasting)
-计算，或者匹配一个需要特定维度数量的函数，我们需要临时增加或移除大小为 1
-的维度。</p></li>
-<li><p><strong>如何实现？</strong> <code>unsqueeze</code> (增加) 和
-<code>squeeze</code> (移除)</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 场景：给一个 2D 的 batch (B, F) 增加一个虚拟的“通道”维度</span></span><br><span class="line">x = torch.randn(<span class="number">16</span>, <span class="number">100</span>) <span class="comment"># (Batch, Features)</span></span><br><span class="line"><span class="comment"># 目标：变成 (16, 1, 100) 以便使用 1D 卷积 nn.Conv1d</span></span><br><span class="line">x_unsqueezed = x.unsqueeze(<span class="number">1</span>) <span class="comment"># 在第 1 维增加一个维度</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 场景：模型输出 (B, 1)，但 loss 函数需要 (B)</span></span><br><span class="line">model_output = torch.randn(<span class="number">16</span>, <span class="number">1</span>)</span><br><span class="line"><span class="comment"># 移除所有大小为 1 的维度</span></span><br><span class="line">squeezed_output = model_output.squeeze() <span class="comment"># 形状变为 (16)</span></span><br><span class="line"><span class="comment"># 只移除第 1 维 (如果它的大小是 1)</span></span><br><span class="line">squeezed_output_dim1 = model_output.squeeze(<span class="number">1</span>) <span class="comment"># 形状变为 (16)</span></span><br></pre></td></tr></table></figure></li>
+<li>
+<p><strong>为什么？</strong> 有时为了进行广播 (broadcasting) 计算，或者匹配一个需要特定维度数量的函数，我们需要临时增加或移除大小为 1 的维度。</p>
+</li>
+<li>
+<p><strong>如何实现？</strong> <code>unsqueeze</code> (增加) 和 <code>squeeze</code> (移除)</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 场景：给一个 2D 的 batch (B, F) 增加一个虚拟的“通道”维度</span></span><br><span class="line">x = torch.randn(<span class="number">16</span>, <span class="number">100</span>) <span class="comment"># (Batch, Features)</span></span><br><span class="line"><span class="comment"># 目标：变成 (16, 1, 100) 以便使用 1D 卷积 nn.Conv1d</span></span><br><span class="line">x_unsqueezed = x.unsqueeze(<span class="number">1</span>) <span class="comment"># 在第 1 维增加一个维度</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 场景：模型输出 (B, 1)，但 loss 函数需要 (B)</span></span><br><span class="line">model_output = torch.randn(<span class="number">16</span>, <span class="number">1</span>)</span><br><span class="line"><span class="comment"># 移除所有大小为 1 的维度</span></span><br><span class="line">squeezed_output = model_output.squeeze() <span class="comment"># 形状变为 (16)</span></span><br><span class="line"><span class="comment"># 只移除第 1 维 (如果它的大小是 1)</span></span><br><span class="line">squeezed_output_dim1 = model_output.squeeze(<span class="number">1</span>) <span class="comment"># 形状变为 (16)</span></span><br></pre></td></tr></table></figure>
+</li>
 </ul>
-<h4 id="阶段-3损失计算阶段-对齐预测与真值">阶段 3：损失计算阶段
-(对齐"预测"与"真值")</h4>
-<p><strong>面临的问题：</strong> 模型的输出 Tensor 和标签 (label) Tensor
-的形状可能不完全一致。</p>
-<p><strong>核心动机：</strong>
-<strong>对齐</strong>。使预测和真值的形状符合损失函数的要求。</p>
-<p><strong>常见变换：</strong> <code>squeeze</code> 或
-<code>argmax</code></p>
+<h4 id="阶段-3：损失计算阶段-对齐-预测-与-真值">阶段 3：损失计算阶段 (对齐&quot;预测&quot;与&quot;真值&quot;)</h4>
+<p><strong>面临的问题：</strong> 模型的输出 Tensor 和标签 (label) Tensor 的形状可能不完全一致。</p>
+<p><strong>核心动机：</strong> <strong>对齐</strong>。使预测和真值的形状符合损失函数的要求。</p>
+<p><strong>常见变换：</strong> <code>squeeze</code> 或 <code>argmax</code></p>
 <ul>
-<li><code>nn.BCELoss</code> (二分类交叉熵) 通常要求模型输出和标签都是
-<code>(B)</code> 或 <code>(B, 1)</code>。如果你的模型输出了
-<code>(B, 1)</code> 而标签是 <code>(B)</code>，你可能需要
-<code>model_output.squeeze(1)</code> 来对齐。</li>
-<li><code>nn.CrossEntropyLoss</code> (多分类交叉熵)
-很智能，它允许模型输出是 <code>(B, num_classes)</code> 的
-logits，而标签是 <code>(B)</code>
-的类别索引。它内部会自动处理对齐。在计算准确率时，你则需要用
-<code>torch.argmax(model_output, dim=1)</code> 来得到 <code>(B)</code>
-的预测类别，再和标签进行比较。</li>
+<li><code>nn.BCELoss</code> (二分类交叉熵) 通常要求模型输出和标签都是 <code>(B)</code> 或 <code>(B, 1)</code>。如果你的模型输出了 <code>(B, 1)</code> 而标签是 <code>(B)</code>，你可能需要 <code>model_output.squeeze(1)</code> 来对齐。</li>
+<li><code>nn.CrossEntropyLoss</code> (多分类交叉熵) 很智能，它允许模型输出是 <code>(B, num_classes)</code> 的 logits，而标签是 <code>(B)</code> 的类别索引。它内部会自动处理对齐。在计算准确率时，你则需要用 <code>torch.argmax(model_output, dim=1)</code> 来得到 <code>(B)</code> 的预测类别，再和标签进行比较。</li>
 </ul>
-<h3 id="我应该用哪个-api">3. 我应该用哪个 API？</h3>
+<h3 id="3-我应该用哪个-API？">3. 我应该用哪个 API？</h3>
 <p>当你需要改变 Tensor 形状时，可以按以下流程思考：</p>
 <p><strong>我的目的是什么？</strong></p>
 <ul>
-<li>是为了<strong>"压平"</strong>多维特征给全连接层？ -&gt;
-<code>flatten</code> 或 <code>reshape/view</code>。</li>
-<li>是为了<strong>"交换"</strong>维度的语义顺序（如 B,S,F -&gt;
-S,B,F）？ -&gt; <code>permute</code> 或 <code>transpose</code>。</li>
-<li>是为了<strong>"增加"</strong>一个不存在的维度（如 batch 维，channel
-维）？ -&gt; <code>unsqueeze</code>。</li>
-<li>是为了<strong>"移除"</strong>一个大小为 1 的多余维度？ -&gt;
-<code>squeeze</code>。</li>
+<li>是为了**“压平”**多维特征给全连接层？ -&gt; <code>flatten</code> 或 <code>reshape/view</code>。</li>
+<li>是为了**“交换”**维度的语义顺序（如 B,S,F -&gt; S,B,F）？ -&gt; <code>permute</code> 或 <code>transpose</code>。</li>
+<li>是为了**“增加”**一个不存在的维度（如 batch 维，channel 维）？ -&gt; <code>unsqueeze</code>。</li>
+<li>是为了**“移除”**一个大小为 1 的多余维度？ -&gt; <code>squeeze</code>。</li>
 </ul>
 <blockquote>
-<p><strong>一个黄金法则：<code>print(tensor.shape)</code></strong> 在
-<code>forward</code> 函数的每一行关键操作后，都加上
-<code>print(x.shape)</code>。这是调试 PyTorch
-模型形状问题的最简单、最有效的方法。它可以让你清晰地看到数据是如何一步步变换的。</p>
+<p><strong>一个黄金法则：<code>print(tensor.shape)</code></strong> 在 <code>forward</code> 函数的每一行关键操作后，都加上 <code>print(x.shape)</code>。这是调试 PyTorch 模型形状问题的最简单、最有效的方法。它可以让你清晰地看到数据是如何一步步变换的。</p>
 </blockquote>
-<h3 id="代码示例-1">4. 代码示例</h3>
+<h3 id="4-代码示例">4. 代码示例</h3>
 <p>让我们追踪一个 Tensor 在一个简单 CNN 中的完整旅程：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ShapeJourneyCNN</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="built_in">super</span>().__init__()</span><br><span class="line">        <span class="variable language_">self</span>.conv1 = nn.Conv2d(in_channels=<span class="number">1</span>, out_channels=<span class="number">16</span>, kernel_size=<span class="number">3</span>, stride=<span class="number">1</span>, padding=<span class="number">1</span>)</span><br><span class="line">        <span class="variable language_">self</span>.relu = nn.ReLU()</span><br><span class="line">        <span class="variable language_">self</span>.pool = nn.MaxPool2d(kernel_size=<span class="number">2</span>, stride=<span class="number">2</span>)</span><br><span class="line">        <span class="variable language_">self</span>.fc1 = nn.Linear(<span class="number">16</span> * <span class="number">14</span> * <span class="number">14</span>, <span class="number">10</span>) <span class="comment"># 28x28 -&gt; 14x14 after pooling</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x</span>):</span><br><span class="line">        <span class="comment"># 初始输入 x: (B, 1, 28, 28) - 假设来自 MNIST</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;Initial shape: \t\t<span class="subst">&#123;x.shape&#125;</span>&quot;</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 经过第一个卷积层</span></span><br><span class="line">        x = <span class="variable language_">self</span>.conv1(x)</span><br><span class="line">        <span class="comment"># 形状变为 (B, 16, 28, 28) - 通道数从 1 变为 16</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;After Conv1: \t\t<span class="subst">&#123;x.shape&#125;</span>&quot;</span>)</span><br><span class="line">        </span><br><span class="line">        x = <span class="variable language_">self</span>.relu(x)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 经过最大池化层</span></span><br><span class="line">        x = <span class="variable language_">self</span>.pool(x)</span><br><span class="line">        <span class="comment"># 形状变为 (B, 16, 14, 14) - H 和 W 都减半</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;After MaxPool: \t\t<span class="subst">&#123;x.shape&#125;</span>&quot;</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># **关键变换：压平**</span></span><br><span class="line">        <span class="comment"># 为了送入 fc1，需要从 4D 变为 2D</span></span><br><span class="line">        <span class="comment"># 我们保留 batch 维度，将其余维度压平</span></span><br><span class="line">        x = torch.flatten(x, start_dim=<span class="number">1</span>)</span><br><span class="line">        <span class="comment"># 形状变为 (B, 16*14*14) -&gt; (B, 3136)</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;After Flatten: \t\t<span class="subst">&#123;x.shape&#125;</span>&quot;</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># 经过全连接层</span></span><br><span class="line">        x = <span class="variable language_">self</span>.fc1(x)</span><br><span class="line">        <span class="comment"># 形状变为 (B, 10) - 10 是最终的类别数</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;Final output shape: \t<span class="subst">&#123;x.shape&#125;</span>&quot;</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> x</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建一个 dummy input batch</span></span><br><span class="line">dummy_batch = torch.randn(<span class="number">64</span>, <span class="number">1</span>, <span class="number">28</span>, <span class="number">28</span>) <span class="comment"># B=64</span></span><br><span class="line">model = ShapeJourneyCNN()</span><br><span class="line">model(dummy_batch)</span><br></pre></td></tr></table></figure>
 <p>输出：</p>
 <figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Initial shape: 		torch.Size([64, 1, 28, 28])</span><br><span class="line">After Conv1: 		torch.Size([64, 16, 28, 28])</span><br><span class="line">After MaxPool: 		torch.Size([64, 16, 14, 14])</span><br><span class="line">After Flatten: 		torch.Size([64, 3136])</span><br><span class="line">Final output shape: 	torch.Size([64, 10])</span><br></pre></td></tr></table></figure>
 <h2 id="总结">总结</h2>
 <p>让我们回顾一下构建起的这张心智地图：</p>
-<ol type="1">
-<li><strong>以工作流为纲</strong>：始终将 PyTorch 的 API 放入"数据准备
--&gt; 模型构建 -&gt;
-训练循环"的框架中去理解其存在的意义。这构成了你的<strong>宏观骨架</strong>。</li>
-<li><strong>以语义为轴</strong>：将 Tensor
-的形状变化理解为匹配不同模块语义接口的"翻译"过程。这让你能自如地掌控<strong>微观血液</strong>的流动。</li>
+<ol>
+<li><strong>以工作流为纲</strong>：始终将 PyTorch 的 API 放入&quot;数据准备 -&gt; 模型构建 -&gt; 训练循环&quot;的框架中去理解其存在的意义。这构成了你的<strong>宏观骨架</strong>。</li>
+<li><strong>以语义为轴</strong>：将 Tensor 的形状变化理解为匹配不同模块语义接口的&quot;翻译&quot;过程。这让你能自如地掌控<strong>微观血液</strong>的流动。</li>
 </ol>
-<p>希望这篇指南能帮助你摆脱死记硬背的泥潭，从第一性原理出发，真正建立起对
-PyTorch 深刻而系统的理解，在"炼丹"之路上走得更远、更稳。</p>
+<p>希望这篇指南能帮助你摆脱死记硬背的泥潭，从第一性原理出发，真正建立起对 PyTorch 深刻而系统的理解，在&quot;炼丹&quot;之路上走得更远、更稳。</p>
 
 <div class="article-footer fs14">
     <section id="license">
       <div class="header"><span>许可协议</span></div>
-      <div class="body"><p>本文采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享
-4.0 国际</a> 许可协议，转载请注明出处。</p>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
 </div>
     </section>
     
@@ -531,26 +392,15 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
 
 
 
-<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a
-target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar
-1.29.1</a> 主题创建。 本博客所有文章除特别声明外，均采用 <a
-target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA
-4.0</a> 许可协议，转载请注明出处。</p>
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Hedon Wang</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>
+本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
 </div></footer>
 <div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
 <div class="widgets">
 
 
 
-<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%8F%E8%A7%82%E7%AF%87%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84-pytorch-%E6%80%9D%E7%BB%B4%E9%AA%A8%E6%9E%B6"><span class="toc-text">宏观篇：搭建你的 PyTorch
-思维骨架</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#pytorch-%E7%9A%84%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1%E5%93%B2%E5%AD%A6%E7%81%B5%E6%B4%BB%E4%B8%8E%E7%9B%B4%E8%A7%82"><span class="toc-text">1. PyTorch
-的核心设计哲学：灵活与直观</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B8%E5%9E%8B%E7%9A%84%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E6%B5%81%E7%A8%8B%E4%B8%8E-pytorch-api-%E7%9A%84%E6%98%A0%E5%B0%84"><span class="toc-text">2. 典型的深度学习流程与
-PyTorch API 的映射</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-1%E6%95%B0%E6%8D%AE%E5%87%86%E5%A4%87-the-fuel"><span class="toc-text">阶段 1：数据准备 (The Fuel)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-2%E6%A8%A1%E5%9E%8B%E6%9E%84%E5%BB%BA-the-engine"><span class="toc-text">阶段 2：模型构建 (The Engine)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-3%E8%AE%AD%E7%BB%83%E5%BE%AA%E7%8E%AF-the-driving-process"><span class="toc-text">阶段 3：训练循环 (The
-Driving Process)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E7%A4%BA%E4%BE%8B"><span class="toc-text">3. 代码示例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BE%AE%E8%A7%82%E7%AF%87%E6%8E%8C%E6%8E%A7-tensor-%E7%9A%84%E4%B8%83%E5%8D%81%E4%BA%8C%E5%8F%98"><span class="toc-text">微观篇：掌控 Tensor
-的&quot;七十二变&quot;</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%BF%83%E6%99%BA%E6%A8%A1%E5%9E%8Bshape-is-semantics%E5%BD%A2%E7%8A%B6%E5%8D%B3%E8%AF%AD%E4%B9%89"><span class="toc-text">1. 核心心智模型：Shape
-is Semantics（形状即语义）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#tensor-%E5%BD%A2%E7%8A%B6%E5%8F%98%E6%8D%A2%E7%9A%84%E5%9C%BA%E6%99%AF%E4%B8%8E%E5%8A%A8%E6%9C%BA"><span class="toc-text">2. Tensor 形状变换的场景与动机</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-1%E6%95%B0%E6%8D%AE%E5%87%86%E5%A4%87%E9%98%B6%E6%AE%B5-%E6%A0%87%E5%87%86%E5%8C%96"><span class="toc-text">阶段 1：数据准备阶段 (标准化)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-2%E6%A8%A1%E5%9E%8B%E5%86%85%E9%83%A8-forward-%E4%BC%A0%E6%92%AD-%E4%BB%8E%E4%B8%80%E7%A7%8D%E5%BD%A2%E6%80%81%E5%88%B0%E5%8F%A6%E4%B8%80%E7%A7%8D%E5%BD%A2%E6%80%81"><span class="toc-text">阶段
-2：模型内部 (forward 传播) (从一种形态到另一种形态)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-3%E6%8D%9F%E5%A4%B1%E8%AE%A1%E7%AE%97%E9%98%B6%E6%AE%B5-%E5%AF%B9%E9%BD%90%E9%A2%84%E6%B5%8B%E4%B8%8E%E7%9C%9F%E5%80%BC"><span class="toc-text">阶段 3：损失计算阶段
-(对齐&quot;预测&quot;与&quot;真值&quot;)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%88%91%E5%BA%94%E8%AF%A5%E7%94%A8%E5%93%AA%E4%B8%AA-api"><span class="toc-text">3. 我应该用哪个 API？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E7%A4%BA%E4%BE%8B-1"><span class="toc-text">4. 代码示例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%8F%E8%A7%82%E7%AF%87%EF%BC%9A%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84-PyTorch-%E6%80%9D%E7%BB%B4%E9%AA%A8%E6%9E%B6"><span class="toc-text">宏观篇：搭建你的 PyTorch 思维骨架</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-PyTorch-%E7%9A%84%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1%E5%93%B2%E5%AD%A6%EF%BC%9A%E7%81%B5%E6%B4%BB%E4%B8%8E%E7%9B%B4%E8%A7%82"><span class="toc-text">1. PyTorch 的核心设计哲学：灵活与直观</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%85%B8%E5%9E%8B%E7%9A%84%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E6%B5%81%E7%A8%8B%E4%B8%8E-PyTorch-API-%E7%9A%84%E6%98%A0%E5%B0%84"><span class="toc-text">2. 典型的深度学习流程与 PyTorch API 的映射</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-1%EF%BC%9A%E6%95%B0%E6%8D%AE%E5%87%86%E5%A4%87-The-Fuel"><span class="toc-text">阶段 1：数据准备 (The Fuel)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-2%EF%BC%9A%E6%A8%A1%E5%9E%8B%E6%9E%84%E5%BB%BA-The-Engine"><span class="toc-text">阶段 2：模型构建 (The Engine)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-3%EF%BC%9A%E8%AE%AD%E7%BB%83%E5%BE%AA%E7%8E%AF-The-Driving-Process"><span class="toc-text">阶段 3：训练循环 (The Driving Process)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E4%BB%A3%E7%A0%81%E7%A4%BA%E4%BE%8B"><span class="toc-text">3. 代码示例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BE%AE%E8%A7%82%E7%AF%87%EF%BC%9A%E6%8E%8C%E6%8E%A7-Tensor-%E7%9A%84-%E4%B8%83%E5%8D%81%E4%BA%8C%E5%8F%98"><span class="toc-text">微观篇：掌控 Tensor 的&quot;七十二变&quot;</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%A0%B8%E5%BF%83%E5%BF%83%E6%99%BA%E6%A8%A1%E5%9E%8B%EF%BC%9AShape-is-Semantics%EF%BC%88%E5%BD%A2%E7%8A%B6%E5%8D%B3%E8%AF%AD%E4%B9%89%EF%BC%89"><span class="toc-text">1. 核心心智模型：Shape is Semantics（形状即语义）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Tensor-%E5%BD%A2%E7%8A%B6%E5%8F%98%E6%8D%A2%E7%9A%84%E5%9C%BA%E6%99%AF%E4%B8%8E%E5%8A%A8%E6%9C%BA"><span class="toc-text">2. Tensor 形状变换的场景与动机</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-1%EF%BC%9A%E6%95%B0%E6%8D%AE%E5%87%86%E5%A4%87%E9%98%B6%E6%AE%B5-%E6%A0%87%E5%87%86%E5%8C%96"><span class="toc-text">阶段 1：数据准备阶段 (标准化)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-2%EF%BC%9A%E6%A8%A1%E5%9E%8B%E5%86%85%E9%83%A8-forward-%E4%BC%A0%E6%92%AD-%E4%BB%8E%E4%B8%80%E7%A7%8D%E5%BD%A2%E6%80%81%E5%88%B0%E5%8F%A6%E4%B8%80%E7%A7%8D%E5%BD%A2%E6%80%81"><span class="toc-text">阶段 2：模型内部 (forward 传播) (从一种形态到另一种形态)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-3%EF%BC%9A%E6%8D%9F%E5%A4%B1%E8%AE%A1%E7%AE%97%E9%98%B6%E6%AE%B5-%E5%AF%B9%E9%BD%90-%E9%A2%84%E6%B5%8B-%E4%B8%8E-%E7%9C%9F%E5%80%BC"><span class="toc-text">阶段 3：损失计算阶段 (对齐&quot;预测&quot;与&quot;真值&quot;)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E6%88%91%E5%BA%94%E8%AF%A5%E7%94%A8%E5%93%AA%E4%B8%AA-API%EF%BC%9F"><span class="toc-text">3. 我应该用哪个 API？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E4%BB%A3%E7%A0%81%E7%A4%BA%E4%BE%8B"><span class="toc-text">4. 代码示例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
 
 <a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
 </div></aside><div class='float-panel blur'>
