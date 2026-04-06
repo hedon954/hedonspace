@@ -20,15 +20,15 @@
   <title>Claude Code 源码解析丨从 6 个问题窥视 CC 的 Harness Engineering - HedonWang</title>
 
   
-    <meta name="description" content="本文通过拆解 Claude Code 源码，围绕 6 个关键问题，深入剖析其核心设计理念与技术细节，帮助读者理解其工程架构与独特实现。">
+    <meta name="description" content="仅仅拿着各种 AI 工具读 Claude Code 源码往往收效甚微，容易陷入“AI 学会了，但自己好像没学会”的困境。本文将“带着问题去让 AI 进行主题性分析”，解剖这个 AI Coding CLI 脱颖而出的原因。我们将聚焦 Prompt 结构与撰写原则、ReAct 循环的具体实现、灵活的内置工具体系以及代码修改的具体流程这几个核心点，为您提供独家深度解剖，助您不再只是“让 AI 重新认识一">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Claude Code 源码解析丨从 6 个问题窥视 CC 的 Harness Engineering">
 <meta property="og:url" content="https://hedon.top/2026/04/05/claude-code-source/index.html">
 <meta property="og:site_name" content="HedonWang">
-<meta property="og:description" content="本文通过拆解 Claude Code 源码，围绕 6 个关键问题，深入剖析其核心设计理念与技术细节，帮助读者理解其工程架构与独特实现。">
+<meta property="og:description" content="仅仅拿着各种 AI 工具读 Claude Code 源码往往收效甚微，容易陷入“AI 学会了，但自己好像没学会”的困境。本文将“带着问题去让 AI 进行主题性分析”，解剖这个 AI Coding CLI 脱颖而出的原因。我们将聚焦 Prompt 结构与撰写原则、ReAct 循环的具体实现、灵活的内置工具体系以及代码修改的具体流程这几个核心点，为您提供独家深度解剖，助您不再只是“让 AI 重新认识一">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-04-05T03:17:20.000Z">
-<meta property="article:modified_time" content="2026-04-05T04:34:41.972Z">
+<meta property="article:modified_time" content="2026-04-06T04:51:16.362Z">
 <meta property="article:author" content="Hedon Wang">
 <meta property="article:tag" content="AI">
 <meta property="article:tag" content="Claude Code">
@@ -79,11 +79,11 @@
 
 
 
-<div class="article banner top"><img class="bg lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/banner/claude-code-source.png">
+<div class="article banner top"><img class="bg lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/banner/claude-code-source.jpg">
   <div class="content">
     <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
 <span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/AI/">AI</a></div>
-<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2026-04-05T03:17:20.000Z">2026-04-05</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2026-04-05T04:34:41.972Z">2026-04-05</time></span></div></div></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2026-04-05T03:17:20.000Z">2026-04-05</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2026-04-06T04:51:16.362Z">2026-04-06</time></span></div></div></div>
     
     <div class="bottom only-title">
       
@@ -1133,7 +1133,7 @@ target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-
       <div class="header"><span>分享文章</span></div>
       <div class="body">
         <div class="link"><input class="copy-area" readonly="true" id="copy-link" value="https://hedon.top/2026/04/05/claude-code-source/" /></div>
-        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2026/04/05/claude-code-source/&title=Claude Code 源码解析丨从 6 个问题窥视 CC 的 Harness Engineering - HedonWang&pics=/banner/claude-code-source.png&summary=本文通过拆解 Claude Code 源码，围绕 6 个关键问题，深入剖析其核心设计理念与技术细节，帮助读者理解其工程架构与独特实现。"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=Claude Code 源码解析丨从 6 个问题窥视 CC 的 Harness Engineering - HedonWang&amp;body=https://hedon.top/2026/04/05/claude-code-source/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
+        <div class="social-wrap dis-select"><a class="social share-item wechat" onclick="util.toggle(&quot;qrcode-wechat&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/b32ef3da1162a.svg" /></a><a class="social share-item weibo" target="_blank" rel="external nofollow noopener noreferrer" href="https://service.weibo.com/share/share.php?url=https://hedon.top/2026/04/05/claude-code-source/&title=Claude Code 源码解析丨从 6 个问题窥视 CC 的 Harness Engineering - HedonWang&pics=/banner/claude-code-source.jpg&summary=仅仅拿着各种 AI 工具读 Claude Code 源码往往收效甚微，容易陷入“AI 学会了，但自己好像没学会”的困境。本文将“带着问题去让 AI 进行主题性分析”，解剖这个 AI Coding CLI 脱颖而出的原因。我们将聚焦 P..."><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/80c07e4dbb303.svg" /></a><a class="social share-item email" href="mailto:?subject=Claude Code 源码解析丨从 6 个问题窥视 CC 的 Harness Engineering - HedonWang&amp;body=https://hedon.top/2026/04/05/claude-code-source/"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/a1b00e20f425d.svg" /></a><a class="social share-item link" onclick="util.copy(&quot;copy-link&quot;, &quot;复制成功&quot;)"><img class="lazy"  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/8411ed322ced6.svg" /></a></div>
         
         <div class="qrcode" id="qrcode-wechat" style="opacity:0;height:0">
           <img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://hedon.top/2026/04/05/claude-code-source/"/>
